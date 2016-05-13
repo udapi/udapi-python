@@ -1,6 +1,6 @@
-#!/usr/bin/bash
+#!/bin/bash
 
-export PATH=../python/bin:$PATH
+export PATH=../bin:$PATH
 export PYTHONPATH=../python/:$PYTHONPATH
 
-udapi.py read.Conllu filename=sample.conllu Dummy write.Conllu > prepositions-up.conllu
+udapy read.Conllu filename=en-sample.conllu Dummy write.Conllu > prepositions-up.conllu
