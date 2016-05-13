@@ -62,9 +62,11 @@ class Conllu(BaseReader):
                     bundle = Bundle()
                     document.bundles.append(bundle)
                     root = Root()
+
                     root._aux['comment'] = comment # TODO: ulozit nekam poradne
                     nodes = [root]
                     bundle.trees.append(root)
+                    root._bundle = bundle
 
                 columns = line.strip().split('\t')
 

@@ -39,10 +39,16 @@ class Root(Node):
     __slots__ = [
                   "sent_id",
                   "zone",
+                  "_bundle",
                   "_children",# ord-ordered list of child nodes
                   "_aux"     # other technical attributes
 
     ]
+
+
+    @property
+    def bundle(self):
+        return self._bundle
 
     # TODO: this enumeration looks silly, can we code the multiple 'read-only attributes' more cleverly?
     

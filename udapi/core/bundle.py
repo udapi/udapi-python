@@ -6,7 +6,7 @@ import re
 from node import Node
 
 class Bundle(object):
-    """Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way (e.g. parallel translations) inside a document"""
+    """Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way (e.g. parallel translations) inside a document. Unless different zones are differentiated in a bundle, there's only one tree per bundle by default."""
 
     __slots__ = [ "trees", "_aux" ]
 
@@ -27,11 +27,12 @@ class Bundle(object):
         
     def create_tree(self,zone=None):
 
-        root = Node()
+        root = Root()
         root.ord = 0
         root._aux['descendants'] = [] 
 
         root.set_zone(zone)
+        root._bundle = self
         self.trees.append(root)
         return root
 
