@@ -123,6 +123,11 @@ class Root(Node):
     def is_descendant_of(self,node):
         return False
 
+
+    def is_root(self):
+        """returns True for all Root instances"""
+        return True
+
     def remove(self):
         raise RuntimeException('Tree root cannot be removed using root.remove(). Use bundle.remove_tree(zone) instead')
 

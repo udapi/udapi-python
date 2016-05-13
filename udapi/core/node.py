@@ -140,7 +140,8 @@ class Node(object):
         return node
 
     def is_root(self):
-        return not self.parent
+        """returns False for all Node instances, irrespectively of whether is has a parent or not"""
+        return False
 
     def _update_ordering(self):
          """ update the ord attribute in all nodes and update the list or descendants stored in the tree root (after node removal or addition) """
