@@ -61,6 +61,8 @@ class Conllu(BaseReader):
                 if not nodes:
                     bundle = Bundle()
                     document.bundles.append(bundle)
+                    bundle._document = bundle
+
                     root = Root()
 
                     root._aux['comment'] = comment # TODO: ulozit nekam poradne

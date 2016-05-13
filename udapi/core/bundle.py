@@ -8,7 +8,10 @@ from node import Node
 class Bundle(object):
     """Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way (e.g. parallel translations) inside a document. Unless different zones are differentiated in a bundle, there's only one tree per bundle by default."""
 
-    __slots__ = [ "trees", "_aux" ]
+    __slots__ = [ "trees", "_aux", "_document" ]
+
+    def document(self):
+        return self._document
 
     def __init__(self):
         self.trees = []
