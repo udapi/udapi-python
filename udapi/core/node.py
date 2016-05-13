@@ -90,7 +90,7 @@ class Node(object):
 
             climbing_node = new_parent
 
-            while climbing_node:
+            while not climbing_node.is_root:
                 if climbing_node == self:
                     raise RuntimeException('setting the parent would lead to a loop: '+str(self))
                 climbing_node = climbing_node.parent
