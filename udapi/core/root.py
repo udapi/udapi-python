@@ -135,8 +135,8 @@ class Root(Node):
         return True
 
     def remove(self):
-        raise RuntimeException('Tree root cannot be removed using root.remove(). Use bundle.remove_tree(zone) instead')
-
+        """remove the whole tree from its bundle"""
+        self.bundle.trees = [root for root in self.bundle.trees if root==self]
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         raise RuntimeException('technical root cannot be shifted as it is always the first node')
