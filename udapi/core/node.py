@@ -26,8 +26,6 @@ class RuntimeException(TreexException):
 # ---------------------------------------------------------------------------------------------
 
 
-
-
 class Node(object):
     """Class for representing non-root nodes in Universal Dependency trees"""
 
@@ -245,4 +243,8 @@ class Node(object):
     def info(self,message):
         import sys
         sys.stderr.write("INFO "+message+"\n")
+
+    def address(self):
+        """full (document-wide) id of the node"""
+        return self.root.address()+"#".self.ord
 

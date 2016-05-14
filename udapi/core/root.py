@@ -38,6 +38,7 @@ class Root(Node):
 
     __slots__ = [
                   "sent_id",
+                  "sentence",
                   "_zone",
                   "_bundle",
                   "_children",# ord-ordered list of child nodes
@@ -152,7 +153,9 @@ class Root(Node):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         raise RuntimeException('technical root cannot be shifted as it is always the first node')
 
-    def info(self,message):
-        import sys
-        sys.stderr.write("INFO "+message+"\n")
-
+    def address(self):
+        """full (document-wide) id of the root"""
+        id = self.bundle.id
+        if self.zone:
+            id = id + "/" + self.zone
+        
