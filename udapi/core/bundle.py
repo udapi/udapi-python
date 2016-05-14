@@ -11,6 +11,7 @@ class Bundle(object):
     __slots__ = [ "trees", "_aux", "_document" ]
 
     def document(self):
+        """returns the document in which the bundle is contained"""
         return self._document
 
     def __init__(self):
@@ -19,7 +20,9 @@ class Bundle(object):
     def __iter__(self):
         return iter(self.trees)
 
-    def tree_by_zone(self,zone):
+    def get_tree(self,zone):
+        """returns the tree root whose zone is equal to zone"""
+
         trees = [tree for tree in self.trees if tree.zone == zone]
         if len(trees) == 1:
             return trees[0]
@@ -29,6 +32,7 @@ class Bundle(object):
             raise Exception("More than one tree with zone="+zone+" in the bundle")
         
     def create_tree(self,zone=None):
+        """returns the root of a newly added tree whose zone is equal to zone"""
 
         root = Root()
         root.ord = 0
@@ -39,3 +43,5 @@ class Bundle(object):
         self.trees.append(root)
         return root
 
+    def remove(self):
+        document.bundles = [bundle for bundle in document.bundles if not bundle == self]

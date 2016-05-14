@@ -123,7 +123,6 @@ class Node(object):
         self.root()._aux['descendants'].append(new_node)
         self._children.append(new_node)
         new_node._parent = self
-#        new_node.set_parent(self)
         return new_node
 
 
@@ -134,6 +133,7 @@ class Node(object):
         return descendants
 
     def root(self):
+        """climbs up to the root and returns it"""
         node = self
         while (node.parent):
             node = node.parent
