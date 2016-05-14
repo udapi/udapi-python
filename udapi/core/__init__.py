@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 
-from document import Document
+#from document import Document

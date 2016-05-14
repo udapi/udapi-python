@@ -7,6 +7,8 @@ from udapi.core.node import Node
 from udapi.core.root import Root
 from udapi.core.bundle import Bundle
 
+from udapi.block.read.conllu import Conllu as ConlluReader
+
 class Document(object):
 
     """Document is a container for Universal Dependency trees"""
@@ -30,69 +32,9 @@ class Document(object):
         bundle.number = len(self.bundles)
         return bundle
 
-    def load(self,args):
-
-        fh = None
-
-        try:
-            fh = args['filehandle']
-        except:
-            filename = args['filename']
-            fh = open(filename, 'r')
-
-        fh = codecs.getreader('utf8')(fh)
-
-        nodes = []
-        comment = ''
-
-        for line in fh:
-
-            if re.search('^#',line):
-                comment = comment + line
-
-            elif re.search('^\d+\-',line):  # HACK: multiword tokens temporarily avoided
-                pass
-
-            elif line.strip():
-
-                if not nodes:
-                    bundle = Bundle()
-                    self.bundles.append(bundle)
-                    root = Root() # TODO: nahradit bundle.create_tree, az bude odladene
-                    root._aux['comment'] = comment # TODO: ulozit nekam poradne
-                    nodes = [root]
-                    bundle.trees.append(root)
-
-                columns = line.strip().split('\t')
-
-                node = Node()
-                nodes.append(node)
-
-                for index in xrange(0,len(Document.attrnames)):
-                    setattr( node, Document.attrnames[index], columns[index] )
-
-                try:  # TODO: kde se v tomhle sloupecku berou podtrzitka
-                    node.head = int(node.head)
-                except ValueError:
-                    node.head = 0
-
-                try:   # TODO: poresit multitokeny
-                    node.ord = int(node.ord)
-                except ValueError:
-                    node.ord = 0
-
-
-            else: # an empty line is guaranteed even after the last sentence in a conll-u file
-
-                nodes[0]._aux['descendants'] = nodes[1:]
-
-                for node in nodes[1:]:
-
-                    node.set_parent( nodes[node.head] )
-
-                nodes = []
-                comment = ''
-
+    def load_conllu(self,filename):
+        reader = ConlluReader({'filename':filename})
+        reader.process_document(self)
 
     def storex(self,args):
 

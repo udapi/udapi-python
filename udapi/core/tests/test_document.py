@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import unittest
-
 from udapi.core.document import Document
 
 class TestDocument(unittest.TestCase):
@@ -17,7 +16,7 @@ class TestDocument(unittest.TestCase):
 
     def test_load_and_store(self):
         doc = Document()
-        doc.load({'filename':'UD_Czech_sample.conllu'})
+        doc.load_conllu('UD_Czech_sample.conllu')
         doc.store({'filename':'temp_copy.connlu'})
         
 

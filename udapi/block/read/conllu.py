@@ -1,5 +1,5 @@
 from udapi.core.basereader import BaseReader
-from udapi.core.document import Document
+#from udapi.core.document import Document
 from udapi.core.bundle import Bundle
 from udapi.core.node import Node
 from udapi.core.root import Root
@@ -7,6 +7,9 @@ import codecs
 import re
 
 class Conllu(BaseReader):
+
+    # TODO: code duplication with Document (only to avoid circular deps):
+    attrnames = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]  
 
     def __init__( self, args = {} ):
 
@@ -24,6 +27,10 @@ class Conllu(BaseReader):
 
         elif 'filename' in args:
             self.filename = args['filename']
+
+            print "FILENAME "+str(self.filename)
+
+
             self.filehandle = open(self.filename, 'r')
 
         else:
@@ -77,8 +84,8 @@ class Conllu(BaseReader):
 
                 columns.append(None)  # TODO: why was the last column missing in some files?
 
-                for index in xrange(0,len(Document.attrnames)):
-                    setattr( node, Document.attrnames[index], columns[index] )
+                for index in xrange(0,len(Conllu.attrnames)):
+                    setattr( node, Conllu.attrnames[index], columns[index] )
 
 
                 try:  # TODO: kde se v tomhle sloupecku berou podtrzitka

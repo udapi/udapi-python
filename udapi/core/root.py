@@ -54,7 +54,7 @@ class Root(Node):
     def set_zone(self,zone):
         """specify which zone the root belongs to"""
         if self.bundle:
-            self.bundle._check_zone(self,zone):
+            self.bundle._check_zone(self,zone)
         self._zone = zone
 
     @property
@@ -110,7 +110,7 @@ class Root(Node):
 
         self._children = []
         self._aux = {}
-        root._aux['descendants'] = [] 
+        self._aux['descendants'] = [] 
 
         for name in data:
             setattr(self,name,data[name])
