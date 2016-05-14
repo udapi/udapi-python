@@ -27,6 +27,7 @@ class Document(object):
     def create_bundle(self):
         bundle = Bundle()
         self.bundles.append(bundle)
+        bundle.number = len(self.bundles)
         return bundle
 
     def load(self,args):

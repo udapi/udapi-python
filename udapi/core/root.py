@@ -38,13 +38,23 @@ class Root(Node):
 
     __slots__ = [
                   "sent_id",
-                  "zone",
+                  "_zone",
                   "_bundle",
                   "_children",# ord-ordered list of child nodes
                   "_aux"     # other technical attributes
 
     ]
 
+
+    @property
+    def zone(self):
+        return self._zone
+
+    def set_zone(self,zone):
+        """specify which zone the root belongs to"""
+        if self.bundle:
+            self.bundle._check_zone(self,zone):
+        self._zone = zone
 
     @property
     def bundle(self):
@@ -99,6 +109,7 @@ class Root(Node):
 
         self._children = []
         self._aux = {}
+        root._aux['descendants'] = [] 
 
         for name in data:
             setattr(self,name,data[name])

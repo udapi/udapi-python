@@ -212,6 +212,21 @@ class Node(object):
     def shift_subtree_after(self, reference_node):
 	self.shift(reference_node,after=1,move_subtree=1,reference_subtree=0)
 
+#    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+
+    def shift_after_node(self, reference_node):
+        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
+
+    def shift_before_node(self, reference_node):
+        self.shift(reference_node, after=0, move_subtree=1, reference_subtree=0)
+
+    def shift_after_subtree(self, reference_node, without_children=0):
+        self.shift(reference_node, after=1, move_subtree=1-without_children, reference_subtree=1)
+
+    def shift_before_subtree(self, reference_node, without_children=0):
+        self.shift(reference_node, after=0, move_subtree=1-without_children, reference_subtree=1)
+
+
     def prev_node(self):
         new_ord = self.ord - 1
         if new_ord < 0:
