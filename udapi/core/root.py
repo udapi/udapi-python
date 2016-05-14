@@ -111,6 +111,7 @@ class Root(Node):
         self._children = []
         self._aux = {}
         self._aux['descendants'] = [] 
+        self._bundle = None
 
         for name in data:
             setattr(self,name,data[name])
@@ -128,7 +129,7 @@ class Root(Node):
 
     @property
     def parent(self):
-        return self._parent
+        return None
 
     def set_parent( self, new_parent ):
 

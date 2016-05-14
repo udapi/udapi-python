@@ -29,6 +29,7 @@ class Document(object):
         bundle = Bundle()
         self.bundles.append(bundle)
         bundle.number = len(self.bundles)
+        bundle._document = bundle
         return bundle
 
     def load_conllu(self,filename):

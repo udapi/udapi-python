@@ -133,7 +133,9 @@ class Node(object):
     def root(self):
         """climbs up to the root and returns it"""
         node = self
+
         while (node.parent):
+            print "SEARCH FOR ROOT: "+str(node)
             node = node.parent
         return node
 

@@ -45,6 +45,9 @@ class Conllu(BaseReader):
 
         nodes = []
         comment = ''
+        sent_id = None
+        last_bundle = None
+        last_root = None
 
         while number_of_loaded_bundles < self.bundles_per_document:
 
@@ -58,28 +61,34 @@ class Conllu(BaseReader):
 
 
             if re.search('^#',line):
-                comment = comment + line
 
-            elif re.search('^\d+\-',line):  # HACK: multiword tokens temporarily avoided                                                                                         
+                pattern = re.compile("^# sent_id=(\S+)")
+                match = pattern.search(line)
+                if match:
+                    sent_id = match.group(1)
+                    print "SENTID="+sent_id
+                else:
+                    comment = comment + line
+
+            elif re.search('^\d+\-',line):  # HACK: multiword tokens temporarily avoided 
                 pass
 
             elif line.strip():
 
                 if not nodes:
-                    bundle = Bundle()
-                    document.bundles.append(bundle)
-                    bundle._document = bundle
+                    last_bundle = document.create_bundle()
+                    last_root = last_bundle.create_tree()
+                    if sent_id:
+                        last_root.sent_id = sent_id
 
-                    root = Root()
+                    last_root._aux['comment'] = comment # TODO: save somehow more properly
 
-                    root._aux['comment'] = comment # TODO: ulozit nekam poradne
-                    nodes = [root]
-                    bundle.trees.append(root)
-                    root._bundle = bundle
+                    nodes = [last_root]
+
 
                 columns = line.strip().split('\t')
 
-                node = Node()
+                node = last_root.create_child()
                 nodes.append(node)
 
                 columns.append(None)  # TODO: why was the last column missing in some files?
@@ -111,5 +120,6 @@ class Conllu(BaseReader):
                         node.set_parent( nodes[node.head] )
                     nodes = []
                     comment = ''
+                    sent_id = None
 
         return document
