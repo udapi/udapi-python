@@ -17,7 +17,7 @@ class TestDocument(unittest.TestCase):
     def test_load_and_store(self):
         doc = Document()
         doc.load_conllu('UD_Czech_sample.conllu')
-        doc.store({'filename':'temp_copy.connlu'})
+        doc.store_conllu('temp_copy.connlu')
         
 
 

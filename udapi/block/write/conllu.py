@@ -1,28 +1,46 @@
 from udapi.core.block import Block
-from udapi.core.document import Document
 
 import sys
 import codecs
-sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
+#sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
 
 class Conllu(Block):
 
-    # TODO: so far cut'n'past from document.py
+    attrnames = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+
+
+    def __init__( self, args = {} ):
+
+        self.filehandle = None
+
+        if 'filehandle' in args:
+            self.filehandle = args['filehandle']
+
+        elif 'filename' in args:
+            self.filename = args['filename']
+
+            self.filehandle = open(self.filename, 'w')
+
+        else:
+            print str(self) + " has no file to read from"
+
+        self.filehandle = codecs.getwriter('utf8')(self.filehandle)
+
 
     def process_document( self, document ):
 
-        fh = sys.stdout
+        fh = self.filehandle
 
         for bundle in document.bundles:
 
             tree_number = 0
 
             for root in bundle:
-                # Skip empty sentences (no nodes, just a comment). They are not allowed in CoNLL-U.                                                                               
+                # Skip empty sentences (no nodes, just a comment). They are not allowed in CoNLL-U.
+
                 tree_number += 1
                 if tree_number > 1:
                     fh.write("#UDAPI_BUNDLE_CONTINUES\n")
-
 
                 if root.descendants():
 
@@ -38,8 +56,8 @@ class Conllu(Block):
 
                     for node in root.descendants():
 
-                        values = [ getattr(node,attrname) for attrname in Document.attrnames ]
-                        values[0] = str(values[0]) # ord                                                                                                                          
+                        values = [ getattr(node,attrname) for attrname in Conllu.attrnames ]
+                        values[0] = str(values[0]) # ord
 
                         try:
                             values[6] = str(node.parent.ord)
