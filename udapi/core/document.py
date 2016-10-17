@@ -32,8 +32,11 @@ class Document(object):
         bundle._document = bundle
         return bundle
 
-    def load_conllu(self,filename):
-        """load a document from a conllu-formatted file"""
+    def load_conllu(self, filename):
+        """
+        Load a document from a conllu-formatted file
+
+        """
         reader = ConlluReader({'filename':filename})
         reader.process_document(self)
 
