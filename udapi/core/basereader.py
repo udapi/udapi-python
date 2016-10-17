@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
-#from node import Node
-#from bundle import Bundle
 from block import Block
 
+
 class BaseReader(Block):
+    """
+    FIXME
 
+    """
     def __init__(self):
-        self.finished = False
+        """
+        FIXME
 
+        """
+        self.finished = False
