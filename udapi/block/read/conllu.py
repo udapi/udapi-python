@@ -3,11 +3,9 @@
 import logging
 import codecs
 import re
+import bz2
 
 import udapi.core.basereader
-
-
-node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
 
 
 class Conllu(udapi.core.basereader.BaseReader):
@@ -19,7 +17,11 @@ class Conllu(udapi.core.basereader.BaseReader):
         if args is None:
             args = {}
 
-        self.finished = False # TODO: this should be invoked from the parent class
+        # A list of Conllu columns.
+        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+
+        # TODO: this should be invoked from the parent class
+        self.finished = False
 
         # Bundles per document.
         self.bundles_per_document = float("inf")
@@ -34,8 +36,15 @@ class Conllu(udapi.core.basereader.BaseReader):
             self.filename = self.file_handler.name
         elif 'filename' in args:
             self.filename = args['filename']
-            logging.debug('Opening file %s', self.filename)
-            self.file_handler = open(self.filename, 'r')
+            filename_extension = self.filename.split('.')[-1]
+
+            # Use bz2 lib when bz2 file is given.
+            if filename_extension == 'bz2':
+                logging.info('Opening BZ2 file %s', self.filename)
+                self.file_handler = bz2.BZ2File(self.filename)
+            else:
+                logging.info('Opening regular file %s', self.filename)
+                self.file_handler = open(self.filename, 'r')
         else:
             raise ValueError('No file to process')
 
@@ -61,6 +70,8 @@ class Conllu(udapi.core.basereader.BaseReader):
         return lines
 
     def process_document(self, document):
+        logging.info('Attributes = %r', self.node_attributes)
+
         number_of_loaded_bundles = 0
 
         # Compile a set of regular expressions that will be searched over the lines.
@@ -76,7 +87,6 @@ class Conllu(udapi.core.basereader.BaseReader):
             # If we can not add next bundle, return document.
             if number_of_loaded_bundles >= self.bundles_per_document:
                 logging.debug('Reached number of requested bundles (%d)', self.bundles_per_document)
-                self.finished = True
                 return document
 
             # Obtain a raw bundle.
@@ -118,7 +128,7 @@ class Conllu(udapi.core.basereader.BaseReader):
                 # Otherwise the line is a tab-separated list of node attributes.
                 node = root_node.create_child()
                 raw_node_attributes = line.split('\t')
-                for (n_attribute, attribute_name) in enumerate(node_attributes):
+                for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                     setattr(node, attribute_name, raw_node_attributes[n_attribute])
                 nodes.append(node)
 
