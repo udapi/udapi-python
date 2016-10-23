@@ -107,12 +107,12 @@ class Node(object):
             return sorted( self._unordered_descendants_using_children() )
 
     def is_descendant_of(self,node):
-	climber = self.parent
-	while climber:
-	    if climber==node:
-                return True
+        climber = self.parent
+        while climber:
+            if climber==node:
+                    return True
             climber = climber.parent
-        return False
+            return False
 
 
     def create_child(self):
@@ -151,10 +151,10 @@ class Node(object):
 
          descendants = sorted( [node for node in root._unordered_descendants_using_children() if node != root] ,
                                key=attrgetter('ord') )
-         
+
 
          self.info ("descendanti podle children: "+(" ".join([node.form+"-"+str(node.ord) for node in descendants])))
-                    
+
 
          root._aux['descendants'] = descendants
 
@@ -180,15 +180,15 @@ class Node(object):
 
         nodes_to_move = [self]
 
-	if move_subtree:
-	    nodes_to_move.extend(self.descendants())
+        if move_subtree:
+            nodes_to_move.extend(self.descendants())
 
-	reference_ord = reference_node.ord
+        reference_ord = reference_node.ord
 
-	if reference_subtree:
-  	    for node in [n for n in reference_node.descendants() if n != self]:
-	        if (after and node.ord > reference_ord) or (not after and node.ord < reference_ord):
-		    reference_ord = node.ord
+        if reference_subtree:
+            for node in [n for n in reference_node.descendants() if n != self]:
+                if (after and node.ord > reference_ord) or (not after and node.ord < reference_ord):
+                    reference_ord = node.ord
                     try:
                         self.info("last reference node: "+node.upostag)
                     except:
@@ -202,15 +202,15 @@ class Node(object):
             node_to_move.ord = reference_ord + common_delta + (node_to_move.ord-self.ord)/100000.  # TODO: can we use some sort of epsilon instead of choosing a silly upper bound for out-degree?
             self.info("NEW ORD OF x: "+str(node_to_move.ord))
 
-	self._update_ordering()
-        
+        self._update_ordering()
+
 
 
     def shift_after(self, reference_node):
-	self.shift(reference_node,after=1,move_subtree=0,reference_subtree=0)
+        self.shift(reference_node,after=1,move_subtree=0,reference_subtree=0)
 
     def shift_subtree_after(self, reference_node):
-	self.shift(reference_node,after=1,move_subtree=1,reference_subtree=0)
+        self.shift(reference_node,after=1,move_subtree=1,reference_subtree=0)
 
 #    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
 
