@@ -16,6 +16,9 @@ class Conllu(udapi.core.basereader.BaseReader):
 
     """
     def __init__(self, args=None):
+        if args is None:
+            args = {}
+
         self.finished = False # TODO: this should be invoked from the parent class
 
         # Bundles per document.
