@@ -1,125 +1,151 @@
-from udapi.core.basereader import BaseReader
-#from udapi.core.document import Document
-from udapi.core.bundle import Bundle
-from udapi.core.node import Node
-from udapi.core.root import Root
+#!/usr/bin/env python
+
+import logging
 import codecs
 import re
 
-class Conllu(BaseReader):
+import udapi.core.basereader
 
-    # TODO: code duplication with Document (only to avoid circular deps):
-    attrnames = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]  
 
-    def __init__( self, args = {} ):
+node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+
+
+class Conllu(udapi.core.basereader.BaseReader):
+    """
+    A reader of the Conll-u files.
+
+    """
+    def __init__(self, args=None):
+        if args is None:
+            args = {}
 
         self.finished = False # TODO: this should be invoked from the parent class
 
+        # Bundles per document.
         self.bundles_per_document = float("inf")
-
         if 'bundles_per_document' in args:
             self.bundles_per_document = int(args['bundles_per_document'])
 
-        self.filehandle = None
-
-        if 'filehandle' in args:
-            self.filehandle = args['filehandle']
-
+        # File handler
+        self.filename = None
+        self.file_handler = None
+        if 'file_handler' in args:
+            self.file_handler = args['file_handler']
+            self.filename = self.file_handler.name
         elif 'filename' in args:
             self.filename = args['filename']
-
-            print "FILENAME "+str(self.filename)
-
-
-            self.filehandle = open(self.filename, 'r')
-
+            logging.debug('Opening file %s', self.filename)
+            self.file_handler = open(self.filename, 'r')
         else:
-            print str(self) + " has no file to read from"
+            raise ValueError('No file to process')
 
-        self.filehandle = codecs.getreader('utf8')(self.filehandle)
+        self.file_handler = codecs.getreader('utf8')(self.file_handler)
 
+    def _get_next_raw_bundle(self):
+        """
+        Read lines for one bundle from the self.file_handler.
+        Bundles are separated by an empty line.
 
-    def process_document( self, document ):
+        :return: A list of lines that represent one bundle.
+        :rtype: list
 
+        """
+        lines = []
+        for line in self.file_handler:
+            line = line.rstrip()
+            if line == '':
+                break
+
+            lines.append(line)
+
+        return lines
+
+    def process_document(self, document):
         number_of_loaded_bundles = 0
 
-        nodes = []
-        comment = ''
-        sent_id = None
-        last_bundle = None
-        last_root = None
+        # Compile a set of regular expressions that will be searched over the lines.
+        re_comment_like = re.compile(r'^#')
+        re_sentence_id = re.compile(r'^# sent_id (\S+)')
+        re_multiword_tokens = re.compile(r'^\d+\-')
 
-        while number_of_loaded_bundles < self.bundles_per_document:
+        # While there are some raw bundles, we process them.
+        while 42:
+            if (number_of_loaded_bundles % 1000) == 0:
+                logging.info('Loaded %d bundles', number_of_loaded_bundles)
 
-            # TODO: more or less cut'n'paste from document.py (in which it should be deleted)
-
-            line = self.filehandle.readline()
-            if line == '': # EOF
+            # If we can not add next bundle, return document.
+            if number_of_loaded_bundles >= self.bundles_per_document:
+                logging.debug('Reached number of requested bundles (%d)', self.bundles_per_document)
                 self.finished = True
-                return
-                # TODO: the last processed bundle should be finished at this point (because of the guaranteed empty line), but it should be checked
+                return document
 
+            # Obtain a raw bundle.
+            raw_bundle = self._get_next_raw_bundle()
 
-            if re.search('^#',line):
+            if len(raw_bundle) == 0:
+                logging.debug('No next bundle to process')
+                break
 
-                pattern = re.compile("^# sent_id=(\S+)")
-                match = pattern.search(line)
-                if match:
+            # Create a new bundle with a new root node.
+            bundle = document.create_bundle()
+            root_node = bundle.create_tree()
+            nodes = [root_node]
+            comments = []
+
+            # Process lines.
+            for (n_line, line) in enumerate(raw_bundle):
+                logging.debug('Processing line %r', line)
+
+                # Sentence identifier.
+                match = re_sentence_id.search(line)
+                if match is not None:
                     sent_id = match.group(1)
-                    print "SENTID="+sent_id
-                else:
-                    comment = comment + line
+                    logging.debug('Matched sent_id keyword with value %s', sent_id)
+                    root_node.sent_id = sent_id
+                    continue
 
-            elif re.search('^\d+\-',line):  # HACK: multiword tokens temporarily avoided 
-                pass
+                # Comments.
+                match = re_comment_like.search(line)
+                if match is not None:
+                    comments.append(line[1:])
+                    continue
 
-            elif line.strip():
+                # FIXME Multi-word tokens are temporarily avoided.
+                if re_multiword_tokens.search(line):
+                    logging.debug('Skipping multi-word tokens %s', line)
+                    continue
 
-                if not nodes:
-                    last_bundle = document.create_bundle()
-                    last_root = last_bundle.create_tree()
-                    if sent_id:
-                        last_root.sent_id = sent_id
-
-                    last_root._aux['comment'] = comment # TODO: save somehow more properly
-
-                    nodes = [last_root]
-
-
-                columns = line.strip().split('\t')
-
-                node = last_root.create_child()
+                # Otherwise the line is a tab-separated list of node attributes.
+                node = root_node.create_child()
+                raw_node_attributes = line.split('\t')
+                for (n_attribute, attribute_name) in enumerate(node_attributes):
+                    setattr(node, attribute_name, raw_node_attributes[n_attribute])
                 nodes.append(node)
 
-                columns.append(None)  # TODO: why was the last column missing in some files?
-
-                for index in xrange(0,len(Conllu.attrnames)):
-                    setattr( node, Conllu.attrnames[index], columns[index] )
-
-
-                try:  # TODO: kde se v tomhle sloupecku berou podtrzitka
+                # TODO: kde se v tomhle sloupecku berou podtrzitka
+                try:
                     node.head = int(node.head)
                 except ValueError:
                     node.head = 0
 
-                try:   # TODO: poresit multitokeny
+                # TODO: poresit multitokeny
+                try:
                     node.ord = int(node.ord)
                 except ValueError:
-                    pass # node.ord = 0                        
+                    pass
 
+            # At least one node should be parsed.
+            if len(nodes) == 0:
+                raise ValueError('Probably two empty lines following each other')
 
-            else: # an empty line is guaranteed even after the last sentence in a conll-u file
+            # Set parents for each node.
+            nodes[0]._aux['comments'] = '\n'.join(comments)
+            nodes[0]._aux['descendants'] = nodes[1:]
+            for node in nodes[1:]:
+                node.set_parent(nodes[node.head])
 
-                if len(nodes) == 0:
-                    print "Warning: this is weird: probably two empty lines following each other" # TODO: resolve
-                else:
-#                    print "QQQ A tree completed, tree number "+str(number_of_loaded_bundles)
-                    number_of_loaded_bundles += 1
-                    nodes[0]._aux['descendants'] = nodes[1:]
-                    for node in nodes[1:]:
-                        node.set_parent( nodes[node.head] )
-                    nodes = []
-                    comment = ''
-                    sent_id = None
+            number_of_loaded_bundles += 1
 
+        logging.info('Loaded %d bundles', number_of_loaded_bundles)
+        self.finished = True
         return document

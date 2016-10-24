@@ -1,63 +1,76 @@
+#!/usr/bin/env python
+
+import logging
+import codecs
+import sys
+
 from udapi.core.block import Block
 
-import sys
-import codecs
-#sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
+
+node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+
 
 class Conllu(Block):
+    """
+    A writer of the Conll-u files.
 
-    attrnames = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+    """
+    def __init__(self, args=None):
+        if args is None:
+            args = {}
 
-
-    def __init__( self, args = {} ):
-
-        self.filehandle = None
-
-        if 'filehandle' in args:
-            self.filehandle = args['filehandle']
-
+        # File handler
+        self.filename = None
+        self.file_handler = None
+        if 'file_handler' in args:
+            self.file_handler = args['file_handler']
+            self.filename = self.file_handler.name
         elif 'filename' in args:
             self.filename = args['filename']
-
-            self.filehandle = open(self.filename, 'w')
-
+            logging.debug('Opening file %s', self.filename)
+            self.file_handler = open(self.filename, 'r')
         else:
-            print str(self) + " has no file to read from"
+            logging.warning('No filename specified, using STDOUT.')
+            self.file_handler = sys.stdout
 
-        self.filehandle = codecs.getwriter('utf8')(self.filehandle)
+        self.file_handler = codecs.getwriter('utf8')(self.file_handler)
 
+    def process_document(self, document):
+        """
+        FIXME
 
-    def process_document( self, document ):
-
-        fh = self.filehandle
-
+        :param document:
+        :return:
+        """
+        number_of_written_bundles = 0
         for bundle in document.bundles:
+            if (number_of_written_bundles % 1000) == 0:
+                logging.info('Wrote %d bundles', number_of_written_bundles)
 
             tree_number = 0
-
             for root in bundle:
                 # Skip empty sentences (no nodes, just a comment). They are not allowed in CoNLL-U.
-
                 tree_number += 1
                 if tree_number > 1:
-                    fh.write("#UDAPI_BUNDLE_CONTINUES\n")
+                    self.file_handler.write("#UDAPI_BUNDLE_CONTINUES\n")
 
                 if root.descendants():
-
-                    try: # undefined comment allowed
-                        fh.write(root._aux['comment'])
-                    except:
-                        pass
-
+                    # Comments.
                     try:
-                        fh.write('#UDAPI_ZONE=' + root.zone()+"\n")
+                        self.file_handler.write(root._aux['comment'])
                     except:
                         pass
 
-                    for node in root.descendants():
+                    # Zones.
+                    try:
+                        self.file_handler.write('#UDAPI_ZONE=' + root.zone()+"\n")
+                    except:
+                        pass
 
-                        values = [ getattr(node,attrname) for attrname in Conllu.attrnames ]
-                        values[0] = str(values[0]) # ord
+                    # Nodes.
+                    for node in root.descendants():
+                        values = [getattr(node, node_attribute) for node_attribute in node_attributes]
+                        values[0] = str(values[0])
 
                         try:
                             values[6] = str(node.parent.ord)
@@ -68,7 +81,11 @@ class Conllu(Block):
                             if values[index] == None:
                                 values[index] = ''
 
-                        fh.write('\t'.join([value for value in values] ))
-                        fh.write('\n')
+                        self.file_handler.write('\t'.join([value for value in values]))
+                        self.file_handler.write('\n')
 
-                    fh.write("\n")
+                    self.file_handler.write("\n")
+
+                number_of_written_bundles += 1
+
+        logging.info('Wrote %d bundles', number_of_written_bundles)

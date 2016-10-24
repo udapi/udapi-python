@@ -7,7 +7,12 @@ from node import Node
 from root import Root
 
 class Bundle(object):
-    """Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way (e.g. parallel translations) inside a document. Unless different zones are differentiated in a bundle, there's only one tree per bundle by default."""
+    """
+    Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way
+    (e.g. parallel translations) inside a document. Unless different zones are differentiated in a bundle,
+    there's only one tree per bundle by default.
+
+    """
 
     __slots__ = [ "trees", "number", "id", "_aux", "_document" ]
 
@@ -21,7 +26,7 @@ class Bundle(object):
     def __iter__(self):
         return iter(self.trees)
 
-    def get_tree(self,zone):
+    def get_tree(self, zone):
         """returns the tree root whose zone is equal to zone"""
 
         trees = [tree for tree in self.trees if tree.zone == zone]
@@ -37,7 +42,7 @@ class Bundle(object):
         for root in root.bundle.trees:
             if root != changed_root and root.zone == zone:
                  raise Exception("Zone "+zone+" already exists in the bundle")
-    
+
 
     def create_tree(self,zone=None):
         """returns the root of a newly added tree whose zone is equal to zone"""
@@ -47,11 +52,11 @@ class Bundle(object):
         self.add_tree(root)
         return root
 
-    def add_tree(self,root):
+    def add_tree(self, root):
         """add an existing tree to the bundle"""
         root._bundle = self
 
-        self._check_new_zone(root,root.zone)
+        self._check_new_zone(root, root.zone)
         self.trees.append(root)
         return root
 
