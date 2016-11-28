@@ -1,6 +1,33 @@
 #!/usr/bin/env python
 
+import logging
+
 from udapi.core.block import Block
+
+
+def _merge_deprel(deprel):
+    """
+    Provide a merging of the closely related bags.
+    In fact, simply modify deprel name according to (Vulic et al., 2016).
+
+    :param deprel: An original deprel.
+    :return: A modified deprel.
+    :rtype: str
+
+    """
+    if deprel in ['dobj', 'iobj', ]:
+        return 'obj'
+
+    if deprel in ['nsubj', 'nsubjpass']:
+        return 'subj'
+
+    if deprel in ['xcomp', 'ccomp']:
+        return 'comp'
+
+    if deprel in ['advcl', 'advmod']:
+        return 'adv'
+
+    return deprel
 
 
 class Vulic(Block):
@@ -19,9 +46,13 @@ class Vulic(Block):
         if args is None:
             args = {}
 
-        self.pool = ['prep', 'acl', 'obj', 'comp', 'adc']
+        self.pool = ['prep', 'acl', 'obj', 'comp', 'adv', 'conj']
         if 'pool' in args:
             self.pool = args['pool'].split(',')
+
+        self.pos = ['VERB']
+        if 'pos' in args:
+            self.pos = args['pos'].split(',')
 
     def process_node(self, node):
         """
@@ -31,15 +62,67 @@ class Vulic(Block):
 
         """
         # We want to extract contexts only for verbs.
-        if str(node.upostag) != "VERB":
+        if str(node.upostag) not in self.pos:
             return
 
         # Process node's parent.
-        if node.parent.deprel in self.pool:
-            parent = node.parent
-            print "%s %s_%s" % (node.form[:-3], parent.form[:-3], node.deprel)
+        parent_deprel_orig = node.deprel
+        parent_deprel_merged = _merge_deprel(parent_deprel_orig)
 
-        # Process node's childs.
-        for child in node.descendants():
-            if child.deprel in self.pool:
-                print "%s %s_%s" % (node.form[:-3], child.form[:-3], child.deprel)
+        if parent_deprel_orig in self.pool:
+            print "%s %s_%sI" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_orig)
+
+        if parent_deprel_orig != parent_deprel_merged and parent_deprel_merged in self.pool:
+            print "%s %s_%sI" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_merged)
+
+        if parent_deprel_orig in self.pool and parent_deprel_orig == 'conj':
+            print "%s %s_%s" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_merged)
+
+        # Process node's children.
+        for child in node.children:
+            child_deprel_orig = child.deprel
+            child_deprel_merged = _merge_deprel(child_deprel_orig)
+
+            if child_deprel_orig in self.pool:
+                print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), child_deprel_orig)
+
+            if child_deprel_orig != child_deprel_merged and child_deprel_merged in self.pool:
+                print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), child_deprel_merged)
+
+            if 'prep' in self.pool:
+                has_preposition = False
+                for subchild in child.children:
+                    if subchild.deprel == 'case':
+                        has_preposition = True
+                        break
+
+                if has_preposition:
+                    print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), 'prep')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

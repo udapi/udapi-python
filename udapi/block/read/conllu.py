@@ -5,10 +5,10 @@ import codecs
 import re
 import bz2
 
-import udapi.core.basereader
+from udapi.core.basereader import BaseReader
 
 
-class Conllu(udapi.core.basereader.BaseReader):
+class Conllu(BaseReader):
     """
     A reader of the Conll-u files.
 
@@ -18,7 +18,8 @@ class Conllu(udapi.core.basereader.BaseReader):
             args = {}
 
         # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
+                                "feats", "head", "deprel", "deps", "misc"]
 
         # TODO: this should be invoked from the parent class
         self.finished = False
@@ -49,6 +50,9 @@ class Conllu(udapi.core.basereader.BaseReader):
             raise ValueError('No file to process')
 
         self.file_handler = codecs.getreader('utf8')(self.file_handler)
+
+        # Remember total number of bundles
+        self.total_number_of_bundles = 0
 
     def _get_next_raw_bundle(self):
         """
@@ -82,7 +86,7 @@ class Conllu(udapi.core.basereader.BaseReader):
         # While there are some raw bundles, we process them.
         while 42:
             if (number_of_loaded_bundles % 1000) == 0:
-                logging.info('Loaded %d bundles', number_of_loaded_bundles)
+                logging.info('Loaded %d bundles (%d in total)', number_of_loaded_bundles, self.total_number_of_bundles)
 
             # If we can not add next bundle, return document.
             if number_of_loaded_bundles >= self.bundles_per_document:
@@ -95,6 +99,19 @@ class Conllu(udapi.core.basereader.BaseReader):
             if len(raw_bundle) == 0:
                 logging.debug('No next bundle to process')
                 break
+
+            # Check if all lines have correct number of data fields.
+            # Skip invalid bundle otherwise.
+            raw_bundle_check = True
+            for line in raw_bundle:
+                if re_comment_like.search(line) is not None:
+                    continue
+                if len(line.split('\t')) != len(self.node_attributes):
+                    raw_bundle_check = False
+
+            if not raw_bundle_check:
+                logging.warning('Skipping invalid bundle: %r', raw_bundle)
+                continue
 
             # Create a new bundle with a new root node.
             bundle = document.create_bundle()
@@ -128,8 +145,12 @@ class Conllu(udapi.core.basereader.BaseReader):
                 # Otherwise the line is a tab-separated list of node attributes.
                 node = root_node.create_child()
                 raw_node_attributes = line.split('\t')
+
+
+
                 for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                     setattr(node, attribute_name, raw_node_attributes[n_attribute])
+
                 nodes.append(node)
 
                 # TODO: kde se v tomhle sloupecku berou podtrzitka
@@ -155,6 +176,7 @@ class Conllu(udapi.core.basereader.BaseReader):
                 node.set_parent(nodes[node.head])
 
             number_of_loaded_bundles += 1
+            self.total_number_of_bundles += 1
 
         logging.info('Loaded %d bundles', number_of_loaded_bundles)
         self.finished = True
