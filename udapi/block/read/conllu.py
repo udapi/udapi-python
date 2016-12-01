@@ -3,14 +3,12 @@
 import logging
 import codecs
 import re
+import bz2
 
-import udapi.core.basereader
-
-
-node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+from udapi.core.basereader import BaseReader
 
 
-class Conllu(udapi.core.basereader.BaseReader):
+class Conllu(BaseReader):
     """
     A reader of the Conll-u files.
 
@@ -19,7 +17,22 @@ class Conllu(udapi.core.basereader.BaseReader):
         if args is None:
             args = {}
 
-        self.finished = False # TODO: this should be invoked from the parent class
+        # A list of Conllu columns.
+        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
+                                "feats", "head", "deprel", "deps", "misc"]
+
+        # TODO: this should be invoked from the parent class
+        self.finished = False
+
+        # Strict.
+        self.strict = False
+        if 'strict' in args and args['strict'] in [True, 1, '1', 'True', 'true']:
+            self.strict = True
+
+        # ID filter.
+        self.sentence_id_filter = None
+        if 'sentence_id_filter' in args:
+            self.sentence_id_filter = re.compile(args['sentence_id_filter'])
 
         # Bundles per document.
         self.bundles_per_document = float("inf")
@@ -34,12 +47,22 @@ class Conllu(udapi.core.basereader.BaseReader):
             self.filename = self.file_handler.name
         elif 'filename' in args:
             self.filename = args['filename']
-            logging.debug('Opening file %s', self.filename)
-            self.file_handler = open(self.filename, 'r')
+            filename_extension = self.filename.split('.')[-1]
+
+            # Use bz2 lib when bz2 file is given.
+            if filename_extension == 'bz2':
+                logging.info('Opening BZ2 file %s', self.filename)
+                self.file_handler = bz2.BZ2File(self.filename)
+            else:
+                logging.info('Opening regular file %s', self.filename)
+                self.file_handler = open(self.filename, 'r')
         else:
             raise ValueError('No file to process')
 
         self.file_handler = codecs.getreader('utf8')(self.file_handler)
+
+        # Remember total number of bundles
+        self.total_number_of_bundles = 0
 
     def _get_next_raw_bundle(self):
         """
@@ -61,6 +84,8 @@ class Conllu(udapi.core.basereader.BaseReader):
         return lines
 
     def process_document(self, document):
+        logging.info('Attributes = %r', self.node_attributes)
+
         number_of_loaded_bundles = 0
 
         # Compile a set of regular expressions that will be searched over the lines.
@@ -71,12 +96,11 @@ class Conllu(udapi.core.basereader.BaseReader):
         # While there are some raw bundles, we process them.
         while 42:
             if (number_of_loaded_bundles % 1000) == 0:
-                logging.info('Loaded %d bundles', number_of_loaded_bundles)
+                logging.info('Loaded %d bundles (%d in total)', number_of_loaded_bundles, self.total_number_of_bundles)
 
             # If we can not add next bundle, return document.
             if number_of_loaded_bundles >= self.bundles_per_document:
                 logging.debug('Reached number of requested bundles (%d)', self.bundles_per_document)
-                self.finished = True
                 return document
 
             # Obtain a raw bundle.
@@ -85,6 +109,20 @@ class Conllu(udapi.core.basereader.BaseReader):
             if len(raw_bundle) == 0:
                 logging.debug('No next bundle to process')
                 break
+
+            # Check if all lines have correct number of data fields.
+            # Skip invalid bundle otherwise.
+            if self.strict:
+                raw_bundle_check = True
+                for line in raw_bundle:
+                    if re_comment_like.search(line) is not None:
+                        continue
+                    if len(line.split('\t')) != len(self.node_attributes):
+                        raw_bundle_check = False
+
+                if not raw_bundle_check:
+                    logging.warning('Skipping invalid bundle: %r', raw_bundle)
+                    continue
 
             # Create a new bundle with a new root node.
             bundle = document.create_bundle()
@@ -118,8 +156,10 @@ class Conllu(udapi.core.basereader.BaseReader):
                 # Otherwise the line is a tab-separated list of node attributes.
                 node = root_node.create_child()
                 raw_node_attributes = line.split('\t')
-                for (n_attribute, attribute_name) in enumerate(node_attributes):
+
+                for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                     setattr(node, attribute_name, raw_node_attributes[n_attribute])
+
                 nodes.append(node)
 
                 # TODO: kde se v tomhle sloupecku berou podtrzitka
@@ -138,6 +178,12 @@ class Conllu(udapi.core.basereader.BaseReader):
             if len(nodes) == 0:
                 raise ValueError('Probably two empty lines following each other')
 
+            # If specified, check sentence ID to match the sentence ID filter.
+            if self.sentence_id_filter is not None:
+                if self.sentence_id_filter.match(root_node.sent_id) is None:
+                    logging.debug('Skipping sentence %s as it does not match the sentence ID filter.', root_node.sent_id)
+                    continue
+
             # Set parents for each node.
             nodes[0]._aux['comments'] = '\n'.join(comments)
             nodes[0]._aux['descendants'] = nodes[1:]
@@ -145,6 +191,7 @@ class Conllu(udapi.core.basereader.BaseReader):
                 node.set_parent(nodes[node.head])
 
             number_of_loaded_bundles += 1
+            self.total_number_of_bundles += 1
 
         logging.info('Loaded %d bundles', number_of_loaded_bundles)
         self.finished = True
