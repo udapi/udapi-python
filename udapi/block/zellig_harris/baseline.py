@@ -56,7 +56,7 @@ class Vulic(Block):
 
         self.suffixed_forms = False
         if 'suffixed_form' in args and args['suffixed_forms'] == '1':
-            self.suffixed_forms == True
+            self.suffixed_forms = True
 
     def process_node(self, node):
         """
@@ -114,31 +114,3 @@ class Vulic(Block):
 
                 if has_preposition:
                     print "%s %s_%s" % (node_form, child_form, 'prep')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,6 +7,10 @@ import sys
 from udapi.core.block import Block
 
 
+# TODO
+# Implement parameters, colors and nonprojectivities according to the Perl implementation
+# https://github.com/udapi/udapi-perl/blob/master/lib/Udapi/Block/Write/TextModeTrees.pm
+
 def get_number_of_antecedents(node):
     """
     Return a number of antecedents.
@@ -74,13 +78,13 @@ def print_tree(root_node):
             print '     %s|' % offset
 
 
-class AsciiTree(Block):
+class TextModeTrees(Block):
     """
     A pretty ACSII printer of the dependency trees.
 
     """
     def __init__(self, args=None):
-        super(AsciiTree, self).__init__(args)
+        super(TextModeTrees, self).__init__(args)
         if args is None:
             args = {}
 
