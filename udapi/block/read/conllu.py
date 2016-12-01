@@ -24,6 +24,11 @@ class Conllu(BaseReader):
         # TODO: this should be invoked from the parent class
         self.finished = False
 
+        # ID filter.
+        self.sentence_id_filter = None
+        if 'sentence_id_filter' in args:
+            self.sentence_id_filter = re.compile(args['sentence_id_filter'])
+
         # Bundles per document.
         self.bundles_per_document = float("inf")
         if 'bundles_per_document' in args:
@@ -146,8 +151,6 @@ class Conllu(BaseReader):
                 node = root_node.create_child()
                 raw_node_attributes = line.split('\t')
 
-
-
                 for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                     setattr(node, attribute_name, raw_node_attributes[n_attribute])
 
@@ -168,6 +171,12 @@ class Conllu(BaseReader):
             # At least one node should be parsed.
             if len(nodes) == 0:
                 raise ValueError('Probably two empty lines following each other')
+
+            # If specified, check sentence ID to match the sentence ID filter.
+            if self.sentence_id_filter is not None:
+                if self.sentence_id_filter.match(root_node.sent_id) is None:
+                    logging.debug('Skipping sentence %s as it does not match the sentence ID filter.', root_node.sent_id)
+                    continue
 
             # Set parents for each node.
             nodes[0]._aux['comments'] = '\n'.join(comments)
