@@ -24,6 +24,11 @@ class Conllu(BaseReader):
         # TODO: this should be invoked from the parent class
         self.finished = False
 
+        # Strict.
+        self.strict = False
+        if 'strict' in args and args['strict'] in [True, 1, '1', 'True', 'true']:
+            self.strict = True
+
         # ID filter.
         self.sentence_id_filter = None
         if 'sentence_id_filter' in args:
@@ -107,16 +112,17 @@ class Conllu(BaseReader):
 
             # Check if all lines have correct number of data fields.
             # Skip invalid bundle otherwise.
-            raw_bundle_check = True
-            for line in raw_bundle:
-                if re_comment_like.search(line) is not None:
-                    continue
-                if len(line.split('\t')) != len(self.node_attributes):
-                    raw_bundle_check = False
+            if self.strict:
+                raw_bundle_check = True
+                for line in raw_bundle:
+                    if re_comment_like.search(line) is not None:
+                        continue
+                    if len(line.split('\t')) != len(self.node_attributes):
+                        raw_bundle_check = False
 
-            if not raw_bundle_check:
-                logging.warning('Skipping invalid bundle: %r', raw_bundle)
-                continue
+                if not raw_bundle_check:
+                    logging.warning('Skipping invalid bundle: %r', raw_bundle)
+                    continue
 
             # Create a new bundle with a new root node.
             bundle = document.create_bundle()
