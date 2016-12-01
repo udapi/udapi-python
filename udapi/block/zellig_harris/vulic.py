@@ -54,6 +54,10 @@ class Vulic(Block):
         if 'pos' in args:
             self.pos = args['pos'].split(',')
 
+        self.suffixed_forms = False
+        if 'suffixed_form' in args and args['suffixed_forms'] == '1':
+            self.suffixed_forms == True
+
     def process_node(self, node):
         """
         Extract context configuration for verbs according to (Vulic et al., 2016).
@@ -65,29 +69,41 @@ class Vulic(Block):
         if str(node.upostag) not in self.pos:
             return
 
+        node_form = node.form.lower()
+        if self.suffixed_forms:
+            node_form = node_form[:-3]
+
+        parent_form = node.parent.form.lower()
+        if self.suffixed_forms:
+            parent_form = parent_form[:-3]
+
         # Process node's parent.
         parent_deprel_orig = node.deprel
         parent_deprel_merged = _merge_deprel(parent_deprel_orig)
 
         if parent_deprel_orig in self.pool:
-            print "%s %s_%sI" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_orig)
+            print "%s %s_%sI" % (node_form, parent_form, parent_deprel_orig)
 
         if parent_deprel_orig != parent_deprel_merged and parent_deprel_merged in self.pool:
-            print "%s %s_%sI" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_merged)
+            print "%s %s_%sI" % (node_form, parent_form, parent_deprel_merged)
 
         if parent_deprel_orig in self.pool and parent_deprel_orig == 'conj':
-            print "%s %s_%s" % (node.form[:-3].lower(), node.parent.form[:-3].lower(), parent_deprel_merged)
+            print "%s %s_%s" % (node_form, parent_form, parent_deprel_merged)
 
         # Process node's children.
         for child in node.children:
             child_deprel_orig = child.deprel
             child_deprel_merged = _merge_deprel(child_deprel_orig)
 
+            child_form = child.form.lower()
+            if self.suffixed_forms:
+                child_form = child_form[:-3]
+
             if child_deprel_orig in self.pool:
-                print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), child_deprel_orig)
+                print "%s %s_%s" % (node_form, child_form, child_deprel_orig)
 
             if child_deprel_orig != child_deprel_merged and child_deprel_merged in self.pool:
-                print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), child_deprel_merged)
+                print "%s %s_%s" % (node_form, child_form, child_deprel_merged)
 
             if 'prep' in self.pool:
                 has_preposition = False
@@ -97,7 +113,7 @@ class Vulic(Block):
                         break
 
                 if has_preposition:
-                    print "%s %s_%s" % (node.form[:-3].lower(), child.form[:-3].lower(), 'prep')
+                    print "%s %s_%s" % (node_form, child_form, 'prep')
 
 
 
