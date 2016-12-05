@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(
-    name='Udapi-Python',
+    name='udapi-python',
     version='0.1',
     description='Python framework for processing Universal Dependencies data',
     author='Vincent Kriz',
