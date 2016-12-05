@@ -3,8 +3,8 @@
 import codecs
 import re
 
-from node import Node
-from root import Root
+from udapi.core.root import Root
+
 
 class Bundle(object):
     """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from block import Block
+from udapi.core.block import Block
 
 
 class BaseReader(Block):
