@@ -6,6 +6,7 @@ import re
 import bz2
 
 from udapi.core.basereader import BaseReader
+from udapi.core.root import Root
 
 
 class Conllu(BaseReader):
@@ -16,6 +17,8 @@ class Conllu(BaseReader):
     def __init__(self, args=None):
         if args is None:
             args = {}
+
+        super(BaseReader, self).__init__()
 
         # A list of Conllu columns.
         self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
@@ -86,17 +89,19 @@ class Conllu(BaseReader):
     def process_document(self, document):
         logging.info('Attributes = %r', self.node_attributes)
 
+        number_of_processed_bundles = -1
         number_of_loaded_bundles = 0
 
         # Compile a set of regular expressions that will be searched over the lines.
         re_comment_like = re.compile(r'^#')
         re_sentence_id = re.compile(r'^# sent_id (\S+)')
-        re_multiword_tokens = re.compile(r'^\d+\-')
+        re_multiword_tokens = re.compile(r'^\d+-')
 
         # While there are some raw bundles, we process them.
         while 42:
-            if (number_of_loaded_bundles % 1000) == 0:
-                logging.info('Loaded %d bundles (%d in total)', number_of_loaded_bundles, self.total_number_of_bundles)
+            if number_of_loaded_bundles > 0 and (number_of_loaded_bundles % 1000) == 0:
+                logging.info('Processed %7d bundles. Loaded %7d bundles (%7d in total)',
+                             number_of_processed_bundles, number_of_loaded_bundles, self.total_number_of_bundles)
 
             # If we can not add next bundle, return document.
             if number_of_loaded_bundles >= self.bundles_per_document:
@@ -105,6 +110,7 @@ class Conllu(BaseReader):
 
             # Obtain a raw bundle.
             raw_bundle = self._get_next_raw_bundle()
+            number_of_processed_bundles += 1
 
             if len(raw_bundle) == 0:
                 logging.debug('No next bundle to process')
@@ -121,78 +127,93 @@ class Conllu(BaseReader):
                         raw_bundle_check = False
 
                 if not raw_bundle_check:
-                    logging.warning('Skipping invalid bundle: %r', raw_bundle)
-                    continue
+                    raise RuntimeError('Detected an invalid bundle: %r' % raw_bundle)
 
-            # Create a new bundle with a new root node.
-            bundle = document.create_bundle()
-            root_node = bundle.create_tree()
+            # Initialize the data structures.
+            root_node = Root()
+            root_node.set_zone(None)
             nodes = [root_node]
             comments = []
 
-            # Process lines.
-            for (n_line, line) in enumerate(raw_bundle):
-                logging.debug('Processing line %r', line)
+            # Try to process a raw bundle.
+            try:
+                # Process lines.
+                for (n_line, line) in enumerate(raw_bundle):
+                    logging.debug('Processing line %r', line)
 
-                # Sentence identifier.
-                match = re_sentence_id.search(line)
-                if match is not None:
-                    sent_id = match.group(1)
-                    logging.debug('Matched sent_id keyword with value %s', sent_id)
-                    root_node.sent_id = sent_id
+                    # Sentence identifier.
+                    match = re_sentence_id.search(line)
+                    if match is not None:
+                        sent_id = match.group(1)
+                        logging.debug('Matched sent_id keyword with value %s', sent_id)
+                        root_node.sent_id = sent_id
+                        continue
+
+                    # Comments.
+                    match = re_comment_like.search(line)
+                    if match is not None:
+                        comments.append(line[1:])
+                        continue
+
+                    # FIXME Multi-word tokens are temporarily avoided.
+                    if re_multiword_tokens.search(line):
+                        logging.debug('Skipping multi-word tokens %s', line)
+                        continue
+
+                    # Otherwise the line is a tab-separated list of node attributes.
+                    node = root_node.create_child()
+                    raw_node_attributes = line.split('\t')
+                    for (n_attribute, attribute_name) in enumerate(self.node_attributes):
+                        setattr(node, attribute_name, raw_node_attributes[n_attribute])
+
+                    nodes.append(node)
+
+                    # TODO: kde se v tomhle sloupecku berou podtrzitka
+                    try:
+                        node.head = int(node.head)
+                    except ValueError:
+                        node.head = 0
+
+                    # TODO: poresit multitokeny
+                    try:
+                        node.ord = int(node.ord)
+                    except ValueError:
+                        pass
+
+                # At least one node should be parsed.
+                if len(nodes) == 0:
+                    raise ValueError('Probably two empty lines following each other.')
+
+                # If specified, check sentence ID to match the sentence ID filter.
+                if self.sentence_id_filter is not None:
+                    if self.sentence_id_filter.match(root_node.sent_id) is None:
+                        logging.debug('Skipping sentence %s as it does not match the sentence ID filter.',
+                                      root_node.sent_id)
+                        continue
+
+                # Set parents for each node.
+                nodes[0].aux['comments'] = '\n'.join(comments)
+                nodes[0].aux['descendants'] = nodes[1:]
+                for node in nodes[1:]:
+                    node.set_parent(nodes[node.head])
+
+                # Create a new bundle with a new root node.
+                bundle = document.create_bundle()
+                bundle.add_tree(root_node)
+            except Exception as exception:
+                if self.strict:
+                    raise RuntimeError('An exception occurred at bundle %d (%s): %s.' % (number_of_processed_bundles,
+                                                                                         root_node.sent_id, exception))
+                else:
+                    logging.warning('An exception occurred at bundle %d (%s): %s. Skipping this bundle.',
+                                    number_of_processed_bundles, root_node.sent_id, exception)
                     continue
-
-                # Comments.
-                match = re_comment_like.search(line)
-                if match is not None:
-                    comments.append(line[1:])
-                    continue
-
-                # FIXME Multi-word tokens are temporarily avoided.
-                if re_multiword_tokens.search(line):
-                    logging.debug('Skipping multi-word tokens %s', line)
-                    continue
-
-                # Otherwise the line is a tab-separated list of node attributes.
-                node = root_node.create_child()
-                raw_node_attributes = line.split('\t')
-
-                for (n_attribute, attribute_name) in enumerate(self.node_attributes):
-                    setattr(node, attribute_name, raw_node_attributes[n_attribute])
-
-                nodes.append(node)
-
-                # TODO: kde se v tomhle sloupecku berou podtrzitka
-                try:
-                    node.head = int(node.head)
-                except ValueError:
-                    node.head = 0
-
-                # TODO: poresit multitokeny
-                try:
-                    node.ord = int(node.ord)
-                except ValueError:
-                    pass
-
-            # At least one node should be parsed.
-            if len(nodes) == 0:
-                raise ValueError('Probably two empty lines following each other')
-
-            # If specified, check sentence ID to match the sentence ID filter.
-            if self.sentence_id_filter is not None:
-                if self.sentence_id_filter.match(root_node.sent_id) is None:
-                    logging.debug('Skipping sentence %s as it does not match the sentence ID filter.', root_node.sent_id)
-                    continue
-
-            # Set parents for each node.
-            nodes[0]._aux['comments'] = '\n'.join(comments)
-            nodes[0]._aux['descendants'] = nodes[1:]
-            for node in nodes[1:]:
-                node.set_parent(nodes[node.head])
 
             number_of_loaded_bundles += 1
             self.total_number_of_bundles += 1
 
-        logging.info('Loaded %d bundles', number_of_loaded_bundles)
+        logging.info('Processed %7d bundles. Loaded %7d bundles.', number_of_processed_bundles,
+                     number_of_loaded_bundles)
+
         self.finished = True
         return document

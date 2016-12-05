@@ -6,7 +6,7 @@ import logging
 from udapi.core.run import Run
 
 # Initialize logging.
-logging.basicConfig(format='%(asctime)-15s [%(levelname)6s] %(funcName)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.INFO)
 
 # Process and provide the scenario.
 if __name__ == "__main__":
