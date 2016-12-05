@@ -27,17 +27,15 @@ class RuntimeException(TreexException):
 
 class Root(Node):
     """
-    Class for representing root nodes (technical roots) in Universal Dependency trees
+    Class for representing root nodes (technical roots) in Universal Dependency trees.
 
     """
-    __slots__ = [
-        "_sent_id",
-        "sentence",
-        "_zone",
-        "_bundle",
-        "_children",  # ord-ordered list of child nodes
-        "_aux"        # other technical attributes
-    ]
+    __slots__ = list()
+    __slots__.append('_sent_id')   # A sentence identifier.
+    __slots__.append('_zone')      # A zone.
+    __slots__.append('_bundle')    # A bundle.
+    __slots__.append('_children')  # Ord-ordered list of child nodes.
+    __slots__.append('_aux')       # Other technical attributes.
 
     def __init__(self, data=None):
         # Initialize data if not given
@@ -48,19 +46,14 @@ class Root(Node):
         super(Root, self).__init__(data)
 
         self._sent_id = None
-        self._children = []
+        self._zone = None
+        self._bundle = None
+        self._children = list()
         self._aux = dict()
         self._aux['descendants'] = []
-        self._bundle = None
 
         for name in data:
             setattr(self, name, data[name])
-
-        for name in Node.__slots__:
-            try:
-                getattr(self, name)
-            except:
-                setattr(self, name, '_')
 
     @property
     def sent_id(self):
@@ -71,22 +64,31 @@ class Root(Node):
         self._sent_id = sent_id
 
     @property
-    def aux(self):
-        return self._aux
-
-    @property
     def zone(self):
         return self._zone
 
-    def set_zone(self,zone):
-        """specify which zone the root belongs to"""
+    @zone.setter
+    def zone(self, zone):
+        """
+        Specify which zone the root belongs to
+
+        """
         if self.bundle:
-            self.bundle._check_zone(self,zone)
+            self.bundle.check_zone(self, zone)
+
         self._zone = zone
 
     @property
     def bundle(self):
         return self._bundle
+
+    @property
+    def aux(self):
+        return self._aux
+
+    @aux.setter
+    def aux(self, value):
+        self._aux = value
 
     # TODO: this enumeration looks silly, can we code the multiple 'read-only attributes' more cleverly?
     
@@ -106,13 +108,12 @@ class Root(Node):
     def upostag(self):
         return '<ROOT>'
 
-
     @property
     def xpostag(self):
         return '<ROOT>'
 
     @property
-    def feats(self):
+    def raw_feats(self):
         return '<ROOT>'
 
     @property
@@ -127,48 +128,64 @@ class Root(Node):
     def misc(self):
         return '<ROOT>'
 
-
-
-    def dep(self):
-        return None
-
-
+    @property
+    def feats(self):
+        return '<ROOT>'
 
     @property
     def children(self):
         return self._children
 
-
     @property
     def parent(self):
         return None
 
-    def set_parent( self, new_parent ):
-
-        raise RuntimeException('technical root cannot be hanged below a node')
-
+    @parent.setter
+    def parent(self, new_parent):
+        raise AttributeError('The technical root cannot have a parent.')
 
     def descendants(self):
+        """
+        Return a list of all descendants of the current node, i.e. the all non-technical
+        node from the dependency tree.
+
+        :return: A list of descendant nodes.
+        :rtype: list
+
+        """
         return self._aux['descendants']
 
-    def is_descendant_of(self,node):
+    def is_descendant_of(self, node):
         return False
 
-
     def is_root(self):
-        """returns True for all Root instances"""
+        """
+        Returns True for all Root instances.
+
+        """
         return True
 
     def remove(self):
-        """remove the whole tree from its bundle"""
-        self.bundle.trees = [root for root in self.bundle.trees if root==self]
+        """
+        Remove the whole tree from its bundle
+
+        """
+        self.bundle.trees = [root for root in self.bundle.trees if root == self]
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
-        raise RuntimeException('technical root cannot be shifted as it is always the first node')
+        raise RuntimeException('Technical root cannot be shifted as it is always the first node')
 
     def address(self):
-        """full (document-wide) id of the root"""
-        id = self.bundle.id
+        """
+        Full (document-wide) id of the root.
+
+        """
+        partial_ids = []
+
+        if self.bundle:
+            partial_ids.append(self.bundle.id)
+
         if self.zone:
-            id = id + "/" + self.zone
-        
+            partial_ids.append(self.zone)
+
+        return '/'.join(partial_ids)
