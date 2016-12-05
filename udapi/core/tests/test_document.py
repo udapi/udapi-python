@@ -12,7 +12,7 @@ class TestDocument(unittest.TestCase):
         doc = Document()
         doc.bundles = ['a', 'b', 'c']
         for bundle in doc:
-            print bundle
+            print(bundle)
 
 
 if __name__ == "__main__":
