@@ -30,7 +30,7 @@ def _merge_deprel(deprel):
     return deprel
 
 
-class Vulic(Block):
+class Baseline(Block):
     """
     A block for extraction context configurations for training verb representations using word2vecf.
 
