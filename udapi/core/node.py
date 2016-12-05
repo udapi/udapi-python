@@ -144,7 +144,6 @@ class Node(object):
         node = self
 
         while (node.parent):
-            print "SEARCH FOR ROOT: "+str(node)
             node = node.parent
         return node
 

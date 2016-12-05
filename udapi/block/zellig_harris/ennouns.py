@@ -8,7 +8,7 @@ from common import *
 from queries import *
 
 
-class CsNouns(Block):
+class EnNouns(Block):
     """
     A block for extraction context configurations for English nouns.
     The configurations will be used as the train data for obtaining the word representations using word2vecf.
@@ -26,7 +26,7 @@ class CsNouns(Block):
             args = {}
 
         # Call the constructor of the parent object.
-        super(CsNouns, self).__init__(args)
+        super(EnNouns, self).__init__(args)
 
         # Process the 'POS' argument.
         self.pos = []
