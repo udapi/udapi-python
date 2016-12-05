@@ -50,8 +50,9 @@ class Node(object):
 
     ]
 
-
-    def __init__(self, data={}):
+    def __init__(self, data=None):
+        if data is None:
+            data = dict()
 
         self._parent = None
         self._children = []
@@ -66,10 +67,18 @@ class Node(object):
             except:
                 setattr(self,name,'_')
 
+    def __str__(self):
+        """
+        Pretty print of the Node object.
+
+        :return: A pretty textual description of the Node.
+
+        """
+        return "<%d, %s, %d, %s>" % (self.ord, self.form, self.parent.ord, self.deprel)
+
     @property
     def children(self):
         return self._children
-
 
     @property
     def parent(self):
