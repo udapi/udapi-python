@@ -10,5 +10,6 @@ setup(
     author_email='kriz@ufal.mff.cuni.cz',
     url='https://github.com/udapi/udapi-python',
     packages=['udapi'],
-    scripts=['bin/udapy']
+    scripts=['bin/udapy'],
+    tests_require=['pytest'],
 )
