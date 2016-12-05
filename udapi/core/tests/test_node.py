@@ -42,5 +42,6 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(node.feats['Voice'], 'Pas')
         self.assertEqual(node.raw_feats, expected_feats)
 
+
 if __name__ == "__main__":
     unittest.main() 
