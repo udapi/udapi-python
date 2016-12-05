@@ -11,8 +11,8 @@ def en_verb_mydobj(node):
     if node.upostag != 'VERB':
         raise ValueError('Is not a verb.')
 
-    # if node.feature('Tense') != 'Past':
-    #     raise ValueError('Is not in the past tense.')
+    if node.feature('Tense') != 'Past':
+        raise ValueError('Is not in the past tense.')
 
     # if node.feature('verbForm') != 'Part':
     #     raise ValueError('Is not in a participle form.')
