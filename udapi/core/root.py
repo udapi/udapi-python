@@ -1,51 +1,78 @@
 #!/usr/bin/env python
 
 from udapi.core.node import Node
-from operator import attrgetter
 
-import codecs
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
-# ----- nasledujici jen kvuli tomu, abych mohl poustet benchmark (pri prevesovani nastavaji cykly a ocekava se RuntimeException) ---
-
-
-########## co s timhle?
 
 class TreexException(Exception):
-    "Common ancestor for Treex exception"
+    """
+    Common ancestor for Treex exception.
+
+    """
     def __init__(self, message):
         self.message = message
 
     def __str__(self):
         return 'TREEX-FATAL: ' + self.__class__.__name__ + ': ' + self.message
 
+
 class RuntimeException(TreexException):
-    "Block runtime exception"
+    """
+    Block runtime exception.
+
+    """
 
     def __init__(self, text):
         TreexException.__init__(self, text)
 
-# ---------------------------------------------------------------------------------------------
-
-
-
 
 class Root(Node):
+    """
+    Class for representing root nodes (technical roots) in Universal Dependency trees
 
-    """Class for representing root nodes (technical roots) in Universal Dependency trees"""
-
+    """
     __slots__ = [
-                  "sent_id",
-                  "sentence",
-                  "_zone",
-                  "_bundle",
-                  "_children",# ord-ordered list of child nodes
-                  "_aux"     # other technical attributes
-
+        "_sent_id",
+        "sentence",
+        "_zone",
+        "_bundle",
+        "_children",  # ord-ordered list of child nodes
+        "_aux"        # other technical attributes
     ]
 
+    def __init__(self, data=None):
+        # Initialize data if not given
+        if data is None:
+            data = dict()
+
+        # Call constructor of the parent object.
+        super(Root, self).__init__(data)
+
+        self._sent_id = None
+        self._children = []
+        self._aux = dict()
+        self._aux['descendants'] = []
+        self._bundle = None
+
+        for name in data:
+            setattr(self, name, data[name])
+
+        for name in Node.__slots__:
+            try:
+                getattr(self, name)
+            except:
+                setattr(self, name, '_')
+
+    @property
+    def sent_id(self):
+        return self._sent_id
+
+    @sent_id.setter
+    def sent_id(self, sent_id):
+        self._sent_id = sent_id
+
+    @property
+    def aux(self):
+        return self._aux
 
     @property
     def zone(self):
@@ -106,21 +133,6 @@ class Root(Node):
         return None
 
 
-    def __init__(self, data={}):
-
-        self._children = []
-        self._aux = {}
-        self._aux['descendants'] = [] 
-        self._bundle = None
-
-        for name in data:
-            setattr(self,name,data[name])
-
-        for name in Node.__slots__:
-            try:
-                getattr(self,name)
-            except:
-                setattr(self,name,'_')
 
     @property
     def children(self):
