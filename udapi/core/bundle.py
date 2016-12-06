@@ -3,8 +3,8 @@
 import codecs
 import re
 
-from node import Node
-from root import Root
+from udapi.core.root import Root
+
 
 class Bundle(object):
     """
@@ -38,7 +38,7 @@ class Bundle(object):
             raise Exception("More than one tree with zone="+zone+" in the bundle")
 
 
-    def _check_new_zone(self,root,new_zone):
+    def check_new_zone(self,root,new_zone):
         for root in root.bundle.trees:
             if root != changed_root and root.zone == zone:
                  raise Exception("Zone "+zone+" already exists in the bundle")

@@ -3,23 +3,16 @@
 import unittest
 from udapi.core.document import Document
 
-class TestDocument(unittest.TestCase):
 
+class TestDocument(unittest.TestCase):
     def test_init(self):
         doc = Document()
 
     def test_iterator(self):
         doc = Document()
-        doc.bundles = ['a','b','c']
+        doc.bundles = ['a', 'b', 'c']
         for bundle in doc:
-            print bundle
-
-    def test_load_and_store(self):
-        doc = Document()
-        doc.load_conllu('UD_Czech_sample.conllu')
-        doc.store_conllu('temp_copy.connlu')
-        
-
+            print(bundle)
 
 
 if __name__ == "__main__":
