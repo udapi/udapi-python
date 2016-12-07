@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import codecs
 import re
 
@@ -38,10 +39,14 @@ class Bundle(object):
             raise Exception("More than one tree with zone="+zone+" in the bundle")
 
 
-    def check_new_zone(self,root,new_zone):
+    def check_new_zone(self, root, new_zone):
+        """
+        FIXME
+
+        """
         for root in root.bundle.trees:
             if root != changed_root and root.zone == zone:
-                 raise Exception("Zone "+zone+" already exists in the bundle")
+                 raise Exception("Zone " + zone + " already exists in the bundle")
 
 
     def create_tree(self,zone=None):
@@ -53,10 +58,13 @@ class Bundle(object):
         return root
 
     def add_tree(self, root):
-        """add an existing tree to the bundle"""
-        root._bundle = self
+        """
+        Add an existing tree to the bundle
 
-        self._check_new_zone(root, root.zone)
+        """
+        root.bundle = self
+        logging.debug('setting bundle')
+        self.check_new_zone(root, root.zone)
         self.trees.append(root)
         return root
 

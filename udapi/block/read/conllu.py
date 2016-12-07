@@ -131,7 +131,6 @@ class Conllu(BaseReader):
 
             # Initialize the data structures.
             root_node = Root()
-            root_node.set_zone(None)
             nodes = [root_node]
             comments = []
 
@@ -164,6 +163,8 @@ class Conllu(BaseReader):
                     node = root_node.create_child()
                     raw_node_attributes = line.split('\t')
                     for (n_attribute, attribute_name) in enumerate(self.node_attributes):
+                        if attribute_name == 'feats':
+                            attribute_name = 'raw_feats'
                         setattr(node, attribute_name, raw_node_attributes[n_attribute])
 
                     nodes.append(node)
@@ -195,7 +196,7 @@ class Conllu(BaseReader):
                 nodes[0].aux['comments'] = '\n'.join(comments)
                 nodes[0].aux['descendants'] = nodes[1:]
                 for node in nodes[1:]:
-                    node.set_parent(nodes[node.head])
+                    node.parent = nodes[node.head]
 
                 # Create a new bundle with a new root node.
                 bundle = document.create_bundle()
@@ -205,7 +206,7 @@ class Conllu(BaseReader):
                     raise RuntimeError('An exception occurred at bundle %d (%s): %s.' % (number_of_processed_bundles,
                                                                                          root_node.sent_id, exception))
                 else:
-                    logging.warning('An exception occurred at bundle %d (%s): %s. Skipping this bundle.',
+                    logging.warning('An exception occurred at bundle %d (%s): %r. Skipping this bundle.',
                                     number_of_processed_bundles, root_node.sent_id, exception)
                     continue
 

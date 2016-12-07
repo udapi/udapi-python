@@ -99,7 +99,7 @@ class Node(object):
 
     @form.setter
     def form(self, value):
-        self._form = str(value)
+        self._form = value
 
     @property
     def lemma(self):
@@ -107,7 +107,7 @@ class Node(object):
 
     @lemma.setter
     def lemma(self, value):
-        self._lemma = str(value)
+        self._lemma = value
 
     @property
     def upostag(self):
@@ -115,7 +115,7 @@ class Node(object):
 
     @upostag.setter
     def upostag(self, value):
-        self._upostag = str(value)
+        self._upostag = value
 
     @property
     def xpostag(self):
@@ -123,7 +123,7 @@ class Node(object):
 
     @xpostag.setter
     def xpostag(self, value):
-        self._xpostag = str(value)
+        self._xpostag = value
 
     @property
     def raw_feats(self):
@@ -170,7 +170,7 @@ class Node(object):
 
     @deprel.setter
     def deprel(self, value):
-        self._deprel = str(value)
+        self._deprel = value
 
     @property
     def deps(self):
@@ -178,7 +178,7 @@ class Node(object):
 
     @deps.setter
     def deps(self, value):
-        self._deps = str(value)
+        self._deps = value
 
     @property
     def misc(self):
@@ -186,7 +186,7 @@ class Node(object):
 
     @misc.setter
     def misc(self, value):
-        self._misc = str(value)
+        self._misc = value
 
     @property
     def feats(self):
@@ -201,7 +201,6 @@ class Node(object):
         if self._feats is None:
             self._feats = dict()
             for raw_feature in self._raw_feats.split('|'):
-                logging.debug('Raw feature: %r', raw_feature)
                 feature, value = raw_feature.split('=')
                 self._feats[feature] = value
 
@@ -252,6 +251,10 @@ class Node(object):
     @property
     def children(self):
         return self._children
+
+    @children.setter
+    def children(self, children):
+        self._children = children
 
     @property
     def aux(self):

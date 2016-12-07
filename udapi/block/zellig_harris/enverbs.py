@@ -55,7 +55,7 @@ class EnVerbs(Block):
             return
 
         if self.verbose:
-            logging.info('Processing node %s/%s', node.root().sent_id, node)
+            logging.info('Processing node %s/%s', node.root.sent_id, node)
 
         # Apply the set of queries and extract the configurations.
         try:
@@ -63,7 +63,7 @@ class EnVerbs(Block):
                 print_triple(node_a, relation_name, node_b, print_lemma=self.print_lemmas)
         except ValueError as exception:
             if self.verbose:
-                logging.info('No configurations for node %s/%s: %s', node.root().sent_id, node, exception)
+                logging.info('No configurations for node %s/%s: %s', node.root.sent_id, node, exception)
 
             pass
 
