@@ -2,15 +2,22 @@
 
 import sys
 import logging
+import argparse
 
 from udapi.core.run import Run
 
+argparser = argparse.ArgumentParser(description='udapy - Python interface to Udapi - API for Universal Dependencies')
+argparser.add_argument("-q", "--quiet", action="store_true", help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
+argparser.add_argument('scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
+args = argparser.parse_args()
+
 # Initialize logging.
-logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.INFO)
+if args.quiet:
+    logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.CRITICAL)
+else:
+    logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.INFO)
 
 # Process and provide the scenario.
 if __name__ == "__main__":
-    command_line_scenario = sys.argv[1:]
-
-    runner = Run(command_line_scenario)
+    runner = Run(args)
     runner.execute()
