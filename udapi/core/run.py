@@ -2,8 +2,7 @@
 
 import logging
 
-#from udapi.core.document import Document
-from document import Document
+from udapi.core.document import Document
 
 
 def _parse_block_name(block_name):
