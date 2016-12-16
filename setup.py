@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='udapi-python',
@@ -9,7 +9,7 @@ setup(
     author='Vincent Kriz',
     author_email='kriz@ufal.mff.cuni.cz',
     url='https://github.com/udapi/udapi-python',
-    packages=['udapi'],
+    packages=find_packages(),
     scripts=['bin/udapy'],
     tests_require=['pytest'],
 )
