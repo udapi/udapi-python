@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import logging
+
 from udapi.core.node import Node
 
 
@@ -34,7 +36,7 @@ class Root(Node):
     __slots__.append('_sent_id')   # A sentence identifier.
     __slots__.append('_zone')      # A zone.
     __slots__.append('_bundle')    # A bundle.
-    __slots__.append('_children')  # Ord-ordered list of child nodes.
+    __slots__.append('_children')  # An ord-ordeded list of children nodes.
     __slots__.append('_aux')       # Other technical attributes.
 
     def __init__(self, data=None):
@@ -81,6 +83,20 @@ class Root(Node):
     @property
     def bundle(self):
         return self._bundle
+
+    @bundle.setter
+    def bundle(self, bundle):
+        self._bundle = bundle
+
+    @property
+    def children(self):
+        logging.debug('davam deti roota')
+        return self._children
+
+    @children.setter
+    def children(self, children):
+        logging.debug('nastavujem deti rootovi')
+        self._children = children
 
     @property
     def aux(self):
@@ -131,10 +147,6 @@ class Root(Node):
     @property
     def feats(self):
         return '<ROOT>'
-
-    @property
-    def children(self):
-        return self._children
 
     @property
     def parent(self):
