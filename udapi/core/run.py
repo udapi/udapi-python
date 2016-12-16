@@ -24,7 +24,7 @@ def _parse_block_name(block_name):
     return '.'.join(names[:-1]), names[-1]
 
 
-def _parse_command_line_arguments(command_line_arguments):
+def _parse_command_line_arguments(scenario):
     """
     Obtain a list of block names and a list of their arguments from the command line arguments list.
 
@@ -36,7 +36,7 @@ def _parse_command_line_arguments(command_line_arguments):
     block_args = []
 
     number_of_blocks = 0
-    for token in command_line_arguments:
+    for token in scenario:
         logging.debug("Token %s", token)
 
         # If there is no '=' character in the token, consider is as a block name.
@@ -104,20 +104,20 @@ class Run(object):
     Processing unit that processes Universal Dependencies data; typically a sequence of blocks.
 
     """
-    def __init__(self, command_line_arguments):
+    def __init__(self, args):
         """
         Initialization of the runner object.
 
-        :param command_line_arguments: A scenario from the command line.
+        :param args: command line args as processed by argparser.
 
         """
-        if not isinstance(command_line_arguments, list):
-            raise TypeError('Expected list, obtained a %r', command_line_arguments)
+        self.args = args
+        if not isinstance(args.scenario, list):
+            raise TypeError('Expected scenario as list, obtained a %r', args.scenario)
 
-        if len(command_line_arguments) < 1:
-            raise ValueError('Empty argument list')
+        if len(args.scenario) < 1:
+            raise ValueError('Empty scenario')
 
-        self.command_line_arguments = command_line_arguments
 
     def run(self):
         """
@@ -135,7 +135,7 @@ class Run(object):
         """
 
         # Parse the given scenario from the command line.
-        block_names, block_args = _parse_command_line_arguments(self.command_line_arguments)
+        block_names, block_args = _parse_command_line_arguments(self.args.scenario)
 
         # Import blocks (classes) and construct block instances.
         blocks = _import_blocks(block_names, block_args)
