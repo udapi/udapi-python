@@ -10,7 +10,7 @@ from queries import *
 
 class CsNouns(Block):
     """
-    A block for extraction context configurations for English nouns.
+    A block for extraction context configurations for Czech nouns.
     The configurations will be used as the train data for obtaining the word representations using word2vecf.
 
     """
