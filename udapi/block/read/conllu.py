@@ -165,6 +165,8 @@ class Conllu(BaseReader):
                     for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                         if attribute_name == 'feats':
                             attribute_name = 'raw_feats'
+                        if attribute_name == 'deps':
+                            attribute_name = 'raw_deps'
                         setattr(node, attribute_name, raw_node_attributes[n_attribute])
 
                     nodes.append(node)
