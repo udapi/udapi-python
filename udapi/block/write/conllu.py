@@ -31,7 +31,7 @@ class Conllu(Block):
         elif 'filename' in args:
             self.filename = args['filename']
             logging.debug('Opening file %s', self.filename)
-            self.file_handler = open(self.filename, 'r')
+            self.file_handler = open(self.filename, 'wb')
         else:
             logging.warning('No filename specified, using STDOUT.')
             self.file_handler = sys.stdout
@@ -80,15 +80,15 @@ class Conllu(Block):
                         except:
                             values[6] = '0'
 
-                        for index in range(0,len(values)):
-                            if values[index] == None:
+                        for index in range(0, len(values)):
+                            if values[index] is None:
                                 values[index] = ''
 
                         self.file_handler.write('\t'.join([value for value in values]))
                         self.file_handler.write('\n')
 
                     if number_of_written_bundles != len(document.bundles) - 1:
-                        self.file_handler.write("\n")
+                        self.file_handler.write('\n')
 
                 number_of_written_bundles += 1
 
