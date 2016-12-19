@@ -58,7 +58,7 @@ class Conllu(BaseReader):
                 self.file_handler = bz2.BZ2File(self.filename)
             else:
                 logging.info('Opening regular file %s', self.filename)
-                self.file_handler = open(self.filename, 'r')
+                self.file_handler = open(self.filename, 'rb')
         else:
             raise ValueError('No file to process')
 
@@ -165,6 +165,8 @@ class Conllu(BaseReader):
                     for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                         if attribute_name == 'feats':
                             attribute_name = 'raw_feats'
+                        if attribute_name == 'deps':
+                            attribute_name = 'raw_deps'
                         setattr(node, attribute_name, raw_node_attributes[n_attribute])
 
                     nodes.append(node)

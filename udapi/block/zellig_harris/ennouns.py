@@ -4,8 +4,8 @@ import logging
 
 from udapi.core.block import Block
 
-from common import *
-from queries import *
+from udapi.block.zellig_harris.common import *
+from udapi.block.zellig_harris.queries import *
 
 
 class EnNouns(Block):

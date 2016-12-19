@@ -30,4 +30,4 @@ def print_triple(node_a, relation_name, node_b, print_lemma=False):
     node_a = get_node_representation(node_a, print_lemma=print_lemma)
     node_b = get_node_representation(node_b, print_lemma=print_lemma)
 
-    print "%s %s_%s" % (node_a, relation_name, node_b)
+    print("%s %s_%s", node_a, relation_name, node_b)

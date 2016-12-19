@@ -4,7 +4,7 @@ import logging
 import codecs
 import re
 
-from conllu import Conllu
+from udapi.block.read.conllu import Conllu
 
 
 class ReducedConllu(Conllu):

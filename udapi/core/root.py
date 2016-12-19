@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 from udapi.core.node import Node
 
 
@@ -90,12 +88,10 @@ class Root(Node):
 
     @property
     def children(self):
-        logging.debug('davam deti roota')
         return self._children
 
     @children.setter
     def children(self, children):
-        logging.debug('nastavujem deti rootovi')
         self._children = children
 
     @property
