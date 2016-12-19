@@ -113,7 +113,7 @@ class Baseline(Block):
         context_word = self.get_word(context_node)
 
         triple = '%s %s_%s' % (target_word, context_word, relation_name)
-        print triple.encode('utf-8')
+        print(triple.encode('utf-8'))
 
     def process_node(self, node):
         """

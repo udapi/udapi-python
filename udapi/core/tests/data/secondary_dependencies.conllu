@@ -1,0 +1,8 @@
+# sent_id a-mf920901-001-p1s1A
+# orig_file_sentence mf920901_001#1
+1	Slovenská	slovenský	ADJ	AAFS1----1A----	Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing	2	amod	0:root|2:amod	_
+2	ústava	ústava	NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Negative=Pos|Number=Sing	0	root	0:root	SpaceAfter=No
+3	:	:	PUNCT	Z:-------------	_	2	punct	0:root	_
+4	pro	pro	ADP	RR--4----------	AdpType=Prep|Case=Acc	2	appos	0:root	LId=pro-1
+5	i	i	CONJ	J^-------------	_	4	cc	1:amod	LId=i-1
+6	proti	proti	ADP	RR--3----------	AdpType=Prep|Case=Dat	4	conj	5:conj	LId=proti-1
