@@ -7,9 +7,6 @@ import sys
 from udapi.core.block import Block
 
 
-node_attributes = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
-
-
 class Conllu(Block):
     """
     A writer of the Conll-u files.
@@ -18,6 +15,12 @@ class Conllu(Block):
     def __init__(self, args=None):
         if args is None:
             args = {}
+
+        super(Block, self).__init__()
+
+        # A list of Conllu columns.
+        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
+                                "raw_feats", "head", "deprel", "raw_deps", "misc"]
 
         # File handler
         self.filename = None
@@ -69,7 +72,7 @@ class Conllu(Block):
 
                     # Nodes.
                     for node in root.descendants():
-                        values = [getattr(node, node_attribute) for node_attribute in node_attributes]
+                        values = [getattr(node, node_attribute) for node_attribute in self.node_attributes]
                         values[0] = str(values[0])
 
                         try:
@@ -84,7 +87,8 @@ class Conllu(Block):
                         self.file_handler.write('\t'.join([value for value in values]))
                         self.file_handler.write('\n')
 
-                    self.file_handler.write("\n")
+                    if number_of_written_bundles != len(document.bundles) - 1:
+                        self.file_handler.write("\n")
 
                 number_of_written_bundles += 1
 
