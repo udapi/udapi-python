@@ -217,7 +217,10 @@ class Node(object):
     @parent.setter
     def parent(self, new_parent):
         """
-        Check if the parent assignment is correct and assign a new parent for the current Node.
+        Check if the parent assignment is valid (no cycles) and assign
+        a new parent (dependency head) for the current node.
+        If the node had a parent, it is detached first
+        (from the list of original parent's children).
 
         :param new_parent: A parent Node object.
 
