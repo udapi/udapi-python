@@ -2,7 +2,7 @@
 
 import logging
 
-from document import Document
+from udapi.core.document import Document
 
 
 def _parse_block_name(block_name):
@@ -86,7 +86,7 @@ def _import_blocks(block_names, block_args):
         try:
             command = "from " + module + " import " + class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
-            exec command
+            exec(command)
         except:
             raise RuntimeError("Error when trying import the block %s", block_name)
 

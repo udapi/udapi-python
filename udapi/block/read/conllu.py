@@ -58,7 +58,7 @@ class Conllu(BaseReader):
                 self.file_handler = bz2.BZ2File(self.filename)
             else:
                 logging.info('Opening regular file %s', self.filename)
-                self.file_handler = open(self.filename, 'r')
+                self.file_handler = open(self.filename, 'rb')
         else:
             raise ValueError('No file to process')
 

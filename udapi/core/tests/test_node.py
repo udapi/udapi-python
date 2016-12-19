@@ -59,7 +59,8 @@ class TestDocument(unittest.TestCase):
 
         # Read a test CoNLLU file.
         document = Document()
-        Conllu({'filename': data_filename}).process_document(document)
+        reader = Conllu({'filename': data_filename})
+        reader.process_document(document)
 
         # Exactly one bundle should be loaded.
         self.assertEquals(len(document.bundles), 1)

@@ -29,47 +29,45 @@ class Node(object):
     Class for representing non-root nodes in Universal Dependency trees.
 
     """
+    __slots__ = [
+        'ord',         # Word index, integer starting at 1 for each new sentence.
+        'form',        # Word form or punctuation symbol.
+        'lemma',       # Lemma or stem of word form.
+        'upostag',     # Universal POS tag drawn from our revised version of the Google UPOS tags.
+        'xpostag',     # Language-specific part-of-speech tag; underscore if not available.
+        'head',        # Head of the current token, which is either a value of ID or zero (0).
+        'deprel',      # Universal Stanford dependency relation to the HEAD (root iff HEAD = 0).
+        'misc',        # Any other annotation.
 
-    __slots__ = list()
-
-    # (A) Features following the CoNLL-U documentation:
-    __slots__.append('_ord')        # Word index, integer starting at 1 for each new sentence.
-    __slots__.append('_form')       # Word form or punctuation symbol.
-    __slots__.append('_lemma')      # Lemma or stem of word form.
-    __slots__.append('_upostag')    # Universal POS tag drawn from our revised version of the Google UPOS tags.
-    __slots__.append('_xpostag')    # Language-specific part-of-speech tag; underscore if not available.
-    __slots__.append('_raw_feats')  # Morphological features in their original CoNLLU format.
-    __slots__.append('_head')       # Head of the current token, which is either a value of ID or zero (0).
-    __slots__.append('_deprel')     # Universal Stanford dependency relation to the HEAD (root iff HEAD = 0).
-    __slots__.append('_raw_deps')   # Secondary dependencies (head-deprel pairs) in their original CoNLLU format.
-    __slots__.append('_misc')       # Any other annotation.
-
-    # (B) Udapi-specific extra features:
-    __slots__.append('_feats')      # Deserialized morphological features stored in a dict (feature -> value).
-    __slots__.append('_deps')       # Deserialized secondary dependencies in a list od {parent, deprel} dicts.
-    __slots__.append('_parent')     # Parent node.
-    __slots__.append('_children')   # Ord-ordered list of child nodes.
-    __slots__.append('_aux')        # Other technical attributes.
+        '_raw_deps',   # Secondary dependencies (head-deprel pairs) in their original CoNLLU format.
+        '_deps',  # Deserialized secondary dependencies in a list od {parent, deprel} dicts.
+        '_raw_feats',  # Morphological features in their original CoNLLU format.
+        '_feats',      # Deserialized morphological features stored in a dict (feature -> value).
+        '_parent',     # Parent node.
+        '_children',   # Ord-ordered list of child nodes.
+        '_aux'        # Other technical attributes.
+    ]
 
     def __init__(self, data=None):
         if data is None:
             data = dict()
 
         # Initialization of the (A) list.
-        self._ord = 0
-        self._form = '_'
-        self._lemma = '_'
-        self._upostag = '_'
-        self._xpostag = '_'
-        self._raw_feats = '_'
-        self._head = '_'
-        self._deprel = '_'
-        self._raw_deps = '_'
-        self._misc = '_'
+        # setattr(self, 'ord', 0)
+        # self.ord = 0
+        # self.form = '_'
+        # self.lemma = '_'
+        # self.upostag = '_'
+        # self.xpostag = '_'
+        # self.head = '_'
+        # self.deprel = '_'
+        # self.misc = '_'
 
         # Initialization of the (B) list.
-        self._feats = None
+        self._raw_deps = '_'
         self._deps = None
+        self._raw_feats = '_'
+        self._feats = None
         self._parent = None
         self._children = list()
         self._aux = dict()
@@ -89,46 +87,6 @@ class Node(object):
         if self.parent is not None:
             parent_ord = self.parent.ord
         return "<%d, %s, %s, %s>" % (self.ord, self.form, parent_ord, self.deprel)
-
-    @property
-    def ord(self):
-        return self._ord
-
-    @ord.setter
-    def ord(self, value):
-        self._ord = int(value)
-
-    @property
-    def form(self):
-        return self._form
-
-    @form.setter
-    def form(self, value):
-        self._form = value
-
-    @property
-    def lemma(self):
-        return self._lemma
-
-    @lemma.setter
-    def lemma(self, value):
-        self._lemma = value
-
-    @property
-    def upostag(self):
-        return self._upostag
-
-    @upostag.setter
-    def upostag(self, value):
-        self._upostag = value
-
-    @property
-    def xpostag(self):
-        return self._xpostag
-
-    @xpostag.setter
-    def xpostag(self, value):
-        self._xpostag = value
 
     @property
     def raw_feats(self):
@@ -162,22 +120,6 @@ class Node(object):
         self._feats = None
 
     @property
-    def head(self):
-        return self._head
-
-    @head.setter
-    def head(self, value):
-        self._head = int(value)
-
-    @property
-    def deprel(self):
-        return self._deprel
-
-    @deprel.setter
-    def deprel(self, value):
-        self._deprel = value
-
-    @property
     def raw_deps(self):
         """
         After the access to the raw secondary dependencies,
@@ -207,14 +149,6 @@ class Node(object):
         """
         self._raw_deps = str(value)
         self._deps = None
-
-    @property
-    def misc(self):
-        return self._misc
-
-    @misc.setter
-    def misc(self, value):
-        self._misc = value
 
     @property
     def feats(self):
