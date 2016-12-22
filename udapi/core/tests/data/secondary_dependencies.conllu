@@ -6,3 +6,4 @@
 4	pro	pro	ADP	RR--4----------	AdpType=Prep|Case=Acc	2	appos	0:root	LId=pro-1
 5	i	i	CONJ	J^-------------	_	4	cc	1:amod	LId=i-1
 6	proti	proti	ADP	RR--3----------	AdpType=Prep|Case=Dat	4	conj	5:conj	LId=proti-1
+
