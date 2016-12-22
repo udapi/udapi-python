@@ -70,12 +70,12 @@ def print_tree(root_node):
             subtree = '--+'
 
         if 0 < node.parent.ord < node.ord:
-            print '     %s|' % offset
+            print('     %s|' % offset)
 
-        print '%2d : %s+--%10s--[%10s]%s' % (node.ord, offset, deprel, node.form[:-3][:10], subtree)
+        print('%2d : %s+--%10s--[%10s]%s' % (node.ord, offset, deprel, node.form[:-3][:10], subtree))
 
         if 0 < node.parent.ord > node.ord:
-            print '     %s|' % offset
+            print('     %s|' % offset)
 
 
 class TextModeTrees(Block):
