@@ -63,25 +63,25 @@ class TestDocument(unittest.TestCase):
         reader.process_document(document)
 
         # Exactly one bundle should be loaded.
-        self.assertEquals(len(document.bundles), 1)
+        self.assertEqual(len(document.bundles), 1)
 
         # Obtain the dependency tree and check its sentence ID.
         root_node = document.bundles[0].get_tree(None)
-        self.assertEquals(root_node.sent_id, 'a-mf920901-001-p1s1A')
+        self.assertEqual(root_node.sent_id, 'a-mf920901-001-p1s1A')
 
         # Check raw secondary dependencies for each node.
         nodes = root_node.descendants()
-        self.assertEquals(nodes[0].raw_deps, '0:root|2:amod')
-        self.assertEquals(nodes[1].raw_deps, '0:root')
-        self.assertEquals(nodes[2].raw_deps, '0:root')
-        self.assertEquals(nodes[3].raw_deps, '0:root')
-        self.assertEquals(nodes[4].raw_deps, '1:amod')
-        self.assertEquals(nodes[5].raw_deps, '5:conj')
+        self.assertEqual(nodes[0].raw_deps, '0:root|2:amod')
+        self.assertEqual(nodes[1].raw_deps, '0:root')
+        self.assertEqual(nodes[2].raw_deps, '0:root')
+        self.assertEqual(nodes[3].raw_deps, '0:root')
+        self.assertEqual(nodes[4].raw_deps, '1:amod')
+        self.assertEqual(nodes[5].raw_deps, '5:conj')
 
         # Check deserialized dependencies.
-        self.assertEquals(nodes[0].deps[0]['parent'], root_node)
-        self.assertEquals(nodes[0].deps[0]['deprel'], 'root')
-        self.assertEquals(nodes[5].deps[0]['parent'], nodes[4])
+        self.assertEqual(nodes[0].deps[0]['parent'], root_node)
+        self.assertEqual(nodes[0].deps[0]['deprel'], 'root')
+        self.assertEqual(nodes[5].deps[0]['parent'], nodes[4])
 
     def test_deps_setter(self):
         """
@@ -96,7 +96,7 @@ class TestDocument(unittest.TestCase):
         nodes = root_node.descendants()
         nodes[0].deps.append({'parent': nodes[1], 'deprel': 'test'})
 
-        self.assertEquals(nodes[0].raw_deps, '2:test')
+        self.assertEqual(nodes[0].raw_deps, '2:test')
 
 if __name__ == "__main__":
     unittest.main() 
