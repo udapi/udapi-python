@@ -6,6 +6,7 @@ class TreexException(Exception):
     Common ancestor for Treex exception.
 
     """
+
     def __init__(self, message):
         self.message = message
 
@@ -100,7 +101,8 @@ class Root(Node):
     def aux(self, value):
         self._aux = value
 
-    # TODO: this enumeration looks silly, can we code the multiple 'read-only attributes' more cleverly?
+    # TODO: this enumeration looks silly, can we code the multiple 'read-only
+    # attributes' more cleverly?
 
     @property
     def ord(self):
@@ -176,10 +178,12 @@ class Root(Node):
         Remove the whole tree from its bundle
 
         """
-        self.bundle.trees = [root for root in self.bundle.trees if root == self]
+        self.bundle.trees = [
+            root for root in self.bundle.trees if root == self]
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
-        raise RuntimeException('Technical root cannot be shifted as it is always the first node')
+        raise RuntimeException(
+            'Technical root cannot be shifted as it is always the first node')
 
     def address(self):
         """

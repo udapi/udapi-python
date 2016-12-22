@@ -46,7 +46,8 @@ def _parse_command_line_arguments(scenario):
             number_of_blocks += 1
             continue
 
-        # Otherwise consider the token to be a block argument in the form key=value.
+        # Otherwise consider the token to be a block argument in the form
+        # key=value.
         logging.debug("- argument")
 
         # Test that there is only one '=' in the token.
@@ -57,7 +58,8 @@ def _parse_command_line_arguments(scenario):
         # Obtain key and value.
         attribute_name, attribute_value = token.split('=', 2)
         if number_of_blocks == 0:
-            raise RuntimeError('Block attribute pair %r without a prior block name', token)
+            raise RuntimeError(
+                'Block attribute pair %r without a prior block name', token)
 
         # Put it as a new argument for the previous block
         block_args[-1][attribute_name] = attribute_value
@@ -82,11 +84,13 @@ def _import_blocks(block_names, block_args):
         sub_path, class_name = _parse_block_name(block_name)
         module = "udapi.block." + sub_path + "." + class_name.lower()
         try:
-            command = "from " + module + " import " + class_name + " as b" + str(block_id)
+            command = "from " + module + " import " + \
+                class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
             exec(command)
         except:
-            raise RuntimeError("Error when trying import the block %s", block_name)
+            raise RuntimeError(
+                "Error when trying import the block %s", block_name)
 
         # Run the imported module.
         command = "b%s(block_args[block_id])" % block_id
@@ -102,6 +106,7 @@ class Run(object):
     Processing unit that processes Universal Dependencies data; typically a sequence of blocks.
 
     """
+
     def __init__(self, args):
         """
         Initialization of the runner object.
@@ -111,11 +116,11 @@ class Run(object):
         """
         self.args = args
         if not isinstance(args.scenario, list):
-            raise TypeError('Expected scenario as list, obtained a %r', args.scenario)
+            raise TypeError(
+                'Expected scenario as list, obtained a %r', args.scenario)
 
         if len(args.scenario) < 1:
             raise ValueError('Empty scenario')
-
 
     def run(self):
         """
@@ -133,7 +138,8 @@ class Run(object):
         """
 
         # Parse the given scenario from the command line.
-        block_names, block_args = _parse_command_line_arguments(self.args.scenario)
+        block_names, block_args = _parse_command_line_arguments(
+            self.args.scenario)
 
         # Import blocks (classes) and construct block instances.
         blocks = _import_blocks(block_names, block_args)

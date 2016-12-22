@@ -69,7 +69,8 @@ def print_tree(root_node):
         if 0 < node.parent.ord < node.ord:
             print('     %s|' % offset)
 
-        print('%2d : %s+--%10s--[%10s]%s' % (node.ord, offset, deprel, node.form[:-3][:10], subtree))
+        print('%2d : %s+--%10s--[%10s]%s' % (node.ord,
+                                             offset, deprel, node.form[:-3][:10], subtree))
 
         if 0 < node.parent.ord > node.ord:
             print('     %s|' % offset)
@@ -80,6 +81,7 @@ class TextModeTrees(Block):
     A pretty ACSII printer of the dependency trees.
 
     """
+
     def __init__(self, args=None):
         super(TextModeTrees, self).__init__(args)
         if args is None:
