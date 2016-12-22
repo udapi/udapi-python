@@ -1,5 +1,4 @@
 import logging
-import codecs
 import re
 import bz2
 
@@ -53,14 +52,12 @@ class Conllu(BaseReader):
             # Use bz2 lib when bz2 file is given.
             if filename_extension == 'bz2':
                 logging.info('Opening BZ2 file %s', self.filename)
-                self.file_handler = bz2.BZ2File(self.filename)
+                self.file_handler = bz2.open(self.filename, 'rt', encoding='utf-8')
             else:
                 logging.info('Opening regular file %s', self.filename)
-                self.file_handler = open(self.filename, 'rb')
+                self.file_handler = open(self.filename, 'rt', encoding='utf-8')
         else:
             raise ValueError('No file to process')
-
-        self.file_handler = codecs.getreader('utf8')(self.file_handler)
 
         # Remember total number of bundles
         self.total_number_of_bundles = 0

@@ -35,11 +35,6 @@ class Conllu(Block):
             logging.warning('No filename specified, using STDOUT.')
             self.file_handler = sys.stdout
 
-        # Python2 does not support open(...,encoding='utf-8')
-        if sys.version_info[0] == 2:
-            import codecs
-            self.file_handler = codecs.getwriter('utf8')(self.file_handler)
-
     def process_document(self, document):
         """
         FIXME

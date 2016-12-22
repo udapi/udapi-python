@@ -1,4 +1,3 @@
-import codecs
 import re
 
 from udapi.core.node import Node
