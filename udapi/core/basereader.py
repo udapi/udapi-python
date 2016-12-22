@@ -6,6 +6,7 @@ class BaseReader(Block):
     FIXME
 
     """
+
     def __init__(self):
         """
         FIXME

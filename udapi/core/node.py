@@ -6,6 +6,7 @@ class TreexException(Exception):
     Common ancestor for Treex exception
 
     """
+
     def __init__(self, message):
         self.message = message
 
@@ -18,6 +19,7 @@ class RuntimeException(TreexException):
     Block runtime exception
 
     """
+
     def __init__(self, text):
         TreexException.__init__(self, text)
 
@@ -28,19 +30,33 @@ class Node(object):
 
     """
     __slots__ = [
-        'ord',         # Word index, integer starting at 1 for each new sentence.
+        # Word index, integer starting at 1 for each new sentence.
+        'ord',
         'form',        # Word form or punctuation symbol.
         'lemma',       # Lemma or stem of word form.
-        'upostag',     # Universal POS tag drawn from our revised version of the Google UPOS tags.
-        'xpostag',     # Language-specific part-of-speech tag; underscore if not available.
-        'head',        # Head of the current token, which is either a value of ID or zero (0).
-        'deprel',      # Universal Stanford dependency relation to the HEAD (root iff HEAD = 0).
+        # Universal POS tag drawn from our revised version of the Google UPOS
+        # tags.
+        'upostag',
+        # Language-specific part-of-speech tag; underscore if not available.
+        'xpostag',
+        # Head of the current token, which is either a value of ID or zero (0).
+        'head',
+        # Universal Stanford dependency relation to the HEAD (root iff HEAD =
+        # 0).
+        'deprel',
         'misc',        # Any other annotation.
 
-        '_raw_deps',   # Secondary dependencies (head-deprel pairs) in their original CoNLLU format.
-        '_deps',  # Deserialized secondary dependencies in a list od {parent, deprel} dicts.
-        '_raw_feats',  # Morphological features in their original CoNLLU format.
-        '_feats',      # Deserialized morphological features stored in a dict (feature -> value).
+        # Secondary dependencies (head-deprel pairs) in their original CoNLLU
+        # format.
+        '_raw_deps',
+        # Deserialized secondary dependencies in a list od {parent, deprel}
+        # dicts.
+        '_deps',
+        # Morphological features in their original CoNLLU format.
+        '_raw_feats',
+        # Deserialized morphological features stored in a dict (feature ->
+        # value).
+        '_feats',
         '_parent',     # Parent node.
         '_children',   # Ord-ordered list of child nodes.
         '_aux'        # Other technical attributes.
@@ -99,7 +115,8 @@ class Node(object):
         if self._feats is not None:
             serialized_features = []
             for feature in sorted(self._feats):
-                serialized_features.append('%s=%s' % (feature, self._feats[feature]))
+                serialized_features.append(
+                    '%s=%s' % (feature, self._feats[feature]))
 
             serialized_features = '|'.join(serialized_features)
             self._raw_feats = serialized_features
@@ -130,7 +147,8 @@ class Node(object):
         if self._deps is not None:
             serialized_deps = []
             for secondary_dependence in self._deps:
-                serialized_deps.append('%d:%s' % (secondary_dependence['parent'].ord, secondary_dependence['deprel']))
+                serialized_deps.append('%d:%s' % (secondary_dependence[
+                                       'parent'].ord, secondary_dependence['deprel']))
 
             serialized_deps = '|'.join(serialized_deps)
             self._raw_deps = serialized_deps
@@ -222,25 +240,29 @@ class Node(object):
 
         # The node itself couldn't be assigned as a parent.
         if self == new_parent:
-            raise ValueError('Could not set the node itself as a parent: %s' % self)
+            raise ValueError(
+                'Could not set the node itself as a parent: %s' % self)
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
         while not climbing_node.is_root:
             if climbing_node == self:
-                raise RuntimeException('Setting the parent would lead to a loop: %s' % self)
+                raise RuntimeException(
+                    'Setting the parent would lead to a loop: %s' % self)
 
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
         if self.parent:
-            self.parent.children = [node for node in self.parent.children if node != self]
+            self.parent.children = [
+                node for node in self.parent.children if node != self]
 
         # Set the new parent.
         self._parent = new_parent
 
         # Append the current node the the new parent children.
-        new_parent.children = sorted(new_parent.children + [self], key=lambda child: child.ord)
+        new_parent.children = sorted(
+            new_parent.children + [self], key=lambda child: child.ord)
 
     @property
     def children(self):
@@ -346,8 +368,10 @@ class Node(object):
 
         """
         root = self.root
-        descendants = [node for node in root.unordered_descendants_using_children() if node != root]
-        descendants = sorted(descendants, key=lambda descendant: descendant.ord)
+        descendants = [
+            node for node in root.unordered_descendants_using_children() if node != root]
+        descendants = sorted(
+            descendants, key=lambda descendant: descendant.ord)
 
         root.aux['descendants'] = descendants
 
@@ -361,7 +385,8 @@ class Node(object):
         :return:
 
         """
-        self.parent.children = [child for child in self.parent.children if child != self]
+        self.parent.children = [
+            child for child in self.parent.children if child != self]
         self.parent.update_ordering()
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
@@ -389,9 +414,11 @@ class Node(object):
 
         common_delta = 0.5 if after else -0.5
 
-        # TODO: can we use some sort of epsilon instead of choosing a silly upper bound for out-degree?
+        # TODO: can we use some sort of epsilon instead of choosing a silly
+        # upper bound for out-degree?
         for node_to_move in nodes_to_move:
-            node_to_move.ord = reference_ord + common_delta + (node_to_move.ord-self.ord) / 100000.
+            node_to_move.ord = reference_ord + common_delta + \
+                (node_to_move.ord - self.ord) / 100000.
 
         self.update_ordering()
 
@@ -403,7 +430,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=1, move_subtree=0, reference_subtree=0)
+        self.shift(reference_node, after=1,
+                   move_subtree=0, reference_subtree=0)
 
     def shift_subtree_after(self, reference_node):
         """
@@ -413,7 +441,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
+        self.shift(reference_node, after=1,
+                   move_subtree=1, reference_subtree=0)
 
     def shift_after_node(self, reference_node):
         """
@@ -423,7 +452,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
+        self.shift(reference_node, after=1,
+                   move_subtree=1, reference_subtree=0)
 
     def shift_before_node(self, reference_node):
         """
@@ -433,7 +463,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=0, move_subtree=1, reference_subtree=0)
+        self.shift(reference_node, after=0,
+                   move_subtree=1, reference_subtree=0)
 
     def shift_after_subtree(self, reference_node, without_children=0):
         """
@@ -444,7 +475,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=1, move_subtree=1-without_children, reference_subtree=1)
+        self.shift(reference_node, after=1, move_subtree=1 -
+                   without_children, reference_subtree=1)
 
     def shift_before_subtree(self, reference_node, without_children=0):
         """
@@ -455,7 +487,8 @@ class Node(object):
         :return:
 
         """
-        self.shift(reference_node, after=0, move_subtree=1-without_children, reference_subtree=1)
+        self.shift(reference_node, after=0, move_subtree=1 -
+                   without_children, reference_subtree=1)
 
     def prev_node(self):
         """

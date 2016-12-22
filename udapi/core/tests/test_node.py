@@ -9,10 +9,12 @@ from udapi.core.node import Node
 from udapi.core.document import Document
 from udapi.block.read.conllu import Conllu
 
-logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.DEBUG)
+logging.basicConfig(
+    format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=logging.DEBUG)
 
 
 class TestDocument(unittest.TestCase):
+
     def test_feats_getter(self):
         """
         Test the deserialization of the morphological featrues.
@@ -55,7 +57,8 @@ class TestDocument(unittest.TestCase):
 
         """
         # Create a path to the test CoNLLU file.
-        data_filename = os.path.join(os.path.dirname(__file__), 'data', 'secondary_dependencies.conllu')
+        data_filename = os.path.join(os.path.dirname(
+            __file__), 'data', 'secondary_dependencies.conllu')
 
         # Read a test CoNLLU file.
         document = Document()

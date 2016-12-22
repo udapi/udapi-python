@@ -5,6 +5,7 @@ from udapi.core.document import Document
 
 
 class TestDocument(unittest.TestCase):
+
     def test_init(self):
         doc = Document()
 

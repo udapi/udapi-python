@@ -11,6 +11,7 @@ class Conllu(BaseReader):
     A reader of the Conll-u files.
 
     """
+
     def __init__(self, args=None):
         if args is None:
             args = {}
@@ -52,7 +53,8 @@ class Conllu(BaseReader):
             # Use bz2 lib when bz2 file is given.
             if filename_extension == 'bz2':
                 logging.info('Opening BZ2 file %s', self.filename)
-                self.file_handler = bz2.open(self.filename, 'rt', encoding='utf-8')
+                self.file_handler = bz2.open(
+                    self.filename, 'rt', encoding='utf-8')
             else:
                 logging.info('Opening regular file %s', self.filename)
                 self.file_handler = open(self.filename, 'rt', encoding='utf-8')
@@ -87,7 +89,8 @@ class Conllu(BaseReader):
         number_of_processed_bundles = -1
         number_of_loaded_bundles = 0
 
-        # Compile a set of regular expressions that will be searched over the lines.
+        # Compile a set of regular expressions that will be searched over the
+        # lines.
         re_comment_like = re.compile(r'^#')
         re_sentence_id = re.compile(r'^# sent_id (\S+)')
         re_multiword_tokens = re.compile(r'^\d+-')
@@ -100,7 +103,8 @@ class Conllu(BaseReader):
 
             # If we can not add next bundle, return document.
             if number_of_loaded_bundles >= self.bundles_per_document:
-                logging.debug('Reached number of requested bundles (%d)', self.bundles_per_document)
+                logging.debug(
+                    'Reached number of requested bundles (%d)', self.bundles_per_document)
                 return document
 
             # Obtain a raw bundle.
@@ -122,7 +126,8 @@ class Conllu(BaseReader):
                         raw_bundle_check = False
 
                 if not raw_bundle_check:
-                    raise RuntimeError('Detected an invalid bundle: %r' % raw_bundle)
+                    raise RuntimeError(
+                        'Detected an invalid bundle: %r' % raw_bundle)
 
             # Initialize the data structures.
             root_node = Root()
@@ -139,7 +144,8 @@ class Conllu(BaseReader):
                     match = re_sentence_id.search(line)
                     if match is not None:
                         sent_id = match.group(1)
-                        logging.debug('Matched sent_id keyword with value %s', sent_id)
+                        logging.debug(
+                            'Matched sent_id keyword with value %s', sent_id)
                         root_node.sent_id = sent_id
                         continue
 
@@ -154,7 +160,8 @@ class Conllu(BaseReader):
                         logging.debug('Skipping multi-word tokens %s', line)
                         continue
 
-                    # Otherwise the line is a tab-separated list of node attributes.
+                    # Otherwise the line is a tab-separated list of node
+                    # attributes.
                     node = root_node.create_child()
                     raw_node_attributes = line.split('\t')
                     for (n_attribute, attribute_name) in enumerate(self.node_attributes):
@@ -162,7 +169,8 @@ class Conllu(BaseReader):
                             attribute_name = 'raw_feats'
                         if attribute_name == 'deps':
                             attribute_name = 'raw_deps'
-                        setattr(node, attribute_name, raw_node_attributes[n_attribute])
+                        setattr(node, attribute_name,
+                                raw_node_attributes[n_attribute])
 
                     nodes.append(node)
 
@@ -180,9 +188,11 @@ class Conllu(BaseReader):
 
                 # At least one node should be parsed.
                 if len(nodes) == 0:
-                    raise ValueError('Probably two empty lines following each other.')
+                    raise ValueError(
+                        'Probably two empty lines following each other.')
 
-                # If specified, check sentence ID to match the sentence ID filter.
+                # If specified, check sentence ID to match the sentence ID
+                # filter.
                 if self.sentence_id_filter is not None:
                     if self.sentence_id_filter.match(root_node.sent_id) is None:
                         logging.debug('Skipping sentence %s as it does not match the sentence ID filter.',
