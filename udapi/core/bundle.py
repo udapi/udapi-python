@@ -1,5 +1,4 @@
 import logging
-import codecs
 import re
 
 from udapi.core.root import Root

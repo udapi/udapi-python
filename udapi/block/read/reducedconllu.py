@@ -1,7 +1,3 @@
-import logging
-import codecs
-import re
-
 from udapi.block.read.conllu import Conllu
 
 

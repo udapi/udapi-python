@@ -1,5 +1,4 @@
 import logging
-import codecs
 import sys
 
 from udapi.core.block import Block
