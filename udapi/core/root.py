@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from udapi.core.node import Node
 
 
@@ -103,7 +101,7 @@ class Root(Node):
         self._aux = value
 
     # TODO: this enumeration looks silly, can we code the multiple 'read-only attributes' more cleverly?
-    
+
     @property
     def ord(self):
         return 0

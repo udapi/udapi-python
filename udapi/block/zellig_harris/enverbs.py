@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import logging
 
 from udapi.core.block import Block
@@ -66,5 +64,3 @@ class EnVerbs(Block):
                 logging.info('No configurations for node %s/%s: %s', node.root.sent_id, node, exception)
 
             pass
-
-

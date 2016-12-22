@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data."""
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import logging
 
 from udapi.core.block import Block
