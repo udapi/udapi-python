@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from udapi.core.block import Block
 
 

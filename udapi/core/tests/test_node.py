@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import unittest
@@ -99,4 +99,4 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(nodes[0].raw_deps, '2:test')
 
 if __name__ == "__main__":
-    unittest.main() 
+    unittest.main()
