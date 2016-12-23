@@ -69,7 +69,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(len(document.bundles), 1)
 
         # Obtain the dependency tree and check its sentence ID.
-        root_node = document.bundles[0].get_tree(None)
+        root_node = document.bundles[0].get_tree()
         self.assertEqual(root_node.sent_id, 'a-mf920901-001-p1s1A')
 
         # Check raw secondary dependencies for each node.

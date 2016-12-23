@@ -8,7 +8,7 @@ from udapi.core.root import Root
 
 class Conllu(BaseReader):
     """
-    A reader of the Conll-u files.
+    A reader of the CoNLL-U files.
 
     """
 
@@ -16,7 +16,7 @@ class Conllu(BaseReader):
         if args is None:
             args = {}
 
-        super(BaseReader, self).__init__()
+        super(Conllu, self).__init__()
 
         # A list of Conllu columns.
         self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",

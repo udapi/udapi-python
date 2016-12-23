@@ -8,7 +8,7 @@ class ReducedConllu(Conllu):
     """
 
     def __init__(self, args=None):
-        Conllu.__init__(self, args)
+        super(ReducedConllu, self).__init__(args)
 
         # Here is the reduced list of the data fields as appear in the Conllu
         # reduced format.

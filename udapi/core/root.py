@@ -1,40 +1,12 @@
+"""Root class represents the technical root node in each tree."""
 from udapi.core.node import Node
-
-
-class TreexException(Exception):
-    """
-    Common ancestor for Treex exception.
-
-    """
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return 'TREEX-FATAL: ' + self.__class__.__name__ + ': ' + self.message
-
-
-class RuntimeException(TreexException):
-    """
-    Block runtime exception.
-
-    """
-
-    def __init__(self, text):
-        TreexException.__init__(self, text)
 
 
 class Root(Node):
     """
-    Class for representing root nodes (technical roots) in Universal Dependency trees.
-
+    Class for representing root nodes (technical roots) in UD trees.
     """
-    __slots__ = list()
-    __slots__.append('_sent_id')   # A sentence identifier.
-    __slots__.append('_zone')      # A zone.
-    __slots__.append('_bundle')    # A bundle.
-    __slots__.append('_children')  # An ord-ordeded list of children nodes.
-    __slots__.append('_aux')       # Other technical attributes.
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_aux']
 
     def __init__(self, data=None):
         # Initialize data if not given
@@ -43,6 +15,15 @@ class Root(Node):
 
         # Call constructor of the parent object.
         super(Root, self).__init__(data)
+
+        self.ord = 0
+        self.form = '<ROOT>'
+        self.lemma = '<ROOT>'
+        self.upostag = '<ROOT>'
+        self.xpostag = '<ROOT>'
+        self.deprel = '<ROOT>'
+        self.misc = '<ROOT>'
+        self._parent = None
 
         self._sent_id = None
         self._zone = None
@@ -56,6 +37,7 @@ class Root(Node):
 
     @property
     def sent_id(self):
+        """ID of this tree, stored in the sent_id comment in CoNLL-U."""
         return self._sent_id
 
     @sent_id.setter
@@ -63,27 +45,24 @@ class Root(Node):
         self._sent_id = sent_id
 
     @property
-    def zone(self):
-        return self._zone
-
-    @zone.setter
-    def zone(self, zone):
-        """
-        Specify which zone the root belongs to
-
-        """
-        if self.bundle:
-            self.bundle.check_zone(self, zone)
-
-        self._zone = zone
-
-    @property
     def bundle(self):
+        """Bundle which this tree belongs to."""
         return self._bundle
 
     @bundle.setter
     def bundle(self, bundle):
         self._bundle = bundle
+
+    @property
+    def zone(self):
+        return self._zone
+
+    @zone.setter
+    def zone(self, zone):
+        """Specify which zone the root belongs to."""
+        if self._bundle:
+            self._bundle.check_zone(zone)
+        self._zone = zone
 
     @property
     def children(self):
@@ -101,65 +80,24 @@ class Root(Node):
     def aux(self, value):
         self._aux = value
 
-    # TODO: this enumeration looks silly, can we code the multiple 'read-only
-    # attributes' more cleverly?
-
-    @property
-    def ord(self):
-        return 0
-
-    @property
-    def form(self):
-        return '<ROOT>'
-
-    @property
-    def lemma(self):
-        return '<ROOT>'
-
-    @property
-    def upostag(self):
-        return '<ROOT>'
-
-    @property
-    def xpostag(self):
-        return '<ROOT>'
-
-    @property
-    def raw_feats(self):
-        return '<ROOT>'
-
-    @property
-    def deprel(self):
-        return '<ROOT>'
-
-    @property
-    def deps(self):
-        return '<ROOT>'
-
-    @property
-    def misc(self):
-        return '<ROOT>'
-
-    @property
-    def feats(self):
-        return '<ROOT>'
-
     @property
     def parent(self):
         return None
 
     @parent.setter
-    def parent(self, new_parent):
+    def parent(self, _):
         raise AttributeError('The technical root cannot have a parent.')
 
     def descendants(self):
         """
-        Return a list of all descendants of the current node, i.e. the all non-technical
-        node from the dependency tree.
+        Return a list of all descendants of the current node.
+
+        The nodes are sorted by their ord.
+        This root-specific implementation returns all the nodes in the tree
+        except the root itself.
 
         :return: A list of descendant nodes.
         :rtype: list
-
         """
         return self._aux['descendants']
 
@@ -181,8 +119,9 @@ class Root(Node):
         self.bundle.trees = [
             root for root in self.bundle.trees if root == self]
 
-    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
-        raise RuntimeException(
+    def shift(self,
+              reference_node, after=0, move_subtree=0, reference_subtree=0):
+        raise Exception(
             'Technical root cannot be shifted as it is always the first node')
 
     def address(self):
@@ -193,7 +132,7 @@ class Root(Node):
         partial_ids = []
 
         if self.bundle:
-            partial_ids.append(self.bundle.id)
+            partial_ids.append(self._bundle.bundle_id)
 
         if self.zone:
             partial_ids.append(self.zone)

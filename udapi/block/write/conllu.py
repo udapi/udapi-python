@@ -13,8 +13,7 @@ class Conllu(Block):
     def __init__(self, args=None):
         if args is None:
             args = {}
-
-        super(Block, self).__init__()
+        super(Conllu, self).__init__(args)
 
         # A list of Conllu columns.
         self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
