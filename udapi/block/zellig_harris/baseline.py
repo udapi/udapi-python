@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from udapi.core.block import Block
 
 
@@ -74,7 +72,8 @@ class Baseline(Block):
         :return: A node's string representation.
 
         """
-        # If reflexive pronoun should be append to the verb, try to find such pronoun for each verb.
+        # If reflexive pronoun should be append to the verb, try to find such
+        # pronoun for each verb.
         word_suffix = ''
         if self.reflexive_verbs:
             for child in node.children:

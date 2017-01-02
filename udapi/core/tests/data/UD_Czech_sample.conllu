@@ -342,3 +342,4 @@
 14	Kanceláří	kancelář	NOUN	NNFS7-----A----	Case=Ins|Gender=Fem|Negative=Pos|Number=Sing	9	ccomp	_	_
 15	SNR	SNR	PROPN	NNFXX-----A---8	Abbr=Yes|Gender=Fem|NameType=Com|Negative=Pos	14	nmod	_	SpaceAfter=No|LId=SNR-1|LGloss=(Slovenská_národní_rada)
 16	.	.	PUNCT	Z:-------------	_	9	punct	_	_
+

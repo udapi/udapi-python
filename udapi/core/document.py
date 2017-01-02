@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import codecs
 import re
 
 from udapi.core.node import Node
@@ -10,11 +7,13 @@ from udapi.core.bundle import Bundle
 from udapi.block.read.conllu import Conllu as ConlluReader
 from udapi.block.write.conllu import Conllu as ConlluWriter
 
+
 class Document(object):
 
     """Document is a container for Universal Dependency trees"""
 
-    attrnames = ["ord", "form", "lemma", "upostag", "xpostag", "feats", "head", "deprel", "deps", "misc"]
+    attrnames = ["ord", "form", "lemma", "upostag",
+                 "xpostag", "feats", "head", "deprel", "deps", "misc"]
 
     bundles = []
 
@@ -37,10 +36,10 @@ class Document(object):
         Load a document from a conllu-formatted file
 
         """
-        reader = ConlluReader({'filename':filename})
+        reader = ConlluReader({'filename': filename})
         reader.process_document(self)
 
-    def store_conllu(self,filename):
+    def store_conllu(self, filename):
         """store a document into a conllu-formatted file"""
-        writer = ConlluWriter({'filename':filename})
+        writer = ConlluWriter({'filename': filename})
         writer.process_document(self)

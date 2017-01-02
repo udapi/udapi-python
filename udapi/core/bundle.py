@@ -1,21 +1,20 @@
-#!/usr/bin/env python
+"""Bundle class represents one sentence."""
 
 import logging
-import codecs
-import re
 
 from udapi.core.root import Root
 
 
 class Bundle(object):
-    """
-    Bundle can be used for embracing two or more Universal Dependency trees that are associated in some way
-    (e.g. parallel translations) inside a document. Unless different zones are differentiated in a bundle,
-    there's only one tree per bundle by default.
+    """Bundle represents one sentence in an UD document.
 
+    A bundle contains one or more trees. More trees are needed e.g. in case of
+    parallel treebanks where each tree represents a translation of the sentence
+    in a different languages.
+    Trees in one bundle are distinguished by a zone label.
     """
 
-    __slots__ = [ "trees", "number", "id", "_aux", "_document" ]
+    __slots__ = ["trees", "number", "id", "_aux", "_document"]
 
     def document(self):
         """returns the document in which the bundle is contained"""
@@ -34,10 +33,10 @@ class Bundle(object):
         if len(trees) == 1:
             return trees[0]
         elif len(trees) == 0:
-            raise Exception( "No tree with zone="+zone+" in the bundle")
+            raise Exception("No tree with zone=" + zone + " in the bundle")
         else:
-            raise Exception("More than one tree with zone="+zone+" in the bundle")
-
+            raise Exception("More than one tree with zone=" +
+                            zone + " in the bundle")
 
     def check_new_zone(self, root, new_zone):
         """
@@ -46,10 +45,10 @@ class Bundle(object):
         """
         for root in root.bundle.trees:
             if root != changed_root and root.zone == zone:
-                 raise Exception("Zone " + zone + " already exists in the bundle")
+                raise Exception("Zone " + zone +
+                                " already exists in the bundle")
 
-
-    def create_tree(self,zone=None):
+    def create_tree(self, zone=None):
         """returns the root of a newly added tree whose zone is equal to zone"""
         root = Root()
         root.set_zone(zone)
@@ -70,4 +69,5 @@ class Bundle(object):
 
     def remove(self):
         "remove a bundle from the document"
-        document.bundles = [bundle for bundle in document.bundles if not bundle == self]
+        document.bundles = [
+            bundle for bundle in document.bundles if not bundle == self]
