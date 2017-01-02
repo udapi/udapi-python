@@ -24,3 +24,4 @@ def en_verb_mydobj(node):
             triples.append((node, 'dobj', child_node))
 
     return triples
+
