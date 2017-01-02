@@ -1,5 +1,7 @@
 import logging
 
+from udapi.block.zellig_harris.enhancedeps import *
+
 
 def en_verb_mydobj(node):
     """
@@ -16,7 +18,7 @@ def en_verb_mydobj(node):
         raise ValueError('Is not in a participle form.')
 
     triples = []
-    for child_node in node.children:
+    for child_node in echildren(node):
         if child_node.deprel != 'dobj':
             continue
 
@@ -24,3 +26,4 @@ def en_verb_mydobj(node):
             triples.append((node, 'dobj', child_node))
 
     return triples
+
