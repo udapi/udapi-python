@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import logging
+
 from udapi.core.block import Block
 
 
@@ -32,7 +34,7 @@ def echildren(node):
     """
     target_deprels = ['subj', 'subjpass', 'dobj', 'iobj', 'compl']
     node_parent = eparent(node)
-    echildren = node.children
+    echildren_list = [child for child in node.children]
 
     for candidate_child in node_parent.children:
         # Check if a candidate node C has the target deprel.
@@ -48,7 +50,9 @@ def echildren(node):
 
         # If there is no such deprel, we can add a new secondary dependence.
         if no_such_deprel:
-            echildren.append(candidate_child)
+            echildren_list.append(candidate_child)
+
+    return echildren_list
 
 
 def enhance_deps(node, new_dependence):
