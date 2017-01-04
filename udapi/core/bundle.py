@@ -18,10 +18,10 @@ class Bundle(object):
 
     __slots__ = ["trees", "number", "bundle_id", "_aux", "_document"]
 
-    def __init__(self):
+    def __init__(self, bundle_id=None, document=None):
         self.trees = []
-        self.bundle_id = None
-        self._document = None
+        self.bundle_id = bundle_id
+        self._document = document
 
     def __str__(self):
         if self.bundle_id is None:

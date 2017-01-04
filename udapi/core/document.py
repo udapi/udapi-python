@@ -1,7 +1,3 @@
-import re
-
-from udapi.core.node import Node
-from udapi.core.root import Root
 from udapi.core.bundle import Bundle
 
 from udapi.block.read.conllu import Conllu as ConlluReader
@@ -25,10 +21,9 @@ class Document(object):
 
     def create_bundle(self):
         """create a new bundle and add it at the end of the document"""
-        bundle = Bundle()
+        bundle = Bundle(document=self)
         self.bundles.append(bundle)
         bundle.number = len(self.bundles)
-        bundle._document = bundle
         return bundle
 
     def load_conllu(self, filename):
