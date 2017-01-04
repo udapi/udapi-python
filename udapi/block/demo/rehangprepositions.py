@@ -4,9 +4,7 @@ from udapi.core.block import Block
 class RehangPrepositions(Block):
 
     def process_node(self, node):
-
-        if str(node.upostag) == "ADP":  # TODO: why the hell is str needed
-
+        if node.upostag == "ADP":
             origparent = node.parent
-            node.set_parent(origparent.parent)
-            origparent.set_parent(node)
+            node.parent = origparent.parent
+            origparent.parent = node

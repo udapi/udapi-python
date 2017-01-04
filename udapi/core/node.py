@@ -103,7 +103,8 @@ class Node(object):
     @raw_feats.setter
     def raw_feats(self, value):
         """
-        When updating raw morphological features, delete the current version of the deserialized feautures.
+        When updating raw morphological features,
+        delete the current version of the deserialized feautures.
 
         :param value: A new raw morphologial feratures.
 
