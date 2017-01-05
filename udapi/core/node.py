@@ -1,34 +1,14 @@
-import logging
-
-
-class TreexException(Exception):
-    """
-    Common ancestor for Treex exception
-
-    """
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return 'TREEX-FATAL: ' + self.__class__.__name__ + ': ' + self.message
-
-
-class RuntimeException(TreexException):
-    """
-    Block runtime exception
-
-    """
-
-    def __init__(self, text):
-        TreexException.__init__(self, text)
+"""Node class represents a node in UD trees."""
 
 
 class Node(object):
     """
-    Class for representing non-root nodes in Universal Dependency trees.
-
+    Class for representing nodes in Universal Dependency trees.
     """
+
+    # TODO: Benchmark memory and speed of slots vs. classic dict.
+    # With Python 3.5 split dict, slots may not be better.
+    # TODO: Should not we include __weakref__ in slots?
     __slots__ = [
         # Word index, integer starting at 1 for each new sentence.
         'ord',
@@ -39,6 +19,7 @@ class Node(object):
         'upostag',
         # Language-specific part-of-speech tag; underscore if not available.
         'xpostag',
+        # TODO: head is not needed, Udapi uses parent
         # Head of the current token, which is either a value of ID or zero (0).
         'head',
         # Universal Stanford dependency relation to the HEAD (root iff HEAD =
@@ -67,15 +48,14 @@ class Node(object):
             data = dict()
 
         # Initialization of the (A) list.
-        # setattr(self, 'ord', 0)
-        # self.ord = 0
-        # self.form = '_'
-        # self.lemma = '_'
-        # self.upostag = '_'
-        # self.xpostag = '_'
+        self.ord = None
+        self.form = None
+        self.lemma = None
+        self.upostag = None
+        self.xpostag = None
         # self.head = '_'
-        # self.deprel = '_'
-        # self.misc = '_'
+        self.deprel = None
+        self.misc = None
 
         # Initialization of the (B) list.
         self._raw_deps = '_'
@@ -117,16 +97,14 @@ class Node(object):
             for feature in sorted(self._feats):
                 serialized_features.append(
                     '%s=%s' % (feature, self._feats[feature]))
-
-            serialized_features = '|'.join(serialized_features)
-            self._raw_feats = serialized_features
-
+            self._raw_feats = '|'.join(serialized_features)
         return self._raw_feats
 
     @raw_feats.setter
     def raw_feats(self, value):
         """
-        When updating raw morphological features, delete the current version of the deserialized feautures.
+        When updating raw morphological features,
+        delete the current version of the deserialized feautures.
 
         :param value: A new raw morphologial feratures.
 
@@ -148,7 +126,7 @@ class Node(object):
             serialized_deps = []
             for secondary_dependence in self._deps:
                 serialized_deps.append('%d:%s' % (secondary_dependence[
-                                       'parent'].ord, secondary_dependence['deprel']))
+                    'parent'].ord, secondary_dependence['deprel']))
 
             serialized_deps = '|'.join(serialized_deps)
             self._raw_deps = serialized_deps
@@ -247,7 +225,7 @@ class Node(object):
         climbing_node = new_parent
         while not climbing_node.is_root:
             if climbing_node == self:
-                raise RuntimeException(
+                raise Exception(
                     'Setting the parent would lead to a loop: %s' % self)
 
             climbing_node = climbing_node.parent
@@ -389,7 +367,8 @@ class Node(object):
             child for child in self.parent.children if child != self]
         self.parent.update_ordering()
 
-    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+    def shift(self,
+              reference_node, after=0, move_subtree=0, reference_subtree=0):
         """
         FIXME
 

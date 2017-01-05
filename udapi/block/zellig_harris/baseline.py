@@ -39,7 +39,7 @@ class Baseline(Block):
         :param args: A dict of optional parameters.
 
         """
-        super(Block, self).__init__()
+        super(Baseline, self).__init__(args)
 
         if args is None:
             args = {}

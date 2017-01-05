@@ -12,4 +12,5 @@ class BaseReader(Block):
         FIXME
 
         """
+        super(BaseReader, self).__init__()
         self.finished = False

@@ -1,7 +1,7 @@
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data."""
 
-    def __init__(self, args={}):
+    def __init__(self, args=None):
         pass
 
     def process_start(self):
