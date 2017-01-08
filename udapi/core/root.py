@@ -22,7 +22,7 @@ class Root(Node):
         self.upostag = '<ROOT>'
         self.xpostag = '<ROOT>'
         self.deprel = '<ROOT>'
-        self.misc = '<ROOT>'
+        self.misc = None
         self.text = None
 
         self._parent = None

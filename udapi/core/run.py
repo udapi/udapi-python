@@ -62,6 +62,8 @@ def _parse_command_line_arguments(scenario):
                 'Block attribute pair %r without a prior block name', token)
 
         # Put it as a new argument for the previous block
+        if attribute_value.isdigit():
+            attribute_value = int(attribute_value)
         block_args[-1][attribute_name] = attribute_value
 
     return block_names, block_args
