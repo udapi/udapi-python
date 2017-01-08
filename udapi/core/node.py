@@ -239,8 +239,7 @@ class Node(object):
         self._parent = new_parent
 
         # Append the current node the the new parent children.
-        new_parent.children = sorted(
-            new_parent.children + [self], key=lambda child: child.ord)
+        new_parent.children = sorted(new_parent.children + [self], key=lambda child: child.ord)
 
     @property
     def children(self):

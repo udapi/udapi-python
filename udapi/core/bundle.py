@@ -62,8 +62,7 @@ class Bundle(object):
         if new_zone == 'all':
             raise ValueError("'all' cannot be used as a zone name")
         if new_zone in [x.zone for x in self.trees]:
-            raise Exception(
-                "Tree with zone '%s' already exists in %s" % new_zone, self)
+            raise Exception("Tree with zone '%s' already exists in %s" % (new_zone, self))
 
     def add_tree(self, root):
         """Add an existing tree to the bundle."""

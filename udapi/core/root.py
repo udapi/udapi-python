@@ -6,7 +6,7 @@ class Root(Node):
     """
     Class for representing root nodes (technical roots) in UD trees.
     """
-    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_aux']
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_aux', 'text']
 
     def __init__(self, data=None):
         # Initialize data if not given
@@ -23,8 +23,9 @@ class Root(Node):
         self.xpostag = '<ROOT>'
         self.deprel = '<ROOT>'
         self.misc = '<ROOT>'
-        self._parent = None
+        self.text = None
 
+        self._parent = None
         self._sent_id = None
         self._zone = None
         self._bundle = None
@@ -125,16 +126,5 @@ class Root(Node):
             'Technical root cannot be shifted as it is always the first node')
 
     def address(self):
-        """
-        Full (document-wide) id of the root.
-
-        """
-        partial_ids = []
-
-        if self.bundle:
-            partial_ids.append(self._bundle.bundle_id)
-
-        if self.zone:
-            partial_ids.append(self.zone)
-
-        return '/'.join(partial_ids)
+        """Full (document-wide) id of the root."""
+        return self._bundle.bundle_id + ('/' + self.zone if self.zone else '')

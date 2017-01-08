@@ -1,7 +1,7 @@
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data."""
 
-    def __init__(self, args=None):
+    def __init__(self, **kwargs):
         pass
 
     def process_start(self):
@@ -30,3 +30,9 @@ class Block(object):
         """Process a UD document"""
         for bundle in document.bundles:
             self.process_bundle(bundle)
+
+    def before_process_document(self, document):
+        pass
+
+    def after_process_document(self, document):
+        pass
