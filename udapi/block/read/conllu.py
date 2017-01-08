@@ -4,8 +4,10 @@ from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
 
 # Compile a set of regular expressions that will be searched over the lines.
-RE_SENT_ID = re.compile(r'^# sent_id\s*=\s+(\S+)')
-RE_TEXT = re.compile(r'^# text\s*=\s+(.+)')
+# The equal sign after sent_id was added to the specification in UD v2.0.
+# This reader accepts also older-style sent_id (until UD v2.0 treebanks are released).
+RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
+RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
 
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
