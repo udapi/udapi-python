@@ -32,10 +32,11 @@ def echildren(node):
     :rtype: list
 
     """
-    target_deprels = ['subj', 'subjpass', 'dobj', 'iobj', 'compl']
     node_parent = eparent(node)
     echildren_list = [child for child in node.children]
 
+    # Rule (A)
+    target_deprels = ['subj', 'subjpass', 'dobj', 'iobj', 'compl']
     for candidate_child in node_parent.children:
         # Check if a candidate node C has the target deprel.
         if candidate_child.deprel not in target_deprels:
@@ -51,6 +52,14 @@ def echildren(node):
         # If there is no such deprel, we can add a new secondary dependence.
         if no_such_deprel:
             echildren_list.append(candidate_child)
+
+    # Rule (B)
+    if node.upostag == 'VERB' and (node_parent.upostag == 'AUX' or
+        node_parent.lemma in ['chtít', 'moci', 'smět', 'mít', 'muset', 'umět']):
+        for candidate_child in node_parent.children:
+            # Check if the candidate child is not in the current node children already.
+            if candidate_child not in echildren_list:
+                echildren_list.append(candidate_child)
 
     return echildren_list
 
