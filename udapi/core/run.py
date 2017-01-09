@@ -1,6 +1,7 @@
 import logging
 
 from udapi.core.document import Document
+from udapi.block.read.conllu import Conllu
 
 
 def _parse_block_name(block_name):
@@ -143,6 +144,11 @@ class Run(object):
                 readers.append(block)
             except:
                 pass
+        if not readers:
+            logging.info('No reader specified, using read.Conllu')
+            conllu_reader = Conllu()
+            readers = [conllu_reader]
+            blocks = readers + blocks
 
         # Apply blocks on the data.
         finished = False
