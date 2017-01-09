@@ -232,22 +232,17 @@ class Node(object):
 
         # Remove the current Node from the children of the old parent.
         if self.parent:
-            self.parent.children = [
-                node for node in self.parent.children if node != self]
+            self.parent._children = [node for node in self.parent.children if node != self]
 
         # Set the new parent.
         self._parent = new_parent
 
         # Append the current node the the new parent children.
-        new_parent.children = sorted(new_parent.children + [self], key=lambda child: child.ord)
+        new_parent._children = sorted(new_parent.children + [self], key=lambda child: child.ord)
 
     @property
     def children(self):
         return self._children
-
-    @children.setter
-    def children(self, children):
-        self._children = children
 
     @property
     def root(self):
