@@ -5,22 +5,26 @@ import logging
 from udapi.core.block import Block
 
 
-def eparent(node):
+def eparents(node):
     """
-    Return an effective parent for the given node.
-
-    The rule for the effective parent - when the current node A has a deprel 'conj' to its parent B,
-    return  B.parent, otherwise return A.parent.
+    Return a list of effective parents for the given node.
 
     :param node: An input node.
-    :return: An effective parent.
-    :rtype: udapi.core.node.Node
+    :return: A list of effective parents.
+    :rtype: list
 
     """
+    # Rule (1): When node.deprel == conj, its effective parents are equal to its parent.
     if node.deprel == 'conj':
-        return node.parent.parent
+        return eparents(node.parent)
 
-    return node.parent
+    # Rule (2): Append the real parent and look for its coordinated nodes.
+    final_eparents = [node.parent]
+    for candidate_eparent in node.parent.children:
+        if candidate_eparent.deprel == 'conj':
+            final_eparents.append(candidate_eparent)
+
+    return final_eparents
 
 
 def echildren(node):
@@ -32,34 +36,35 @@ def echildren(node):
     :rtype: list
 
     """
-    node_parent = eparent(node)
+    node_parents = eparents(node)
     echildren_list = [child for child in node.children]
 
     # Rule (A)
     target_deprels = ['subj', 'subjpass', 'dobj', 'iobj', 'compl']
-    for candidate_child in node_parent.children:
-        # Check if a candidate node C has the target deprel.
-        if candidate_child.deprel not in target_deprels:
-            continue
+    for node_parent in node_parents:
+        for candidate_child in node_parent.children:
+            # Check if a candidate node C has the target deprel.
+            if candidate_child.deprel not in target_deprels:
+                continue
 
-        # Check if such deprel is not in the current node children already.
-        no_such_deprel = True
-        for current_child in node.children:
-            if current_child.deprel == candidate_child.deprel:
-                no_such_deprel = False
-                break
+            # Check if such deprel is not in the current node children already.
+            no_such_deprel = True
+            for current_child in node.children:
+                if current_child.deprel == candidate_child.deprel:
+                    no_such_deprel = False
+                    break
 
-        # If there is no such deprel, we can add a new secondary dependence.
-        if no_such_deprel:
-            echildren_list.append(candidate_child)
+            # If there is no such deprel, we can add a new secondary dependence.
+            if no_such_deprel:
+                echildren_list.append(candidate_child)
 
     # Rule (B)
-    if node.upostag == 'VERB' and (node_parent.upostag == 'AUX' or
-        node_parent.lemma in ['chtít', 'moci', 'smět', 'mít', 'muset', 'umět']):
-        for candidate_child in node_parent.children:
-            # Check if the candidate child is not in the current node children already.
-            if candidate_child not in echildren_list:
-                echildren_list.append(candidate_child)
+    for node_parent in node_parents:
+        if node.upostag == 'VERB' and (node_parent.upostag == 'AUX' or node_parent.lemma in ['chtít', 'moci', 'smět', 'mít', 'muset', 'umět']):
+            for candidate_child in node_parent.children:
+                # Check if the candidate child is not in the current node children already.
+                if candidate_child not in echildren_list:
+                    echildren_list.append(candidate_child)
 
     return echildren_list
 

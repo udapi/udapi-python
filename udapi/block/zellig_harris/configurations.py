@@ -71,8 +71,12 @@ class Configurations(Block):
                 logging.info(' - no configurations, but all conditions passed.')
 
         for (node_a, relation_name, node_b) in triples:
-            print_triple(node_a, relation_name, node_b,
-                         print_lemma=self.print_lemmas)
+            triple = print_triple(node_a, relation_name, node_b, print_lemma=self.print_lemmas)
+
+            if self.verbose:
+                logging.info(' - %s', triple)
+
+            print(triple)
 
     def process_tree(self, tree):
         """
