@@ -1,5 +1,5 @@
 """Node class represents a node in UD trees."""
-
+from udapi.block.write.textmodetrees import TextModeTrees
 
 class Node(object):
     """
@@ -477,6 +477,26 @@ class Node(object):
             return self.root._descendants[self.ord]
         except IndexError:
             return None
+
+    def is_leaf(self):
+        return not self.children
+
+    def get_attrs(self, attrs, undefs=None):
+        values = [getattr(self, name) for name in attrs]
+        if undefs is not None:
+            values = [x if x is not None else undefs for x in values]
+        return values
+
+    def compute_sentence(self):
+        string = ''
+        for node in self.descendants():
+            string += node.form
+            if node.misc.find('SpaceAfter=No') == -1:
+                string += ' '
+        return string
+
+    def print_subtree(self, **kwargs):
+        TextModeTrees(**kwargs).process_tree(self)
 
     def address(self):
         """
