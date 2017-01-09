@@ -1,4 +1,4 @@
-# sent_id a-mf920901-001-p1s1A
+# sent_id = a-mf920901-001-p1s1A
 # orig_file_sentence mf920901_001#1
 1	Slovenská	slovenský	ADJ	AAFS1----1A----	Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing	2	amod	0:root|2:amod	_
 2	ústava	ústava	NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Negative=Pos|Number=Sing	0	root	0:root	SpaceAfter=No

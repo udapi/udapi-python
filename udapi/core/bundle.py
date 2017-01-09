@@ -16,7 +16,7 @@ class Bundle(object):
     Trees in one bundle are distinguished by a zone label.
     """
 
-    __slots__ = ["trees", "number", "bundle_id", "_aux", "_document"]
+    __slots__ = ["trees", "number", "bundle_id", "_document"]
 
     def __init__(self, bundle_id=None, document=None):
         self.trees = []
@@ -62,8 +62,7 @@ class Bundle(object):
         if new_zone == 'all':
             raise ValueError("'all' cannot be used as a zone name")
         if new_zone in [x.zone for x in self.trees]:
-            raise Exception(
-                "Tree with zone '%s' already exists in %s" % new_zone, self)
+            raise Exception("Tree with zone '%s' already exists in %s" % (new_zone, self))
 
     def add_tree(self, root):
         """Add an existing tree to the bundle."""

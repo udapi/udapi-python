@@ -6,7 +6,7 @@ class Root(Node):
     """
     Class for representing root nodes (technical roots) in UD trees.
     """
-    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_aux']
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_descendants', 'text']
 
     def __init__(self, data=None):
         # Initialize data if not given
@@ -14,7 +14,7 @@ class Root(Node):
             data = dict()
 
         # Call constructor of the parent object.
-        super(Root, self).__init__(data)
+        super().__init__(data)
 
         self.ord = 0
         self.form = '<ROOT>'
@@ -22,15 +22,15 @@ class Root(Node):
         self.upostag = '<ROOT>'
         self.xpostag = '<ROOT>'
         self.deprel = '<ROOT>'
-        self.misc = '<ROOT>'
-        self._parent = None
+        self.misc = None
+        self.text = None
 
+        self._parent = None
         self._sent_id = None
         self._zone = None
         self._bundle = None
         self._children = list()
-        self._aux = dict()
-        self._aux['descendants'] = []
+        self._descendants = []
 
         for name in data:
             setattr(self, name, data[name])
@@ -73,14 +73,6 @@ class Root(Node):
         self._children = children
 
     @property
-    def aux(self):
-        return self._aux
-
-    @aux.setter
-    def aux(self, value):
-        self._aux = value
-
-    @property
     def parent(self):
         return None
 
@@ -99,7 +91,7 @@ class Root(Node):
         :return: A list of descendant nodes.
         :rtype: list
         """
-        return self._aux['descendants']
+        return self._descendants
 
     def is_descendant_of(self, node):
         return False
@@ -116,8 +108,7 @@ class Root(Node):
         Remove the whole tree from its bundle
 
         """
-        self.bundle.trees = [
-            root for root in self.bundle.trees if root == self]
+        self.bundle.trees = [root for root in self.bundle.trees if root != self]
 
     def shift(self,
               reference_node, after=0, move_subtree=0, reference_subtree=0):
@@ -125,16 +116,5 @@ class Root(Node):
             'Technical root cannot be shifted as it is always the first node')
 
     def address(self):
-        """
-        Full (document-wide) id of the root.
-
-        """
-        partial_ids = []
-
-        if self.bundle:
-            partial_ids.append(self._bundle.bundle_id)
-
-        if self.zone:
-            partial_ids.append(self.zone)
-
-        return '/'.join(partial_ids)
+        """Full (document-wide) id of the root."""
+        return self._bundle.bundle_id + ('/' + self.zone if self.zone else '')

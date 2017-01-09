@@ -11,6 +11,8 @@ argparser.add_argument("-q", "--quiet", action="store_true",
                        help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
 argparser.add_argument("-v", "--verbose", action="store_true",
                        help="Warning, info and debug messages are printed to the STDERR.")
+argparser.add_argument("-s", "--save", action="store_true",
+                       help="Add write.Conllu to the end of the scenario")
 argparser.add_argument('scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
 args = argparser.parse_args()
@@ -27,5 +29,7 @@ logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(mes
 
 # Process and provide the scenario.
 if __name__ == "__main__":
+    if args.save:
+        args.scenario = args.scenario + ['write.Conllu']
     runner = Run(args)
     runner.execute()

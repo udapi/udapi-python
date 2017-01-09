@@ -1,6 +1,7 @@
 import logging
 
 from udapi.core.document import Document
+from udapi.block.read.conllu import Conllu
 
 
 def _parse_block_name(block_name):
@@ -62,6 +63,8 @@ def _parse_command_line_arguments(scenario):
                 'Block attribute pair %r without a prior block name', token)
 
         # Put it as a new argument for the previous block
+        if attribute_value.isdigit():
+            attribute_value = int(attribute_value)
         block_args[-1][attribute_name] = attribute_value
 
     return block_names, block_args
@@ -84,16 +87,15 @@ def _import_blocks(block_names, block_args):
         sub_path, class_name = _parse_block_name(block_name)
         module = "udapi.block." + sub_path + "." + class_name.lower()
         try:
-            command = "from " + module + " import " + \
-                class_name + " as b" + str(block_id)
+            command = "from " + module + " import " + class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
             exec(command)
         except:
-            raise RuntimeError(
-                "Error when trying import the block %s", block_name)
+            raise RuntimeError("Error when trying import the block %s", block_name)
 
         # Run the imported module.
-        command = "b%s(block_args[block_id])" % block_id
+        kwargs = block_args[block_id]
+        command = "b%s(**kwargs)" % block_id
         logging.debug("Trying to evaluate this: %s", command)
         new_block_instance = eval(command)
         blocks.append(new_block_instance)
@@ -122,24 +124,11 @@ class Run(object):
         if len(args.scenario) < 1:
             raise ValueError('Empty scenario')
 
-    def run(self):
-        """
-        FIXME
-
-        :return:
-
-        """
-        pass
-
     def execute(self):
-        """
-        Parse given scenario and execute it.
-
-        """
+        """Parse given scenario and execute it."""
 
         # Parse the given scenario from the command line.
-        block_names, block_args = _parse_command_line_arguments(
-            self.args.scenario)
+        block_names, block_args = _parse_command_line_arguments(self.args.scenario)
 
         # Import blocks (classes) and construct block instances.
         blocks = _import_blocks(block_names, block_args)
@@ -148,7 +137,6 @@ class Run(object):
         for block in blocks:
             block.process_start()
 
-        # Apply blocks on the data.
         readers = []
         for block in blocks:
             try:
@@ -156,14 +144,22 @@ class Run(object):
                 readers.append(block)
             except:
                 pass
+        if not readers:
+            logging.info('No reader specified, using read.Conllu')
+            conllu_reader = Conllu()
+            readers = [conllu_reader]
+            blocks = readers + blocks
 
+        # Apply blocks on the data.
         finished = False
         while not finished:
             document = Document()
             logging.info(" ---- ROUND ----")
             for block in blocks:
                 logging.info("Executing block " + block.__class__.__name__)
+                block.before_process_document(document)
                 block.process_document(document)
+                block.after_process_document(document)
 
             finished = True
 

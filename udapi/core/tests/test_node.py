@@ -62,7 +62,7 @@ class TestDocument(unittest.TestCase):
 
         # Read a test CoNLLU file.
         document = Document()
-        reader = Conllu({'filename': data_filename})
+        reader = Conllu(files=data_filename)
         reader.process_document(document)
 
         # Exactly one bundle should be loaded.
@@ -70,7 +70,7 @@ class TestDocument(unittest.TestCase):
 
         # Obtain the dependency tree and check its sentence ID.
         root_node = document.bundles[0].get_tree()
-        self.assertEqual(root_node.sent_id, 'a-mf920901-001-p1s1A')
+        self.assertEqual(root_node.bundle.bundle_id, 'a-mf920901-001-p1s1A')
 
         # Check raw secondary dependencies for each node.
         nodes = root_node.descendants()
