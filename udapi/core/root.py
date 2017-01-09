@@ -1,12 +1,12 @@
 """Root class represents the technical root node in each tree."""
 from udapi.core.node import Node
-
+from udapi.core.mwt import MWT
 
 class Root(Node):
     """
     Class for representing root nodes (technical roots) in UD trees.
     """
-    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_descendants', 'text']
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_children', '_descendants', '_mwts', 'text']
 
     def __init__(self, data=None):
         # Initialize data if not given
@@ -31,6 +31,7 @@ class Root(Node):
         self._bundle = None
         self._children = list()
         self._descendants = []
+        self._mwts = []
 
         for name in data:
             setattr(self, name, data[name])
@@ -97,17 +98,11 @@ class Root(Node):
         return False
 
     def is_root(self):
-        """
-        Returns True for all Root instances.
-
-        """
+        """Returns True for all Root instances."""
         return True
 
     def remove(self):
-        """
-        Remove the whole tree from its bundle
-
-        """
+        """Remove the whole tree from its bundle."""
         self.bundle.trees = [root for root in self.bundle.trees if root != self]
 
     def shift(self,
@@ -118,3 +113,16 @@ class Root(Node):
     def address(self):
         """Full (document-wide) id of the root."""
         return self._bundle.bundle_id + ('/' + self.zone if self.zone else '')
+
+    def create_multiword_token(self, words=None, form=None, misc=None):
+        mwt = MWT(words, form, misc, root=self)
+        self._mwts.append(mwt)
+        return mwt
+
+    @property
+    def multiword_tokens(self):
+        return self._mwts
+
+    @multiword_tokens.setter
+    def multiword_tokens(self, mwts):
+        self._mwts = mwts

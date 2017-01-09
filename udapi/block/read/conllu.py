@@ -39,6 +39,7 @@ class Conllu(BaseReader):
         if filehandle is None:
             return None
 
+        mwts = []
         for line in filehandle:
             line = line.rstrip()
             if line == '':
@@ -57,8 +58,9 @@ class Conllu(BaseReader):
                 fields = line.split('\t')
                 if self.strict and len(fields) != len(self.node_attributes):
                     raise RuntimeError('Wrong number of columns in %r' % line)
+                # multi-word tokens will be processed later
                 if fields[0].find('-') != -1:
-                    # TODO multiword tokens
+                    mwts.append(fields)
                     continue
 
                 node = root.create_child()
@@ -100,6 +102,13 @@ class Conllu(BaseReader):
 
         if comment != '':
             root.misc = comment
-            comment = ''
+
+        # Create multi-word tokens.
+        for fields in mwts:
+            range_start, range_end = fields[0].split('-')
+            words = nodes[int(range_start):int(range_end)+1]
+            mwt = root.create_multiword_token(words, form=fields[1])
+            if fields[-1] != '_':
+                mwt.misc = fields[-1]
 
         return root

@@ -1,0 +1,33 @@
+"""MWT class represents a multi-word token."""
+
+class MWT(object):
+    """
+    Class for representing multi-word tokens in UD trees.
+    """
+    __slots__ = ['words', 'form', 'misc', 'root']
+
+    def __init__(self, words=None, form=None, misc=None, root=None):
+        self.words = words if words is not None else []
+        self.form = form
+        self.misc = misc
+        self.root = root
+        for word in self.words:
+            word._mwt = self
+
+    def ord_range(self):
+        return "%d-%d" % (self.words[0].ord, self.words[-1].ord)
+
+    def remove(self):
+        """Delete this multi-word token (but keep its words)."""
+        for word in self.words:
+            word._mwt = None
+        self.root.multiword_tokens = [tok for tok in self.root.multiword_tokens if tok != self]
+
+    def address(self):
+        """Full (document-wide) id of the multi-word token."""
+        return self.root.address + '#' + self.ord_range
+
+# TODO: node.remove() should check if the node is not part of any MWT
+# TODO: mwt.words.append(node) and node.shift* should check if the MWT does not contain gaps
+#       and is still multi-word
+# TODO: check if one word is not included in multiple multi-word tokens
