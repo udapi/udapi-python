@@ -35,7 +35,15 @@ class Conllu(BaseWriter):
             comment = comment.rstrip()
             print('#' + comment.replace('\n', '\n#'))
 
+        last_mwt_id = 0
         for node in nodes:
+            mwt = node.multiword_token
+            if mwt and node.ord > last_mwt_id:
+                last_mwt_id = mwt.words[-1].ord
+                print('\t'.join([mwt.ord_range(),
+                                mwt.form if mwt.form is not None else '_',
+                                '_\t_\t_\t_\t_\t_\t_',
+                                mwt.misc if mwt.misc is not None else '_']))
             values = [getattr(node, node_attribute) for node_attribute in self.node_attributes]
             values[0] = str(values[0])
             try:

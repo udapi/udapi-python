@@ -40,6 +40,7 @@ class Node(object):
         '_feats',
         '_parent',     # Parent node.
         '_children',   # Ord-ordered list of child nodes.
+        '_mwt',        # multi-word token in which this word participates
     ]
 
     def __init__(self, data=None):
@@ -63,6 +64,7 @@ class Node(object):
         self._feats = None
         self._parent = None
         self._children = list()
+        self._mwt = None
 
         # If given, set the node using data from arguments.
         for name in data:
@@ -490,3 +492,7 @@ class Node(object):
 
         """
         return '%s#%d' % (self.root.address(), self.ord)
+
+    @property
+    def multiword_token(self):
+        return self._mwt
