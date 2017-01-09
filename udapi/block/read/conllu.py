@@ -96,7 +96,7 @@ class Conllu(BaseReader):
             node.parent = nodes[parents[node_ord]]
 
         # Set root attributes (descendants for faster iteration of all nodes in a tree).
-        root.aux['descendants'] = nodes[1:]
+        root._descendants = nodes[1:]
 
         if comment != '':
             root.misc = comment

@@ -40,7 +40,6 @@ class Node(object):
         '_feats',
         '_parent',     # Parent node.
         '_children',   # Ord-ordered list of child nodes.
-        '_aux'        # Other technical attributes.
     ]
 
     def __init__(self, data=None):
@@ -64,7 +63,6 @@ class Node(object):
         self._feats = None
         self._parent = None
         self._children = list()
-        self._aux = dict()
 
         # If given, set the node using data from arguments.
         for name in data:
@@ -250,14 +248,6 @@ class Node(object):
         self._children = children
 
     @property
-    def aux(self):
-        return self._aux
-
-    @aux.setter
-    def aux(self, value):
-        self._aux = int(value)
-
-    @property
     def root(self):
         """
         Climbs up to the root and returns it.
@@ -280,10 +270,7 @@ class Node(object):
         :rtype: list
 
         """
-        if self.is_root():
-            return self._aux['descendants']
-        else:
-            return sorted(self.unordered_descendants_using_children())
+        return sorted(self.unordered_descendants(), key=lambda node: node.ord)
 
     def is_descendant_of(self, node):
         """
@@ -312,13 +299,13 @@ class Node(object):
 
         """
         new_node = Node()
-        new_node.ord = len(self.root.aux['descendants']) + 1
-        self.root.aux['descendants'].append(new_node)
+        new_node.ord = len(self.root._descendants) + 1
+        self.root._descendants.append(new_node)
         self.children.append(new_node)
         new_node.parent = self
         return new_node
 
-    def unordered_descendants_using_children(self):
+    def unordered_descendants(self):
         """
         FIXME
 
@@ -328,7 +315,7 @@ class Node(object):
         """
         descendants = [self]
         for child in self.children:
-            descendants.extend(child.unordered_descendants_using_children())
+            descendants.extend(child.unordered_descendants())
         return descendants
 
     def is_root(self):
@@ -346,11 +333,10 @@ class Node(object):
         """
         root = self.root
         descendants = [
-            node for node in root.unordered_descendants_using_children() if node != root]
-        descendants = sorted(
-            descendants, key=lambda descendant: descendant.ord)
+            node for node in root.unordered_descendants() if node != root]
+        descendants = sorted(descendants, key=lambda descendant: descendant.ord)
 
-        root.aux['descendants'] = descendants
+        root._descendants = descendants
 
         for (new_ord, node) in enumerate(descendants):
             node.ord = new_ord + 1
@@ -480,7 +466,7 @@ class Node(object):
             return None
         if new_ord == 0:
             return self.root
-        return self.root.aux['descendants'][self.ord - 1]
+        return self.root._descendants[self.ord - 1]
 
     def next_node(self):
         """
@@ -491,7 +477,7 @@ class Node(object):
         """
         # Note that all_nodes[n].ord == n+1
         try:
-            return self.root.aux['descendants'][self.ord]
+            return self.root._descendants[self.ord]
         except IndexError:
             return None
 

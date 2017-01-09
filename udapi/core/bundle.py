@@ -16,7 +16,7 @@ class Bundle(object):
     Trees in one bundle are distinguished by a zone label.
     """
 
-    __slots__ = ["trees", "number", "bundle_id", "_aux", "_document"]
+    __slots__ = ["trees", "number", "bundle_id", "_document"]
 
     def __init__(self, bundle_id=None, document=None):
         self.trees = []
