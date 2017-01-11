@@ -6,13 +6,10 @@ class Root(Node):
     """Class for representing root nodes (technical roots) in UD trees."""
     __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts', 'text']
 
-    def __init__(self, data=None):
+    def __init__(self, sent_id=None, zone=None, misc=None, text=None):
         """Create new root node."""
-        if data is None:
-            data = dict()
-
         # Call constructor of the parent object.
-        super().__init__(data)
+        super().__init__()
 
         self.ord = 0
         self.form = '<ROOT>'
@@ -20,16 +17,14 @@ class Root(Node):
         self.upostag = '<ROOT>'
         self.xpostag = '<ROOT>'
         self.deprel = '<ROOT>'
-        self.text = None
+        self.misc = misc
+        self.text = text
 
-        self._sent_id = None
-        self._zone = None
+        self._sent_id = sent_id
+        self._zone = zone
         self._bundle = None
         self._descendants = []
         self._mwts = []
-
-        for name in data:
-            setattr(self, name, data[name])
 
     @property
     def sent_id(self):

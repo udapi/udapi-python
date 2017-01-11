@@ -38,9 +38,6 @@ class Node(object):
 
     def __init__(self, data=None):
         """Create new node and initialize its attributes with data."""
-        if data is None:
-            data = dict()
-
         # Initialization of the (A) list.
         self.ord = None
         self.form = None
@@ -60,8 +57,9 @@ class Node(object):
         self._mwt = None
 
         # If given, set the node using data from arguments.
-        for name in data:
-            setattr(self, name, data[name])
+        if data is not None:
+            for name in data:
+                setattr(self, name, data[name])
 
     def __str__(self):
         """Pretty print of the Node object."""
