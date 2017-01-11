@@ -204,8 +204,26 @@ class Node(object):
 
     @property
     def children(self):
-        """Return a list of dependency children (direct dependants) nodes."""
-        return self._children
+        """Return a list of dependency children (direct dependants) nodes.
+
+        The returned nodes are sorted by their ord.
+        Note that node.children is a property, not a method,
+        so if you want all the children of a node (excluding the node itself),
+        you should not use node.children(), but just
+         node.children
+        However, the returned result is a callable list, so you can use
+         nodes1 = node.children(add_self=True)
+         nodes2 = node.children(following_only=True)
+         nodes3 = node.children(preceding_only=True)
+         nodes4 = node.children(preceding_only=True, add_self=True)
+        as a shortcut for
+         nodes1 = sorted([node] + node.children, key=lambda n: n.ord)
+         nodes2 = [n for n in node.children if n.ord > node.ord]
+         nodes3 = [n for n in node.children if n.ord < node.ord]
+         nodes4 = [n for n in node.children if n.ord < node.ord] + [node]
+        See documentation of ListOfNodes for details.
+        """
+        return ListOfNodes(self._children, origin=self)
 
     @property
     def root(self):
@@ -215,12 +233,28 @@ class Node(object):
             node = node.parent
         return node
 
+    @property
     def descendants(self):
         """Return a list of all descendants of the current node.
 
-        The nodes are sorted by their ord.
+        The returned nodes are sorted by their ord.
+        Note that node.descendants is a property, not a method,
+        so if you want all the descendants of a node (excluding the node itself),
+        you should not use node.descendants(), but just
+         node.descendants
+        However, the returned result is a callable list, so you can use
+         nodes1 = node.descendants(add_self=True)
+         nodes2 = node.descendants(following_only=True)
+         nodes3 = node.descendants(preceding_only=True)
+         nodes4 = node.descendants(preceding_only=True, add_self=True)
+        as a shortcut for
+         nodes1 = sorted([node] + node.descendants, key=lambda n: n.ord)
+         nodes2 = [n for n in node.descendants if n.ord > node.ord]
+         nodes3 = [n for n in node.descendants if n.ord < node.ord]
+         nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
+        See documentation of ListOfNodes for details.
         """
-        return sorted(self.unordered_descendants(), key=lambda node: node.ord)
+        return ListOfNodes(sorted(self.unordered_descendants(), key=lambda n: n.ord), origin=self)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
@@ -326,6 +360,7 @@ class Node(object):
         """
         self.shift(reference_node, after=0, move_subtree=not without_children, reference_subtree=1)
 
+    @property
     def prev_node(self):
         """Return the previous node according to word order."""
         new_ord = self.ord - 1
@@ -335,6 +370,7 @@ class Node(object):
             return self.root
         return self.root._descendants[self.ord - 1]
 
+    @property
     def next_node(self):
         """Return the following node according to word order."""
         # Note that all_nodes[n].ord == n+1
@@ -415,3 +451,48 @@ class Node(object):
         If this nodes is not part of any multi-word token, this method returns None.
         """
         return self._mwt
+
+
+class ListOfNodes(list):
+    """Helper class for results of node.children and node.descendants.
+
+    Python distinguishes properties, e.g. node.form ... no brackets,
+    and methods, e.g. node.remove() ... brackets necessary.
+    It is useful (and expected by Udapi users) to use properties,
+    so one can do e.g. node.form += "suffix".
+    It is questionable whether node.parent, node.root, node.children etc.
+    should be properties or methods. The problem of methods is that
+    if users forget the brackets, the error may remain unnoticed
+    because the result is interpreted as a method reference.
+    The problem of properties is that they cannot have any parameters.
+    However, we would like to allow e.g. node.children(add_self=True).
+
+    This class solves the problem: node.children and node.descendants
+    are properties which return instances of this clas ListOfNodes.
+    This class implements the method __call__, so one can use e.g.
+    nodes = node.children
+    nodes = node.children()
+    nodes = node.children(add_self=True, following_only=True)
+    """
+    def __init__(self, iterable, origin):
+        """Create a new ListOfNodes.
+
+        Args:
+        iterable: a list of nodes
+        origin: a node which is the parent/ancestor of these nodes
+        """
+        super().__init__(iterable)
+        self.origin = origin
+
+    def __call__(self, add_self=False, following_only=False, preceding_only=False):
+        """Returns a subset of nodes contained in this list as specified by the args."""
+        if not add_self and not following_only and not preceding_only:
+            return self
+        result = list(self)
+        if add_self:
+            result.append(self.origin)
+        if preceding_only:
+            result = [x for x in result if x.ord <= self.origin.ord]
+        if following_only:
+            result = [x for x in result if x.ord >= self.origin.ord]
+        return sorted(result, key=lambda node: node.ord)

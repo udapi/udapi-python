@@ -1,5 +1,5 @@
 """Root class represents the technical root node in each tree."""
-from udapi.core.node import Node
+from udapi.core.node import Node, ListOfNodes
 from udapi.core.mwt import MWT
 
 class Root(Node):
@@ -69,13 +69,14 @@ class Root(Node):
         """Attempts at setting parent of root result in AttributeError exception."""
         raise AttributeError('The technical root cannot have a parent.')
 
+    @property
     def descendants(self):
         """Return a list of all descendants of the current node.
 
         The nodes are sorted by their ord.
         This root-specific implementation returns all the nodes in the tree except the root itself.
         """
-        return self._descendants
+        return ListOfNodes(self._descendants, origin=self)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?
