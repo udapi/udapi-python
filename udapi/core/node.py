@@ -10,18 +10,12 @@ class Node(object):
     __slots__ = [
         # Word index, integer starting at 1 for each new sentence.
         'ord',
-        'form',        # Word form or punctuation symbol.
-        'lemma',       # Lemma or stem of word form.
-        # Universal POS tag drawn from our revised version of the Google UPOS tags.
-        'upostag',
-        # Language-specific part-of-speech tag; underscore if not available.
-        'xpostag',
-        # TODO: head is not needed, Udapi uses parent
-        # Head of the current token, which is either a value of ID or zero (0).
-        'head',
-        # Universal Stanford dependency relation to the HEAD (root iff HEAD = 0).
-        'deprel',
-        'misc',        # Any other annotation.
+        'form',    # Word form or punctuation symbol.
+        'lemma',   # Lemma of word form.
+        'upostag', # Universal PoS tag
+        'xpostag', # Language-specific part-of-speech tag; underscore if not available.
+        'deprel',  # UD dependency relation to the HEAD (root iff HEAD = 0).
+        'misc',    # Any other annotation.
 
         # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
         '_raw_deps',
