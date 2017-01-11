@@ -9,3 +9,10 @@
 # (we can afford more descriptive variable/method names,
 # while not having to break too many lines.)
 max-line-length=100
+
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+# Including TODO into the list of problems is a bad idea, I think.
+notes=FIXME,XXX
