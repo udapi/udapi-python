@@ -1,0 +1,11 @@
+# Udapi project overrides some of the default pylint settings
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+# Most of the code is in a method in a class, which adds 8 spaces,
+# so with the default limit 79, there would be just 71 chars left.
+# By increasing the limit to 100, I hope we improve the readability
+# (we can afford more descriptive variable/method names,
+# while not having to break too many lines.)
+max-line-length=100

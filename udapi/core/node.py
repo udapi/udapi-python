@@ -2,9 +2,7 @@
 from udapi.block.write.textmodetrees import TextModeTrees
 
 class Node(object):
-    """
-    Class for representing nodes in Universal Dependency trees.
-    """
+    """Class for representing nodes in Universal Dependency trees."""
 
     # TODO: Benchmark memory and speed of slots vs. classic dict.
     # With Python 3.5 split dict, slots may not be better.
@@ -14,29 +12,24 @@ class Node(object):
         'ord',
         'form',        # Word form or punctuation symbol.
         'lemma',       # Lemma or stem of word form.
-        # Universal POS tag drawn from our revised version of the Google UPOS
-        # tags.
+        # Universal POS tag drawn from our revised version of the Google UPOS tags.
         'upostag',
         # Language-specific part-of-speech tag; underscore if not available.
         'xpostag',
         # TODO: head is not needed, Udapi uses parent
         # Head of the current token, which is either a value of ID or zero (0).
         'head',
-        # Universal Stanford dependency relation to the HEAD (root iff HEAD =
-        # 0).
+        # Universal Stanford dependency relation to the HEAD (root iff HEAD = 0).
         'deprel',
         'misc',        # Any other annotation.
 
-        # Secondary dependencies (head-deprel pairs) in their original CoNLLU
-        # format.
+        # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
         '_raw_deps',
-        # Deserialized secondary dependencies in a list od {parent, deprel}
-        # dicts.
+        # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
         '_deps',
         # Morphological features in their original CoNLLU format.
         '_raw_feats',
-        # Deserialized morphological features stored in a dict (feature ->
-        # value).
+        # Deserialized morphological features stored in a dict (feature -> value).
         '_feats',
         '_parent',     # Parent node.
         '_children',   # Ord-ordered list of child nodes.
@@ -44,6 +37,7 @@ class Node(object):
     ]
 
     def __init__(self, data=None):
+        """Create new node and initialize its attributes with data."""
         if data is None:
             data = dict()
 
@@ -53,7 +47,6 @@ class Node(object):
         self.lemma = None
         self.upostag = None
         self.xpostag = None
-        # self.head = '_'
         self.deprel = None
         self.misc = None
 
@@ -71,12 +64,7 @@ class Node(object):
             setattr(self, name, data[name])
 
     def __str__(self):
-        """
-        Pretty print of the Node object.
-
-        :return: A pretty textual description of the Node.
-
-        """
+        """Pretty print of the Node object."""
         parent_ord = None
         if self.parent is not None:
             parent_ord = self.parent.ord
@@ -84,43 +72,34 @@ class Node(object):
 
     @property
     def raw_feats(self):
-        """
-        After the access to the raw morphological feature set,
+        """String serialization of morphological features as stored in CoNLL-U files.
+
+        After the access to the raw morphological features,
         provide the serialization of the features if they were deserialized already.
-
-        :return: A raw string with morphological features, as stored in the conllu files.
-        :rtype: str
-
         """
         if self._feats is not None:
             serialized_features = []
             for feature in sorted(self._feats):
-                serialized_features.append(
-                    '%s=%s' % (feature, self._feats[feature]))
+                serialized_features.append('%s=%s' % (feature, self._feats[feature]))
             self._raw_feats = '|'.join(serialized_features)
         return self._raw_feats
 
     @raw_feats.setter
     def raw_feats(self, value):
-        """
+        """Set serialized morphological features (the new value is a string).
+
         When updating raw morphological features,
         delete the current version of the deserialized feautures.
-
-        :param value: A new raw morphologial feratures.
-
         """
         self._raw_feats = str(value)
         self._feats = None
 
     @property
     def raw_deps(self):
-        """
-        After the access to the raw secondary dependencies,
+        """String serialization of enhanced dependencies as stored in CoNLL-U files.
+
+        After the access to the raw enhanced dependencies,
         provide the serialization if they were deserialized already.
-
-        :return: A raw string with secondary dependencies, as stored in the CoNLLU files.
-        :rtype: str
-
         """
         if self._deps is not None:
             serialized_deps = []
@@ -135,24 +114,20 @@ class Node(object):
 
     @raw_deps.setter
     def raw_deps(self, value):
-        """
-        When updating raw secondary dependencies, delete the current version of the deserialized data.
+        """Set serialized enhanced dependencies (the new value is a string).
 
-        :param value: A new raw secondary dependencies.
-
+        When updating raw secondary dependencies,
+        delete the current version of the deserialized data.
         """
         self._raw_deps = str(value)
         self._deps = None
 
     @property
     def feats(self):
-        """
-        After the first access to the morphological feature set,
+        """Return morphological features as a Python dict.
+
+        After the first access to the morphological features,
         provide the deserialization of the features and save features to the dict.
-
-        :return: A dict with morphological features.
-        :rtype: dict
-
         """
         if self._feats is None:
             self._feats = dict()
@@ -164,17 +139,15 @@ class Node(object):
 
     @feats.setter
     def feats(self, value):
+        """Set deserialized morphological features (the new value is a dict)."""
         self._feats = value
 
     @property
     def deps(self):
-        """
-        After the first access to the secondary dependencies set,
+        """Return enhanced dependencies as a Python list of dicts.
+
+        After the first access to the enhanced dependencies,
         provide the deserialization of the raw data and save deps to the list.
-
-        :return: A list with secondary dependencies.
-        :rtype: list
-
         """
         if self._deps is None:
             # Obtain a list of all nodes in the dependency tree.
@@ -195,22 +168,22 @@ class Node(object):
 
     @deps.setter
     def deps(self, value):
+        """Set deserialized enhanced dependencies (the new value is a list of dicts)."""
         self._deps = value
 
     @property
     def parent(self):
+        """Return dependency parent (head) node."""
         return self._parent
 
     @parent.setter
     def parent(self, new_parent):
-        """
+        """Set a new dependency parent node.
+
         Check if the parent assignment is valid (no cycles) and assign
         a new parent (dependency head) for the current node.
         If the node had a parent, it is detached first
         (from the list of original parent's children).
-
-        :param new_parent: A parent Node object.
-
         """
         # If the parent is already assigned, return.
         if self.parent == new_parent:
@@ -218,16 +191,13 @@ class Node(object):
 
         # The node itself couldn't be assigned as a parent.
         if self == new_parent:
-            raise ValueError(
-                'Could not set the node itself as a parent: %s' % self)
+            raise ValueError('Could not set the node itself as a parent: %s' % self)
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
         while not climbing_node.is_root:
             if climbing_node == self:
-                raise Exception(
-                    'Setting the parent would lead to a loop: %s' % self)
-
+                raise Exception('Setting the parent would lead to a loop: %s' % self)
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
@@ -242,59 +212,35 @@ class Node(object):
 
     @property
     def children(self):
+        """Return a list of dependency children (direct dependants) nodes."""
         return self._children
 
     @property
     def root(self):
-        """
-        Climbs up to the root and returns it.
-
-        :return: A root node.
-        :rtype: Root
-
-        """
+        """Return the (technical) root node of the whole tree."""
         node = self
         while node.parent:
             node = node.parent
-
         return node
 
     def descendants(self):
-        """
-        Return a list of all descendants of the current node.
+        """Return a list of all descendants of the current node.
 
-        :return: A list of descendant nodes.
-        :rtype: list
-
+        The nodes are sorted by their ord.
         """
         return sorted(self.unordered_descendants(), key=lambda node: node.ord)
 
     def is_descendant_of(self, node):
-        """
-        Return true if the given node is a descendant of the current Node.
-
-        :param node: A candidate descendant.
-        :return: True if an input node is a descendant of the current Node.
-        :rtype: bool
-
-        """
+        """Is the current node a descendant of the node given as argument?"""
         climber = self.parent
         while climber:
             if climber == node:
                 return True
-
             climber = climber.parent
-
         return False
 
     def create_child(self):
-        """
-        Create a new child of the current node.
-
-        :return: A new created Node.
-        :rtype: Node
-
-        """
+        """Create and return a new child of the current node."""
         new_node = Node()
         new_node.ord = len(self.root._descendants) + 1
         self.root._descendants.append(new_node)
@@ -302,65 +248,44 @@ class Node(object):
         new_node.parent = self
         return new_node
 
+    # TODO: make private: _unordered_descendants
     def unordered_descendants(self):
-        """
-        FIXME
-
-        :return:
-        :type: list
-
-        """
+        """Return a list of all descendants in any order."""
         descendants = [self]
         for child in self.children:
             descendants.extend(child.unordered_descendants())
         return descendants
 
     def is_root(self):
-        """
-        Returns False for all Node instances, irrespectively of whether is has a parent or not.
+        """Is the current node a (technical) root?
 
+        Returns False for all Node instances, irrespectively of whether is has a parent or not.
+        True is returned only by instances of udapi.core.root.Root.
         """
         return False
 
+    # TODO make private: _udpate_ordering
     def update_ordering(self):
-        """
-        Update the ord attribute in all nodes and update the list or descendants stored in the
-        tree root (after node removal or addition)
+        """Update the ord ord attribute in all nodes.
 
+        Update also the list or descendants stored in the tree root.
+        This method is automatically called after node removal or addition.
         """
         root = self.root
-        descendants = [
-            node for node in root.unordered_descendants() if node != root]
-        descendants = sorted(descendants, key=lambda descendant: descendant.ord)
-
+        descendants = [node for node in root.unordered_descendants() if node != root]
+        descendants = sorted(descendants, key=lambda node: node.ord)
         root._descendants = descendants
-
         for (new_ord, node) in enumerate(descendants):
             node.ord = new_ord + 1
 
     def remove(self):
-        """
-        FIXME
-
-        :return:
-
-        """
-        self.parent.children = [
-            child for child in self.parent.children if child != self]
+        """Delete this node and all its descendants."""
+        self.parent.children = [child for child in self.parent.children if child != self]
         self.parent.update_ordering()
 
-    def shift(self,
-              reference_node, after=0, move_subtree=0, reference_subtree=0):
-        """
-        FIXME
-
-        :param reference_node:
-        :param after:
-        :param move_subtree:
-        :param reference_subtree:
-        :return:
-
-        """
+    # TODO: make private: _shift
+    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+        """Internal method for changing word order."""
         nodes_to_move = [self]
 
         if move_subtree:
@@ -383,81 +308,41 @@ class Node(object):
 
         self.update_ordering()
 
+    # TODO delete
     def shift_after(self, reference_node):
-        """
-        FIXME
+        self.shift(reference_node, after=1, move_subtree=0, reference_subtree=0)
 
-        :param reference_node:
-        :return:
-
-        """
-        self.shift(reference_node, after=1,
-                   move_subtree=0, reference_subtree=0)
-
+    # TODO delete
     def shift_subtree_after(self, reference_node):
-        """
-        FIXME
+        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
 
-        :param reference_node:
-        :return:
-
-        """
-        self.shift(reference_node, after=1,
-                   move_subtree=1, reference_subtree=0)
-
+    # TODO add without_children kwarg
     def shift_after_node(self, reference_node):
-        """
-        FIXME
-
-        :param reference_node:
-        :return:
-
-        """
-        self.shift(reference_node, after=1,
-                   move_subtree=1, reference_subtree=0)
+        """Shift this node after the reference_node."""
+        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
 
     def shift_before_node(self, reference_node):
-        """
-        FIXME
-
-        :param reference_node:
-        :return:
-
-        """
-        self.shift(reference_node, after=0,
-                   move_subtree=1, reference_subtree=0)
+        """Shift this node after the reference_node."""
+        self.shift(reference_node, after=0, move_subtree=1, reference_subtree=0)
 
     def shift_after_subtree(self, reference_node, without_children=0):
-        """
-        FIXME
+        """Shift this node (and its subtree) after the subtree rooted by reference_node.
 
-        :param reference_node:
-        :param without_children:
-        :return:
-
+        Args:
+        without_children: shift just this node without its subtree?
         """
-        self.shift(reference_node, after=1, move_subtree=1 -
-                   without_children, reference_subtree=1)
+        self.shift(reference_node, after=1, move_subtree=not without_children, reference_subtree=1)
 
     def shift_before_subtree(self, reference_node, without_children=0):
-        """
-        FIXME
+        """Shift this node (and its subtree) before the subtree rooted by reference_node.
 
-        :param reference_node:
-        :param without_children:
-        :return:
-
+        Args:
+        without_children: shift just this node without its subtree?
         """
-        self.shift(reference_node, after=0, move_subtree=1 -
-                   without_children, reference_subtree=1)
+        self.shift(reference_node, after=0, move_subtree=not without_children, reference_subtree=1)
 
     def prev_node(self):
-        """
-        FIXME
-
-        :return:
-
-        """
+        """Return the previous node according to word order."""
         new_ord = self.ord - 1
         if new_ord < 0:
             return None
@@ -466,12 +351,7 @@ class Node(object):
         return self.root._descendants[self.ord - 1]
 
     def next_node(self):
-        """
-        FIXME
-
-        :return:
-
-        """
+        """Return the following node according to word order."""
         # Note that all_nodes[n].ord == n+1
         try:
             return self.root._descendants[self.ord]
@@ -479,16 +359,38 @@ class Node(object):
             return None
 
     def is_leaf(self):
+        """Is this node a leaf, ie. a node without any children?"""
         return not self.children
 
     def get_attrs(self, attrs, undefs=None):
+        """Return multiple attributes, possibly subsitituting empty ones.
+
+        Args:
+        attrs: A list of attribute names, e.g. ['form', 'lemma'].
+        undefs: A value to be used instead of None for empty (undefined) values.
+        """
         values = [getattr(self, name) for name in attrs]
         if undefs is not None:
             values = [x if x is not None else undefs for x in values]
         return values
 
     def compute_sentence(self):
+        """Return a string representing this subtree's text (detokenized).
+
+        Compute the string by concatenating forms of nodes
+        (words and multi-word tokens) and joining them with a single space,
+        unless the node has SpaceAfter=No in its misc.
+        If called on root this method returns a string suitable for storing
+        in root.text (but it is not stored there automatically).
+
+        Technical detail:
+        If called on root, the root's form (<ROOT>) is not included in the string.
+        If called on non-root nodeA, nodeA's form is included in the string,
+        i.e. internally descendants(add_self=True) is used.
+        """
         string = ''
+        # TODO: use multi-word tokens instead of words where possible.
+        # TODO: self.descendants(add_self=not self.is_root()):
         for node in self.descendants():
             string += node.form
             if node.misc.find('SpaceAfter=No') == -1:
@@ -496,18 +398,35 @@ class Node(object):
         return string
 
     def print_subtree(self, **kwargs):
+        """Print ASCII visualization of the dependency structure of this subtree.
+
+        This method is useful for debugging.
+        Internally udapi.block.write.textmodetrees.TextModeTrees is used for the printing.
+        All keyword arguments of this method are passed to its constructor,
+        so you can use e.g.:
+        files: to redirect sys.stdout to a file
+        indent: to have wider trees
+        attributes: to override the default list 'form,upostag,deprel'
+        See TextModeTrees for details and other parameters.
+        """
         TextModeTrees(**kwargs).process_tree(self)
 
     def address(self):
-        """
-        Full (document-wide) id of the node.
+        """Return full (document-wide) id of the node.
 
-        :return: Full (document-wide) id of the node.
-        :rtype: str
-
+        For non-root nodes, the general address format is:
+        node.bundle.bundle_id + '/' + node.root.zone + '#' + node.ord,
+        e.g. s123/en_udpipe#4. If zone is empty, the slash is excluded as well,
+        e.g. s123#4.
         """
         return '%s#%d' % (self.root.address(), self.ord)
 
     @property
     def multiword_token(self):
+        """Return the multi-word token which includes this node, or None.
+
+        If this node represents a (syntactic) word which is part of a multi-word token,
+        this method returns the instance of udapi.core.mwt.MWT.
+        If this nodes is not part of any multi-word token, this method returns None.
+        """
         return self._mwt
