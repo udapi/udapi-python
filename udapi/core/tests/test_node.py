@@ -15,6 +15,25 @@ logging.basicConfig(
 
 class TestDocument(unittest.TestCase):
 
+    def test_topology(self):
+        doc = Document()
+        data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
+        doc.load_conllu(data_filename)
+        self.assertEqual(len(doc.bundles), 1)
+        root = doc.bundles[0].get_tree()
+        nodes = root.descendants()
+        self.assertEqual(len(nodes), 6)
+        self.assertEqual(nodes[1].parent, root)
+        self.assertEqual(nodes[2].root, root)
+        self.assertEqual(len(nodes[1].descendants()), 5)
+        self.assertEqual(len(nodes[1].children), 3)
+
+        # ords and reorderings
+        self.assertEqual([node.ord for node in nodes], [1,2,3,4,5,6])
+        #nodes[0].shift_after_node(nodes[1])
+        #self.assertEqual([node.ord for node in nodes], [2,1,3,4,5,6])
+        #self.assertEqual([node.ord for node in root.descendants()], [1,2,3,4,5,6])
+
     def test_feats_getter(self):
         """
         Test the deserialization of the morphological featrues.
@@ -57,8 +76,7 @@ class TestDocument(unittest.TestCase):
 
         """
         # Create a path to the test CoNLLU file.
-        data_filename = os.path.join(os.path.dirname(
-            __file__), 'data', 'secondary_dependencies.conllu')
+        data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
 
         # Read a test CoNLLU file.
         document = Document()
@@ -69,11 +87,11 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(len(document.bundles), 1)
 
         # Obtain the dependency tree and check its sentence ID.
-        root_node = document.bundles[0].get_tree()
-        self.assertEqual(root_node.bundle.bundle_id, 'a-mf920901-001-p1s1A')
+        root = document.bundles[0].get_tree()
+        self.assertEqual(root.bundle.bundle_id, 'a-mf920901-001-p1s1A')
 
         # Check raw secondary dependencies for each node.
-        nodes = root_node.descendants()
+        nodes = root.descendants()
         self.assertEqual(nodes[0].raw_deps, '0:root|2:amod')
         self.assertEqual(nodes[1].raw_deps, '0:root')
         self.assertEqual(nodes[2].raw_deps, '0:root')
@@ -82,7 +100,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(nodes[5].raw_deps, '5:conj')
 
         # Check deserialized dependencies.
-        self.assertEqual(nodes[0].deps[0]['parent'], root_node)
+        self.assertEqual(nodes[0].deps[0]['parent'], root)
         self.assertEqual(nodes[0].deps[0]['deprel'], 'root')
         self.assertEqual(nodes[5].deps[0]['parent'], nodes[4])
 
@@ -92,11 +110,11 @@ class TestDocument(unittest.TestCase):
 
         """
         # Create a sample dependency tree.
-        root_node = Root()
+        root = Root()
         for i in range(3):
-            root_node.create_child()
+            root.create_child()
 
-        nodes = root_node.descendants()
+        nodes = root.descendants()
         nodes[0].deps.append({'parent': nodes[1], 'deprel': 'test'})
 
         self.assertEqual(nodes[0].raw_deps, '2:test')

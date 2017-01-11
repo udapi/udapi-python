@@ -243,8 +243,9 @@ class Node(object):
     # TODO: make private: _unordered_descendants
     def unordered_descendants(self):
         """Return a list of all descendants in any order."""
-        descendants = [self]
+        descendants = []
         for child in self.children:
+            descendants.append(child)
             descendants.extend(child.unordered_descendants())
         return descendants
 
@@ -299,14 +300,6 @@ class Node(object):
                 (node_to_move.ord - self.ord) / 100000.
 
         self.update_ordering()
-
-    # TODO delete
-    def shift_after(self, reference_node):
-        self.shift(reference_node, after=1, move_subtree=0, reference_subtree=0)
-
-    # TODO delete
-    def shift_subtree_after(self, reference_node):
-        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
 
     # TODO add without_children kwarg
     def shift_after_node(self, reference_node):
