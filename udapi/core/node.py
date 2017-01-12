@@ -1,6 +1,17 @@
 """Node class represents a node in UD trees."""
 from udapi.block.write.textmodetrees import TextModeTrees
 
+# Pylint complains when we access e.g. node.parent._children or root._descendants
+# because it does not know that node.parent is the same class (Node)
+# and Root is a "friend" class of Node, so accessing underlined attributes is OK and intended.
+# Moreover, pylint has false-positive no-member alarms when accessing node.root._descendants
+# (pylint thinks node.root returns a Node instance, but actually it returns a Root instance).
+# pylint: disable=protected-access,no-member
+
+# 7 instance attributes and 20 public methods are too low limits (CoNLL-U has 10 columns)
+# The set of public attributes/properties and methods of Node was well-thought.
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
+
 class Node(object):
     """Class for representing nodes in Universal Dependency trees."""
 
@@ -98,10 +109,7 @@ class Node(object):
             for secondary_dependence in self._deps:
                 serialized_deps.append('%d:%s' % (secondary_dependence[
                     'parent'].ord, secondary_dependence['deprel']))
-
-            serialized_deps = '|'.join(serialized_deps)
-            self._raw_deps = serialized_deps
-
+            self._raw_deps = '|'.join(serialized_deps)
         return self._raw_deps
 
     @raw_deps.setter
@@ -283,7 +291,8 @@ class Node(object):
             descendants.extend(child.unordered_descendants())
         return descendants
 
-    def is_root(self):
+    @staticmethod
+    def is_root():
         """Is the current node a (technical) root?
 
         Returns False for all Node instances, irrespectively of whether is has a parent or not.
@@ -291,24 +300,10 @@ class Node(object):
         """
         return False
 
-    # TODO make private: _udpate_ordering
-    def update_ordering(self):
-        """Update the ord ord attribute in all nodes.
-
-        Update also the list or descendants stored in the tree root.
-        This method is automatically called after node removal or addition.
-        """
-        root = self.root
-        descendants = [node for node in root.unordered_descendants() if node != root]
-        descendants = sorted(descendants, key=lambda node: node.ord)
-        root._descendants = descendants
-        for (new_ord, node) in enumerate(descendants):
-            node.ord = new_ord + 1
-
     def remove(self):
         """Delete this node and all its descendants."""
         self.parent.children = [child for child in self.parent.children if child != self]
-        self.parent.update_ordering()
+        self.root._update_ordering()
 
     # TODO: make private: _shift
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
@@ -333,7 +328,7 @@ class Node(object):
             node_to_move.ord = reference_ord + common_delta + \
                 (node_to_move.ord - self.ord) / 100000.
 
-        self.update_ordering()
+        self.root._update_ordering()
 
     # TODO add without_children kwarg
     def shift_after_node(self, reference_node):

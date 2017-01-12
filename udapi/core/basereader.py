@@ -7,6 +7,7 @@ from udapi.core.files import Files
 
 class BaseReader(Block):
 
+    # pylint: disable=too-many-arguments
     def __init__(self, files='-', zone='keep', bundles_per_doc=0, encoding='utf-8',
                  sent_id_filter=None, **kwargs):
         super().__init__(**kwargs)
@@ -89,7 +90,7 @@ class BaseReader(Block):
             if tree_id is not None:
                 parts = tree_id.split('/', 1)
                 bundle_id = parts[0]
-                if len(parts)==2:
+                if len(parts) == 2:
                     root.zone = parts[1]
                 if bundle_id == last_bundle_id:
                     add_to_the_last_bundle = 1

@@ -16,3 +16,7 @@ max-line-length=100
 # List of note tags to take in consideration, separated by a comma.
 # Including TODO into the list of problems is a bad idea, I think.
 notes=FIXME,XXX
+
+[MESSAGES CONTROL]
+
+disable=locally-disabled

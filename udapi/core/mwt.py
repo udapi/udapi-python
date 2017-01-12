@@ -1,9 +1,7 @@
 """MWT class represents a multi-word token."""
 
 class MWT(object):
-    """
-    Class for representing multi-word tokens in UD trees.
-    """
+    """Class for representing multi-word tokens in UD trees."""
     __slots__ = ['words', 'form', 'misc', 'root']
 
     def __init__(self, words=None, form=None, misc=None, root=None):
@@ -12,15 +10,16 @@ class MWT(object):
         self.misc = misc
         self.root = root
         for word in self.words:
-            word._mwt = self
+            word._mwt = self # pylint: disable=W0212
 
     def ord_range(self):
+        """Return a string suitable for the first column of CoNLL-U."""
         return "%d-%d" % (self.words[0].ord, self.words[-1].ord)
 
     def remove(self):
         """Delete this multi-word token (but keep its words)."""
         for word in self.words:
-            word._mwt = None
+            word._mwt = None # pylint: disable=W0212
         self.root.multiword_tokens = [tok for tok in self.root.multiword_tokens if tok != self]
 
     def address(self):

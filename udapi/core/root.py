@@ -2,6 +2,10 @@
 from udapi.core.node import Node, ListOfNodes
 from udapi.core.mwt import MWT
 
+# 7 instance attributes is too low (CoNLL-U has 10 columns)
+# The set of public attributes/properties and methods of Root was well-thought.
+# pylint: disable=too-many-instance-attributes
+
 class Root(Node):
     """Class for representing root nodes (technical roots) in UD trees."""
     __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts', 'text']
@@ -132,3 +136,13 @@ class Root(Node):
     def multiword_tokens(self, mwts):
         """Set the list of all multi-word tokens in this tree."""
         self._mwts = mwts
+
+    def _update_ordering(self):
+        """Update the ord attribute of all nodes.
+
+        Update also the list of all tree nodes stored in root._descendants.
+        This method is automatically called after node removal or reordering.
+        """
+        self._descendants = sorted(self.unordered_descendants(), key=lambda node: node.ord)
+        for (new_ord, node) in enumerate(self._descendants, 1):
+            node.ord = new_ord

@@ -1,3 +1,5 @@
+"""Document class is a container for UD trees."""
+
 from udapi.core.bundle import Bundle
 
 from udapi.block.read.conllu import Conllu as ConlluReader

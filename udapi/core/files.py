@@ -10,9 +10,9 @@ import lzma
 class Files(object):
 
     def __init__(self, filenames, encoding='utf-8'):
-        if type(filenames) is list:
+        if isinstance(filenames, list):
             self.filenames = filenames
-        elif type(filenames) is str:
+        elif isinstance(filenames, str):
             self.filenames = self.string_to_filenames(filenames)
         else:
             raise ValueError('Parameter "filenames" must be a list or str')

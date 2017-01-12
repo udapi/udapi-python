@@ -1,3 +1,5 @@
+"""Block class represents the basic Udapi processing unit."""
+
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data."""
 
@@ -12,7 +14,7 @@ class Block(object):
         """A hook method that is executed after processing all UD data"""
         pass
 
-    def process_node(self, node):
+    def process_node(self, _):
         """Process a UD node"""
         raise Exception("No processing activity defined in block " + str(self))
 
@@ -32,7 +34,9 @@ class Block(object):
             self.process_bundle(bundle)
 
     def before_process_document(self, document):
+        """This method is called before each process_document."""
         pass
 
     def after_process_document(self, document):
+        """This method is called after each process_document."""
         pass
