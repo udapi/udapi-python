@@ -1,3 +1,4 @@
+"""An ASCII pretty printer of dependency trees."""
 import re
 import sys
 
@@ -13,8 +14,15 @@ COLOR_OF = {
     'ord': 'yellow',
 }
 
+def _length(string):
+    '''Strips ANSI color codes before measuring the string's length.'''
+    return len(re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', string))
+
+# Too many instance variables, arguments, branches...
+# I don't see how to fix this while not making the code less readable or more difficult to use.
+# pylint: disable=R0902,R0912,R0913,R0914
 class TextModeTrees(BaseWriter):
-    """A pretty ASCII printer of dependency trees.
+    """An ASCII pretty printer of dependency trees.
 
     SYNOPSIS
     # from command line (visualize CoNLL-U files)
@@ -94,15 +102,15 @@ class TextModeTrees(BaseWriter):
 
         # DRAW[bottom-most][top-most]
         line = '─' * indent
-        self.H = line + '─'
-        self.DRAW = [[line + '┤', line + '┐'], [line + '┘', self.H]]
+        self._horiz = line + '─'
+        self._draw = [[line + '┤', line + '┐'], [line + '┘', self._horiz]]
 
         # SPACE[bottom-most][top-most]
         space = ' ' * indent
-        self.V = space + '│'
-        self.SPACE = [[space + '├', space + '┌'], [space + '└']]
+        self._vert = space + '│'
+        self._space = [[space + '├', space + '┌'], [space + '└']]
 
-        self.attrs = attributes.split(',')
+        self.attrs = [x if x not in ['feats', 'deps'] else 'raw_'+x for x in attributes.split(',')]
         self._index_of = []
         self._gaps = []
 
@@ -115,16 +123,12 @@ class TextModeTrees(BaseWriter):
     def _compute_gaps(self, node):
         lmost, rmost, descs = self._index_of[node.ord], self._index_of[node.ord], 0
         for child in node.children:
-            lm, rm, de = self._compute_gaps(child)
-            lmost = min(lm, lmost)
-            rmost = max(rm, rmost)
-            descs += de
+            _lm, _rm, _de = self._compute_gaps(child)
+            lmost = min(_lm, lmost)
+            rmost = max(_rm, rmost)
+            descs += _de
         self._gaps[node.ord] = rmost - lmost - descs
         return lmost, rmost, descs + 1
-
-    def _length(self, string):
-        '''Strips ANSI color codes before measuring the string's length.'''
-        return len(re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', string))
 
     def process_tree(self, root):
         '''Prints the tree to (possibly redirected) sys.stdout.'''
@@ -141,26 +145,25 @@ class TextModeTrees(BaseWriter):
         stack = [root,]
         while stack:
             node = stack.pop()
-            #TODO children = node.children(add_self=1)
-            children = sorted([node] + node.children, key=lambda node: node.ord)
+            children = node.children(add_self=1)
             min_idx, max_idx = self._index_of[children[0].ord], self._index_of[children[-1].ord]
-            max_length = max([self._length(lines[i]) for i in range(min_idx, max_idx+1)])
+            max_length = max([_length(lines[i]) for i in range(min_idx, max_idx+1)])
             for idx in range(min_idx, max_idx+1):
                 idx_node = allnodes[idx]
                 filler = '─' if lines[idx] and lines[idx][-1] in '─┌└├' else ' '
-                lines[idx] += filler * (max_length - self._length(lines[idx]))
+                lines[idx] += filler * (max_length - _length(lines[idx]))
 
                 topmost = idx == min_idx
                 botmost = idx == max_idx
                 if idx_node is node:
-                    lines[idx] += self.DRAW[botmost][topmost] + self.node_to_string(node)
+                    lines[idx] += self._draw[botmost][topmost] + self.node_to_string(node)
                 else:
                     if idx_node.parent is not node:
-                        lines[idx] += self.V
+                        lines[idx] += self._vert
                     else:
-                        lines[idx] += self.SPACE[botmost][topmost]
+                        lines[idx] += self._space[botmost][topmost]
                         if idx_node.is_leaf():
-                            lines[idx] += self.H + self.node_to_string(idx_node)
+                            lines[idx] += self._horiz + self.node_to_string(idx_node)
                         else:
                             stack.append(idx_node)
 
