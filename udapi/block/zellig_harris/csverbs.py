@@ -9,22 +9,9 @@ from udapi.block.zellig_harris.queries import *
 class CsVerbs(Configurations):
     """
     A block for extraction context configurations for Czech verbs.
-    The configurations will be used as the train data for obtaining the word representations using word2vecf.
-
+    The configurations will be used as the train data for obtaining
+    the word representations using word2vecf.
     """
-
-    def __init__(self, args=None):
-        """
-        Initialization.
-
-        :param args: A dict of optional parameters.
-
-        """
-        if args is None:
-            args = {}
-
-        # Call the constructor of the parent object.
-        super(CsVerbs, self).__init__(args)
 
     def process_node(self, node):
         """

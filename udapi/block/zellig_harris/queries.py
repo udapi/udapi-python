@@ -1,5 +1,3 @@
-import logging
-
 from udapi.block.zellig_harris.enhancedeps import *
 
 

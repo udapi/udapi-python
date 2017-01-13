@@ -1,10 +1,7 @@
-import logging
-import sys
-
-
 def get_node_representation(node, print_lemma=False):
     """
-    Transform the node into the proper textual representation, as will appear in the extracted contexts.
+    Transform the node into the proper textual representation,
+    as will appear in the extracted contexts.
 
     :param node: An input Node.
     :param print_lemma: If true, the node lemma is used, otherwise the node form.
