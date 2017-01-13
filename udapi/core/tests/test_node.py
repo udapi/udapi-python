@@ -53,14 +53,15 @@ class TestDocument(unittest.TestCase):
 
         """
         node = Node()
-        node.raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|Voice=Act'
+        node.raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin'
         self.assertEqual(node.feats['Mood'], 'Ind')
         self.assertEqual(node.feats['Negative'], 'Pos')
         self.assertEqual(node.feats['Number'], 'Sing')
         self.assertEqual(node.feats['Person'], '1')
         self.assertEqual(node.feats['Tense'], 'Pres')
         self.assertEqual(node.feats['VerbForm'], 'Fin')
-        self.assertEqual(node.feats['Voice'], 'Act')
+        node.raw_feats = '_'
+        self.assertEqual(node.feats, {})
 
     def test_feats_setter(self):
         """

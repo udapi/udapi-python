@@ -131,10 +131,10 @@ class Node(object):
         """
         if self._feats is None:
             self._feats = dict()
-            for raw_feature in self._raw_feats.split('|'):
-                feature, value = raw_feature.split('=')
-                self._feats[feature] = value
-
+            if self._raw_feats != '_':
+                for raw_feature in self._raw_feats.split('|'):
+                    feature, value = raw_feature.split('=')
+                    self._feats[feature] = value
         return self._feats
 
     @feats.setter
