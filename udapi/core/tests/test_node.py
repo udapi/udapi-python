@@ -47,42 +47,26 @@ class TestDocument(unittest.TestCase):
         #self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         #self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
 
-    def test_feats_getter(self):
-        """
-        Test the deserialization of the morphological featrues.
 
-        """
+    def test_feats(self):
+        """Test the morphological featrues."""
+        raw_feats = 'Mood=Ind|Person=1|Voice=Act'
+        expected_feats = 'Mood=Ind|Person=1|Voice=Pas'
+
         node = Node()
-        node.raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin'
+        node.feats = raw_feats
+        self.assertEqual(node.feats['Voice'], 'Act')
         self.assertEqual(node.feats['Mood'], 'Ind')
-        self.assertEqual(node.feats['Negative'], 'Pos')
-        self.assertEqual(node.feats['Number'], 'Sing')
-        self.assertEqual(node.feats['Person'], '1')
-        self.assertEqual(node.feats['Tense'], 'Pres')
-        self.assertEqual(node.feats['VerbForm'], 'Fin')
-        node.raw_feats = '_'
-        self.assertEqual(node.feats, {})
+        self.assertEqual(node.feats['NonExistentFeature'], '')
 
-    def test_feats_setter(self):
-        """
-        Test the deserialization of the morphological featrues.
-
-        """
-        raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|Voice=Act'
-        expected_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|Voice=Pas'
-
-        node = Node()
-        node.raw_feats = raw_feats
         node.feats['Voice'] = 'Pas'
-
-        self.assertEqual(node.feats['Mood'], 'Ind')
-        self.assertEqual(node.feats['Negative'], 'Pos')
-        self.assertEqual(node.feats['Number'], 'Sing')
-        self.assertEqual(node.feats['Person'], '1')
-        self.assertEqual(node.feats['Tense'], 'Pres')
-        self.assertEqual(node.feats['VerbForm'], 'Fin')
-        self.assertEqual(node.feats['Voice'], 'Pas')
         self.assertEqual(node.raw_feats, expected_feats)
+        self.assertEqual(node.feats['Voice'], 'Pas')
+        self.assertEqual(node.feats['Mood'], 'Ind')
+        self.assertEqual(node.feats['Person'], '1')
+
+        node.feats = '_'
+        self.assertEqual(node.feats, {})
 
     def test_deps_getter(self):
         """
@@ -125,7 +109,7 @@ class TestDocument(unittest.TestCase):
         """
         # Create a sample dependency tree.
         root = Root()
-        for i in range(3):
+        for _ in range(3):
             root.create_child()
 
         nodes = root.descendants()

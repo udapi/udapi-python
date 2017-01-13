@@ -1,5 +1,8 @@
 """Node class represents a node in UD trees."""
+import collections.abc
+
 from udapi.block.write.textmodetrees import TextModeTrees
+from udapi.core.feats import Feats
 
 # Pylint complains when we access e.g. node.parent._children or root._descendants
 # because it does not know that node.parent is the same class (Node)
@@ -56,7 +59,7 @@ class Node(object):
         self._raw_deps = '_'
         self._deps = None
         self._raw_feats = '_'
-        self._feats = None
+        self._feats = Feats()
         self._parent = None
         self._children = list()
         self._mwt = None
@@ -75,27 +78,21 @@ class Node(object):
 
     @property
     def raw_feats(self):
-        """String serialization of morphological features as stored in CoNLL-U files.
+        """String serialization of morphological features as stored in CoNLL-U files."""
+        return str(self._feats)
 
-        After the access to the raw morphological features,
-        provide the serialization of the features if they were deserialized already.
-        """
-        if self._feats is not None:
-            serialized_features = []
-            for feature in sorted(self._feats):
-                serialized_features.append('%s=%s' % (feature, self._feats[feature]))
-            self._raw_feats = '|'.join(serialized_features)
-        return self._raw_feats
+    @property
+    def feats(self):
+        """Return morphological features as a `Feats` object (dict)."""
+        return self._feats
 
-    @raw_feats.setter
-    def raw_feats(self, value):
-        """Set serialized morphological features (the new value is a string).
-
-        When updating raw morphological features,
-        delete the current version of the deserialized feautures.
-        """
-        self._raw_feats = str(value)
-        self._feats = None
+    @feats.setter
+    def feats(self, value):
+        """Set morphological features (the value can be string or dict)."""
+        if isinstance(value, str):
+            self._feats.set_string(value)
+        elif isinstance(value, collections.abc.Mapping):
+            self._feats = Feats(value)
 
     @property
     def raw_deps(self):
@@ -121,26 +118,6 @@ class Node(object):
         """
         self._raw_deps = str(value)
         self._deps = None
-
-    @property
-    def feats(self):
-        """Return morphological features as a Python dict.
-
-        After the first access to the morphological features,
-        provide the deserialization of the features and save features to the dict.
-        """
-        if self._feats is None:
-            self._feats = dict()
-            if self._raw_feats != '_':
-                for raw_feature in self._raw_feats.split('|'):
-                    feature, value = raw_feature.split('=')
-                    self._feats[feature] = value
-        return self._feats
-
-    @feats.setter
-    def feats(self, value):
-        """Set deserialized morphological features (the new value is a dict)."""
-        self._feats = value
 
     @property
     def deps(self):
