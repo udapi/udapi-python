@@ -16,7 +16,7 @@ class Conllu(BaseReader):
         super().__init__(**kwargs)
 
         # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
+        self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
                                 "feats", "head", "deprel", "deps", "misc"]
 
         # TODO: this should be invoked from the parent class

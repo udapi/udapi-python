@@ -11,7 +11,7 @@ class Conllu(BaseWriter):
         self.print_empty_trees = print_empty_trees
 
         # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
+        self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
                                 "raw_feats", "parent", "deprel", "raw_deps", "misc"]
 
     def process_tree(self, tree):

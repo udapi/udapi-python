@@ -12,4 +12,4 @@ class ReducedConllu(Conllu):
 
         # Here is the reduced list of the data fields as appear in the Conllu
         # reduced format.
-        self.node_attributes = ["ord", "form", "upostag", "head", "deprel"]
+        self.node_attributes = ["ord", "form", "upos", "head", "deprel"]

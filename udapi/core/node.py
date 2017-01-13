@@ -23,8 +23,8 @@ class Node(object):
         'ord',
         'form',    # Word form or punctuation symbol.
         'lemma',   # Lemma of word form.
-        'upostag', # Universal PoS tag
-        'xpostag', # Language-specific part-of-speech tag; underscore if not available.
+        'upos', # Universal PoS tag
+        'xpos', # Language-specific part-of-speech tag; underscore if not available.
         'deprel',  # UD dependency relation to the HEAD (root iff HEAD = 0).
         'misc',    # Any other annotation.
 
@@ -47,8 +47,8 @@ class Node(object):
         self.ord = None
         self.form = None
         self.lemma = None
-        self.upostag = None
-        self.xpostag = None
+        self.upos = None
+        self.xpos = None
         self.deprel = None
         self.misc = None
 
@@ -422,7 +422,7 @@ class Node(object):
         so you can use e.g.:
         files: to redirect sys.stdout to a file
         indent: to have wider trees
-        attributes: to override the default list 'form,upostag,deprel'
+        attributes: to override the default list 'form,upos,deprel'
         See TextModeTrees for details and other parameters.
         """
         TextModeTrees(**kwargs).process_tree(self)

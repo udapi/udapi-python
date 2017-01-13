@@ -34,7 +34,7 @@ class CsVerbs(Configurations):
 
         """
         # We want to extract contexts only for verbs.
-        if str(node.upostag) not in self.pos:
+        if str(node.upos) not in self.pos:
             return
 
         if self.verbose:

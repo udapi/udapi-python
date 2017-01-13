@@ -18,8 +18,8 @@ class Root(Node):
         self.ord = 0
         self.form = '<ROOT>'
         self.lemma = '<ROOT>'
-        self.upostag = '<ROOT>'
-        self.xpostag = '<ROOT>'
+        self.upos = '<ROOT>'
+        self.xpos = '<ROOT>'
         self.deprel = '<ROOT>'
         self.misc = misc
         self.text = text

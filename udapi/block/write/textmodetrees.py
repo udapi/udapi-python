@@ -8,7 +8,7 @@ from udapi.core.basewriter import BaseWriter
 COLOR_OF = {
     'form': 'yellow',
     'lemma': 'cyan',
-    'upostag': 'red',
+    'upos': 'red',
     'deprel': 'blue',
     'ord': 'yellow',
 }
@@ -60,7 +60,7 @@ class TextModeTrees(BaseWriter):
     """
 
     def __init__(self, print_sent_id=False, print_sentence=False, add_empty_line=True, indent=1,
-                 minimize_cross=True, color='auto', attributes='form,upostag,deprel',
+                 minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='', **kwargs):
         '''Create new TextModeTrees block object.
 
@@ -79,16 +79,16 @@ class TextModeTrees(BaseWriter):
                If you plan to pipe the output (e.g. to "less -R") and you want the colors,
                you need to set explicitly color=1, see the example in Synopsis.
         attributes: A comma-separated list of node attributes which should be printed. Possible
-                    values are ord, form, lemma, upostag, xpostag, feats, deprel, deps, misc.
+                    values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
         '''
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
         self.print_sentence = print_sentence
         self.add_empty_line = add_empty_line
-        self.indent  = indent
+        self.indent = indent
         self.minimize_cross = minimize_cross
-        self.color =  color
+        self.color = color
         self.attributes = attributes
         self.print_undef_as = print_undef_as
 
@@ -118,7 +118,7 @@ class TextModeTrees(BaseWriter):
             lm, rm, de = self._compute_gaps(child)
             lmost = min(lm, lmost)
             rmost = max(rm, rmost)
-            descs += de;
+            descs += de
         self._gaps[node.ord] = rmost - lmost - descs
         return lmost, rmost, descs + 1
 

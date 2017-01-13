@@ -122,7 +122,7 @@ class Baseline(Block):
 
         """
         # We want to extract contexts only for verbs.
-        if str(node.upostag) not in self.pos:
+        if str(node.upos) not in self.pos:
             return
 
         # Process node's parent.
