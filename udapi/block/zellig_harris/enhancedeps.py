@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 from udapi.core.block import Block
 
 
@@ -74,28 +72,17 @@ def enhance_deps(node, new_dependence):
 
 class EnhanceDeps(Block):
     """
-    Identify new relations between nodes in the dependency tree (an analogy of effective parents/children from PML).
+    Identify new relations between nodes in the dependency tree
+    (an analogy of effective parents/children from PML).
     Add these new relations into secondary dependencies slot.
 
     """
 
-    def __init__(self, args=None):
-        """
-        Initialization.
-
-        :param args: A dict of optional parameters.
-
-        """
-        super(Block, self).__init__()
-
-        if args is None:
-            args = {}
-
     def process_node(self, node):
         """
         Enhance secondary dependencies by application of the following rules:
-        1. when the current node A has a deprel 'conj' to its parent B, create a new secondary dependence
-           (B.parent, B.deprel) to A
+        1. when the current node A has a deprel 'conj' to its parent B,
+           create a new secondary dependence (B.parent, B.deprel) to A
         2. when the current node A has a deprel 'conj' to its parent B, look at B.children C
            when C.deprel is in {subj, subjpass, iobj, dobj, compl} and there is no A.children D
            such that C.deprel == D.deprel, add a new secondary dependence (A, C.deprel) to C
