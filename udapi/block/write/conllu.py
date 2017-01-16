@@ -1,3 +1,4 @@
+"""Conllu class is a a writer of files in the CoNLL-U format."""
 from udapi.core.basewriter import BaseWriter
 
 
@@ -41,9 +42,9 @@ class Conllu(BaseWriter):
             if mwt and node.ord > last_mwt_id:
                 last_mwt_id = mwt.words[-1].ord
                 print('\t'.join([mwt.ord_range(),
-                                mwt.form if mwt.form is not None else '_',
-                                '_\t_\t_\t_\t_\t_\t_',
-                                mwt.misc if mwt.misc is not None else '_']))
+                                 mwt.form if mwt.form is not None else '_',
+                                 '_\t_\t_\t_\t_\t_\t_',
+                                 mwt.misc if mwt.misc is not None else '_']))
             values = [getattr(node, node_attribute) for node_attribute in self.node_attributes]
             values[0] = str(values[0])
             try:

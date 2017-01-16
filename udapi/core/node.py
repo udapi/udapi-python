@@ -23,22 +23,19 @@ class Node(object):
     # TODO: Should not we include __weakref__ in slots?
     __slots__ = [
         # Word index, integer starting at 1 for each new sentence.
-        'ord',
-        'form',    # Word form or punctuation symbol.
-        'lemma',   # Lemma of word form.
-        'upos', # Universal PoS tag
-        'xpos', # Language-specific part-of-speech tag; underscore if not available.
-        'deprel',  # UD dependency relation to the HEAD (root iff HEAD = 0).
-        'misc',    # Any other annotation.
-
-        # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
-        '_raw_deps',
-        # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
-        '_deps',
-        '_feats',      # Morphological features as udapi.core.feats.Feats object.
-        '_parent',     # Parent node.
-        '_children',   # Ord-ordered list of child nodes.
-        '_mwt',        # multi-word token in which this word participates
+        'ord',       # Word-order index of the node (root has 0).
+        'form',      # Word form or punctuation symbol.
+        'lemma',     # Lemma of word form.
+        'upos',      # Universal PoS tag
+        'xpos',      # Language-specific part-of-speech tag; underscore if not available.
+        'deprel',    # UD dependency relation to the HEAD (root iff HEAD = 0).
+        'misc',      # Any other annotation.
+        '_raw_deps', # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
+        '_deps',     # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
+        '_feats',    # Morphological features as udapi.core.feats.Feats object.
+        '_parent',   # Parent node.
+        '_children', # Ord-ordered list of child nodes.
+        '_mwt',      # multi-word token in which this word participates
     ]
 
     def __init__(self, data=None):
