@@ -71,7 +71,23 @@ class DualDict(collections.abc.MutableMapping):
         self._string = '_'
         self._dict.clear()
 
-    def set_string(self, string):
-        """Set the mapping from a string serialization."""
-        self._dict.clear()
-        self._string = string
+    def set_mapping(self, value):
+        """Set the mapping from a dict or string.
+
+        If the `value` is None or an empty string, it is converted to storing string `_`
+        (which is the CoNLL-U way of representing an empty value).
+        If the `value` is a string, it is stored as is.
+        If the `value` is a dict (or any instance of `collections.abc.Mapping`),
+        its copy is stored.
+        Other types of `value` raise an `ValueError` exception.
+        """
+        if value is None:
+            self.clear()
+        elif isinstance(value, str):
+            self._dict.clear()
+            self._string = value if value != '' else '_'
+        elif isinstance(value, collections.abc.Mapping):
+            self._string = None
+            self._dict = dict(value)
+        else:
+            raise ValueError("Unsupported value type " + str(value))

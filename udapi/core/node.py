@@ -1,6 +1,4 @@
 """Node class represents a node in UD trees."""
-import collections.abc
-
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
@@ -69,29 +67,58 @@ class Node(object):
 
     @property
     def feats(self):
-        """Return morphological features as a `Feats` object (dict)."""
+        """Property for morphological features stored as a `Feats` object.
+
+        Reading:
+        You can access `node.feats` as a dict, e.g. `if node.feats['Case'] == 'Nom'`.
+        Features which are not set return an empty string (not None, not KeyError),
+        so you can safely use e.g. `if node.feats['MyExtra'].find('substring') != -1`.
+        You can also obtain the string representation of the whole FEATS (suitable for CoNLL-U),
+        e.g. `if node.feats == 'Case=Nom|Person=1'`.
+
+        Writing:
+        All the following assignment types are supported:
+        `node.feats['Case'] = 'Nom'`
+        `node.feats = {'Case': 'Nom', 'Person': '1'}`
+        `node.feats = 'Case=Nom|Person=1'`
+        `node.feats = '_'`
+        The last line has the same result as assigning None or empty string to `node.feats`.
+
+        For details about the implementation and other methods (e.g. `node.feats.is_plural()`),
+        see ``udapi.core.feats.Feats`` which is a subclass of `DualDict`.
+        """
         return self._feats
 
     @feats.setter
     def feats(self, value):
-        """Set morphological features (the value can be string or dict)."""
-        if isinstance(value, str):
-            self._feats.set_string(value)
-        elif isinstance(value, collections.abc.Mapping):
-            self._feats = Feats(value)
+        self._feats.set_mapping(value)
 
     @property
     def misc(self):
-        """Return MISC attributes as a `DualDict` object (dict with __str__)."""
+        """Property for MISC attributes stored as a `DualDict` object.
+
+        Reading:
+        You can access `node.misc` as a dict, e.g. `if node.misc['SpaceAfter'] == 'No'`.
+        Features which are not set return an empty string (not None, not KeyError),
+        so you can safely use e.g. `if node.misc['MyExtra'].find('substring') != -1`.
+        You can also obtain the string representation of the whole MISC (suitable for CoNLL-U),
+        e.g. `if node.misc == 'SpaceAfter=No|X=Y'`.
+
+        Writing:
+        All the following assignment types are supported:
+        `node.misc['SpaceAfter'] = 'No'`
+        `node.misc = {'SpaceAfter': 'No', 'X': 'Y'}`
+        `node.misc = 'SpaceAfter=No|X=Y'`
+        `node.misc = '_'`
+        The last line has the same result as assigning None or empty string to `node.feats`.
+
+        For details about the implementation, see ``udapi.core.dualdict.DualDict``.
+        """
         return self._misc
 
     @misc.setter
     def misc(self, value):
-        """Set MISC attributes (the value can be string or dict)."""
-        if isinstance(value, str):
-            self._misc.set_string(value)
-        elif isinstance(value, collections.abc.Mapping):
-            self._misc = DualDict(value)
+        self._misc.set_mapping(value)
 
     @property
     def raw_deps(self):
