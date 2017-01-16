@@ -99,7 +99,7 @@ class Conllu(BaseReader):
         root._descendants = nodes[1:] # pylint: disable=protected-access
 
         if comment != '':
-            root.misc = comment
+            root.comment = comment
 
         # Create multi-word tokens.
         for fields in mwts:

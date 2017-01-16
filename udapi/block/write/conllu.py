@@ -31,7 +31,7 @@ class Conllu(BaseWriter):
             if sentence:
                 print("# text = " + sentence)
 
-        comment = tree.misc
+        comment = tree.comment
         if comment:
             comment = comment.rstrip()
             print('#' + comment.replace('\n', '\n#'))
