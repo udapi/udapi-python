@@ -15,13 +15,47 @@ from udapi.core.feats import Feats
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
 class Node(object):
-    """Class for representing nodes in Universal Dependency trees."""
+    """Class for representing nodes in Universal Dependency trees.
+
+    Attributes `form`, `lemma`, `upos`, `xpos` and `deprel` are public attributes of type `str`,
+    so you can use e.g. `node.lemma = node.form`.
+
+    `node.ord` is a int type public attribute for storing the node's word order index,
+    but assigning to it should be done with care, so the non-root nodes have `ord`s 1,2,3...
+    It is recommended to use one of the `node.shift_*` methods for reordering nodes.
+
+    For changing dependency structure (topology) of the tree, there is the `parent` property,
+    e.g. `node.parent = node.parent.parent` and `node.create_child()` method.
+    Properties `node.children` and `node.descendants` return object of type `ListOfNodes`,
+    so it is possible to do e.g.
+    >>> all_children = node.children
+    >>> left_children = node.children(preceding_only=True)
+    >>> right_descendants = node.descendants(following_only=True, add_self=True)
+
+    Properties `node.feats` and `node.misc` return objects of type `DualDict`, so one can do e.g.:
+    >>> node = Node()
+    >>> str(node.feats)
+    '_'
+    >>> node.feats = {'Case': 'Nom', 'Person': '1'}`
+    >>> node.feats = 'Case=Nom|Person=1' # equivalent to the above
+    >>> node.feats['Case']
+    'Nom'
+    >>> node.feats['NonExistent']
+    ''
+    >>> node.feats['Case'] = 'Gen'
+    >>> str(node.feats)
+    'Case=Gen|Person=1'
+    >>> dict(node.feats)
+    {'Case': 'Gen', 'Person': '1'}
+
+    Handling of enhanced dependencies, multi-word tokens and other node's methods
+    are described below.
+    """
 
     # TODO: Benchmark memory and speed of slots vs. classic dict.
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
     __slots__ = [
-        # Word index, integer starting at 1 for each new sentence.
         'ord',       # Word-order index of the node (root has 0).
         'form',      # Word form or punctuation symbol.
         'lemma',     # Lemma of word form.
