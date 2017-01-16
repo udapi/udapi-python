@@ -1,5 +1,6 @@
 """DualDict is a dict with lazily synchronized string representation."""
 import collections.abc
+import logging
 
 class DualDict(collections.abc.MutableMapping):
     """DualDict class serves as dict with lazily synchronized string representation.
@@ -42,7 +43,13 @@ class DualDict(collections.abc.MutableMapping):
     def _deserialize_if_empty(self):
         if not self._dict and self._string is not None and self._string != '_':
             for raw_feature in self._string.split('|'):
-                name, value = raw_feature.split('=')
+                try:
+                    name, value = raw_feature.split('=')
+                except ValueError as exception:
+                    logging.error("<%s> contains <%s> which does not contain one '=' symbol.",
+                                  self._string, raw_feature)
+                    raise exception
+
                 self._dict[name] = value
 
     def __getitem__(self, key):
