@@ -35,10 +35,7 @@ class Node(object):
         '_raw_deps',
         # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
         '_deps',
-        # Morphological features in their original CoNLLU format.
-        '_raw_feats',
-        # Deserialized morphological features stored in a dict (feature -> value).
-        '_feats',
+        '_feats',      # Morphological features as udapi.core.feats.Feats object.
         '_parent',     # Parent node.
         '_children',   # Ord-ordered list of child nodes.
         '_mwt',        # multi-word token in which this word participates
@@ -58,7 +55,6 @@ class Node(object):
         # Initialization of the (B) list.
         self._raw_deps = '_'
         self._deps = None
-        self._raw_feats = '_'
         self._feats = Feats()
         self._parent = None
         self._children = list()

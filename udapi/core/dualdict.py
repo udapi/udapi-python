@@ -36,7 +36,7 @@ class DualDict(collections.abc.MutableMapping):
             serialized = []
             for name in sorted(self._dict):
                 serialized.append('%s=%s' % (name, self._dict[name]))
-            self._string = '|'.join(serialized)
+            self._string = '|'.join(serialized) if serialized else '_'
         return self._string
 
     def _deserialize_if_empty(self):
@@ -72,5 +72,6 @@ class DualDict(collections.abc.MutableMapping):
         self._dict.clear()
 
     def set_string(self, string):
+        """Set the mapping from a string serialization."""
         self._dict.clear()
         self._string = string

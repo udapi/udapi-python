@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Unit tests for udapi.core.node."""
 import os
 import unittest
 import logging
@@ -14,8 +14,10 @@ logging.basicConfig(
 
 
 class TestDocument(unittest.TestCase):
+    """Unit tests for udapi.core.node."""
 
     def test_topology(self):
+        """Test methods/properties descendants, children, prev_node, next_node, ord."""
         doc = Document()
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
         doc.load_conllu(data_filename)
@@ -54,6 +56,7 @@ class TestDocument(unittest.TestCase):
         expected_feats = 'Mood=Ind|Person=1|Voice=Pas'
 
         node = Node()
+        self.assertEqual(str(node.feats), '_')
         node.feats = raw_feats
         self.assertEqual(node.feats['Voice'], 'Act')
         self.assertEqual(node.feats['Mood'], 'Ind')
@@ -69,10 +72,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(node.feats, {})
 
     def test_deps_getter(self):
-        """
-        Test the deserialization of the morphological featrues.
-
-        """
+        """Test enhanced dependencies."""
         # Create a path to the test CoNLLU file.
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
 
@@ -103,10 +103,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(nodes[5].deps[0]['parent'], nodes[4])
 
     def test_deps_setter(self):
-        """
-        Test the deserialization of the secondary dependencies.
-
-        """
+        """Test the deserialization of enhanced dependencies."""
         # Create a sample dependency tree.
         root = Root()
         for _ in range(3):
