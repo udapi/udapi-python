@@ -45,8 +45,7 @@ class Conllu(BaseWriter):
                                  mwt.form if mwt.form is not None else '_',
                                  '_\t_\t_\t_\t_\t_\t_',
                                  mwt.misc if mwt.misc is not None else '_']))
-            values = [getattr(node, node_attribute) for node_attribute in self.node_attributes]
-            values[0] = str(values[0])
+            values = [str(getattr(node, attr_name)) for attr_name in self.node_attributes]
             try:
                 values[6] = str(node.parent.ord)
             except AttributeError:

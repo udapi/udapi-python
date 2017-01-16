@@ -2,6 +2,7 @@
 import collections.abc
 
 from udapi.block.write.textmodetrees import TextModeTrees
+from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
 
 # Pylint complains when we access e.g. node.parent._children or root._descendants
@@ -29,7 +30,7 @@ class Node(object):
         'upos',      # Universal PoS tag
         'xpos',      # Language-specific part-of-speech tag; underscore if not available.
         'deprel',    # UD dependency relation to the HEAD (root iff HEAD = 0).
-        'misc',      # Any other annotation.
+        '_misc',     # Any other annotation as udapi.core.dualdict.DualDict object.
         '_raw_deps', # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
         '_deps',     # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
         '_feats',    # Morphological features as udapi.core.feats.Feats object.
@@ -40,16 +41,13 @@ class Node(object):
 
     def __init__(self, data=None):
         """Create new node and initialize its attributes with data."""
-        # Initialization of the (A) list.
         self.ord = None
         self.form = None
         self.lemma = None
         self.upos = None
         self.xpos = None
         self.deprel = None
-        self.misc = None
-
-        # Initialization of the (B) list.
+        self._misc = DualDict()
         self._raw_deps = '_'
         self._deps = None
         self._feats = Feats()
@@ -86,6 +84,19 @@ class Node(object):
             self._feats.set_string(value)
         elif isinstance(value, collections.abc.Mapping):
             self._feats = Feats(value)
+
+    @property
+    def misc(self):
+        """Return MISC attributes as a `DualDict` object (dict with __str__)."""
+        return self._misc
+
+    @misc.setter
+    def misc(self, value):
+        """Set MISC attributes (the value can be string or dict)."""
+        if isinstance(value, str):
+            self._misc.set_string(value)
+        elif isinstance(value, collections.abc.Mapping):
+            self._misc = DualDict(value)
 
     @property
     def raw_deps(self):
