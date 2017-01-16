@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Unit tests for udapi.core.node."""
-import os
-import unittest
+import io
 import logging
+import os
+import sys
+import unittest
 
 from udapi.core.root import Root
 from udapi.core.node import Node
@@ -49,26 +51,57 @@ class TestDocument(unittest.TestCase):
         #self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         #self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
 
+    def test_print_subtree(self):
+        """Test print_subtree() method, which uses udapi.block.write.textmodetrees."""
+        doc = Document()
+        data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
+        doc.load_conllu(data_filename)
+        root = doc.bundles[0].get_tree()
+
+        expected1 = ("─┐\n"
+                     " │ ┌──Slovenská ADJ amod\n"
+                     " └─┤ústava NOUN root\n"
+                     "   ├──: PUNCT punct\n"
+                     "   └─┐pro ADP appos\n"
+                     "     ├──i CONJ cc\n"
+                     "     └──proti ADP conj\n"
+                     "\n")
+        expected2 = ("─┐\n"
+                     " │ ┌──Slovenská Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing _\n"
+                     " └─┤ústava Case=Nom|Gender=Fem|Negative=Pos|Number=Sing SpaceAfter=No\n"
+                     "   ├──: _ _\n"
+                     "   └─┐pro AdpType=Prep|Case=Acc LId=pro-1\n"
+                     "     ├──i _ LId=i-1\n"
+                     "     └──proti AdpType=Prep|Case=Dat LId=proti-1\n"
+                     "\n")
+        try:
+            sys.stdout = capture = io.StringIO()
+            root.print_subtree(color=False)
+            self.assertEqual(capture.getvalue(), expected1)
+            capture.seek(0)
+            root.print_subtree(color=False, attributes='form,feats,misc')
+            self.assertEqual(capture.getvalue(), expected2)
+        finally:
+            sys.stdout = sys.__stdout__
 
     def test_feats(self):
         """Test the morphological featrues."""
-        raw_feats = 'Mood=Ind|Person=1|Voice=Act'
-        expected_feats = 'Mood=Ind|Person=1|Voice=Pas'
-
         node = Node()
         self.assertEqual(str(node.feats), '_')
-        node.feats = raw_feats
-        self.assertEqual(node.feats['Voice'], 'Act')
+        node.feats = 'Mood=Ind|Person=1|Voice=Act'
         self.assertEqual(node.feats['Mood'], 'Ind')
+        self.assertEqual(node.feats['Voice'], 'Act')
         self.assertEqual(node.feats['NonExistentFeature'], '')
 
         node.feats['Voice'] = 'Pas'
-        self.assertEqual(node.raw_feats, expected_feats)
+        self.assertEqual(str(node.feats), 'Mood=Ind|Person=1|Voice=Pas')
+        self.assertEqual(node.feats, {'Mood': 'Ind', 'Person': '1', 'Voice': 'Pas'})
         self.assertEqual(node.feats['Voice'], 'Pas')
         self.assertEqual(node.feats['Mood'], 'Ind')
         self.assertEqual(node.feats['Person'], '1')
 
         node.feats = '_'
+        self.assertEqual(str(node.feats), '_')
         self.assertEqual(node.feats, {})
 
     def test_deps_getter(self):

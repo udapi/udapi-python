@@ -68,11 +68,6 @@ class Node(object):
         return "<%d, %s, %s, %s>" % (self.ord, self.form, parent_ord, self.deprel)
 
     @property
-    def raw_feats(self):
-        """String serialization of morphological features as stored in CoNLL-U files."""
-        return str(self._feats)
-
-    @property
     def feats(self):
         """Return morphological features as a `Feats` object (dict)."""
         return self._feats
@@ -359,16 +354,19 @@ class Node(object):
         """Is this node a leaf, ie. a node without any children?"""
         return not self.children
 
-    def get_attrs(self, attrs, undefs=None):
+    def get_attrs(self, attrs, undefs=None, stringify=True):
         """Return multiple attributes, possibly subsitituting empty ones.
 
         Args:
         attrs: A list of attribute names, e.g. ['form', 'lemma'].
         undefs: A value to be used instead of None for empty (undefined) values.
+        stringify: Apply `str()` on each value (except for None)
         """
         values = [getattr(self, name) for name in attrs]
         if undefs is not None:
             values = [x if x is not None else undefs for x in values]
+        if stringify:
+            values = [str(x) if x is not None else None for x in values]
         return values
 
     def compute_sentence(self):
