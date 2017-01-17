@@ -1,5 +1,7 @@
 """Node class represents a node in UD trees."""
 from udapi.block.write.textmodetrees import TextModeTrees
+from udapi.core.dualdict import DualDict
+from udapi.core.feats import Feats
 
 # Pylint complains when we access e.g. node.parent._children or root._descendants
 # because it does not know that node.parent is the same class (Node)
@@ -13,50 +15,74 @@ from udapi.block.write.textmodetrees import TextModeTrees
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
 class Node(object):
-    """Class for representing nodes in Universal Dependency trees."""
+    """Class for representing nodes in Universal Dependency trees.
+
+    Attributes `form`, `lemma`, `upos`, `xpos` and `deprel` are public attributes of type `str`,
+    so you can use e.g. `node.lemma = node.form`.
+
+    `node.ord` is a int type public attribute for storing the node's word order index,
+    but assigning to it should be done with care, so the non-root nodes have `ord`s 1,2,3...
+    It is recommended to use one of the `node.shift_*` methods for reordering nodes.
+
+    For changing dependency structure (topology) of the tree, there is the `parent` property,
+    e.g. `node.parent = node.parent.parent` and `node.create_child()` method.
+    Properties `node.children` and `node.descendants` return object of type `ListOfNodes`,
+    so it is possible to do e.g.
+    >>> all_children = node.children
+    >>> left_children = node.children(preceding_only=True)
+    >>> right_descendants = node.descendants(following_only=True, add_self=True)
+
+    Properties `node.feats` and `node.misc` return objects of type `DualDict`, so one can do e.g.:
+    >>> node = Node()
+    >>> str(node.feats)
+    '_'
+    >>> node.feats = {'Case': 'Nom', 'Person': '1'}`
+    >>> node.feats = 'Case=Nom|Person=1' # equivalent to the above
+    >>> node.feats['Case']
+    'Nom'
+    >>> node.feats['NonExistent']
+    ''
+    >>> node.feats['Case'] = 'Gen'
+    >>> str(node.feats)
+    'Case=Gen|Person=1'
+    >>> dict(node.feats)
+    {'Case': 'Gen', 'Person': '1'}
+
+    Handling of enhanced dependencies, multi-word tokens and other node's methods
+    are described below.
+    """
 
     # TODO: Benchmark memory and speed of slots vs. classic dict.
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
     __slots__ = [
-        # Word index, integer starting at 1 for each new sentence.
-        'ord',
-        'form',    # Word form or punctuation symbol.
-        'lemma',   # Lemma of word form.
-        'upos', # Universal PoS tag
-        'xpos', # Language-specific part-of-speech tag; underscore if not available.
-        'deprel',  # UD dependency relation to the HEAD (root iff HEAD = 0).
-        'misc',    # Any other annotation.
-
-        # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
-        '_raw_deps',
-        # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
-        '_deps',
-        # Morphological features in their original CoNLLU format.
-        '_raw_feats',
-        # Deserialized morphological features stored in a dict (feature -> value).
-        '_feats',
-        '_parent',     # Parent node.
-        '_children',   # Ord-ordered list of child nodes.
-        '_mwt',        # multi-word token in which this word participates
+        'ord',       # Word-order index of the node (root has 0).
+        'form',      # Word form or punctuation symbol.
+        'lemma',     # Lemma of word form.
+        'upos',      # Universal PoS tag
+        'xpos',      # Language-specific part-of-speech tag; underscore if not available.
+        'deprel',    # UD dependency relation to the HEAD (root iff HEAD = 0).
+        '_misc',     # Any other annotation as udapi.core.dualdict.DualDict object.
+        '_raw_deps', # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
+        '_deps',     # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
+        '_feats',    # Morphological features as udapi.core.feats.Feats object.
+        '_parent',   # Parent node.
+        '_children', # Ord-ordered list of child nodes.
+        '_mwt',      # multi-word token in which this word participates
     ]
 
     def __init__(self, data=None):
         """Create new node and initialize its attributes with data."""
-        # Initialization of the (A) list.
         self.ord = None
         self.form = None
         self.lemma = None
         self.upos = None
         self.xpos = None
         self.deprel = None
-        self.misc = None
-
-        # Initialization of the (B) list.
+        self._misc = DualDict()
         self._raw_deps = '_'
         self._deps = None
-        self._raw_feats = '_'
-        self._feats = None
+        self._feats = Feats()
         self._parent = None
         self._children = list()
         self._mwt = None
@@ -74,28 +100,59 @@ class Node(object):
         return "<%d, %s, %s, %s>" % (self.ord, self.form, parent_ord, self.deprel)
 
     @property
-    def raw_feats(self):
-        """String serialization of morphological features as stored in CoNLL-U files.
+    def feats(self):
+        """Property for morphological features stored as a `Feats` object.
 
-        After the access to the raw morphological features,
-        provide the serialization of the features if they were deserialized already.
+        Reading:
+        You can access `node.feats` as a dict, e.g. `if node.feats['Case'] == 'Nom'`.
+        Features which are not set return an empty string (not None, not KeyError),
+        so you can safely use e.g. `if node.feats['MyExtra'].find('substring') != -1`.
+        You can also obtain the string representation of the whole FEATS (suitable for CoNLL-U),
+        e.g. `if node.feats == 'Case=Nom|Person=1'`.
+
+        Writing:
+        All the following assignment types are supported:
+        `node.feats['Case'] = 'Nom'`
+        `node.feats = {'Case': 'Nom', 'Person': '1'}`
+        `node.feats = 'Case=Nom|Person=1'`
+        `node.feats = '_'`
+        The last line has the same result as assigning None or empty string to `node.feats`.
+
+        For details about the implementation and other methods (e.g. `node.feats.is_plural()`),
+        see ``udapi.core.feats.Feats`` which is a subclass of `DualDict`.
         """
-        if self._feats is not None:
-            serialized_features = []
-            for feature in sorted(self._feats):
-                serialized_features.append('%s=%s' % (feature, self._feats[feature]))
-            self._raw_feats = '|'.join(serialized_features)
-        return self._raw_feats
+        return self._feats
 
-    @raw_feats.setter
-    def raw_feats(self, value):
-        """Set serialized morphological features (the new value is a string).
+    @feats.setter
+    def feats(self, value):
+        self._feats.set_mapping(value)
 
-        When updating raw morphological features,
-        delete the current version of the deserialized feautures.
+    @property
+    def misc(self):
+        """Property for MISC attributes stored as a `DualDict` object.
+
+        Reading:
+        You can access `node.misc` as a dict, e.g. `if node.misc['SpaceAfter'] == 'No'`.
+        Features which are not set return an empty string (not None, not KeyError),
+        so you can safely use e.g. `if node.misc['MyExtra'].find('substring') != -1`.
+        You can also obtain the string representation of the whole MISC (suitable for CoNLL-U),
+        e.g. `if node.misc == 'SpaceAfter=No|X=Y'`.
+
+        Writing:
+        All the following assignment types are supported:
+        `node.misc['SpaceAfter'] = 'No'`
+        `node.misc = {'SpaceAfter': 'No', 'X': 'Y'}`
+        `node.misc = 'SpaceAfter=No|X=Y'`
+        `node.misc = '_'`
+        The last line has the same result as assigning None or empty string to `node.feats`.
+
+        For details about the implementation, see ``udapi.core.dualdict.DualDict``.
         """
-        self._raw_feats = str(value)
-        self._feats = None
+        return self._misc
+
+    @misc.setter
+    def misc(self, value):
+        self._misc.set_mapping(value)
 
     @property
     def raw_deps(self):
@@ -121,26 +178,6 @@ class Node(object):
         """
         self._raw_deps = str(value)
         self._deps = None
-
-    @property
-    def feats(self):
-        """Return morphological features as a Python dict.
-
-        After the first access to the morphological features,
-        provide the deserialization of the features and save features to the dict.
-        """
-        if self._feats is None:
-            self._feats = dict()
-            if self._raw_feats != '_':
-                for raw_feature in self._raw_feats.split('|'):
-                    feature, value = raw_feature.split('=')
-                    self._feats[feature] = value
-        return self._feats
-
-    @feats.setter
-    def feats(self, value):
-        """Set deserialized morphological features (the new value is a dict)."""
-        self._feats = value
 
     @property
     def deps(self):
@@ -378,16 +415,19 @@ class Node(object):
         """Is this node a leaf, ie. a node without any children?"""
         return not self.children
 
-    def get_attrs(self, attrs, undefs=None):
+    def get_attrs(self, attrs, undefs=None, stringify=True):
         """Return multiple attributes, possibly subsitituting empty ones.
 
         Args:
         attrs: A list of attribute names, e.g. ['form', 'lemma'].
         undefs: A value to be used instead of None for empty (undefined) values.
+        stringify: Apply `str()` on each value (except for None)
         """
         values = [getattr(self, name) for name in attrs]
         if undefs is not None:
             values = [x if x is not None else undefs for x in values]
+        if stringify:
+            values = [str(x) if x is not None else None for x in values]
         return values
 
     def compute_sentence(self):

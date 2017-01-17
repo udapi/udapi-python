@@ -1,3 +1,4 @@
+"""Conllu class is a a writer of files in the CoNLL-U format."""
 from udapi.core.basewriter import BaseWriter
 
 
@@ -12,7 +13,7 @@ class Conllu(BaseWriter):
 
         # A list of Conllu columns.
         self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
-                                "raw_feats", "parent", "deprel", "raw_deps", "misc"]
+                                "feats", "parent", "deprel", "raw_deps", "misc"]
 
     def process_tree(self, tree):
         nodes = tree.descendants()
@@ -30,7 +31,7 @@ class Conllu(BaseWriter):
             if sentence:
                 print("# text = " + sentence)
 
-        comment = tree.misc
+        comment = tree.comment
         if comment:
             comment = comment.rstrip()
             print('#' + comment.replace('\n', '\n#'))
@@ -41,11 +42,10 @@ class Conllu(BaseWriter):
             if mwt and node.ord > last_mwt_id:
                 last_mwt_id = mwt.words[-1].ord
                 print('\t'.join([mwt.ord_range(),
-                                mwt.form if mwt.form is not None else '_',
-                                '_\t_\t_\t_\t_\t_\t_',
-                                mwt.misc if mwt.misc is not None else '_']))
-            values = [getattr(node, node_attribute) for node_attribute in self.node_attributes]
-            values[0] = str(values[0])
+                                 mwt.form if mwt.form is not None else '_',
+                                 '_\t_\t_\t_\t_\t_\t_',
+                                 mwt.misc if mwt.misc is not None else '_']))
+            values = [str(getattr(node, attr_name)) for attr_name in self.node_attributes]
             try:
                 values[6] = str(node.parent.ord)
             except AttributeError:

@@ -12,7 +12,6 @@ class BaseWriter(Block):
         self.files = Files(filenames=files)
         self.encoding = encoding
         self.newline = newline
-        self.orig_stdout = sys.stdout
 
     def filename(self):
         return self.files.filename()
@@ -25,7 +24,7 @@ class BaseWriter(Block):
 
     def before_process_document(self, _):
         if self.orig_files == '-':
-            sys.stdout = self.orig_stdout
+            sys.stdout = sys.__stdout__
             return
 
         old_filehandle = sys.stdout
@@ -38,7 +37,7 @@ class BaseWriter(Block):
                                % self.orig_files)
         elif filename == '-':
             logging.debug('Opening stdout.')
-            sys.stdout = self.orig_stdout
+            sys.stdout = sys.__stdout__
         else:
             logging.debug('Opening file %s.', filename)
             sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)

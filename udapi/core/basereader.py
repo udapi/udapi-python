@@ -67,10 +67,8 @@ class BaseReader(Block):
 
         # There may be a tree left in the buffer when reading the last doc.
         if self._buffer:
-            if orig_bundles:
-                bundle = orig_bundles.pop(0)  # TODO inefficient, use collections.deque.popleft()
-            else:
-                bundle = document.create_bundle()
+            # TODO list.pop(0) is inefficient, use collections.deque.popleft()
+            bundle = orig_bundles.pop(0) if orig_bundles else document.create_bundle()
             bundle.add_tree(self._buffer)
             self._buffer = None
 
@@ -92,8 +90,7 @@ class BaseReader(Block):
                 bundle_id = parts[0]
                 if len(parts) == 2:
                     root.zone = parts[1]
-                if bundle_id == last_bundle_id:
-                    add_to_the_last_bundle = 1
+                add_to_the_last_bundle = bundle_id == last_bundle_id
                 last_bundle_id = bundle_id
                 root.sent_id = None
 
@@ -110,7 +107,7 @@ class BaseReader(Block):
                     return
 
                 if orig_bundles:
-                    # TODO inefficient, use collections.deque.popleft()
+                    # TODO list.pop(0) is inefficient, use collections.deque.popleft()
                     bundle = orig_bundles.pop(0)
                     if last_bundle_id and last_bundle_id != bundle.bundle_id:
                         logging.warning('Mismatch in bundle IDs: %s vs %s. Keeping the former one.',

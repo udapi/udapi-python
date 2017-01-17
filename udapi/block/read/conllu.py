@@ -71,8 +71,6 @@ class Conllu(BaseReader):
                         parents.append(int(fields[n_attribute]))
                     elif attribute_name == 'ord':
                         setattr(node, 'ord', int(fields[n_attribute]))
-                    elif attribute_name == 'feats':
-                        setattr(node, 'raw_feats', fields[n_attribute])
                     elif attribute_name == 'deps':
                         setattr(node, 'raw_deps', fields[n_attribute])
                     else:
@@ -98,10 +96,10 @@ class Conllu(BaseReader):
             node.parent = nodes[parents[node_ord]]
 
         # Set root attributes (descendants for faster iteration of all nodes in a tree).
-        root._descendants = nodes[1:]
+        root._descendants = nodes[1:] # pylint: disable=protected-access
 
         if comment != '':
-            root.misc = comment
+            root.comment = comment
 
         # Create multi-word tokens.
         for fields in mwts:

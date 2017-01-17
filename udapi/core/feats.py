@@ -1,8 +1,17 @@
 """Feats class for storing morphological features of nodes in UD trees."""
+import udapi.core.dualdict
 
-class Feats(dict):
-    """Feats class for storing morphological features of nodes in UD trees."""
+class Feats(udapi.core.dualdict.DualDict):
+    """Feats class for storing morphological features of nodes in UD trees.
 
-    def __missing__(self, key):
-        """Let the default value be an empty string."""
-        return ''
+    See http://universaldependencies.org/u/feat/index.html for the specification of possible
+    feature names and values.
+    """
+
+    def is_singular(self):
+        """Is the grammatical number singular (feats['Number'] contains 'Sing')?"""
+        return self['Number'].find('Sing') != -1
+
+    def is_plural(self):
+        """Is the grammatical number plural (feats['Number'] contains 'Plur')?"""
+        return self['Number'].find('Plur') != -1

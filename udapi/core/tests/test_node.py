@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-
-import os
-import unittest
+"""Unit tests for udapi.core.node."""
+import io
 import logging
+import os
+import sys
+import unittest
 
 from udapi.core.root import Root
 from udapi.core.node import Node
@@ -14,8 +16,10 @@ logging.basicConfig(
 
 
 class TestDocument(unittest.TestCase):
+    """Unit tests for udapi.core.node."""
 
     def test_topology(self):
+        """Test methods/properties descendants, children, prev_node, next_node, ord."""
         doc = Document()
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
         doc.load_conllu(data_filename)
@@ -47,48 +51,68 @@ class TestDocument(unittest.TestCase):
         #self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         #self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
 
-    def test_feats_getter(self):
-        """
-        Test the deserialization of the morphological featrues.
+    def test_print_subtree(self):
+        """Test print_subtree() method, which uses udapi.block.write.textmodetrees."""
+        doc = Document()
+        data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
+        doc.load_conllu(data_filename)
+        root = doc.bundles[0].get_tree()
 
-        """
+        expected1 = ("─┐\n"
+                     " │ ┌──Slovenská ADJ amod\n"
+                     " └─┤ústava NOUN root\n"
+                     "   ├──: PUNCT punct\n"
+                     "   └─┐pro ADP appos\n"
+                     "     ├──i CONJ cc\n"
+                     "     └──proti ADP conj\n"
+                     "\n")
+        expected2 = ("─┐\n"
+                     " │ ┌──Slovenská Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing _\n"
+                     " └─┤ústava Case=Nom|Gender=Fem|Negative=Pos|Number=Sing SpaceAfter=No\n"
+                     "   ├──: _ _\n"
+                     "   └─┐pro AdpType=Prep|Case=Acc LId=pro-1\n"
+                     "     ├──i _ LId=i-1\n"
+                     "     └──proti AdpType=Prep|Case=Dat LId=proti-1\n"
+                     "\n")
+        try:
+            sys.stdout = capture = io.StringIO()
+            root.print_subtree(color=False)
+            self.assertEqual(capture.getvalue(), expected1)
+            capture.seek(0)
+            root.print_subtree(color=False, attributes='form,feats,misc')
+            self.assertEqual(capture.getvalue(), expected2)
+        finally:
+            sys.stdout = sys.__stdout__ # pylint: disable=redefined-variable-type
+
+    def test_feats(self):
+        """Test the morphological featrues."""
         node = Node()
-        node.raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin'
+        self.assertEqual(str(node.feats), '_')
+        node.feats = ''
+        self.assertEqual(str(node.feats), '_')
+        node.feats = None
+        self.assertEqual(str(node.feats), '_')
+        node.feats = {} # pylint: disable=redefined-variable-type
+        self.assertEqual(str(node.feats), '_')
+
+        node.feats = 'Mood=Ind|Person=1|Voice=Act'
         self.assertEqual(node.feats['Mood'], 'Ind')
-        self.assertEqual(node.feats['Negative'], 'Pos')
-        self.assertEqual(node.feats['Number'], 'Sing')
+        self.assertEqual(node.feats['Voice'], 'Act')
+        self.assertEqual(node.feats['NonExistentFeature'], '')
+
+        node.feats['Voice'] = 'Pas'
+        self.assertEqual(str(node.feats), 'Mood=Ind|Person=1|Voice=Pas')
+        self.assertEqual(node.feats, {'Mood': 'Ind', 'Person': '1', 'Voice': 'Pas'})
+        self.assertEqual(node.feats['Voice'], 'Pas')
+        self.assertEqual(node.feats['Mood'], 'Ind')
         self.assertEqual(node.feats['Person'], '1')
-        self.assertEqual(node.feats['Tense'], 'Pres')
-        self.assertEqual(node.feats['VerbForm'], 'Fin')
-        node.raw_feats = '_'
+
+        node.feats = '_'
+        self.assertEqual(str(node.feats), '_')
         self.assertEqual(node.feats, {})
 
-    def test_feats_setter(self):
-        """
-        Test the deserialization of the morphological featrues.
-
-        """
-        raw_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|Voice=Act'
-        expected_feats = 'Mood=Ind|Negative=Pos|Number=Sing|Person=1|Tense=Pres|VerbForm=Fin|Voice=Pas'
-
-        node = Node()
-        node.raw_feats = raw_feats
-        node.feats['Voice'] = 'Pas'
-
-        self.assertEqual(node.feats['Mood'], 'Ind')
-        self.assertEqual(node.feats['Negative'], 'Pos')
-        self.assertEqual(node.feats['Number'], 'Sing')
-        self.assertEqual(node.feats['Person'], '1')
-        self.assertEqual(node.feats['Tense'], 'Pres')
-        self.assertEqual(node.feats['VerbForm'], 'Fin')
-        self.assertEqual(node.feats['Voice'], 'Pas')
-        self.assertEqual(node.raw_feats, expected_feats)
-
     def test_deps_getter(self):
-        """
-        Test the deserialization of the morphological featrues.
-
-        """
+        """Test enhanced dependencies."""
         # Create a path to the test CoNLLU file.
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
 
@@ -119,13 +143,10 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(nodes[5].deps[0]['parent'], nodes[4])
 
     def test_deps_setter(self):
-        """
-        Test the deserialization of the secondary dependencies.
-
-        """
+        """Test the deserialization of enhanced dependencies."""
         # Create a sample dependency tree.
         root = Root()
-        for i in range(3):
+        for _ in range(3):
             root.create_child()
 
         nodes = root.descendants()

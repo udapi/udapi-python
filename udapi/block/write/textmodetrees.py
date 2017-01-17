@@ -110,7 +110,7 @@ class TextModeTrees(BaseWriter):
         self._vert = space + '│'
         self._space = [[space + '├', space + '┌'], [space + '└']]
 
-        self.attrs = [x if x not in ['feats', 'deps'] else 'raw_'+x for x in attributes.split(',')]
+        self.attrs = attributes.split(',')
         self._index_of = []
         self._gaps = []
 
