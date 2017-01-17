@@ -1,3 +1,4 @@
+"""BaseWriter is the base class for all writer blocks."""
 import sys
 import logging
 
@@ -5,6 +6,7 @@ from udapi.core.block import Block
 from udapi.core.files import Files
 
 class BaseWriter(Block):
+    """Base class for all reader blocks."""
 
     def __init__(self, files='-', encoding='utf-8', newline='\n', **kwargs):
         super().__init__(**kwargs)
@@ -13,13 +15,18 @@ class BaseWriter(Block):
         self.encoding = encoding
         self.newline = newline
 
+    @property
     def filename(self):
-        return self.files.filename()
+        """Property with the current filehandle."""
+        return self.files.filename
 
+    @property
     def file_number(self):
+        """Property with the current file number (1-based)."""
         return self.files.file_number
 
     def next_filename(self):
+        """Go to the next file and retrun its filename."""
         return self.files.next_filename()
 
     def before_process_document(self, _):

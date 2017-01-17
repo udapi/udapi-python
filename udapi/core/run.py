@@ -165,3 +165,8 @@ class Run(object):
         # 6. close blocks (process_end)
         for block in blocks:
             block.process_end()
+
+    # TODO: better implementation, included Scen
+    def scenario_string(self):
+        """Return the scenario string."""
+        return "\n".join(self.args.scenario)

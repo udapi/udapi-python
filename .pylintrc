@@ -19,4 +19,6 @@ notes=FIXME,XXX
 
 [MESSAGES CONTROL]
 
+# The purpose of locally disabling a warning is to disable it:-).
+# If needed we can detect those places with `ack 'pylint: disable'`.
 disable=locally-disabled

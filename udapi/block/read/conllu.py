@@ -1,3 +1,5 @@
+""""Conllu is a reader block for the CoNLL-U files."""
+
 import re
 
 from udapi.core.basereader import BaseReader
@@ -30,17 +32,19 @@ class Conllu(BaseReader):
         # Remember total number of bundles
         self.total_number_of_bundles = 0
 
+    # pylint: disable=too-many-locals,too-many-branches
+    # Maybe the code could be refactored, but it is speed-critical,
+    # so benchmarking is needed because calling extra methods may result in slowdown.
     def read_tree(self, document=None):
         root = Root()
         nodes = [root]
         parents = [0]
         comment = ''
-        filehandle = self.filehandle()
-        if filehandle is None:
+        if self.filehandle is None:
             return None
 
         mwts = []
-        for line in filehandle:
+        for line in self.filehandle:
             line = line.rstrip()
             if line == '':
                 break

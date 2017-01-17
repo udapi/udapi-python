@@ -1,3 +1,4 @@
+"""BaseReader is the base class for all reader blocks."""
 import re
 import logging
 
@@ -6,6 +7,7 @@ from udapi.core.files import Files
 
 
 class BaseReader(Block):
+    """Base class for all reader blocks."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, files='-', zone='keep', bundles_per_doc=0, encoding='utf-8',
@@ -24,30 +26,51 @@ class BaseReader(Block):
 
     @staticmethod
     def is_multizone_reader():
-        return 1
+        """Can this reader read bundles which contain more zones?.
 
+        This implementation returns always True.
+        If a subclass supports just one zone in file (e.g. `read.Sentences`),
+        this method should be overriden to return False, so `process_document`
+        can take advatage of this knowledge and optimize the reading
+        (no buffer needed even if `bundles_per_doc` specified).
+        """
+        return True
+
+    @property
     def filehandle(self):
+        """Property with the current file handle."""
         return self.files.filehandle
 
+    @property
     def filename(self):
-        return self.files.filename()
+        """Property with the current filename."""
+        return self.files.filename
 
+    @property
     def file_number(self):
+        """Property with the current file number (1-based)."""
         return self.files.file_number
 
     def next_filehandle(self):
+        """Go to the next file and retrun its filehandle."""
         return self.files.next_filehandle()
 
     def read_tree(self, document=None):
-        '''Load one (more) tree from self.files and return its root.
+        """Load one (more) tree from self.files and return its root.
 
         This method must be overriden in all readers.
         Usually it is the only method that needs to be implemented.
-        '''
+        The implementation in this base clases raises `NotImplementedError`.
+        """
         raise NotImplementedError("Class %s doesn't implement read_tree" % self.__class__.__name__)
 
 
     def filtered_read_tree(self, document=None):
+        """Load and return one more tree matching the `sent_id_filter`.
+
+        This method uses `read_tree()` internally.
+        This is the method called by `process_document`.
+        """
         tree = self.read_tree(document)
         if self.sent_id_filter is None:
             return tree
@@ -60,6 +83,9 @@ class BaseReader(Block):
                           tree.sent_id, self.sent_id_filter)
             tree = self.read_tree(document)
 
+    # pylint: disable=too-many-branches
+    # Maybe the code could be refactored, but it is speed-critical,
+    # so benchmarking is needed because calling extra methods may result in slowdown.
     def process_document(self, document):
         orig_bundles = document.bundles[:]
         last_bundle_id = ''
@@ -78,7 +104,7 @@ class BaseReader(Block):
             return
 
         while True:
-            root = self.read_tree(document)
+            root = self.filtered_read_tree(document)
             if root is None:
                 self.finished = not self.files.has_next_file()
                 break

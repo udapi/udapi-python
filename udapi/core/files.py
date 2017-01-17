@@ -1,4 +1,4 @@
-"""Helper class for iterating over filenames."""
+"""Files is a helper class for iterating over filenames."""
 
 import glob
 import sys
@@ -8,6 +8,25 @@ import gzip
 import lzma
 
 class Files(object):
+    """Helper class for iterating over filenames.
+
+    It is used e.g. in ``udapi.core.basereader`` (as `self.files = Files(filenames=pattern)`).
+    Constructor takes various arguments:
+    >>> files = Files(['file1.txt', 'file2.txt']) # list of filenames or
+    >>> files = Files('file1.txt,file2.txt')      # comma- or space-separated filenames in string
+    >>> files = Files('file1.txt,file2.txt.gz')   # supports automatic decompression of gz, xz, bz2
+    >>> files = Files('@my.filelist !dir??/file*.txt') # @ marks filelist, ! marks wildcard pattern
+    The `@filelist` and `!wildcard` conventions are used in several other tools, e.g. 7z or javac.
+
+    Usage:
+    >>> while (True):
+    >>>     filename = files.next_filename()
+            if filename is None:
+                break
+            ...
+    or
+    >>> filehandle = files.next_filehandle()
+    """
 
     def __init__(self, filenames, encoding='utf-8'):
         if isinstance(filenames, list):
@@ -21,6 +40,14 @@ class Files(object):
         self.file_number = 0
 
     def string_to_filenames(self, string):
+        """Parse a pattern string (e.g. '!dir??/file*.txt') and return a list of matching filenames.
+
+        If the string starts with `!` it is interpreted as shell wildcard pattern.
+        If it starts with `@` it is interpreted as a filelist with one file per line.
+        The string can contain more filenames (or '!' and '@' patterns) separated by spaces
+        or commas. For specifying files with spaces or commas in filenames, you need to use
+        wildcard patterns or '@' filelist. (But preferably don't use such filenames.)
+        """
         # "!" means glob pattern which can contain {dir1,dir2}
         # so it cannot be combined with separating tokens with comma.
         if string[0] == '!':
@@ -49,22 +76,29 @@ class Files(object):
             filenames = token
         return filenames
 
+    @property
     def number_of_files(self):
+        """Propery with the total number of files."""
         return len(self.filenames)
 
+    @property
     def filename(self):
-        if self.file_number == 0 or self.file_number > self.number_of_files():
+        """Property with the current file name."""
+        if self.file_number == 0 or self.file_number > self.number_of_files:
             return None
         return self.filenames[self.file_number - 1]
 
     def next_filename(self):
+        """Go to the next file and retrun its filename or None (meaning no more files)."""
         self.file_number += 1
-        return self.filename()
+        return self.filename
 
     def has_next_file(self):
-        return self.file_number < self.number_of_files()
+        """Is there any other file in the queue after the current one?"""
+        return self.file_number < self.number_of_files
 
     def next_filehandle(self):
+        """Go to the next file and retrun its filehandle or None (meaning no more files)."""
         filename = self.next_filename()
         if filename is None:
             fhandle = None
