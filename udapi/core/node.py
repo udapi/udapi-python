@@ -411,6 +411,10 @@ class Node(object):
         except IndexError:
             return None
 
+    def precedes(self, node):
+        """Does this node precedes another `node` in word order (`self.ord < node.ord`)?"""
+        return self.ord < node.ord
+
     def is_leaf(self):
         """Is this node a leaf, ie. a node without any children?"""
         return not self.children
