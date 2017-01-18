@@ -1,11 +1,13 @@
+"""Eval is a special block for evaluating code given by parameters."""
 from udapi.core.block import Block
 
-# We need eval in this block and the variables this etc. are not unused but provided for the eval
-# pylint: disable=W0123,W0612
+# We need exec in this block and the variables this etc. are not unused but provided for the exec
+# pylint: disable=exec-used,unused-variable
 class Eval(Block):
-    """ Special block for evaluating code given by parameters."""
+    """Special block for evaluating code given by parameters."""
 
-    # pylint: disable=R0913
+    # So many arguments is the design of this block (consistent with Perl Udapi).
+    # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, doc=None, bundle=None, tree=None, node=None, start=None, end=None,
                  before_doc=None, after_doc=None, before_bundle=None, after_bundle=None,
                  expand_code=True, **kwargs):
@@ -23,22 +25,23 @@ class Eval(Block):
         self.expand_code = expand_code
 
     def expand_eval_code(self, to_eval):
+        """Expand '$.' to 'this.', useful for oneliners."""
         return to_eval.replace('$.', 'this.') if self.expand_code else to_eval
 
     def before_process_document(self, document):
         if self.before_doc:
             this = doc = document
-            eval(self.expand_eval_code(self.before_doc))
+            exec(self.expand_eval_code(self.before_doc))
 
     def after_process_document(self, document):
         if self.after_doc:
             this = doc = document
-            eval(self.expand_eval_code(self.after_doc))
+            exec(self.expand_eval_code(self.after_doc))
 
     def process_document(self, document):
         this = doc = document
         if self.doc:
-            eval(self.expand_eval_code(self.doc))
+            exec(self.expand_eval_code(self.doc))
 
         if self.bundle or self.before_bundle or self.after_bundle or self.tree or self.node:
             for bundle in doc.bundles:
@@ -51,10 +54,10 @@ class Eval(Block):
         this = bundle
 
         if self.before_bundle:
-            eval(self.expand_eval_code(self.before_bundle))
+            exec(self.expand_eval_code(self.before_bundle))
 
         if self.bundle:
-            eval(self.expand_eval_code(self.bundle))
+            exec(self.expand_eval_code(self.bundle))
 
         if self.tree or self.node:
             trees = bundle.trees
@@ -63,7 +66,7 @@ class Eval(Block):
                 self.process_tree(tree)
 
         if self.after_bundle:
-            eval(self.expand_eval_code(self.after_bundle))
+            exec(self.expand_eval_code(self.after_bundle))
 
     def process_tree(self, tree):
         # Extract variables $bundle, so they can be used in eval code
@@ -72,17 +75,17 @@ class Eval(Block):
         this = tree
 
         if self.tree:
-            eval(self.expand_eval_code(self.tree))
+            exec(self.expand_eval_code(self.tree))
 
         if self.node:
             for node in tree.descendants():
                 this = node
-                eval(self.expand_eval_code(self.node))
+                exec(self.expand_eval_code(self.node))
 
     def process_start(self):
         if self.start:
-            eval(self.expand_eval_code(self.start))
+            exec(self.expand_eval_code(self.start))
 
     def process_end(self):
         if self.end:
-            eval(self.expand_eval_code(self.end))
+            exec(self.expand_eval_code(self.end))
