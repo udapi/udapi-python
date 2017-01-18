@@ -123,9 +123,10 @@ class Convert1to2(Block):
         """cc and punct in coordinations should depend on the immediately following conjunct."""
         if node.deprel in ['cc', 'punct']:
             conjuncts = [n for n in node.parent.children if n.deprel == 'conj']
+            # Skip cases when punct is used outside of coordination
+            # and when cc is used without any conj sibling, e.g. "And then we left."
+            # Both of these cases are allowed by the UDv2 specification.
             if not conjuncts:
-                if node.deprel == 'cc':
-                    self.log(node, 'cc', 'cc without conj')
                 return
             next_conjunct = next((n for n in conjuncts if node.precedes(n)), None)
             if next_conjunct:
