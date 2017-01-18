@@ -17,7 +17,8 @@ DEPREL_CHANGE = {
     "nsubjpass": "nsubj:pass",
     "csubjpass": "csubj:pass",
     "auxpass": "aux:pass",
-    "name": "flat",
+    "name": "flat", # or "flat:name"?
+    "foreign": "flat", # or "flat:foreign"?
 }
 
 class Convert1to2(Block):
@@ -41,6 +42,15 @@ class Convert1to2(Block):
         self.reattach_coordinations(node)
 
     @staticmethod
+    def log(node, short_msg, long_msg):
+        """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
+        logging.warning('node %s: %s', node.address(), long_msg)
+        if node.misc['ToDo']:
+            node.misc['ToDo'] += ',' + short_msg
+        else:
+            node.misc['ToDo'] = short_msg
+
+    @staticmethod
     def change_upos(node):
         """CONJ→CCONJ."""
         if node.upos == "CONJ":
@@ -48,14 +58,15 @@ class Convert1to2(Block):
 
     @staticmethod
     def change_deprel_simple(node):
-        """mwe→fixed, dobj→obj, name→flat, *pass→*:pass."""
+        """mwe→fixed, dobj→obj, *pass→*:pass, name→flat, foreign→flat+Foreign=Yes."""
+        if node.deprel == 'foreign':
+            node.feats['Foreign'] = 'Yes'
         try:
             node.deprel = DEPREL_CHANGE[node.deprel]
         except KeyError:
             pass
 
-    @staticmethod
-    def change_neg(node):
+    def change_neg(self, node):
         """neg→advmod/det/ToDo + Polarity=Neg."""
         # TODO: Is this specific for English?
         if node.deprel == 'neg':
@@ -66,8 +77,7 @@ class Convert1to2(Block):
             elif node.upos == 'DET':
                 node.deprel = 'det'
             else:
-                node.misc['ToDo'] += 'neg'
-                logging.warning("Node %s has deprel=neg upos=%s", node.address(), node.upos)
+                self.log(node, 'neg', 'deprel=neg upos=%s' % node.upos)
 
     @staticmethod
     def is_nominal(node):
@@ -91,10 +101,9 @@ class Convert1to2(Block):
             if parent_is_nominal == 'no':
                 node.deprel = 'obl'
             elif parent_is_nominal == 'maybe':
-                node.misc['ToDo'] += 'nmod'
+                self.log(node, 'nmod', 'deprel=nmod, but parent is ambiguous nominal/predicate')
 
-    @staticmethod
-    def change_feat(node):
+    def change_feat(self, node):
         """Negative→Polarity, Aspect=Pro→Prosp, VerbForm=Trans→Conv, Definite=Red→Cons."""
         if node.feats['Negative']:
             node.feats['Polarity'] = node.feats['Negative']
@@ -105,16 +114,18 @@ class Convert1to2(Block):
             node.feats['VerbForm'] = 'Conv'
         if node.feats['Definite'] == 'Red':
             node.feats['Definite'] = 'Cons'
+        if node.feats['Tense'] == 'Nar':
+            self.log(node, 'nar', 'Tense=Nar not allowed in UD v2')
+        if node.feats['NumType'] == 'Gen':
+            self.log(node, 'gen', 'NumType=Gen not allowed in UD v2')
 
-    @staticmethod
-    def reattach_coordinations(node):
+    def reattach_coordinations(self, node):
         """cc and punct in coordinations should depend on the immediately following conjunct."""
         if node.deprel in ['cc', 'punct']:
             conjuncts = [n for n in node.parent.children if n.deprel == 'conj']
             if not conjuncts:
                 if node.deprel == 'cc':
-                    logging.warning('%s cc without conj', node.address())
-                    node.misc['ToDo'] += 'cc'
+                    self.log(node, 'cc', 'cc without conj')
                 return
             next_conjunct = next((n for n in conjuncts if node.precedes(n)), None)
             if next_conjunct:
@@ -123,5 +134,4 @@ class Convert1to2(Block):
                 else:
                     node.parent = next_conjunct
             elif node.deprel == 'cc':
-                logging.warning('%s cc with no following conjunct', node.address())
-                node.misc['ToDo'] += 'cc'
+                self.log(node, 'cc', 'cc with no following conjunct')
