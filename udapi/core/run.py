@@ -51,13 +51,9 @@ def _parse_command_line_arguments(scenario):
         # key=value.
         logging.debug("- argument")
 
-        # Test that there is only one '=' in the token.
-        data_fields = token.split('=')
-        if len(data_fields) != 2:
-            raise ValueError('Invalid token %r', token)
-
-        # Obtain key and value.
-        attribute_name, attribute_value = token.split('=', 2)
+        # The first '=' in the token separates name from value.
+        # The value may contain other '=' characters (e.g. in util.Eval node='node.form = "_"').
+        attribute_name, attribute_value = token.split('=', 1)
         if number_of_blocks == 0:
             raise RuntimeError(
                 'Block attribute pair %r without a prior block name', token)

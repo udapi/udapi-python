@@ -450,10 +450,9 @@ class Node(object):
         """
         string = ''
         # TODO: use multi-word tokens instead of words where possible.
-        # TODO: self.descendants(add_self=not self.is_root()):
-        for node in self.descendants():
+        for node in self.descendants(add_self=not self.is_root()):
             string += node.form
-            if node.misc.find('SpaceAfter=No') == -1:
+            if node.misc['SpaceAfter'] != 'No':
                 string += ' '
         return string
 
