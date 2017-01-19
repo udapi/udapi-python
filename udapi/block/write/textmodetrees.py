@@ -70,7 +70,7 @@ class TextModeTrees(BaseWriter):
     def __init__(self, print_sent_id=False, print_sentence=False, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='', **kwargs):
-        '''Create new TextModeTrees block object.
+        """Create new TextModeTrees block object.
 
         Args:
         print_sent_id: Print ID of the tree (its root, aka "sent_id") above each tree?
@@ -89,7 +89,7 @@ class TextModeTrees(BaseWriter):
         attributes: A comma-separated list of node attributes which should be printed. Possible
                     values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
-        '''
+        """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
         self.print_sentence = print_sentence
@@ -100,15 +100,16 @@ class TextModeTrees(BaseWriter):
         self.attributes = attributes
         self.print_undef_as = print_undef_as
 
-        # DRAW[bottom-most][top-most]
+        # _draw[is_bottommost][is_topmost]
         line = '─' * indent
         self._horiz = line + '─'
         self._draw = [[line + '┤', line + '┐'], [line + '┘', self._horiz]]
 
-        # SPACE[bottom-most][top-most]
+        # _space[is_bottommost][is_topmost]
+        # _vert[is_crossing]
         space = ' ' * indent
-        self._vert = space + '│'
         self._space = [[space + '├', space + '┌'], [space + '└']]
+        self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
         self._index_of = []
@@ -131,14 +132,14 @@ class TextModeTrees(BaseWriter):
         return lmost, rmost, descs + 1
 
     def process_tree(self, root):
-        '''Prints the tree to (possibly redirected) sys.stdout.'''
+        """Print the tree to (possibly redirected) sys.stdout."""
         allnodes = [root] + root.descendants()
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
-        self._gaps = [0,] * (1 + len(root.root.descendants()))
         lines = [''] * len(allnodes)
 
         # Precompute the number of non-projective gaps for each subtree
         if self.minimize_cross:
+            self._gaps = [0,] * (1 + len(root.root.descendants))
             self._compute_gaps(root)
 
         # Precompute lines for printing
@@ -150,7 +151,7 @@ class TextModeTrees(BaseWriter):
             max_length = max([_length(lines[i]) for i in range(min_idx, max_idx+1)])
             for idx in range(min_idx, max_idx+1):
                 idx_node = allnodes[idx]
-                filler = '─' if lines[idx] and lines[idx][-1] in '─┌└├' else ' '
+                filler = '─' if lines[idx] and lines[idx][-1] in '─┌└├╪' else ' '
                 lines[idx] += filler * (max_length - _length(lines[idx]))
 
                 topmost = idx == min_idx
@@ -159,7 +160,7 @@ class TextModeTrees(BaseWriter):
                     lines[idx] += self._draw[botmost][topmost] + self.node_to_string(node)
                 else:
                     if idx_node.parent is not node:
-                        lines[idx] += self._vert
+                        lines[idx] += self._vert[bool(lines[idx] and lines[idx][-1] == '─')]
                     else:
                         lines[idx] += self._space[botmost][topmost]
                         if idx_node.is_leaf():
@@ -169,15 +170,13 @@ class TextModeTrees(BaseWriter):
 
             # sorting the stack to minimize crossings of edges
             if self.minimize_cross:
-                stack = sorted(stack, key=lambda x: self._gaps[x.ord])
+                stack = sorted(stack, key=lambda x: -self._gaps[x.ord])
 
         # Print headers (if required) and the tree itself
         if self.print_sent_id:
             print('# sent_id = ' + root.address())
-
         if self.print_sentence:
             print("# text = " + root.compute_sentence())
-
         for line in lines:
             print(line)
 
@@ -185,10 +184,11 @@ class TextModeTrees(BaseWriter):
             print('')
 
     def before_process_document(self, document):
-        '''Initialize ANSI colors if color is True or 'auto'.
+        """Initialize ANSI colors if color is True or 'auto'.
 
         If color=='auto', detect if sys.stdout is interactive
-        (terminal, not redirected to a file).'''
+        (terminal, not redirected to a file).
+        """
         super().before_process_document(document)
         if self.color == 'auto':
             self.color = sys.stdout.isatty()
@@ -196,7 +196,7 @@ class TextModeTrees(BaseWriter):
                 colorama.init()
 
     def node_to_string(self, node):
-        '''Render a node with its attributes.'''
+        """Render a node with its attributes."""
         if node.is_root():
             return ''
         values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
