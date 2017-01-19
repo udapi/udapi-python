@@ -9,6 +9,7 @@ See http://universaldependencies.org/v2/summary.html for the description of all 
 * Install Udapi for Python as described [here](https://github.com/udapi/udapi-python/README.md),
   so you have the `udapy` execution script in your `$PATH`.
 * Run from command line:
+
   ```bash
   udapy -s ud.Convert1to2 < inputUD1.conllu > outputUD2.conllu
   ```
@@ -16,11 +17,13 @@ See http://universaldependencies.org/v2/summary.html for the description of all 
 ### Tricks
 * If you already have some conversion of your treebank into v2,
   you can use this script for comparing the differences, e.g.:
+  
   ```bash
   vimdiff outputUD2.conllu previous_outputUD2.conllu
   ```
 * It is difficult for humans to see the dependency structure in CoNLL-U format.
   You can use a Udapi pretty-printer `write.TextModeTrees`:
+  
   ```bash
   udapy ud.Convert1to2 write.TextModeTrees attributes=form,lemma,upos,deprel,feats,misc < inputUD1.conllu > outputUD2.txt
   udapy write.TextModeTrees attributes=form,lemma,upos,deprel,feats,misc < previous_outputUD2.conllu > previous_outputUD2.txt
@@ -28,6 +31,7 @@ See http://universaldependencies.org/v2/summary.html for the description of all 
   ```
 * `Convert1to2` marks unclear cases with a special `ToDo` attribute in the MISC column (and logging to stderr).
   You can find these nodes in colored pretty-printed trees with:
+
   ```bash
   udapy ud.Convert1to2 write.TextModeTrees attributes=form,lemma,upos,deprel,feats,misc color=1 < inputUD1.conllu | less -R
   ```
