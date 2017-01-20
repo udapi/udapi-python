@@ -71,26 +71,22 @@ class Node(object):
         '_mwt',      # multi-word token in which this word participates
     ]
 
-    def __init__(self, data=None):
-        """Create new node and initialize its attributes with data."""
+    def __init__(self, form=None, lemma=None, upos=None, # pylint: disable=too-many-arguments
+                 xpos=None, feats=None, deprel=None, misc=None):
+        """Create a new node and initialize its attributes using the keyword arguments."""
         self.ord = None
-        self.form = None
-        self.lemma = None
-        self.upos = None
-        self.xpos = None
-        self.deprel = None
-        self._misc = DualDict()
+        self.form = form
+        self.lemma = lemma
+        self.upos = upos
+        self.xpos = xpos
+        self._feats = Feats(string=feats)
+        self.deprel = deprel
+        self._misc = DualDict(string=misc)
         self._raw_deps = '_'
         self._deps = None
-        self._feats = Feats()
         self._parent = None
         self._children = list()
         self._mwt = None
-
-        # If given, set the node using data from arguments.
-        if data is not None:
-            for name in data:
-                setattr(self, name, data[name])
 
     def __str__(self):
         """Pretty print of the Node object."""
@@ -312,7 +308,7 @@ class Node(object):
 
     def create_child(self, **kwargs):
         """Create and return a new child of the current node."""
-        new_node = Node(data=kwargs)
+        new_node = Node(**kwargs)
         new_node.ord = len(self.root._descendants) + 1
         self.root._descendants.append(new_node)
         self.children.append(new_node)
