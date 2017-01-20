@@ -36,7 +36,7 @@ class TextModeTrees(BaseWriter):
     This block prints dependency trees in plain-text format.
     For example the following CoNLL-U file (with tabs instead of spaces)
 
-    1  I     I     PRON  PRP Number=Sing|Person=1 2 nsubj      _ _
+    1  I     I     PRON  PRP Number=Sing|Person=1 2  nsubj     _ _
     2  saw   see   VERB  VBD Tense=Past           0  root      _ _
     3  a     a     DET   DT  Definite=Ind         4  det       _ _
     4  dog   dog   NOUN  NN  Number=Sing          2  dobj      _ _
@@ -49,18 +49,18 @@ class TextModeTrees(BaseWriter):
     11 .     .     PUNCT .   _                    2  punct     _ _
 
     will be printed (with the default parameters) as
-    ─┐
-     │ ┌──I PRON nsubj
-     └─┤saw VERB root
-       │                           ┌──a DET det
-       ├───────────────────────────┤dog NOUN dobj
-       ├──yesterday NOUN nmod:tmod │
-       ├──, PUNCT punct            │
-       │                           │ ┌──which DET nsubj
-       │                           │ ├──was VERB cop
-       │                           │ ├──a DET det
-       │                           └─┘boxer NOUN acl:relcl
-       └──. PUNCT punct
+    ─┮
+     │ ╭─╼ I PRON nsubj
+     ╰─┾ saw VERB root
+       │                        ╭─╼ a DET det
+       ├────────────────────────┾ dog NOUN dobj
+       ├─╼ today NOUN nmod:tmod │
+       ├─╼ , PUNCT punct        │
+       │                        │ ╭─╼ which DET nsubj
+       │                        │ ├─╼ was VERB cop
+       │                        │ ├─╼ a DET det
+       │                        ╰─┶ boxer NOUN acl:relcl
+       ╰─╼ . PUNCT punct
 
     This block's method process_tree can be called on any node (not only root),
     which is useful for printing subtrees using node.print_subtree(),
@@ -102,13 +102,13 @@ class TextModeTrees(BaseWriter):
 
         # _draw[is_bottommost][is_topmost]
         line = '─' * indent
-        self._horiz = line + '─'
-        self._draw = [[line + '┤', line + '┐'], [line + '┘', self._horiz]]
+        self._horiz = line + '╼'
+        self._draw = [[line + '┾', line + '┮'], [line + '┶', self._horiz]]
 
         # _space[is_bottommost][is_topmost]
         # _vert[is_crossing]
         space = ' ' * indent
-        self._space = [[space + '├', space + '┌'], [space + '└']]
+        self._space = [[space + '├', space + '╭'], [space + '╰']]
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
@@ -151,7 +151,7 @@ class TextModeTrees(BaseWriter):
             max_length = max([_length(lines[i]) for i in range(min_idx, max_idx+1)])
             for idx in range(min_idx, max_idx+1):
                 idx_node = allnodes[idx]
-                filler = '─' if lines[idx] and lines[idx][-1] in '─┌└├╪' else ' '
+                filler = '─' if lines[idx] and lines[idx][-1] in '─╭╰├╪' else ' '
                 lines[idx] += filler * (max_length - _length(lines[idx]))
 
                 topmost = idx == min_idx
@@ -205,4 +205,4 @@ class TextModeTrees(BaseWriter):
                 color = COLOR_OF.get(attr, 0)
                 if color:
                     values[i] = colored(values[i], color)
-        return ' '.join(values)
+        return ' ' + ' '.join(values)

@@ -58,21 +58,21 @@ class TestDocument(unittest.TestCase):
         doc.load_conllu(data_filename)
         root = doc.bundles[0].get_tree()
 
-        expected1 = ("─┐\n"
-                     " │ ┌──Slovenská ADJ amod\n"
-                     " └─┤ústava NOUN root\n"
-                     "   ├──: PUNCT punct\n"
-                     "   └─┐pro ADP appos\n"
-                     "     ├──i CONJ cc\n"
-                     "     └──proti ADP conj\n"
+        expected1 = ("─┮\n"
+                     " │ ╭─╼ Slovenská ADJ amod\n"
+                     " ╰─┾ ústava NOUN root\n"
+                     "   ├─╼ : PUNCT punct\n"
+                     "   ╰─┮ pro ADP appos\n"
+                     "     ├─╼ i CONJ cc\n"
+                     "     ╰─╼ proti ADP conj\n"
                      "\n")
-        expected2 = ("─┐\n"
-                     " │ ┌──Slovenská Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing _\n"
-                     " └─┤ústava Case=Nom|Gender=Fem|Negative=Pos|Number=Sing SpaceAfter=No\n"
-                     "   ├──: _ _\n"
-                     "   └─┐pro AdpType=Prep|Case=Acc LId=pro-1\n"
-                     "     ├──i _ LId=i-1\n"
-                     "     └──proti AdpType=Prep|Case=Dat LId=proti-1\n"
+        expected2 = ("─┮\n"
+                     " │ ╭─╼ Slovenská Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing _\n"
+                     " ╰─┾ ústava Case=Nom|Gender=Fem|Negative=Pos|Number=Sing SpaceAfter=No\n"
+                     "   ├─╼ : _ _\n"
+                     "   ╰─┮ pro AdpType=Prep|Case=Acc LId=pro-1\n"
+                     "     ├─╼ i _ LId=i-1\n"
+                     "     ╰─╼ proti AdpType=Prep|Case=Dat LId=proti-1\n"
                      "\n")
         try:
             sys.stdout = capture = io.StringIO()
