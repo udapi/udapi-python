@@ -74,13 +74,33 @@ class TestDocument(unittest.TestCase):
                      "     ├─╼ i _ LId=i-1\n"
                      "     ╰─╼ proti AdpType=Prep|Case=Dat LId=proti-1\n"
                      "\n")
+
+        # test non-projective tree
+        rootB = Root()
+        for i in range(1,5):
+            rootB.create_child(form=str(i))
+        nodesB = rootB.descendants(add_self=1)
+        nodesB[1].parent = nodesB[3]
+        nodesB[4].parent = nodesB[2]
+        expectedB = ("─┮\n"
+                     " │ ╭─╼ 1\n"
+                     " ├─╪───┮ 2\n"
+                     " ╰─┶ 3 │\n"
+                     "       ╰─╼ 4\n"
+                     "\n")
+
         try:
             sys.stdout = capture = io.StringIO()
             root.print_subtree(color=False)
             self.assertEqual(capture.getvalue(), expected1)
             capture.seek(0)
+            capture.truncate()
             root.print_subtree(color=False, attributes='form,feats,misc')
             self.assertEqual(capture.getvalue(), expected2)
+            capture.seek(0)
+            capture.truncate()
+            rootB.print_subtree(color=False, attributes='form')
+            self.assertEqual(capture.getvalue(), expectedB)
         finally:
             sys.stdout = sys.__stdout__ # pylint: disable=redefined-variable-type
 

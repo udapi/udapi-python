@@ -310,9 +310,9 @@ class Node(object):
             climber = climber.parent
         return False
 
-    def create_child(self):
+    def create_child(self, **kwargs):
         """Create and return a new child of the current node."""
-        new_node = Node()
+        new_node = Node(data=kwargs)
         new_node.ord = len(self.root._descendants) + 1
         self.root._descendants.append(new_node)
         self.children.append(new_node)

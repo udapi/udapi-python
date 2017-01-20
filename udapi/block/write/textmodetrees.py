@@ -62,8 +62,16 @@ class TextModeTrees(BaseWriter):
        │                        ╰─┶ boxer NOUN acl:relcl
        ╰─╼ . PUNCT punct
 
-    This block's method process_tree can be called on any node (not only root),
-    which is useful for printing subtrees using node.print_subtree(),
+    Some non-projective trees cannot be printed witout crossing edges.
+    TextModeTrees uses a special "bridge" symbol ─╪─ to mark this:
+    ─┮
+     │ ╭─╼ 1
+     ├─╪───┮ 2
+     ╰─┶ 3 │
+           ╰─╼ 4
+
+    This block's method `process_tree` can be called on any node (not only root),
+    which is useful for printing subtrees using `node.print_subtree()`,
     which is internally implemented using this block.
     """
 
@@ -160,7 +168,7 @@ class TextModeTrees(BaseWriter):
                     lines[idx] += self._draw[botmost][topmost] + self.node_to_string(node)
                 else:
                     if idx_node.parent is not node:
-                        lines[idx] += self._vert[bool(lines[idx] and lines[idx][-1] == '─')]
+                        lines[idx] += self._vert[bool(lines[idx] and lines[idx][-1] in '─├')]
                     else:
                         lines[idx] += self._space[botmost][topmost]
                         if idx_node.is_leaf():
