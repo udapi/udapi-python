@@ -7,7 +7,7 @@ import sys
 import unittest
 
 from udapi.core.root import Root
-from udapi.core.node import Node
+from udapi.core.node import Node, find_minimal_common_treelet
 from udapi.core.document import Document
 from udapi.block.read.conllu import Conllu
 
@@ -43,6 +43,13 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(nodes[5].next_node, None)
         self.assertEqual(root.prev_node, None)
 
+        (common_ancestor, added_nodes) = find_minimal_common_treelet(nodes[0], nodes[1])
+        self.assertEqual(common_ancestor, nodes[1])
+        self.assertEqual(list(added_nodes), [])
+        input_nodes = [nodes[2], nodes[4], nodes[5]]
+        (common_ancestor, added_nodes) = find_minimal_common_treelet(*input_nodes)
+        self.assertEqual(common_ancestor, nodes[1])
+        self.assertEqual(list(added_nodes), [nodes[1], nodes[3]])
 
         # ords and reorderings
         self.assertEqual([node.ord for node in nodes], [1, 2, 3, 4, 5, 6])

@@ -20,7 +20,7 @@ class Block(object):
 
     def process_tree(self, tree):
         """Process a UD tree"""
-        for node in tree.descendants():
+        for node in tree.descendants:
             self.process_node(node)
 
     def process_bundle(self, bundle):

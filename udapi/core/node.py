@@ -1,4 +1,8 @@
-"""Node class represents a node in UD trees."""
+"""Node class and related classes and functions.
+
+In addition to class `Node`, this module contains class `ListOfNodes`
+and function `find_minimal_common_treelet`.
+"""
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
@@ -90,10 +94,7 @@ class Node(object):
 
     def __str__(self):
         """Pretty print of the Node object."""
-        parent_ord = None
-        if self.parent is not None:
-            parent_ord = self.parent.ord
-        return "<%d, %s, %s, %s>" % (self.ord, self.form, parent_ord, self.deprel)
+        return "node<%s, %s>" % (self.address(), self.form)
 
     @property
     def feats(self):
@@ -530,3 +531,65 @@ class ListOfNodes(list):
         if following_only:
             result = [x for x in result if x.ord >= self.origin.ord]
         return sorted(result, key=lambda node: node.ord)
+
+def find_minimal_common_treelet(*args):
+    """Find the smallest tree subgraph containing all `nodes` provided in args.
+
+    >>> from udapi.core.node import find_minimal_common_treelet
+    >>> (nearest_common_ancestor, _) = find_minimal_common_treelet(nodeA, nodeB)
+    >>> nodes = [nodeA, nodeB, nodeC]
+    >>> (nca, added_nodes) = find_minimal_common_treelet(*nodes)
+
+    There always exists exactly one such tree subgraph (aka treelet).
+    This function returns a tuple `(root, added_nodes)`,
+    where `root` is the root of the minimal treelet
+    and `added_nodes` is an iterator of nodes that had to be added to `nodes` to form the treelet.
+    The `nodes` should not contain one node twice.
+    """
+    nodes = list(args)
+    # The input nodes are surely in the treelet, let's mark this with "1".
+    in_treelet = {node.ord: 1 for node in nodes}
+
+    # Step 1: Find a node (`highest`) which is governing all the input `nodes`.
+    #         It may not be the lowest such node, however.
+    # At the beginning, each node in `nodes` represents (a top node of) a "component".
+    # We climb up from all `nodes` towards the root "in parallel".
+    # If we encounter an already visited node, we mark the node (`in_treelet[node.ord] = 1`)
+    # as a "sure" member of the treelet and we merge the two components,
+    # i.e. we delete this second component from `nodes`,
+    # in practice we just skip the command `nodes.append(parent)`.
+    # Otherwise, we mark the node as "unsure".
+    # For unsure members we need to mark from which of its children
+    # we climbed to it (`in_treelet[paren.ord] = the_child`).
+    # In `new_nodes` dict, we note which nodes were tentatively added to the treelet.
+    # If we climb up to the root of the whole tree, we save the root in `highest`.
+    new_nodes = {}
+    highest = None
+    while len(nodes) > 1:
+        node = nodes.pop(0) # TODO deque
+        parent = node.parent
+        if parent is None:
+            highest = node
+        elif in_treelet.get(parent.ord, False):
+            in_treelet[parent.ord] = 1
+        else:
+            new_nodes[parent.ord] = parent
+            in_treelet[parent.ord] = node
+            nodes.append(parent)
+
+    # In most cases, `nodes` now contain just one node -- the one we were looking for.
+    # Only if we climbed up to the root, then the `highest` one is the root, of course.
+    highest = highest or nodes[0]
+
+    # Step 2: Find the lowest node which is governing all the original input `nodes`.
+    # If the `highest` node is unsure, climb down using poiners stored in `in_treelet`.
+    # All such nodes which were rejected as true members of the minimal common treelet
+    # must be deleted from the set of newly added nodes `new_nodes`.
+    child = in_treelet[highest.ord]
+    while child != 1:
+        del new_nodes[highest.ord]
+        highest = child
+        child = in_treelet[highest.ord]
+
+    # We return the root of the minimal common treelet plus all the newly added nodes.
+    return (highest, new_nodes.values())
