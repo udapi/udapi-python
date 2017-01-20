@@ -76,13 +76,13 @@ class TestDocument(unittest.TestCase):
                      "\n")
 
         # test non-projective tree
-        rootB = Root()
-        for i in range(1,5):
-            rootB.create_child(form=str(i))
-        nodesB = rootB.descendants(add_self=1)
-        nodesB[1].parent = nodesB[3]
-        nodesB[4].parent = nodesB[2]
-        expectedB = ("─┮\n"
+        root3 = Root()
+        for i in range(1, 5):
+            root3.create_child(form=str(i))
+        nodes = root3.descendants(add_self=1)
+        nodes[1].parent = nodes[3]
+        nodes[4].parent = nodes[2]
+        expected3 = ("─┮\n"
                      " │ ╭─╼ 1\n"
                      " ├─╪───┮ 2\n"
                      " ╰─┶ 3 │\n"
@@ -99,8 +99,8 @@ class TestDocument(unittest.TestCase):
             self.assertEqual(capture.getvalue(), expected2)
             capture.seek(0)
             capture.truncate()
-            rootB.print_subtree(color=False, attributes='form')
-            self.assertEqual(capture.getvalue(), expectedB)
+            root3.print_subtree(color=False, attributes='form')
+            self.assertEqual(capture.getvalue(), expected3)
         finally:
             sys.stdout = sys.__stdout__ # pylint: disable=redefined-variable-type
 
