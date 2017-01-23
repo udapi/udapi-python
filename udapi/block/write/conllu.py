@@ -16,7 +16,7 @@ class Conllu(BaseWriter):
                                 "feats", "parent", "deprel", "raw_deps", "misc"]
 
     def process_tree(self, tree):
-        nodes = tree.descendants()
+        nodes = tree.descendants
 
         # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
         # we need to skip the whole tree (including possible comments).

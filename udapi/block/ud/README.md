@@ -6,7 +6,7 @@ See http://universaldependencies.org/v2/summary.html for the description of all 
 **IMPORTANT**: this code does only **some** of the changes and the output should be **checked**, see below.
 
 ### Usage
-* Install Udapi for Python as described [here](https://github.com/udapi/udapi-python/README.md),
+* Install Udapi for Python as described [here](https://github.com/udapi/udapi-python/blob/master/README.md),
   so you have the `udapy` execution script in your `$PATH`.
 * Run from command line:
 
