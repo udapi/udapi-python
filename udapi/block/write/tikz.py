@@ -1,4 +1,4 @@
-"""Tikz class is a a writer for LaTeX with tikz-dependency."""
+"""Tikz class is a writer for LaTeX with tikz-dependency."""
 import logging
 
 from udapi.core.basewriter import BaseWriter
@@ -31,10 +31,10 @@ class Tikz(BaseWriter):
             print(r'\begin{document}')
 
     def after_process_document(self, doc):
-        super().after_process_document(doc)
         if self.print_preambule:
             print(r'\end{document}')
         logging.info('Use pdflatex to compile the output')
+        super().after_process_document(doc)
 
     def process_tree(self, tree):
         print(r'\begin{dependency}')
