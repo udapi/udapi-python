@@ -116,7 +116,11 @@ class Convert1to2(Block):
                 self.log(node, 'nmod', 'deprel=nmod, but parent is ambiguous nominal/predicate')
 
     def change_feat(self, node):
-        """Negative→Polarity, Aspect=Pro→Prosp, VerbForm=Trans→Conv, Definite=Red→Cons."""
+        """Negative→Polarity, Aspect=Pro→Prosp, VerbForm=Trans→Conv, Definite=Red→Cons,...
+
+        Also Foreign=Foreign→Yes and
+        log if Tense=NarTense=Nar or NumType=GenNumType=Gen is used.
+        """
         if node.feats['Negative']:
             node.feats['Polarity'] = node.feats['Negative']
             del node.feats['Negative']
@@ -126,6 +130,8 @@ class Convert1to2(Block):
             node.feats['VerbForm'] = 'Conv'
         if node.feats['Definite'] == 'Red':
             node.feats['Definite'] = 'Cons'
+        if node.feats['Foreign'] == 'Foreign':
+            node.feats['Foreign'] = 'Yes'
         if node.feats['Tense'] == 'Nar':
             self.log(node, 'nar', 'Tense=Nar not allowed in UD v2')
         if node.feats['NumType'] == 'Gen':

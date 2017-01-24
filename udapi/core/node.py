@@ -532,6 +532,7 @@ class ListOfNodes(list):
             result = [x for x in result if x.ord >= self.origin.ord]
         return sorted(result, key=lambda node: node.ord)
 
+
 def find_minimal_common_treelet(*args):
     """Find the smallest tree subgraph containing all `nodes` provided in args.
 

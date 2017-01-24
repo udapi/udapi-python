@@ -11,6 +11,23 @@ class Tikz(BaseWriter):
     udapy write.Tikz < my.conllu > my.tex
     pdflatex my.tex
     xdg-open my.pdf
+
+    Long sentences may result in too large pictures.
+    You can tune the width (in addition to changing fontsize or using minipage and rescaling) with
+      ``\begin{deptext}[column sep=0.2cm]``
+    or individually for each word:
+      ``My \&[.5cm] dog \& etc.``
+    By default, the height of the horizontal segment of a dependency edge is proportional
+    to the distance between the linked words. You can tune the height with:
+     ``\depedge[edge unit distance=1.5ex]{9}{1}{deprel}``
+
+    See `tikz-dependency documentation
+    <http://mirrors.ctan.org/graphics/pgf/contrib/tikz-dependency/tikz-dependency-doc.pdf>`_
+    for details.
+
+    Alternatives:
+    * use `write.TextModeTrees` and include it in verbatim environment in LaTeX.
+    * use `write.Html`, press "Save as SVG" button, convert to pdf and include in LaTeX.
     """
 
     def __init__(self, print_sent_id=True, print_text=True, print_preambule=True,
