@@ -27,9 +27,7 @@ class Conllu(BaseWriter):
             print('# sent_id = ' + tree.address())
 
         if self.print_text:
-            sentence = tree.text
-            if sentence:
-                print("# text = " + sentence)
+            print("# text = " + tree.get_sentence())
 
         comment = tree.comment
         if comment:

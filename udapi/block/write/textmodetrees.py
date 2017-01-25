@@ -75,7 +75,7 @@ class TextModeTrees(BaseWriter):
     which is internally implemented using this block.
     """
 
-    def __init__(self, print_sent_id=False, print_sentence=False, add_empty_line=True, indent=1,
+    def __init__(self, print_sent_id=False, print_text=False, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='', **kwargs):
         """Create new TextModeTrees block object.
@@ -100,7 +100,7 @@ class TextModeTrees(BaseWriter):
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
-        self.print_sentence = print_sentence
+        self.print_text = print_text
         self.add_empty_line = add_empty_line
         self.indent = indent
         self.minimize_cross = minimize_cross
@@ -183,8 +183,8 @@ class TextModeTrees(BaseWriter):
         # Print headers (if required) and the tree itself
         if self.print_sent_id:
             print('# sent_id = ' + root.address())
-        if self.print_sentence:
-            print("# text = " + root.compute_sentence())
+        if self.print_text:
+            print("# text = " + root.get_sentence())
         for line in lines:
             print(line)
 

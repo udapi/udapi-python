@@ -146,3 +146,24 @@ class Root(Node):
         self._descendants = sorted(self.unordered_descendants(), key=lambda node: node.ord)
         for (new_ord, node) in enumerate(self._descendants, 1):
             node.ord = new_ord
+
+    def get_sentence(self, if_missing='detokenize'):
+        """Return either the stored `root.text` or (if None) `root.compute_text()`.
+
+        Args:
+        if_missing: What to do if `root.text` is `None`? (default=detokenize)
+         * `detokenize`: use `root.compute_text()` to compute the sentence.
+         * `empty`: return an empty string
+         * `warn_detokenize`, `warn_empty`: in addition emit a warning via `logging.warning()`
+         * `fatal`: raise an exception
+        """
+        sentence = self.text
+        if sentence is not None:
+            return sentence
+        if if_missing == 'fatal':
+            raise RuntimeError('Tree %s has empty root.text.' % self.address())
+        if if_missing.startswith('warn'):
+            logging.warning('Tree %s has empty root.text.' % self.address())
+        if if_missing.endswith('detokenize'):
+            return self.compute_text()
+        return ''

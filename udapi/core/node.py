@@ -431,7 +431,7 @@ class Node(object):
             values = [str(x) if x is not None else None for x in values]
         return values
 
-    def compute_sentence(self):
+    def compute_text(self):
         """Return a string representing this subtree's text (detokenized).
 
         Compute the string by concatenating forms of nodes
