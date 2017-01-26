@@ -336,7 +336,7 @@ class Node(object):
 
     def remove(self):
         """Delete this node and all its descendants."""
-        self.parent.children = [child for child in self.parent.children if child != self]
+        self.parent._children = [child for child in self.parent.children if child != self]
         self.root._update_ordering()
 
     # TODO: make private: _shift
