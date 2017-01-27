@@ -6,6 +6,7 @@ and function `find_minimal_common_treelet`.
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
+from udapi.core.links import Links
 
 # Pylint complains when we access e.g. node.parent._children or root._descendants
 # because it does not know that node.parent is the same class (Node)
@@ -69,6 +70,8 @@ class Node(object):
         '_misc',     # Any other annotation as udapi.core.dualdict.DualDict object.
         '_raw_deps', # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
         '_deps',     # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
+        '_enh_parents', # Enhanced dependencies (head-deprel pairs) as EnhDeps object.
+        '_enh_children', # Enhanced dependencies (child-deprel pairs) as EnhDeps object.
         '_feats',    # Morphological features as udapi.core.feats.Feats object.
         '_parent',   # Parent node.
         '_children', # Ord-ordered list of child nodes.
@@ -76,7 +79,7 @@ class Node(object):
     ]
 
     def __init__(self, form=None, lemma=None, upos=None, # pylint: disable=too-many-arguments
-                 xpos=None, feats=None, deprel=None, misc=None):
+                 xpos=None, feats=None, deprel=None, enh_parents=None, misc=None):
         """Create a new node and initialize its attributes using the keyword arguments."""
         self.ord = None
         self.form = form
@@ -86,6 +89,10 @@ class Node(object):
         self._feats = Feats(string=feats)
         self.deprel = deprel
         self._misc = DualDict(string=misc)
+        self._enh_parents = None
+        if enh_parents is not None and enh_parents != '_':
+            self._enh_parents = Links(self, enh_parents)
+        self._enh_children = None
         self._raw_deps = '_'
         self._deps = None
         self._parent = None
@@ -150,6 +157,36 @@ class Node(object):
     @misc.setter
     def misc(self, value):
         self._misc.set_mapping(value)
+
+    @property
+    def enh_parents(self):
+        """Return a list of (parent, deprel) enhanced dependencies.
+
+        To get just the parent nodes (without deprels) use
+        `enhanced_parents = node.enh_parents.nodes`
+        """
+        if self._enh_parents is None:
+            self._enh_parents = Links(self, None)
+        return self._enh_parents
+
+    @enh_parents.setter
+    def enh_parents(self, value):
+        if self._enh_parents is None:
+            if value is not None and value != '_':
+                self._enh_parents = Links(self, value)
+        else:
+            self._enh_parents.set_links(value)
+
+    @property
+    def enh_children(self):
+        """Return a list of (child, deprel) enhanced dependencies.
+
+        To get just the child nodes (without deprels) use
+        `enhanced_children = node.enh_children.nodes`
+        """
+        if self._enh_children is None:
+            self._enh_children = Links(self, None)
+        return self._enh_children
 
     @property
     def raw_deps(self):
