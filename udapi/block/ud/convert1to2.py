@@ -193,7 +193,7 @@ class Convert1to2(Block):
         if not remnants:
             return
 
-        (first_conjunct, _) = find_minimal_common_treelet(*remnants, remnants[0].parent.parent)
+        (first_conjunct, _) = find_minimal_common_treelet(remnants[0].parent.parent, *remnants)
         if first_conjunct == root:
             self.log(remnants[0], 'remnant', "remnants' (+their grandpas') common governor is root")
             return
