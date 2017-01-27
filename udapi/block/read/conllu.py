@@ -46,13 +46,13 @@ class Conllu(BaseReader):
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def read_tree(self, document=None):
+        if self.filehandle is None:
+            return None
+
         root = Root()
         nodes = [root]
         parents = [0]
         comment = ''
-        if self.filehandle is None:
-            return None
-
         mwts = []
         for line in self.filehandle:
             line = line.rstrip()
