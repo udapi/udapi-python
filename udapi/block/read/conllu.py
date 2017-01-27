@@ -14,23 +14,33 @@ RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
-    def __init__(self, strict=False, **kwargs):
+    def __init__(self, strict=False,
+                 attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
+        """Create the Conllu reader object.
+
+        Args:
+        strict: raise an exception if errors found (default=False, i.e. a robust mode)
+        attributes: comma-separated list of column names in the input files
+            (default='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc')
+            Changing the default can be used for loading CoNLL-like formats (not valid CoNLL-U).
+            For ignoring a column, use "_" as its name.
+            Column "ord" marks the column with 1-based word-order number/index (usualy called ID).
+            Column "head" marks the column with dependency parent index (word-order number).
+
+            For example, for CoNLL-X which uses name1=value1|name2=value2 format of FEATS, use
+            `attributes=ord,form,lemma,upos,xpos,feats,head,deprel`
+            but note attributes that upos, feats and deprel will contain language-specific values,
+            not valid according to UD guidelines and a further conversion will be needed.
+            For CoNLL-2009 you can use
+            `attributes=ord,form,lemma,_,upos,_,feats,_,head,_,deprel`
+            but you will loose the predicted_* attributes and semantic/predicate annotation.
+
+            TODO: allow storing the rest of columns in misc, e.g. `node.misc[feats]`
+            for feats which do not use the name1=value1|name2=value2 format.
+        """
         super().__init__(**kwargs)
-
-        # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
-                                "feats", "head", "deprel", "deps", "misc"]
-
-        # TODO: this should be invoked from the parent class
-        self.finished = False
-
-        # Strict.
+        self.node_attributes = attributes.split(',')
         self.strict = strict
-        if strict in [1, '1', 'True', 'true']:
-            self.strict = True
-
-        # Remember total number of bundles
-        self.total_number_of_bundles = 0
 
     # pylint: disable=too-many-locals,too-many-branches
     # Maybe the code could be refactored, but it is speed-critical,
@@ -77,7 +87,7 @@ class Conllu(BaseReader):
                         setattr(node, 'ord', int(fields[n_attribute]))
                     elif attribute_name == 'deps':
                         setattr(node, 'raw_deps', fields[n_attribute])
-                    else:
+                    elif attribute_name != '_':
                         setattr(node, attribute_name, fields[n_attribute])
 
                 nodes.append(node)
