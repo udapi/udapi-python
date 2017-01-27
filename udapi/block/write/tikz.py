@@ -5,7 +5,7 @@ from udapi.core.basewriter import BaseWriter
 
 
 class Tikz(BaseWriter):
-    """A writer of files in the LaTeX with tikz-dependency format.
+    r"""A writer of files in the LaTeX with tikz-dependency format.
 
     Usage:
     udapy write.Tikz < my.conllu > my.tex
@@ -32,6 +32,15 @@ class Tikz(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, print_preambule=True,
                  attributes='form,upos', **kwargs):
+        """Create the Tikz block object.
+
+        Args:
+        print_sent_id: print sent_id (`tree.address()`) as a LaTeX comment (default=True)
+        print_text: print sentence text  (`tree.get_sentence()`) as a LaTeX comment (default=True)
+        print_preambule: surround each document with LaTeX preambule (`documentclass` etc)
+            and `end{document}` (default=True)
+        attributes: comma-separated list of node attributes to print (each on a separate line).
+        """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
         self.print_text = print_text
@@ -62,9 +71,7 @@ class Tikz(BaseWriter):
             print('% sent_id = ' + tree.address())
 
         if self.print_text:
-            sentence = tree.text
-            if sentence:
-                print("% text = " + sentence)
+            print("% text = " + tree.get_sentence())
 
         comment = tree.comment
         if comment:
