@@ -38,6 +38,7 @@ class Convert1to2(Block):
         """
         for node in tree.descendants:
             self.change_upos(node)
+            self.change_upos_copula(node)
             self.change_deprel_simple(node)
             self.change_neg(node)
             self.change_nmod(node)
@@ -69,6 +70,12 @@ class Convert1to2(Block):
             node.upos = "CCONJ"
 
     @staticmethod
+    def change_upos_copula(node):
+        """deprel=cop needs upos=AUX (or PRON)."""
+        if node.deprel == 'cop' and node.upos not in ("AUX", "PRON"):
+            node.upos = "AUX"
+
+    @staticmethod
     def change_deprel_simple(node):
         """mwe→fixed, dobj→obj, *pass→*:pass, name→flat, foreign→flat+Foreign=Yes."""
         if node.deprel == 'foreign':
@@ -79,21 +86,43 @@ class Convert1to2(Block):
             pass
 
     def change_neg(self, node):
-        """neg→advmod/det/ToDo + Polarity=Neg."""
+        """neg→advmod/det/ToDo + Polarity=Neg.
+
+        In addition, if there is a node with deprel=neg and upos=INTJ,
+        it is checked whether it is possibly a real interjection or a negation particle,
+        which should have upos=PART (as documented in
+        http://universaldependencies.org/u/pos/PART.html)
+        This kind of error (INTJ instead of PART for "не") is common e.g. in Bulgarian v1.4,
+        but I hope the rule is language independent (enough to be included here).
+        """
         # TODO: Is this specific for English?
         if node.deprel == 'neg':
             if 'Neg' not in node.feats['PronType']:
                 node.feats['Polarity'] = 'Neg'
+
             if node.upos in ['ADV', 'PART']:
                 node.deprel = 'advmod'
             elif node.upos == 'DET':
                 node.deprel = 'det'
+            elif node.upos == 'INTJ':
+                node.deprel = 'advmod'
+                if self.is_verbal(node.parent):
+                    node.upos = 'PART'
             else:
                 self.log(node, 'neg', 'deprel=neg upos=%s' % node.upos)
 
     @staticmethod
+    def is_verbal(node):
+        """Returns True for verbs and nodes with copula child.
+
+        Used in `change_neg`."""
+        return node.upos == 'VERB' or any([child.deprel == 'cop' for child in node.children])
+
+    @staticmethod
     def is_nominal(node):
-        """Returns 'no' (for predicates), 'yes' (sure nominals) or 'maybe'."""
+        """Returns 'no' (for predicates), 'yes' (sure nominals) or 'maybe'.
+
+        Used in `change_nmod`."""
         if node.upos in ["VERB", "AUX", "ADJ", "ADV"]:
             return 'no'
         # Include NUM for examples such as "one of the guys"
