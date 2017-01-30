@@ -431,7 +431,7 @@ class Node(object):
             values = [str(x) if x is not None else None for x in values]
         return values
 
-    def compute_text(self):
+    def compute_text(self, use_mwt=True):
         """Return a string representing this subtree's text (detokenized).
 
         Compute the string by concatenating forms of nodes
@@ -440,17 +440,28 @@ class Node(object):
         If called on root this method returns a string suitable for storing
         in root.text (but it is not stored there automatically).
 
-        Technical detail:
+        Technical details:
         If called on root, the root's form (<ROOT>) is not included in the string.
         If called on non-root nodeA, nodeA's form is included in the string,
         i.e. internally descendants(add_self=True) is used.
+        Note that if the subtree is non-projective, the resulting string may be misleading.
+
+        Args:
+        use_mwt: consider multi-word tokens? (default=True)
         """
         string = ''
-        # TODO: use multi-word tokens instead of words where possible.
+        last_mwt_id = 0
         for node in self.descendants(add_self=not self.is_root()):
-            string += node.form
-            if node.misc['SpaceAfter'] != 'No':
-                string += ' '
+            mwt = node.multiword_token
+            if use_mwt and mwt and node.ord > last_mwt_id:
+                last_mwt_id = mwt.words[-1].ord
+                string += mwt.form
+                if mwt.misc['SpaceAfter'] != 'No':
+                    string += ' '
+            else:
+                string += node.form
+                if node.misc['SpaceAfter'] != 'No':
+                    string += ' '
         return string
 
     def print_subtree(self, **kwargs):
