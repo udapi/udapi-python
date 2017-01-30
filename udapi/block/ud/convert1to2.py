@@ -8,6 +8,7 @@ https://github.com/UniversalDependencies/tools/tree/master/v2-conversion
 by Sebastian Schuster.
 """
 import logging
+import collections
 
 from udapi.core.block import Block
 from udapi.core.node import find_minimal_common_treelet
@@ -27,6 +28,7 @@ class Convert1to2(Block):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.stats = collections.Counter()
 
     def process_tree(self, tree):
         """Apply all the changes on the current tree.
@@ -54,14 +56,17 @@ class Convert1to2(Block):
         for node in tree.descendants:
             self.reattach_coordinations(node)
 
-    @staticmethod
-    def log(node, short_msg, long_msg):
+        # Fix the plain-text sentence stored in the '# text =' comment.
+        self.fix_text(tree)
+
+    def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
         logging.warning('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.misc['ToDo']:
             node.misc['ToDo'] += ',' + short_msg
         else:
             node.misc['ToDo'] = short_msg
+        self.stats[short_msg] += 1
 
     @staticmethod
     def change_upos(node):
@@ -259,3 +264,15 @@ class Convert1to2(Block):
 
         if chained_remnants:
             self._recursive_fix_remnants(chained_remnants, chained_deprels, first_conjunct)
+
+    def fix_text(self, root):
+        stored = root.get_sentence()
+        root.text = stored.rstrip()
+
+    def process_end(self):
+        logging.warning('ud.Convert1to2 ToDo Overview:')
+        total = 0
+        for todo, count in sorted(self.stats.items(), key=lambda pair: pair[1]):
+            total += count
+            logging.warning('%20s %10d', todo, count)
+        logging.warning('%20s %10d', 'TOTAL', total)
