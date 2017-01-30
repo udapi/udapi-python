@@ -7,8 +7,8 @@ Author: Martin Popel, based on
 https://github.com/UniversalDependencies/tools/tree/master/v2-conversion
 by Sebastian Schuster.
 """
-import logging
 import collections
+import logging
 
 from udapi.core.block import Block
 from udapi.core.node import find_minimal_common_treelet
@@ -62,7 +62,9 @@ class Convert1to2(Block):
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
         logging.warning('node %s %s: %s', node.address(), short_msg, long_msg)
-        if node.misc['ToDo']:
+        if node.is_root():
+            pass
+        elif node.misc['ToDo']:
             node.misc['ToDo'] += ',' + short_msg
         else:
             node.misc['ToDo'] = short_msg
@@ -266,10 +268,20 @@ class Convert1to2(Block):
             self._recursive_fix_remnants(chained_remnants, chained_deprels, first_conjunct)
 
     def fix_text(self, root):
-        stored = root.get_sentence()
-        root.text = stored.rstrip()
+        """Make sure `root.text` is filled and matching the forms+SpaceAfter=No."""
+        stored = root.text
+        computed = root.compute_text()
+        if stored is None:
+            root.text = computed
+        elif stored != computed:
+            normalized = ''.join(stored.split())
+            if normalized != computed:
+                root.text = normalized
+                root.add_comment('ToDoOrigText = ' + stored)
+                self.log(root, 'text', 'Sentence string does not agree with the stored text.')
 
     def process_end(self):
+        """Print overall statistics of ToDo counts."""
         logging.warning('ud.Convert1to2 ToDo Overview:')
         total = 0
         for todo, count in sorted(self.stats.items(), key=lambda pair: pair[1]):

@@ -169,3 +169,10 @@ class Root(Node):
         if if_missing.endswith('detokenize'):
             return self.compute_text()
         return ''
+
+    def add_comment(self, string):
+        """Add a given `string` to `root.comment` separated by a newline and space."""
+        if self.comment is None:
+            self.comment = string
+        else:
+            self.comment += "\n " + string

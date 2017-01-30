@@ -462,7 +462,7 @@ class Node(object):
                 string += node.form
                 if node.misc['SpaceAfter'] != 'No':
                     string += ' '
-        return string
+        return string.rstrip()
 
     def print_subtree(self, **kwargs):
         """Print ASCII visualization of the dependency structure of this subtree.
