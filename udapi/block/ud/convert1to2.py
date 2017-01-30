@@ -274,7 +274,7 @@ class Convert1to2(Block):
         if stored is None:
             root.text = computed
         elif stored != computed:
-            normalized = ''.join(stored.split())
+            normalized = ' '.join(stored.split())
             if normalized != computed:
                 root.text = normalized
                 root.add_comment('ToDoOrigText = ' + stored)
