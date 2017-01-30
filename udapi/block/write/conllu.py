@@ -41,8 +41,7 @@ class Conllu(BaseWriter):
                 last_mwt_id = mwt.words[-1].ord
                 print('\t'.join([mwt.ord_range(),
                                  mwt.form if mwt.form is not None else '_',
-                                 '_\t_\t_\t_\t_\t_\t_',
-                                 mwt.misc if mwt.misc is not None else '_']))
+                                 '_\t_\t_\t_\t_\t_\t_', str(mwt.misc)]))
             values = [str(getattr(node, attr_name)) for attr_name in self.node_attributes]
             try:
                 values[6] = str(node.parent.ord)

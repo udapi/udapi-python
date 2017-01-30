@@ -1,16 +1,30 @@
 """MWT class represents a multi-word token."""
+from udapi.core.dualdict import DualDict
+
 
 class MWT(object):
     """Class for representing multi-word tokens in UD trees."""
-    __slots__ = ['words', 'form', 'misc', 'root']
+    __slots__ = ['words', 'form', '_misc', 'root']
 
     def __init__(self, words=None, form=None, misc=None, root=None):
         self.words = words if words is not None else []
         self.form = form
-        self.misc = misc
+        self._misc = DualDict(string=misc)
         self.root = root
         for word in self.words:
             word._mwt = self # pylint: disable=W0212
+
+    @property
+    def misc(self):
+        """Property for MISC attributes stored as a `DualDict` object.
+
+        See `udapi.core.node.Node` for details.
+        """
+        return self._misc
+
+    @misc.setter
+    def misc(self, value):
+        self._misc.set_mapping(value)
 
     def ord_range(self):
         """Return a string suitable for the first column of CoNLL-U."""

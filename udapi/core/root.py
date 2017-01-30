@@ -1,4 +1,6 @@
 """Root class represents the technical root node in each tree."""
+import logging
+
 from udapi.core.node import Node, ListOfNodes
 from udapi.core.mwt import MWT
 
@@ -163,7 +165,7 @@ class Root(Node):
         if if_missing == 'fatal':
             raise RuntimeError('Tree %s has empty root.text.' % self.address())
         if if_missing.startswith('warn'):
-            logging.warning('Tree %s has empty root.text.' % self.address())
+            logging.warning('Tree %s has empty root.text.', self.address())
         if if_missing.endswith('detokenize'):
             return self.compute_text()
         return ''

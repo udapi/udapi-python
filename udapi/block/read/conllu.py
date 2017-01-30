@@ -119,8 +119,6 @@ class Conllu(BaseReader):
         for fields in mwts:
             range_start, range_end = fields[0].split('-')
             words = nodes[int(range_start):int(range_end)+1]
-            mwt = root.create_multiword_token(words, form=fields[1])
-            if fields[-1] != '_':
-                mwt.misc = fields[-1]
+            root.create_multiword_token(words, form=fields[1], misc=fields[-1])
 
         return root
