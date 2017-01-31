@@ -28,12 +28,13 @@ class Conllu(BaseReader):
             Column "head" marks the column with dependency parent index (word-order number).
 
             For example, for CoNLL-X which uses name1=value1|name2=value2 format of FEATS, use
-            `attributes=ord,form,lemma,upos,xpos,feats,head,deprel`
+            `attributes=ord,form,lemma,upos,xpos,feats,head,deprel,_,_`
             but note attributes that upos, feats and deprel will contain language-specific values,
             not valid according to UD guidelines and a further conversion will be needed.
-            For CoNLL-2009 you can use
-            `attributes=ord,form,lemma,_,upos,_,feats,_,head,_,deprel`
-            but you will loose the predicted_* attributes and semantic/predicate annotation.
+            You will loose the projective_HEAD and projective_DEPREL attributes.
+
+            For CoNLL-2009 you can use `attributes=ord,form,lemma,_,upos,_,feats,_,head,_,deprel`.
+            You will loose the predicted_* attributes and semantic/predicate annotation.
 
             TODO: allow storing the rest of columns in misc, e.g. `node.misc[feats]`
             for feats which do not use the name1=value1|name2=value2 format.
