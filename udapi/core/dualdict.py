@@ -74,6 +74,10 @@ class DualDict(collections.abc.MutableMapping):
         self._deserialize_if_empty()
         return len(self._dict)
 
+    def __contains__(self, key):
+        self._deserialize_if_empty()
+        return self._dict.__contains__(key)
+
     def clear(self):
         self._string = '_'
         self._dict.clear()
