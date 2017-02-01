@@ -1,5 +1,10 @@
 # Udapi project overrides some of the default pylint settings
 
+[MASTER]
+
+# The author of zellig_harris blocks does not use pylint.
+ignore=zellig_harris
+
 [FORMAT]
 
 # Maximum number of characters on a single line.
@@ -21,4 +26,4 @@ notes=FIXME,XXX
 
 # The purpose of locally disabling a warning is to disable it:-).
 # If needed we can detect those places with `ack 'pylint: disable'`.
-disable=locally-disabled
+disable=locally-disabled,locally-enabled
