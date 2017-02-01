@@ -1,5 +1,4 @@
 """An ASCII pretty printer of dependency trees."""
-import re
 import sys
 
 import colorama
@@ -13,10 +12,6 @@ COLOR_OF = {
     'deprel': 'blue',
     'ord': 'yellow',
 }
-
-def _length(string):
-    '''Strips ANSI color codes before measuring the string's length.'''
-    return len(re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', string))
 
 # Too many instance variables, arguments, branches...
 # I don't see how to fix this while not making the code less readable or more difficult to use.
@@ -122,6 +117,8 @@ class TextModeTrees(BaseWriter):
         self.attrs = attributes.split(',')
         self._index_of = []
         self._gaps = []
+        self.lines = []
+        self.lengths = []
 
     # We want to be able to call process_tree not only on root node,
     # so this block can be called from node.print_subtree(**kwargs)
@@ -143,7 +140,8 @@ class TextModeTrees(BaseWriter):
         """Print the tree to (possibly redirected) sys.stdout."""
         allnodes = [root] + root.descendants()
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
-        lines = [''] * len(allnodes)
+        self.lines = [''] * len(allnodes)
+        self.lengths = [0] * len(allnodes)
 
         # Precompute the number of non-projective gaps for each subtree
         if self.minimize_cross:
@@ -156,23 +154,25 @@ class TextModeTrees(BaseWriter):
             node = stack.pop()
             children = node.children(add_self=1)
             min_idx, max_idx = self._index_of[children[0].ord], self._index_of[children[-1].ord]
-            max_length = max([_length(lines[i]) for i in range(min_idx, max_idx+1)])
+            max_length = max([self.lengths[i] for i in range(min_idx, max_idx+1)])
             for idx in range(min_idx, max_idx+1):
                 idx_node = allnodes[idx]
-                filler = '─' if lines[idx] and lines[idx][-1] in '─╭╰├╪' else ' '
-                lines[idx] += filler * (max_length - _length(lines[idx]))
+                filler = '─' if self._ends(idx, '─╭╰├╪') else ' '
+                self._add(idx, filler * (max_length - self.lengths[idx]))
 
                 topmost = idx == min_idx
                 botmost = idx == max_idx
                 if idx_node is node:
-                    lines[idx] += self._draw[botmost][topmost] + self.node_to_string(node)
+                    self._add(idx, self._draw[botmost][topmost])
+                    self.add_node(idx, node)
                 else:
                     if idx_node.parent is not node:
-                        lines[idx] += self._vert[bool(lines[idx] and lines[idx][-1] in '─├')]
+                        self._add(idx, self._vert[self._ends(idx, '─├')])
                     else:
-                        lines[idx] += self._space[botmost][topmost]
+                        self._add(idx, self._space[botmost][topmost])
                         if idx_node.is_leaf():
-                            lines[idx] += self._horiz + self.node_to_string(idx_node)
+                            self._add(idx, self._horiz)
+                            self.add_node(idx, idx_node)
                         else:
                             stack.append(idx_node)
 
@@ -185,11 +185,14 @@ class TextModeTrees(BaseWriter):
             print('# sent_id = ' + root.address())
         if self.print_text:
             print("# text = " + root.get_sentence())
-        for line in lines:
+        for line in self.lines:
             print(line)
 
         if self.add_empty_line:
             print('')
+
+    def _ends(self, idx, chars):
+        return bool(self.lines[idx] and self.lines[idx][-1] in chars)
 
     def before_process_document(self, document):
         """Initialize ANSI colors if color is True or 'auto'.
@@ -203,14 +206,18 @@ class TextModeTrees(BaseWriter):
             if self.color:
                 colorama.init()
 
-    def node_to_string(self, node):
+    def _add(self, idx, text):
+        self.lines[idx] += text
+        self.lengths[idx] += len(text)
+
+    def add_node(self, idx, node):
         """Render a node with its attributes."""
-        if node.is_root():
-            return ''
-        values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
-        if self.color:
-            for i, attr in enumerate(self.attrs):
-                color = COLOR_OF.get(attr, 0)
-                if color:
-                    values[i] = colored(values[i], color)
-        return ' ' + ' '.join(values)
+        if not node.is_root():
+            values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
+            self.lengths[idx] += 1 + len(' '.join(values))
+            if self.color:
+                for i, attr in enumerate(self.attrs):
+                    color = COLOR_OF.get(attr, 0)
+                    if color:
+                        values[i] = colored(values[i], color)
+            self.lines[idx] += ' ' + ' '.join(values)
