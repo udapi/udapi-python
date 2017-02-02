@@ -10,7 +10,7 @@ COLOR_OF = {
     'lemma': 'cyan',
     'upos': 'red',
     'deprel': 'blue',
-    'ord': 'yellow',
+    'ord': 'green',
 }
 
 # Too many instance variables, arguments, branches...
@@ -65,14 +65,23 @@ class TextModeTrees(BaseWriter):
      ╰─┶ 3 │
            ╰─╼ 4
 
+    By default parameter `color=auto`, so if the output is printed to the console
+    (not file or pipe), each node attribute is printed in different color.
+    If a given node's MISC contains any of `ToDo`, `Bug` or `Mark` attributes
+    (or any other specified in the parameter `mark`), the node will be highlighted
+    (by reveresing the background and foreground colors).
+
     This block's method `process_tree` can be called on any node (not only root),
     which is useful for printing subtrees using `node.print_subtree()`,
     which is internally implemented using this block.
+
+    SEE ALSO
+    `write.TextModeTreesHtml`
     """
 
     def __init__(self, print_sent_id=False, print_text=False, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', **kwargs):
+                 print_undef_as='', mark='ToDo,Bug,Mark', **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -92,6 +101,8 @@ class TextModeTrees(BaseWriter):
         attributes: A comma-separated list of node attributes which should be printed. Possible
                     values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
+        mark: Comma-separated list of strings which should cause node highlighting
+              if they are present as keys in `node.misc`. Default = 'ToDo,Bug,Mark'.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -100,7 +111,6 @@ class TextModeTrees(BaseWriter):
         self.indent = indent
         self.minimize_cross = minimize_cross
         self.color = color
-        self.attributes = attributes
         self.print_undef_as = print_undef_as
 
         # _draw[is_bottommost][is_topmost]
@@ -115,6 +125,7 @@ class TextModeTrees(BaseWriter):
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
+        self.marks = mark.split(',')
         self._index_of = []
         self._gaps = []
         self.lines = []
@@ -216,8 +227,17 @@ class TextModeTrees(BaseWriter):
             values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
             self.lengths[idx] += 1 + len(' '.join(values))
             if self.color:
+                marked = self.is_marked(node)
                 for i, attr in enumerate(self.attrs):
-                    color = COLOR_OF.get(attr, 0)
-                    if color:
-                        values[i] = colored(values[i], color)
+                    values[i] = self.colorize_attr(attr, values[i], marked)
             self.lines[idx] += ' ' + ' '.join(values)
+
+    def is_marked(self, node):
+        """Should a given node be highlighted?"""
+        return any([m in node.misc for m in self.marks])
+
+    @staticmethod
+    def colorize_attr(attr, value, marked):
+        """Return a string with color markup for a given attr and its value."""
+        color = COLOR_OF.get(attr, None)
+        return colored(value, color, None, ['reverse', 'bold'] if marked else None)
