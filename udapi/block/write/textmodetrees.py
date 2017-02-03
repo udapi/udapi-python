@@ -79,7 +79,7 @@ class TextModeTrees(BaseWriter):
     `write.TextModeTreesHtml`
     """
 
-    def __init__(self, print_sent_id=False, print_text=False, add_empty_line=True, indent=1,
+    def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='', mark='ToDo,Bug,Mark', **kwargs):
         """Create new TextModeTrees block object.

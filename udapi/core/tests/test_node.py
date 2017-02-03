@@ -65,7 +65,9 @@ class TestDocument(unittest.TestCase):
         doc.load_conllu(data_filename)
         root = doc.bundles[0].get_tree()
 
-        expected1 = ("─┮\n"
+        expected1 = ("# sent_id = a-mf920901-001-p1s1A\n"
+                     "# text = Slovenská ústava: pro i proti\n"
+                     "─┮\n"
                      " │ ╭─╼ Slovenská ADJ amod\n"
                      " ╰─┾ ústava NOUN root\n"
                      "   ├─╼ : PUNCT punct\n"
@@ -102,11 +104,12 @@ class TestDocument(unittest.TestCase):
             self.assertEqual(capture.getvalue(), expected1)
             capture.seek(0)
             capture.truncate()
-            root.print_subtree(color=False, attributes='form,feats,misc')
+            root.print_subtree(color=False, attributes='form,feats,misc',
+                               print_sent_id=False, print_text=False)
             self.assertEqual(capture.getvalue(), expected2)
             capture.seek(0)
             capture.truncate()
-            root3.print_subtree(color=False, attributes='form')
+            root3.print_subtree(color=False, attributes='form', print_sent_id=0, print_text=0)
             self.assertEqual(capture.getvalue(), expected3)
         finally:
             sys.stdout = sys.__stdout__ # pylint: disable=redefined-variable-type
