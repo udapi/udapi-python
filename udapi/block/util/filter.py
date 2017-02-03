@@ -1,51 +1,92 @@
 """Filter is a special block for keeping/deleting subtrees specified by parameters."""
+import re # may be useful in eval, thus pylint: disable=unused-import
+
 from udapi.core.block import Block
 
 # We need eval in this block
 # pylint: disable=eval-used
 class Filter(Block):
-    """Special block for keeping/deleting some subtrees specified by parameters.
+    """Special block for keeping/deleting subtrees specified by parameters.
 
     Example usage from command line:
     # extract subtrees governed by nouns (noun phrases)
-    `udapy -s util.Filter subtree='node.upos == "NOUN"' < in.conllu > filtered.conllu`
+    `udapy -s util.Filter keep_subtree='node.upos == "NOUN"' < in.conllu > filtered.conllu`
 
-    TODO:
-    Currently, only the first matching node (and its subtree) is kept,
-    all other nodes are deleted (although some of them may be matching as well).
-    In future, there should be a parameter `keep_all` for changing this behavior.
+    # keep only trees which contain ToDo|Bug nodes
+    udapy -s util.Filter keep_tree_if_node='re.match("ToDo|Bug", str(node.misc))' < in > filtered
 
-    Also, there should be parameters `node`, `tree` (maybe more) for specifying
-    other conditions. It should be possible to keep the whole tree which contains
-    a matching node.
+    # delete trees which contain deprel=remnant
+    udapy -s util.Filter delete_tree_if_node='node.deprel == "remnant"' < in > filtered
+
+    # delete subtrees headed by a node with deprel=remnant
+    udapy -s util.Filter delete_subtree='node.deprel == "remnant"' < in > filtered
     """
 
-    def __init__(self, subtree, delete_matching=False, **kwargs):
+    def __init__(self,
+                 keep_tree_if_node=None, delete_tree_if_node=None,
+                 keep_subtree=None, delete_subtree=None,
+                 **kwargs):
         """Create the Filter block object.
 
         Args:
-        `subtree`: Python expression to be evaluated and if True,
-            the subtree headed by `node` is considered "matching"
-        `delete_matching` (default=False): by default the matching subtrees are kept
-            and all other nodes are deleted. Specifying `delete_matching=True` inverts
-            this behavior, so only the matching nodes and their subtrees are deleted.
+        `delete_tree_if_node`: Python expression to be evaluated for each node and if True,
+            the whole tree will be deleted
+
+        `delete_subtree`: Python expression to be evaluated for each node and if True,
+                    the subtree headed by `node` will be deleted
+
+        `keep_tree_if_node`: Python expression to be evaluated for each node and if True,
+            the whole tree will be kept. If the tree contains no node evaluated to True,
+            the whole tree will be deleted.
+
+        `keep_subtree`: Python expression to be evaluated for each node and if True,
+            the subtree headed by `node` will be marked so it is not deleted.
+            All non-marked nodes will be deleted.
+            If no node in the tree was marked (i.e. only the root without any children remained),
+            the whole tree will be deleted.
+
+        Specifying more than one parameter is not recommended,
+        but it is allowed and the current behavior is that
+        the arguments are evaluated in the specified order.
         """
         super().__init__(**kwargs)
-        self.subtree = subtree
-        self.delete_matching = delete_matching
+        self.delete_tree_if_node = delete_tree_if_node
+        self.delete_subtree = delete_subtree
 
-    def process_tree(self, tree):
+        self.keep_tree_if_node = keep_tree_if_node
+        self.keep_subtree = keep_subtree
+
+    def process_tree(self, tree): # pylint: disable=too-many-branches
         root = tree
-        found = False
-        for node in tree.descendants:
-            if eval(self.subtree):
-                found = True
-                if self.delete_matching:
+
+        if self.delete_tree_if_node is not None:
+            for node in tree.descendants:
+                if eval(self.delete_tree_if_node):
+                    tree.remove()
+                    return
+
+        if self.delete_subtree is not None:
+            for node in tree.descendants:
+                if eval(self.delete_subtree):
                     node.remove()
-                else:
-                    node.parent = root
-                    for sibling in [n for n in root.children if n != node]:
-                        sibling.remove()
-                    break
-        if not found and not self.delete_matching:
+                    continue
+
+        if self.keep_tree_if_node is not None:
+            for node in tree.descendants:
+                if eval(self.keep_tree_if_node):
+                    return
             tree.remove()
+            return
+
+        if self.keep_subtree is not None:
+            kept_subtrees = []
+            for node in tree.descendants:
+                if eval(self.keep_subtree):
+                    kept_subtrees.append(node)
+            if not kept_subtrees:
+                tree.remove()
+            else:
+                for node in kept_subtrees:
+                    node.parent = root
+                for orig_subroot in [n for n in root.children if n not in kept_subtrees]:
+                    orig_subroot.remove()
