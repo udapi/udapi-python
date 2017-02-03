@@ -6,17 +6,25 @@ import argparse
 from udapi.core.run import Run
 
 # Parse command line arguments.
-argparser = argparse.ArgumentParser(description='udapy - Python interface to Udapi - API for Universal Dependencies')
-argparser.add_argument("-q", "--quiet", action="store_true",
-                       help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
-argparser.add_argument("-v", "--verbose", action="store_true",
-                       help="Warning, info and debug messages are printed to the STDERR.")
-argparser.add_argument("-s", "--save", action="store_true",
-                       help="Add write.Conllu to the end of the scenario")
-argparser.add_argument("-t", "--save_text_mode_trees", action="store_true",
-                       help="Add write.TextModeTrees to the end of the scenario")
-
-argparser.add_argument('scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
+argparser = argparse.ArgumentParser(
+    description='udapy - Python interface to Udapi - API for Universal Dependencies')
+argparser.add_argument(
+    "-q", "--quiet", action="store_true",
+    help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
+argparser.add_argument(
+    "-v", "--verbose", action="store_true",
+    help="Warning, info and debug messages are printed to the STDERR.")
+argparser.add_argument(
+    "-s", "--save", action="store_true",
+    help="Add write.Conllu to the end of the scenario")
+argparser.add_argument(
+    "-t", "--save_text_mode_trees", action="store_true",
+    help="Add write.TextModeTrees to the end of the scenario")
+argparser.add_argument(
+    "-T", "--save_color_text_mode_trees", action="store_true",
+    help="Add write.TextModeTrees color=1 to the end of the scenario")
+argparser.add_argument(
+    'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
 args = argparser.parse_args()
 
@@ -36,5 +44,7 @@ if __name__ == "__main__":
         args.scenario = args.scenario + ['write.Conllu']
     if args.save_text_mode_trees:
         args.scenario = args.scenario + ['write.TextModeTrees']
+    if args.save_color_text_mode_trees:
+        args.scenario = args.scenario + ['write.TextModeTrees', 'color=1']
     runner = Run(args)
     runner.execute()

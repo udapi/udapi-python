@@ -15,6 +15,9 @@ class Filter(Block):
     # keep only trees which contain ToDo|Bug nodes
     udapy -s util.Filter keep_tree_if_node='re.match("ToDo|Bug", str(node.misc))' < in > filtered
 
+    # keep only non-projective trees, annotate non-projective edges with Mark=nofeats and show.
+    udapy -T util.Filter keep_tree_if_node='node.is_nonprojective()' mark=nonproj < in | less -R
+
     # delete trees which contain deprel=remnant
     udapy -s util.Filter delete_tree_if_node='node.deprel == "remnant"' < in > filtered
 
@@ -22,10 +25,11 @@ class Filter(Block):
     udapy -s util.Filter delete_subtree='node.deprel == "remnant"' < in > filtered
     """
 
-    def __init__(self,
+
+    def __init__(self, # pylint: disable=too-many-arguments
                  keep_tree_if_node=None, delete_tree_if_node=None,
                  keep_subtree=None, delete_subtree=None,
-                 **kwargs):
+                 mark=None, **kwargs):
         """Create the Filter block object.
 
         Args:
@@ -45,6 +49,10 @@ class Filter(Block):
             If no node in the tree was marked (i.e. only the root without any children remained),
             the whole tree will be deleted.
 
+        `mark`: a string or None. This makes sense only with `keep_tree_if_node`, where the
+            matched nodes are marked with `Mark=<mark>` in `node.misc`, so they will be highlighted
+            if printed with `write.TextModeTrees`. Default=None.
+
         Specifying more than one parameter is not recommended,
         but it is allowed and the current behavior is that
         the arguments are evaluated in the specified order.
@@ -52,9 +60,9 @@ class Filter(Block):
         super().__init__(**kwargs)
         self.delete_tree_if_node = delete_tree_if_node
         self.delete_subtree = delete_subtree
-
         self.keep_tree_if_node = keep_tree_if_node
         self.keep_subtree = keep_subtree
+        self.mark = mark
 
     def process_tree(self, tree): # pylint: disable=too-many-branches
         root = tree
@@ -72,10 +80,16 @@ class Filter(Block):
                     continue
 
         if self.keep_tree_if_node is not None:
+            found = False
             for node in tree.descendants:
                 if eval(self.keep_tree_if_node):
-                    return
-            tree.remove()
+                    found = True
+                    if self.mark:
+                        node.misc['Mark'] = self.mark
+                    else:
+                        return
+            if not found:
+                tree.remove()
             return
 
         if self.keep_subtree is not None:

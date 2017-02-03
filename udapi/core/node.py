@@ -498,6 +498,35 @@ class Node(object):
         """
         return self._mwt
 
+    def is_nonprojective(self):
+        """Is the node attached to its parent non-projectively?
+
+        Is there at least one node between (word-order-wise) this node and its parent
+        that is not dominated by the parent?
+        For higher speed, the actual implementation does not find the node(s)
+        which cause(s) the gap. It only checks the number of parent's descendants in the span
+        and the total number of nodes in the span.
+        """
+        # Root and its children are always projective
+        parent = self.parent
+        if not parent or parent.is_root():
+            return False
+
+        # Edges between neighboring nodes are always projective.
+        # Check it now to make it a bit faster.
+        ord1, ord2 = self.ord, parent.ord
+        if ord1 > ord2:
+            ord1, ord2 = ord2, ord1
+        distance = ord2 - ord1
+        if distance == 1:
+            return False
+
+        # Get all the descendants of parent that are in the span of the edge.
+        span = [n for n in parent.descendants if (n.ord > ord1 and n.ord < ord2)]
+
+        # For projective edges, span must include all the nodes between parent and self.
+        return len(span) != distance - 1
+
 
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.

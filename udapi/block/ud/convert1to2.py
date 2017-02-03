@@ -65,7 +65,8 @@ class Convert1to2(Block):
         if node.is_root():
             pass
         elif node.misc['ToDo']:
-            node.misc['ToDo'] += ',' + short_msg
+            if short_msg not in node.misc['ToDo']:
+                node.misc['ToDo'] += ',' + short_msg
         else:
             node.misc['ToDo'] = short_msg
         self.stats[short_msg] += 1

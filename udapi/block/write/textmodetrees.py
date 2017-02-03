@@ -1,4 +1,5 @@
 """An ASCII pretty printer of dependency trees."""
+import re
 import sys
 
 import colorama
@@ -81,7 +82,7 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', mark='ToDo,Bug,Mark', **kwargs):
+                 print_undef_as='', mark='ToDo|Bug|Mark', **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -101,8 +102,8 @@ class TextModeTrees(BaseWriter):
         attributes: A comma-separated list of node attributes which should be printed. Possible
                     values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
-        mark: Comma-separated list of strings which should cause node highlighting
-              if they are present as keys in `node.misc`. Default = 'ToDo,Bug,Mark'.
+        mark: a regex. If `re.match('.*'+mark, str(node.misc)` the node is highlighted.
+            Empty string means no highlighting. Default = 'ToDo|Bug|Mark'.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -125,7 +126,7 @@ class TextModeTrees(BaseWriter):
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
-        self.marks = mark.split(',')
+        self.mark_re = re.compile('.*' + mark) if (mark is not None and mark != '') else None
         self._index_of = []
         self._gaps = []
         self.lines = []
@@ -234,7 +235,7 @@ class TextModeTrees(BaseWriter):
 
     def is_marked(self, node):
         """Should a given node be highlighted?"""
-        return any([m in node.misc for m in self.marks])
+        return self.mark_re.match(str(node.misc)) if self.mark_re is not None else False
 
     @staticmethod
     def colorize_attr(attr, value, marked):
