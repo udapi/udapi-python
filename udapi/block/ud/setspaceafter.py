@@ -42,20 +42,34 @@ class SetSpaceAfter(Block):
         for i, node in enumerate(nodes[:-1]):
             next_form = nodes[i+1].form
             if node.form in self.not_after or next_form in not_before:
-                self._mark_no_space(node)
+                self.mark_no_space(node)
             if matching_quotes and node.form == '"':
                 if odd_indexed_quote:
-                    self._mark_no_space(node)
+                    self.mark_no_space(node)
                 elif i:
-                    self._mark_no_space(nodes[i-1])
+                    self.mark_no_space(nodes[i-1])
                 odd_indexed_quote = not odd_indexed_quote
 
         if matching_quotes and nodes[-1].form == '"':
-            self._mark_no_space(nodes[-2])
+            self.mark_no_space(nodes[-2])
 
         if self.fix_text and self.changed:
             root.text = root.compute_text()
 
-    def _mark_no_space(self, node):
-        node.misc['SpaceAfter'] = 'No'
-        self.changed = True
+    def mark_no_space(self, node):
+        """Mark a node with SpaceAfter=No unless it is a goeswith exception."""
+        if not self.is_goeswith_exception(node):
+            node.misc['SpaceAfter'] = 'No'
+            self.changed = True
+
+    @staticmethod
+    def is_goeswith_exception(node):
+        """Is this node excepted from SpaceAfter=No because of the `goeswith` deprel?
+
+        Deprel=goeswith means that a space was (incorrectly) present in the original text,
+        so we should not add SpaceAfter=No in these cases.
+        """
+        if node.deprel == 'goeswith':
+            return node.precedes(node.parent)
+        first_right_child = next((n for n in node.children if node.precedes(n)), None)
+        return first_right_child and first_right_child.deprel == 'goeswith'
