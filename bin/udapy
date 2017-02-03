@@ -13,6 +13,9 @@ argparser.add_argument("-v", "--verbose", action="store_true",
                        help="Warning, info and debug messages are printed to the STDERR.")
 argparser.add_argument("-s", "--save", action="store_true",
                        help="Add write.Conllu to the end of the scenario")
+argparser.add_argument("-t", "--save_text_mode_trees", action="store_true",
+                       help="Add write.TextModeTrees to the end of the scenario")
+
 argparser.add_argument('scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
 args = argparser.parse_args()
@@ -31,5 +34,7 @@ logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(mes
 if __name__ == "__main__":
     if args.save:
         args.scenario = args.scenario + ['write.Conllu']
+    if args.save_text_mode_trees:
+        args.scenario = args.scenario + ['write.TextModeTrees']
     runner = Run(args)
     runner.execute()
