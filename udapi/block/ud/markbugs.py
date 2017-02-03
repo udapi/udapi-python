@@ -39,7 +39,8 @@ class MarkBugs(Block):
         # TODO: these should be logging.debug and udapy should have --debug flag
         logging.warning('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.misc['Bug']:
-            node.misc['Bug'] += ',' + short_msg
+            if short_msg not in node.misc['Bug']:
+                node.misc['Bug'] += ',' + short_msg
         else:
             node.misc['Bug'] = short_msg
         self.stats[short_msg] += 1
@@ -98,6 +99,18 @@ class MarkBugs(Block):
         # In addition to http://universaldependencies.org/svalidation.html
         if parent.deprel == 'punct':
             self.log(node, 'punct-child', 'parent.deprel=punct')
+
+        if deprel == 'goeswith':
+            if node.precedes(parent):
+                if node.ord + 1 != parent.ord:
+                    self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the next node")
+                elif node.misc['SpaceAfter'] == 'No':
+                    self.log(node, 'goeswith-space', "deprel=goeswith but SpaceAfter=No")
+            else:
+                if node.ord - 1 != parent.ord:
+                    self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the prev node")
+                elif parent.misc['SpaceAfter'] == 'No':
+                    self.log(node, 'goeswith-space', "deprel=goeswith but parent.SpaceAfter=No")
 
     def process_end(self):
         logging.warning('ud.MarkBugs Error Overview:')
