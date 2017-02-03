@@ -149,7 +149,7 @@ class TextModeTrees(BaseWriter):
 
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
-        allnodes = [root] + root.descendants()
+        allnodes = root.descendants(add_self=1)
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
         self.lengths = [0] * len(allnodes)
@@ -195,7 +195,7 @@ class TextModeTrees(BaseWriter):
         if self.print_sent_id:
             print('# sent_id = ' + root.address())
         if self.print_text:
-            print("# text = " + root.get_sentence())
+            print("# text = " + (root.get_sentence() if root.is_root() else root.compute_text()))
         for line in self.lines:
             print(line)
 
