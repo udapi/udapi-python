@@ -26,9 +26,18 @@ DEPREL_CHANGE = {
 class Convert1to2(Block):
     """Block for converting UD v1 to UD v2."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, skip='', **kwargs):
+        """Create the Convert1to2 block instance.
+
+        Args:
+        skip: comma separated list of transformations to skip. Default=empty string (no skipping).
+            possible values are:
+            upos, upos_copula, deprel_simple, neg, nmod, nmod, feats, remnants, coord, text.
+            If you cannot guess their meaning, consult the source code:-(.
+        """
         super().__init__(**kwargs)
         self.stats = collections.Counter()
+        self.skip = {k for k in skip.split(',')}
 
     def process_tree(self, tree):
         """Apply all the changes on the current tree.
@@ -39,25 +48,34 @@ class Convert1to2(Block):
         you can reuse just some of the implemented changes.
         """
         for node in tree.descendants:
-            self.change_upos(node)
-            self.change_upos_copula(node)
-            self.change_deprel_simple(node)
-            self.change_neg(node)
-            self.change_nmod(node)
-            self.change_feat(node)
+            if 'upos' not in self.skip:
+                self.change_upos(node)
+            if 'upos_copula' not in self.skip:
+                self.change_upos_copula(node)
+            if 'deprel_simple' not in self.skip:
+                self.change_deprel_simple(node)
+            if 'neg' not in self.skip:
+                self.change_neg(node)
+            if 'nmod' not in self.skip:
+                self.change_nmod(node)
+            if 'feats' not in self.skip:
+                self.change_feats(node)
 
         # fix_remnants_in_tree() needs access to the whole tree.
-        self.fix_remnants_in_tree(tree)
+        if 'remnants' not in self.skip:
+            self.fix_remnants_in_tree(tree)
 
         # reattach_coordinations() must go after fix_remnants_in_tree()
         # E.g. in "Marie went to Paris and Miriam to Prague",
         # we need to first remove the edge remnant(Marie, Miriam) and add conj(went, Miriam),
         # which allows reattach_coordinations() to change cc(went, and) → cc(Miriam,and).
-        for node in tree.descendants:
-            self.reattach_coordinations(node)
+        if 'coord' not in self.skip:
+            for node in tree.descendants:
+                self.reattach_coordinations(node)
 
         # Fix the plain-text sentence stored in the '# text =' comment.
-        self.fix_text(tree)
+        if 'text' not in self.skip:
+            self.fix_text(tree)
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
@@ -152,7 +170,7 @@ class Convert1to2(Block):
             elif parent_is_nominal == 'maybe':
                 self.log(node, 'nmod', 'deprel=nmod, but parent is ambiguous nominal/predicate')
 
-    def change_feat(self, node):
+    def change_feats(self, node):
         """Negative→Polarity, Aspect=Pro→Prosp, VerbForm=Trans→Conv, Definite=Red→Cons,...
 
         Also Foreign=Foreign→Yes and

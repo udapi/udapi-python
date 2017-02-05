@@ -1,4 +1,6 @@
 """Eval is a special block for evaluating code given by parameters."""
+import re # may be useful in exec, thus pylint: disable=unused-import
+
 from udapi.core.block import Block
 
 # We need exec in this block and the variables this etc. are not unused but provided for the exec
