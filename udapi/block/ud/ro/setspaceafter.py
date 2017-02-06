@@ -17,10 +17,9 @@ class SetSpaceAfter(udapi.block.ud.setspaceafter.SetSpaceAfter):
     -------|---------|-----------|-----------
     n-ar   | nu ar   | n- ar     | nu avea
     să-i   | să îi   | să -i     | să el
-    într-o | în o    | într- o   | întru* un
-    nu-i   | nu e    | nu -i     | nu el*
-
-    *) I think this is an annotation error (it should be "în un" and "nu fi", respectively).
+    într-o | în o    | într- o   | întru un
+    nu-i   | nu îi   | nu -i     | nu el
+    nu-i   | nu e    | nu -i     | nu fi
 
     Detokenization is quite simple: no space after word-final hyphen and before word-initial hyphen.
     There are just two exceptions, I have found:
