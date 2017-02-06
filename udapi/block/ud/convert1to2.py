@@ -213,7 +213,8 @@ class Convert1to2(Block):
                 if node.deprel == 'punct':
                     next_sibl = next(n for n in siblings if node.precedes(n) and n.deprel != 'cc')
                     if next_sibl != next_conjunct:
-                        self.log(node, 'punct-in-coord', 'punct may be part of coordination')
+                        if node != siblings[0]:
+                            self.log(node, 'punct-in-coord', 'punct may be part of coordination')
                         return
                 node.parent = next_conjunct
             elif node.deprel == 'cc':
