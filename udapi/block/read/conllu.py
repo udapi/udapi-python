@@ -1,5 +1,5 @@
 """"Conllu is a reader block for the CoNLL-U files."""
-
+import logging
 import re
 
 from udapi.core.basereader import BaseReader
@@ -108,7 +108,10 @@ class Conllu(BaseReader):
 
         # Set dependency parents (now, all nodes of the tree are created).
         for node_ord, node in enumerate(nodes[1:], 1):
-            node.parent = nodes[parents[node_ord]]
+            try:
+                node.parent = nodes[parents[node_ord]]
+            except IndexError:
+                raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
 
         # Set root attributes (descendants for faster iteration of all nodes in a tree).
         root._descendants = nodes[1:] # pylint: disable=protected-access
