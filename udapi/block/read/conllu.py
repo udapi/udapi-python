@@ -1,5 +1,4 @@
 """"Conllu is a reader block for the CoNLL-U files."""
-import logging
 import re
 
 from udapi.core.basereader import BaseReader

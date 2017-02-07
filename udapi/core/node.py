@@ -523,7 +523,7 @@ class Node(object):
             return False
 
         # Get all the descendants of parent that are in the span of the edge.
-        span = [n for n in parent.descendants if (n.ord > ord1 and n.ord < ord2)]
+        span = [n for n in parent.descendants if n.ord > ord1 and n.ord < ord2]
 
         # For projective edges, span must include all the nodes between parent and self.
         return len(span) != distance - 1
