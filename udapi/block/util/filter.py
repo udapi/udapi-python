@@ -27,17 +27,23 @@ class Filter(Block):
 
 
     def __init__(self, # pylint: disable=too-many-arguments
-                 keep_tree_if_node=None, delete_tree_if_node=None,
-                 keep_subtree=None, delete_subtree=None,
+                 delete_tree=None, delete_tree_if_node=None, delete_subtree=None,
+                 keep_tree=None, keep_tree_if_node=None, keep_subtree=None,
                  mark=None, **kwargs):
         """Create the Filter block object.
 
         Args:
+        `delete_tree`: Python expression to be evaluated for the root and if True,
+            the whole tree will be deleted.
+
         `delete_tree_if_node`: Python expression to be evaluated for each node and if True,
-            the whole tree will be deleted
+            the whole tree will be deleted.
 
         `delete_subtree`: Python expression to be evaluated for each node and if True,
-                    the subtree headed by `node` will be deleted
+                    the subtree headed by `node` will be deleted.
+
+        `keep_tree`: Python expression to be evaluated for the root and if False,
+            the whole tree will be deleted.
 
         `keep_tree_if_node`: Python expression to be evaluated for each node and if True,
             the whole tree will be kept. If the tree contains no node evaluated to True,
@@ -58,14 +64,21 @@ class Filter(Block):
         the arguments are evaluated in the specified order.
         """
         super().__init__(**kwargs)
+        self.delete_tree = delete_tree
         self.delete_tree_if_node = delete_tree_if_node
         self.delete_subtree = delete_subtree
+        self.keep_tree = keep_tree
         self.keep_tree_if_node = keep_tree_if_node
         self.keep_subtree = keep_subtree
         self.mark = mark
 
     def process_tree(self, tree): # pylint: disable=too-many-branches
         root = tree
+
+        if self.delete_tree is not None:
+            if eval(self.delete_tree):
+                tree.remove()
+                return
 
         if self.delete_tree_if_node is not None:
             for node in tree.descendants:
@@ -78,6 +91,11 @@ class Filter(Block):
                 if eval(self.delete_subtree):
                     node.remove()
                     continue
+
+        if self.keep_tree is not None:
+            if not eval(self.keep_tree):
+                tree.remove()
+                return
 
         if self.keep_tree_if_node is not None:
             found = False
