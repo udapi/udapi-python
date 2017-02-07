@@ -107,6 +107,10 @@ class Conllu(BaseReader):
             nodes.pop()
 
         # Set dependency parents (now, all nodes of the tree are created).
+        # TODO: parent setter checks for cycles, but this is something like O(n*log n)
+        # if done for each node. It could be done faster if the whole tree is checked at once.
+        # Also parent setter removes the node from its old parent's list of children,
+        # this could be skipped here by not using `node = root.create_child()`.
         for node_ord, node in enumerate(nodes[1:], 1):
             try:
                 node.parent = nodes[parents[node_ord]]

@@ -229,10 +229,10 @@ class Node(object):
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
-        while not climbing_node.is_root:
+        while not climbing_node.is_root():
             if climbing_node == self:
-                raise ValueError('Setting the parent to %s would lead to a cycle: %s'
-                                 % (new_parent, self))
+                raise ValueError('Setting the parent of %s to %s would lead to a cycle.'
+                                 % (self, new_parent))
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
