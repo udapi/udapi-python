@@ -179,7 +179,7 @@ class TextModeTrees(BaseWriter):
                     self.add_node(idx, node)
                 else:
                     if idx_node.parent is not node:
-                        self._add(idx, self._vert[self._ends(idx, '─├')])
+                        self._add(idx, self._vert[self._ends(idx, '─╭╰├╪')])
                     else:
                         self._add(idx, self._space[botmost][topmost])
                         if idx_node.is_leaf():
