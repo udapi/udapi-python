@@ -109,10 +109,17 @@ class Root(Node):
         The general format of root nodes is:
         root.bundle.bundle_id + '/' + root.zone, e.g. s123/en_udpipe.
         If zone is empty, the slash is excluded as well, e.g. s123.
+        If bundle is missing (could occur during loading), '?' is used instead.
         Root's address is stored in CoNLL-U files as sent_id (in a special comment).
         TODO: Make sure root.sent_id returns always the same string as root.address.
         """
-        return self._bundle.bundle_id + ('/' + self.zone if self.zone else '')
+        zone = '/' + self.zone if self.zone else ''
+        if self._bundle is not None:
+            return self._bundle.address() + zone
+        elif self.sent_id is not None:
+            return self.sent_id + zone
+        else:
+            return '?' + zone
 
     # TODO document whether misc is a string or dict or it can be both
     def create_multiword_token(self, words=None, form=None, misc=None):

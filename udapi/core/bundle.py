@@ -77,3 +77,7 @@ class Bundle(object):
         """Remove a bundle from the document."""
         self.document.bundles = [
             bundle for bundle in self.document.bundles if not bundle == self]
+
+    def address(self):
+        """Return bundle_id or '?' if missing."""
+        return self.bundle_id if self.bundle_id is not None else '?'

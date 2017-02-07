@@ -225,13 +225,14 @@ class Node(object):
 
         # The node itself couldn't be assigned as a parent.
         if self == new_parent:
-            raise ValueError('Could not set the node itself as a parent: %s' % self)
+            raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s' % self)
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
         while not climbing_node.is_root:
             if climbing_node == self:
-                raise Exception('Setting the parent would lead to a loop: %s' % self)
+                raise ValueError('Setting the parent to %s would lead to a cycle: %s'
+                                 % (new_parent, self))
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
@@ -486,7 +487,7 @@ class Node(object):
         e.g. s123/en_udpipe#4. If zone is empty, the slash is excluded as well,
         e.g. s123#4.
         """
-        return '%s#%d' % (self.root.address(), self.ord)
+        return '%s#%d' % (self.root.address() if self.root else '?', self.ord)
 
     @property
     def multiword_token(self):
