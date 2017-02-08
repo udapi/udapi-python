@@ -73,8 +73,11 @@ class Conllu(BaseReader):
                 if self.strict and len(fields) != len(self.node_attributes):
                     raise RuntimeError('Wrong number of columns in %r' % line)
                 # multi-word tokens will be processed later
-                if fields[0].find('-') != -1:
+                if '-' in fields[0]:
                     mwts.append(fields)
+                    continue
+                if '.' in fields[0]:
+                    # TODO load empty nodes
                     continue
 
                 node = root.create_child()
