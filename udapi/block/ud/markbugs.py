@@ -30,14 +30,19 @@ REQUIRED_FEATURE_FOR_UPOS = {
 class MarkBugs(Block):
     """Block for checking suspicious/wrong constructions in UD v2."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, save_stats=True, **kwargs):
+        """Create the MarkBugs block object.
+
+        Args:
+        save_stats: store the bug statistics overview into `document.misc["bugs"]`?
+        """
         super().__init__(**kwargs)
+        self.save_stats = save_stats
         self.stats = collections.Counter()
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
-        # TODO: these should be logging.debug and udapy should have --debug flag
-        logging.warning('node %s %s: %s', node.address(), short_msg, long_msg)
+        logging.debug('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.misc['Bug']:
             if short_msg not in node.misc['Bug']:
                 node.misc['Bug'] += ',' + short_msg
@@ -112,23 +117,25 @@ class MarkBugs(Block):
                 self.log(node, parent.deprel + '-child',
                          'parent.deprel=%s deprel!=conj|cc|punct|fixed|goeswith' % parent.deprel)
 
-        # goeswith should be left-headed, but this is already checked before.
-        # if deprel == 'goeswith' and parent.precedes(node):
-        #     if node.precedes(parent):
-        #         if node.ord + 1 != parent.ord:
-        #             self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the next node")
-        #         elif node.misc['SpaceAfter'] == 'No':
-        #             self.log(node, 'goeswith-space', "deprel=goeswith but SpaceAfter=No")
-        #     else:
-        #         if node.ord - 1 != parent.ord:
-        #             self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the prev node")
-        #         elif parent.misc['SpaceAfter'] == 'No':
-        #             self.log(node, 'goeswith-space', "deprel=goeswith but parent.SpaceAfter=No")
+        # goeswith should be left-headed, but this is already checked, so let's skip right-headed.
+        if deprel == 'goeswith' and parent.precedes(node):
+            span = node.root.descendants(add_self=1)[parent.ord:node.ord]
+            intruder = next((n for n in span[1:] if n.deprel != "goeswith"), None)
+            if intruder is not None:
+                self.log(intruder, 'goeswith-gap', "deprel!=goeswith but lies within goeswith span")
+            else:
+                for goeswith_node in span:
+                    if goeswith_node.misc['SpaceAfter'] == 'No':
+                        self.log(goeswith_node, 'goeswith-space', "deprel=goeswith SpaceAfter=No")
 
-    def process_end(self):
-        logging.warning('ud.MarkBugs Error Overview:')
+    def after_process_document(self, document):
         total = 0
+        message = 'ud.MarkBugs Error Overview:'
         for bug, count in sorted(self.stats.items(), key=lambda pair: pair[1]):
             total += count
-            logging.warning('%20s %10d', bug, count)
-        logging.warning('%20s %10d', 'TOTAL', total)
+            message += '\n%20s %10d' % (bug, count)
+        message += '\n%20s %10d\n' % ('TOTAL', total)
+        logging.warning(message)
+        if self.save_stats:
+            document.meta["bugs"] = message
+        self.stats.clear()
