@@ -18,11 +18,17 @@ argparser.add_argument(
     "-s", "--save", action="store_true",
     help="Add write.Conllu to the end of the scenario")
 argparser.add_argument(
-    "-t", "--save_text_mode_trees", action="store_true",
-    help="Add write.TextModeTrees to the end of the scenario")
-argparser.add_argument(
-    "-T", "--save_color_text_mode_trees", action="store_true",
+    "-T", "--save_text_mode_trees", action="store_true",
     help="Add write.TextModeTrees color=1 to the end of the scenario")
+argparser.add_argument(
+    "-H", "--save_html", action="store_true",
+    help="Add write.TextModeTreesHtml color=1 to the end of the scenario")
+argparser.add_argument(
+    "-A", "--save_all_attributes", action="store_true",
+    help="Add attributes=form,lemma,upos,xpos,feats,deprel,misc (to be used after -T and -H)")
+argparser.add_argument(
+    "-N", "--no_color", action="store_true",
+    help="Add color=0 to the end of the scenario, this overrides color=1 of -T and -H")
 argparser.add_argument(
     'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
@@ -43,8 +49,12 @@ if __name__ == "__main__":
     if args.save:
         args.scenario = args.scenario + ['write.Conllu']
     if args.save_text_mode_trees:
-        args.scenario = args.scenario + ['write.TextModeTrees']
-    if args.save_color_text_mode_trees:
         args.scenario = args.scenario + ['write.TextModeTrees', 'color=1']
+    if args.save_html:
+        args.scenario = args.scenario + ['write.TextModeTreesHtml', 'color=1']
+    if args.save_all_attributes:
+        args.scenario = args.scenario + ['attributes=form,lemma,upos,xpos,feats,deprel,misc']
+    if args.no_color:
+        args.scenario = args.scenario + ['color=0']
     runner = Run(args)
     runner.execute()
