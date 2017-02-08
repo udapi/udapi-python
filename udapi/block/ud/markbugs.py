@@ -50,11 +50,11 @@ class MarkBugs(Block):
         deprel, upos, feats = node.deprel, node.upos, node.feats
         parent = node.parent
 
-        for dep in ('aux', 'fixed', 'appos'):
+        for dep in ('aux', 'fixed', 'appos', 'goeswith'):
             if deprel == dep and parent.deprel == dep:
                 self.log(node, dep + '-chain', dep + ' dependencies should not form a chain.')
 
-        for dep in ('flat', 'fixed', 'conj', 'appos'):
+        for dep in ('flat', 'fixed', 'conj', 'appos', 'goeswith'):
             if deprel == dep and node.precedes(parent):
                 self.log(node, dep + '-rightheaded',
                          dep + ' relations should be left-headed, not right.')
@@ -93,24 +93,37 @@ class MarkBugs(Block):
         if len(object_children) > 1:
             self.log(node, 'multi-obj', 'More than one obj|ccomp child')
 
-        if parent.upos == 'ADP' and deprel not in ('conj', 'cc', 'punct', 'fixed'):
-            self.log(node, 'adp-child', 'parent.upos=ADP deprel!=conj|cc|punct|fixed')
-
         # In addition to http://universaldependencies.org/svalidation.html
         if parent.deprel == 'punct':
             self.log(node, 'punct-child', 'parent.deprel=punct')
 
-        if deprel == 'goeswith':
-            if node.precedes(parent):
-                if node.ord + 1 != parent.ord:
-                    self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the next node")
-                elif node.misc['SpaceAfter'] == 'No':
-                    self.log(node, 'goeswith-space', "deprel=goeswith but SpaceAfter=No")
-            else:
-                if node.ord - 1 != parent.ord:
-                    self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the prev node")
-                elif parent.misc['SpaceAfter'] == 'No':
-                    self.log(node, 'goeswith-space', "deprel=goeswith but parent.SpaceAfter=No")
+        # See http://universaldependencies.org/u/overview/syntax.html#the-status-of-function-words
+        # TODO: Promotion by Head Elision: It is difficult to detect this exception.
+        #       So far, I have just excluded "det" from the forbidded parent.deprel set
+        #       because it is quite often the promoted head and the false-alarm probability is high.
+        #       In future, we could check the enhanced dependencies for empty nodes.
+        # TODO: Function word modifiers: so far I have included advmod to the allowed deprel set.
+        #       This catches the cases like "not every", "exactly two" and "just when".
+        #       It seems the documentation does not allow any other deprel than advmod,
+        #       so there should be no false alarms. Some errors are not reported, i.e. the cases
+        #       when advmod incorrectly depends on a function word ("right before midnight").
+        if parent.deprel in ('aux', 'cop', 'mark', 'clf', 'case'):
+            if deprel not in ('conj', 'cc', 'punct', 'fixed', 'goeswith', 'advmod'):
+                self.log(node, parent.deprel + '-child',
+                         'parent.deprel=%s deprel!=conj|cc|punct|fixed|goeswith' % parent.deprel)
+
+        # goeswith should be left-headed, but this is already checked before.
+        # if deprel == 'goeswith' and parent.precedes(node):
+        #     if node.precedes(parent):
+        #         if node.ord + 1 != parent.ord:
+        #             self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the next node")
+        #         elif node.misc['SpaceAfter'] == 'No':
+        #             self.log(node, 'goeswith-space', "deprel=goeswith but SpaceAfter=No")
+        #     else:
+        #         if node.ord - 1 != parent.ord:
+        #             self.log(node, 'goeswith-gap', "deprel=goeswith but parent isn't the prev node")
+        #         elif parent.misc['SpaceAfter'] == 'No':
+        #             self.log(node, 'goeswith-space', "deprel=goeswith but parent.SpaceAfter=No")
 
     def process_end(self):
         logging.warning('ud.MarkBugs Error Overview:')
