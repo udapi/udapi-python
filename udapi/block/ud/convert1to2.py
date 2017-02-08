@@ -3,6 +3,9 @@
 See http://universaldependencies.org/v2/summary.html for the description of all UD v2 changes.
 IMPORTANT: this code does only SOME of the changes and the output should be checked.
 
+Note that this block is not idempotent, i.e. you should not apply it twice on the same data.
+It should be idempotent when skipping the coordination transformations (`skip=coord`).
+
 Author: Martin Popel, based on
 https://github.com/UniversalDependencies/tools/tree/master/v2-conversion
 by Sebastian Schuster.
@@ -208,14 +211,19 @@ class Convert1to2(Block):
                     self.log(node, 'cc-without-conj', 'cc after its parent with no conjuncts')
                 return
 
+            # Skip also the cases where punct/cc is before the whole coordination.
+            # As above, the punct/cc does not belong to the coordination.
+            # E.g. "And he is big and strong."
+            if node.precedes(conjuncts[0]) and node.precedes(node.parent):
+                return
+
             next_conjunct = next((n for n in conjuncts if node.precedes(n)), None)
             if next_conjunct:
-                if node.deprel == 'punct':
-                    next_sibl = next(n for n in siblings if node.precedes(n) and n.deprel != 'cc')
-                    if next_sibl != next_conjunct:
-                        if node != siblings[0]:
-                            self.log(node, 'punct-in-coord', 'punct may be part of coordination')
-                        return
+                # Make sure we don't introduce non-projectivities.
+                next_sibl = next(n for n in siblings if node.precedes(n) and n.deprel != 'cc')
+                if next_sibl != next_conjunct:
+                    self.log(node, node.deprel + '-in-coord', 'it may be part of coordination')
+                    return
                 node.parent = next_conjunct
             elif node.deprel == 'cc':
                 self.log(node, 'cc-after-conj', 'cc with no following conjunct')
