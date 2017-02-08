@@ -82,7 +82,7 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', mark='ToDo|Bug|Mark', **kwargs):
+                 print_undef_as='', print_doc_meta=True, mark='ToDo|Bug|Mark', **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -102,6 +102,7 @@ class TextModeTrees(BaseWriter):
         attributes: A comma-separated list of node attributes which should be printed. Possible
                     values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
+        print_doc_meta: Print `document.meta` metadata before each document?
         mark: a regex. If `re.match('.*'+mark, str(node.misc)` the node is highlighted.
             Empty string means no highlighting. Default = 'ToDo|Bug|Mark'.
         """
@@ -113,6 +114,7 @@ class TextModeTrees(BaseWriter):
         self.minimize_cross = minimize_cross
         self.color = color
         self.print_undef_as = print_undef_as
+        self.print_doc_meta = print_doc_meta
 
         # _draw[is_bottommost][is_topmost]
         line = '─' * indent
@@ -217,6 +219,9 @@ class TextModeTrees(BaseWriter):
             self.color = sys.stdout.isatty()
             if self.color:
                 colorama.init()
+        if self.print_doc_meta:
+            for key, value in document.meta.items():
+                print('%s = %s' % (key, value))
 
     def _add(self, idx, text):
         self.lines[idx] += text

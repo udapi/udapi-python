@@ -42,9 +42,13 @@ class TextModeTreesHtml(TextModeTrees):
         print("<!DOCTYPE html>\n<html>\n<head>\n<style>")
         print(STYLE)
         print("</style>\n</head>\n<body>\n<pre>")
+        if self.print_doc_meta:
+            for key, value in document.meta.items():
+                print('%s = %s' % (key, value))
+
 
     def after_process_document(self, document):
-        super().before_process_document(document)
+        super().after_process_document(document)
         print("</pre>\n</body>\n</html>")
 
     def add_node(self, idx, node):

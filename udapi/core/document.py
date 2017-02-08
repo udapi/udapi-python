@@ -12,6 +12,7 @@ class Document(object):
     def __init__(self):
         self.bundles = []
         self._highest_bundle_id = 0
+        self.meta = {}
 
     def __iter__(self):
         return iter(self.bundles)
