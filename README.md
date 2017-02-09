@@ -24,3 +24,9 @@ This is similar to the above, but installs Udapi to the standard (user) Python p
 ```
 pip3 install --user --upgrade git+https://github.com/udapi/udapi-python.git
 ```
+Try `udapy -h` to check it is installed correctly.
+If it fails, make sure your `PATH` includes the directory where `pip3` installed the `udapy` script.
+Usually, this results in
+```
+export PATH="$HOME/.local/bin/:$PATH"
+```
