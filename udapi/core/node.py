@@ -454,11 +454,12 @@ class Node(object):
         last_mwt_id = 0
         for node in self.descendants(add_self=not self.is_root()):
             mwt = node.multiword_token
-            if use_mwt and mwt and node.ord > last_mwt_id:
-                last_mwt_id = mwt.words[-1].ord
-                string += mwt.form
-                if mwt.misc['SpaceAfter'] != 'No':
-                    string += ' '
+            if use_mwt and mwt:
+                if node.ord > last_mwt_id:
+                    last_mwt_id = mwt.words[-1].ord
+                    string += mwt.form
+                    if mwt.misc['SpaceAfter'] != 'No':
+                        string += ' '
             else:
                 string += node.form
                 if node.misc['SpaceAfter'] != 'No':
