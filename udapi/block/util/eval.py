@@ -1,12 +1,27 @@
 """Eval is a special block for evaluating code given by parameters."""
-import re # may be useful in exec, thus pylint: disable=unused-import
+import collections
+import pprint
+import re
 
 from udapi.core.block import Block
+
+pp = pprint.pprint # pylint: disable=invalid-name
 
 # We need exec in this block and the variables this etc. are not unused but provided for the exec
 # pylint: disable=exec-used,unused-variable
 class Eval(Block):
-    """Special block for evaluating code given by parameters."""
+    r"""Special block for evaluating code given by parameters.
+
+    Tricks:
+    `pp` is a shortcut for `pprint.pprint`.
+    `$.` is a shortcut for `this.` which is a shortcut for `node.`, `tree.` etc.
+    depending on context.
+    `count_X` is a shortcut for `self.count[X]` where X is any string (\S+)
+    and `self.count` is a `collections.Counter()` instance.
+    Thus you can use code like
+
+    `util.Eval node='count_$.upos +=1; count_"TOTAL" +=1' end="pp(self.count)"`
+    """
 
     # So many arguments is the design of this block (consistent with Perl Udapi).
     # pylint: disable=too-many-arguments,too-many-instance-attributes
@@ -25,10 +40,14 @@ class Eval(Block):
         self.before_bundle = before_bundle
         self.after_bundle = after_bundle
         self.expand_code = expand_code
+        self.count = collections.Counter()
 
     def expand_eval_code(self, to_eval):
         """Expand '$.' to 'this.', useful for oneliners."""
-        return to_eval.replace('$.', 'this.') if self.expand_code else to_eval
+        if not self.expand_code:
+            return to_eval
+        to_eval = re.sub(r'count_(\S+)', r'self.count[\1]', to_eval)
+        return to_eval.replace('$.', 'this.')
 
     def before_process_document(self, document):
         if self.before_doc:
@@ -71,10 +90,11 @@ class Eval(Block):
             exec(self.expand_eval_code(self.after_bundle))
 
     def process_tree(self, tree):
-        # Extract variables $bundle, so they can be used in eval code
+        # Extract variables so they can be used in eval code
         bundle = tree.bundle
         doc = document = bundle.document
         this = tree
+        root = tree
 
         if self.tree:
             exec(self.expand_eval_code(self.tree))
