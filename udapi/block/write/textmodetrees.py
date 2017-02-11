@@ -82,7 +82,8 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', print_doc_meta=True, mark='ToDo|Bug|Mark', **kwargs):
+                 print_undef_as='', print_doc_meta=True, mark='ToDo|Bug|Mark',
+                 marked_only=False, **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -105,6 +106,7 @@ class TextModeTrees(BaseWriter):
         print_doc_meta: Print `document.meta` metadata before each document?
         mark: a regex. If `re.match('.*'+mark, str(node.misc)` the node is highlighted.
             Empty string means no highlighting. Default = 'ToDo|Bug|Mark'.
+        marked_only: print only trees containing one or more marked nodes. Default=False.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -115,6 +117,7 @@ class TextModeTrees(BaseWriter):
         self.color = color
         self.print_undef_as = print_undef_as
         self.print_doc_meta = print_doc_meta
+        self.marked_only = marked_only
 
         # _draw[is_bottommost][is_topmost]
         line = '─' * indent
@@ -153,6 +156,8 @@ class TextModeTrees(BaseWriter):
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
         allnodes = root.descendants(add_self=1)
+        if self.marked_only and not any(self.is_marked(n) for n in allnodes):
+            return
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
         self.lengths = [0] * len(allnodes)

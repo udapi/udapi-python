@@ -27,6 +27,9 @@ argparser.add_argument(
     "-A", "--save_all_attributes", action="store_true",
     help="Add attributes=form,lemma,upos,xpos,feats,deprel,misc (to be used after -T and -H)")
 argparser.add_argument(
+    "-M", "--marked_only", action="store_true",
+    help="Add marked_only=1 to the end of the scenario (to be used after -T and -H)")
+argparser.add_argument(
     "-N", "--no_color", action="store_true",
     help="Add color=0 to the end of the scenario, this overrides color=1 of -T and -H")
 argparser.add_argument(
@@ -54,6 +57,8 @@ if __name__ == "__main__":
         args.scenario = args.scenario + ['write.TextModeTreesHtml', 'color=1']
     if args.save_all_attributes:
         args.scenario = args.scenario + ['attributes=form,lemma,upos,xpos,feats,deprel,misc']
+    if args.marked_only:
+        args.scenario = args.scenario + ['marked_only=1']
     if args.no_color:
         args.scenario = args.scenario + ['color=0']
     runner = Run(args)
