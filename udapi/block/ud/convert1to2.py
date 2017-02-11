@@ -306,7 +306,7 @@ class Convert1to2(Block):
         elif stored != computed:
             normalized = ' '.join(stored.split())
             if normalized != computed:
-                root.text = normalized
+                root.text = computed
                 root.add_comment('ToDoOrigText = ' + stored)
                 self.log(root, 'text', 'Sentence string does not agree with the stored text.')
 
