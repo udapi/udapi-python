@@ -185,3 +185,33 @@ class Root(Node):
             self.comment = string
         else:
             self.comment += "\n " + string
+
+    @property
+    def token_descendants(self):
+        """Return all tokens (one-word or multi-word) in the tree.
+
+        ie. return a list of `core.Node` and `core.MWT` instances,
+        whose forms create the raw sentence. Skip nodes, which are part of multi-word tokens.
+
+        For example with:
+        1-2    vámonos   _
+        1      vamos     ir
+        2      nos       nosotros
+        3-4    al        _
+        3      a         a
+        4      el        el
+        5      mar       mar
+
+        `[n.form for n in root.token_descendants]` will return `['vámonos', 'al', 'mar']`.
+        """
+        result = []
+        last_mwt_id = 0
+        for node in self._descendants:
+            mwt = node.multiword_token
+            if mwt:
+                if node.ord > last_mwt_id:
+                    last_mwt_id = mwt.words[-1].ord
+                    result.append(mwt)
+            else:
+                result.append(node)
+        return result
