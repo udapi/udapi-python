@@ -20,6 +20,12 @@ class DualDict(collections.abc.MutableMapping):
     both of the representations which are always kept synchronized.
     Moreover, the synchronization is lazy, so the serialization and deserialization
     is done only when needed. This speeds up scenarios where access to dict is not needed.
+
+    A value can be deleted with any of the following three ways:
+    >>> del ddict['Case']
+    >>> ddict['Case'] = None
+    >>> ddict['Case'] = ''
+    and it works even if the value was already missing.
     """
     __slots__ = ['_string', '_dict']
 
@@ -59,12 +65,18 @@ class DualDict(collections.abc.MutableMapping):
     def __setitem__(self, key, value):
         self._deserialize_if_empty()
         self._string = None
-        self._dict[key] = value
+        if value is not None and value != '':
+            self._dict[key] = value
+        else:
+            self.__delitem__(key)
 
     def __delitem__(self, key):
         self._deserialize_if_empty()
-        self._string = None
-        del self._dict[key]
+        try:
+            del self._dict[key]
+            self._string = None
+        except KeyError:
+            pass
 
     def __iter__(self):
         self._deserialize_if_empty()
