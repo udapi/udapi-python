@@ -42,7 +42,7 @@ class Conllu(BaseReader):
         self.node_attributes = attributes.split(',')
         self.strict = strict
 
-    # pylint: disable=too-many-locals,too-many-branches
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def read_tree(self, document=None):
@@ -77,7 +77,10 @@ class Conllu(BaseReader):
                     mwts.append(fields)
                     continue
                 if '.' in fields[0]:
-                    # TODO load empty nodes
+                    empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
+                                                    xpos=fields[4], feats=fields[5], misc=fields[9])
+                    empty.ord = fields[0]
+                    empty.raw_deps = fields[8] # TODO
                     continue
 
                 node = root.create_child()

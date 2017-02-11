@@ -317,6 +317,14 @@ class Node(object):
         new_node.parent = self
         return new_node
 
+    def create_empty_child(self, **kwargs):
+        """Create and return a new empty node child of the current node."""
+        new_node = Node(**kwargs)
+        self.root.empty_nodes.append(new_node)
+        #self.enh_children.append(new_node) TODO
+        #new_node.enh_parents.append(self) TODO
+        return new_node
+
     # TODO: make private: _unordered_descendants
     def unordered_descendants(self):
         """Return a list of all descendants in any order."""

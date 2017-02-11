@@ -10,7 +10,8 @@ from udapi.core.mwt import MWT
 
 class Root(Node):
     """Class for representing root nodes (technical roots) in UD trees."""
-    __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts', 'text', 'comment']
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts',
+                 'empty_nodes', 'text', 'comment']
 
     def __init__(self, sent_id=None, zone=None, comment=None, text=None):
         """Create new root node."""
@@ -31,6 +32,7 @@ class Root(Node):
         self._bundle = None
         self._descendants = []
         self._mwts = []
+        self.empty_nodes = [] # TODO: private
 
     @property
     def sent_id(self):
