@@ -3,6 +3,8 @@
 In addition to class `Node`, this module contains class `ListOfNodes`
 and function `find_minimal_common_treelet`.
 """
+import logging
+
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
@@ -343,9 +345,16 @@ class Node(object):
         """
         return False
 
-    def remove(self):
+    def remove(self, children=None):
         """Delete this node and all its descendants."""
         self.parent._children = [child for child in self.parent.children if child != self]
+        if children is not None and self.children:
+            if children.startswith('rehang'):
+                for child in self.children:
+                    child.parent = self.parent
+            if children.endswith('warn'):
+                logging.warning('%s is being removed by remove(children=%s), '
+                                ' but it has (unexpected) children', self, children)
         self.root._update_ordering()
 
     # TODO: make private: _shift
