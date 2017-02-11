@@ -38,8 +38,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(len(nodes[1].children(add_self=1, following_only=1)), 3)
 
         self.assertEqual(nodes[0].next_node, nodes[1])
-        # TODO fix
-        #self.assertEqual(nodes[2].prev_node, nodes[1])
+        self.assertEqual(nodes[2].prev_node, nodes[1])
         self.assertEqual(nodes[5].next_node, None)
         self.assertEqual(root.prev_node, None)
 
@@ -53,10 +52,9 @@ class TestDocument(unittest.TestCase):
 
         # ords and reorderings
         self.assertEqual([node.ord for node in nodes], [1, 2, 3, 4, 5, 6])
-        # TODO: fix
-        #nodes[0].shift_after_node(nodes[1])
-        #self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
-        #self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
+        nodes[0].shift_after_node(nodes[1])
+        self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
+        self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
 
     def test_print_subtree(self):
         """Test print_subtree() method, which uses udapi.block.write.textmodetrees."""

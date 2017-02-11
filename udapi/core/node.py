@@ -406,7 +406,7 @@ class Node(object):
             return None
         if new_ord == 0:
             return self.root
-        return self.root._descendants[self.ord - 1]
+        return self.root._descendants[new_ord - 1]
 
     @property
     def next_node(self):
