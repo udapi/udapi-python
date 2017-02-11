@@ -97,8 +97,17 @@ class Root(Node):
         """Return True for all Root instances."""
         return True
 
-    def remove(self):
-        """Remove the whole tree from its bundle."""
+    def remove(self, children=None):
+        """Remove the whole tree from its bundle.
+
+        Args:
+        children: a string specifying what to do if the root has any children.
+            The default (None) is to delete them (and all their descendants).
+            `warn` means to issue a warning.
+        """
+        if children is not None and self.children:
+            logging.warning('%s is being removed by remove(children=%s), '
+                            ' but it has (unexpected) children', self, children)
         self.bundle.trees = [root for root in self.bundle.trees if root != self]
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):

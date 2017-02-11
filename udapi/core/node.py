@@ -346,7 +346,15 @@ class Node(object):
         return False
 
     def remove(self, children=None):
-        """Delete this node and all its descendants."""
+        """Delete this node and all its descendants.
+
+        Args:
+        children: a string specifying what to do if the node has any children.
+            The default (None) is to delete them (and all their descendants).
+            `rehang` means to re-attach those children to the parent of the removed node.
+            `warn` means to issue a warning if any children are present and delete them.
+            `rehang_warn` means to rehang and warn:-).
+        """
         self.parent._children = [child for child in self.parent.children if child != self]
         if children is not None and self.children:
             if children.startswith('rehang'):
