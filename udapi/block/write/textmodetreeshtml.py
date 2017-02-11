@@ -43,7 +43,7 @@ class TextModeTreesHtml(TextModeTrees):
         print(STYLE)
         print("</style>\n</head>\n<body>\n<pre>")
         if self.print_doc_meta:
-            for key, value in document.meta.items():
+            for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
 
 

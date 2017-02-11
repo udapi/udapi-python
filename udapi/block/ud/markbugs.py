@@ -131,7 +131,7 @@ class MarkBugs(Block):
     def after_process_document(self, document):
         total = 0
         message = 'ud.MarkBugs Error Overview:'
-        for bug, count in sorted(self.stats.items(), key=lambda pair: pair[1]):
+        for bug, count in sorted(self.stats.items(), key=lambda pair: (pair[1], pair[0])):
             total += count
             message += '\n%20s %10d' % (bug, count)
         message += '\n%20s %10d\n' % ('TOTAL', total)

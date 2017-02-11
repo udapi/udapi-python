@@ -29,7 +29,7 @@ DEPREL_CHANGE = {
 class Convert1to2(Block):
     """Block for converting UD v1 to UD v2."""
 
-    def __init__(self, skip='', **kwargs):
+    def __init__(self, skip='', save_stats=True, **kwargs):
         """Create the Convert1to2 block instance.
 
         Args:
@@ -37,10 +37,12 @@ class Convert1to2(Block):
             possible values are:
             upos, upos_copula, deprel_simple, neg, nmod, nmod, feats, remnants, coord, text.
             If you cannot guess their meaning, consult the source code:-(.
+        save_stats: store the ToDo statistics overview into `document.misc["todo"]`?
         """
         super().__init__(**kwargs)
         self.stats = collections.Counter()
         self.skip = {k for k in skip.split(',')}
+        self.save_stats = save_stats
 
     def process_tree(self, tree):
         """Apply all the changes on the current tree.
@@ -308,11 +310,15 @@ class Convert1to2(Block):
                 root.add_comment('ToDoOrigText = ' + stored)
                 self.log(root, 'text', 'Sentence string does not agree with the stored text.')
 
-    def process_end(self):
+    def after_process_document(self, document):
         """Print overall statistics of ToDo counts."""
-        logging.warning('ud.Convert1to2 ToDo Overview:')
+        message = 'ud.Convert1to2 ToDo Overview:'
         total = 0
-        for todo, count in sorted(self.stats.items(), key=lambda pair: pair[1]):
+        for todo, count in sorted(self.stats.items(), key=lambda pair: (pair[1], pair[0])):
             total += count
-            logging.warning('%20s %10d', todo, count)
-        logging.warning('%20s %10d', 'TOTAL', total)
+            message += '\n%20s %10d' % (todo, count)
+        message += '\n%20s %10d\n' % ('TOTAL', total)
+        logging.warning(message)
+        if self.save_stats:
+            document.meta["todo"] = message
+        self.stats.clear()

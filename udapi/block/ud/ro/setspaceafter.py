@@ -1,7 +1,7 @@
 """Block ud.ro.SetSpaceAfter for heuristic setting of SpaceAfter=No in Romanian.
 
 Usage:
-udapy -s ud.SetSpaceAfter < in.conllu > fixed.conllu
+udapy -s ud.ro.SetSpaceAfter < in.conllu > fixed.conllu
 
 Author: Martin Popel
 """

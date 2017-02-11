@@ -225,7 +225,7 @@ class TextModeTrees(BaseWriter):
             if self.color:
                 colorama.init()
         if self.print_doc_meta:
-            for key, value in document.meta.items():
+            for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
 
     def _add(self, idx, text):
