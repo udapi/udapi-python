@@ -261,7 +261,7 @@ class TextModeTrees(BaseWriter):
 
     def is_marked(self, node):
         """Should a given node be highlighted?"""
-        return self.mark_re.match(str(node.misc)) if self.mark_re is not None else False
+        return self.mark_re.search(str(node.misc)) if self.mark_re is not None else False
 
     def colorize_comment(self, comment):
         """Return a string with color markup for a given comment."""
