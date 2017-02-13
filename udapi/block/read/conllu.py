@@ -9,6 +9,7 @@ from udapi.core.root import Root
 # This reader accepts also older-style sent_id (until UD v2.0 treebanks are released).
 RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
+RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
 
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
@@ -42,7 +43,32 @@ class Conllu(BaseReader):
         self.node_attributes = attributes.split(',')
         self.strict = strict
 
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+
+    @staticmethod
+    def parse_comment_line(line, root):
+        """Parse one line of CoNLL-U and fill sent_id, text, newpar, newdoc in root."""
+        sent_id_match = RE_SENT_ID.match(line)
+        if sent_id_match is not None:
+            root.sent_id = sent_id_match.group(1)
+            return
+
+        text_match = RE_TEXT.match(line)
+        if text_match is not None:
+            root.text = text_match.group(1)
+            return
+
+        pardoc_match = RE_NEWPARDOC.match(line)
+        if pardoc_match is not None:
+            value = True if pardoc_match.group(2) is None else pardoc_match.group(2)
+            if pardoc_match.group(1) == 'newpar':
+                root.newpar = value
+            else:
+                root.newdoc = value
+            return
+
+        root.comment = root.comment + line[1:] + "\n"
+
+    # pylint: disable=too-many-locals,too-many-branches
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def read_tree(self, document=None):
@@ -52,22 +78,13 @@ class Conllu(BaseReader):
         root = Root()
         nodes = [root]
         parents = [0]
-        comment = ''
         mwts = []
         for line in self.filehandle:
             line = line.rstrip()
             if line == '':
                 break
             if line[0] == '#':
-                sent_id_match = RE_SENT_ID.search(line)
-                if sent_id_match is not None:
-                    root.sent_id = sent_id_match.group(1)
-                else:
-                    text_match = RE_TEXT.search(line)
-                    if text_match is not None:
-                        root.text = text_match.group(1)
-                    else:
-                        comment = comment + line[1:] + "\n"
+                self.parse_comment_line(line, root)
             else:
                 fields = line.split('\t')
                 if self.strict and len(fields) != len(self.node_attributes):
@@ -124,9 +141,6 @@ class Conllu(BaseReader):
 
         # Set root attributes (descendants for faster iteration of all nodes in a tree).
         root._descendants = nodes[1:] # pylint: disable=protected-access
-
-        if comment != '':
-            root.comment = comment
 
         # Create multi-word tokens.
         for fields in mwts:

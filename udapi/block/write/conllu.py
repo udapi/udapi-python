@@ -15,7 +15,7 @@ class Conllu(BaseWriter):
         self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
                                 "feats", "parent", "deprel", "raw_deps", "misc"]
 
-    def process_tree(self, tree):
+    def process_tree(self, tree): # pylint: disable=too-many-branches
         nodes = tree.descendants
 
         # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
@@ -24,6 +24,12 @@ class Conllu(BaseWriter):
             return
 
         if self.print_sent_id:
+            if tree.newdoc:
+                value = ' id = ' + tree.newdoc if tree.newdoc is not True else ''
+                print('# newdoc' + value)
+            if tree.newpar:
+                value = ' id = ' + tree.newpar if tree.newpar is not True else ''
+                print('# newpar' + value)
             print('# sent_id = ' + tree.address())
 
         if self.print_text:
