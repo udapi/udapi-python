@@ -58,6 +58,12 @@ class TextModeTreesHtml(TextModeTrees):
             super().add_node(idx, node)
             self.lines[idx] += '</mark>' if marked else ''
 
+    def colorize_comment(self, comment):
+        """Return a string with color markup for a given comment."""
+        if self.mark_re is None:
+            return comment
+        return self.mark_re.sub(r'<mark>\g<0></mark>', comment)
+
     @staticmethod
     def colorize_attr(attr, value, marked):
         """Return a string with color markup for a given attr and its value."""

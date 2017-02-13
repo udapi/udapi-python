@@ -82,8 +82,8 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', print_doc_meta=True, mark='ToDo|Bug|Mark',
-                 marked_only=False, **kwargs):
+                 print_undef_as='', print_doc_meta=True, print_comments=False,
+                 mark='ToDo|Bug|Mark', marked_only=False, **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -104,9 +104,11 @@ class TextModeTrees(BaseWriter):
                     values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
         print_doc_meta: Print `document.meta` metadata before each document?
-        mark: a regex. If `re.match('.*'+mark, str(node.misc)` the node is highlighted.
+        print_comments: Print comments (other than sent_id and text)?
+        mark: a regex. If `re.search(mark, str(node.misc))` the node is highlighted.
+            If `print_comments and re.search(mark, root.comment)` the comment is highlighted.
             Empty string means no highlighting. Default = 'ToDo|Bug|Mark'.
-        marked_only: print only trees containing one or more marked nodes. Default=False.
+        marked_only: print only trees containing one or more marked nodes/comments. Default=False.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -117,6 +119,8 @@ class TextModeTrees(BaseWriter):
         self.color = color
         self.print_undef_as = print_undef_as
         self.print_doc_meta = print_doc_meta
+        self.print_comments = print_comments
+        self.mark = mark
         self.marked_only = marked_only
 
         # _draw[is_bottommost][is_topmost]
@@ -131,7 +135,7 @@ class TextModeTrees(BaseWriter):
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
-        self.mark_re = re.compile('.*' + mark) if (mark is not None and mark != '') else None
+        self.mark_re = re.compile(mark, re.S) if (mark is not None and mark != '') else None
         self._index_of = []
         self._gaps = []
         self.lines = []
@@ -153,10 +157,20 @@ class TextModeTrees(BaseWriter):
         self._gaps[node.ord] = rmost - lmost - descs
         return lmost, rmost, descs + 1
 
+    def should_print_tree(self, root):
+        """Should this tree be printed?"""
+        if not self.marked_only:
+            return True
+        if any(self.is_marked(n) for n in root.descendants(add_self=1)):
+            return True
+        if not self.print_comments or root.comment is None or self.mark_re is None:
+            return False
+        return self.mark_re.search(root.comment)
+
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
         allnodes = root.descendants(add_self=1)
-        if self.marked_only and not any(self.is_marked(n) for n in allnodes):
+        if not self.should_print_tree(root):
             return
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
@@ -204,6 +218,8 @@ class TextModeTrees(BaseWriter):
             print('# sent_id = ' + root.address())
         if self.print_text:
             print("# text = " + (root.get_sentence() if root.is_root() else root.compute_text()))
+        if self.print_comments and root.comment:
+            print('#' + self.colorize_comment(root.comment.rstrip().replace('\n', '\n#')))
         for line in self.lines:
             print(line)
 
@@ -246,6 +262,12 @@ class TextModeTrees(BaseWriter):
     def is_marked(self, node):
         """Should a given node be highlighted?"""
         return self.mark_re.match(str(node.misc)) if self.mark_re is not None else False
+
+    def colorize_comment(self, comment):
+        """Return a string with color markup for a given comment."""
+        if self.mark_re is None:
+            return comment
+        return self.mark_re.sub(colored(r'\g<0>', None, None, ['reverse', 'bold']), comment)
 
     @staticmethod
     def colorize_attr(attr, value, marked):
