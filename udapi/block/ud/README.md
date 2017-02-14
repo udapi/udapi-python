@@ -3,7 +3,8 @@
 Overview:
 * [Convert1to2](#convert1to2) - conversion from UD v1 to UD v2
 * [MarkBugs](markbugs.py) - check for suspicious/wrong constructions
-* [SetSpaceAfter](setspaceafter.py) - heuristically fill `SpaceAfter=No` if missing in the data
+* [SetSpaceAfter](setspaceafter.py) - heuristically fill `SpaceAfter=No` and `# text` if missing in the data
+* [SetSpaceAfterFromText](setspaceafterfromtext.py) - `SpaceAfter=No` according to `# text`
 
 For using these tools, you need to install Udapi for Python
 as described [here](https://github.com/udapi/udapi-python/blob/master/README.md),
