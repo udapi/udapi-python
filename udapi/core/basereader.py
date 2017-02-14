@@ -5,13 +5,13 @@ import logging
 from udapi.core.block import Block
 from udapi.core.files import Files
 
-
+# pylint: disable=too-many-instance-attributes
 class BaseReader(Block):
     """Base class for all reader blocks."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, files='-', zone='keep', bundles_per_doc=0, encoding='utf-8',
-                 sent_id_filter=None, **kwargs):
+                 sent_id_filter=None, split_docs=False, **kwargs):
         super().__init__(**kwargs)
         self.files = Files(filenames=files)
         self.zone = zone
@@ -23,6 +23,7 @@ class BaseReader(Block):
         if sent_id_filter is not None:
             self.sent_id_filter = re.compile(sent_id_filter)
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
+        self.split_docs = split_docs
 
     @staticmethod
     def is_multizone_reader():
@@ -83,7 +84,7 @@ class BaseReader(Block):
                           tree.sent_id, self.sent_id_filter)
             tree = self.read_tree(document)
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def process_document(self, document):
@@ -96,19 +97,28 @@ class BaseReader(Block):
             # TODO list.pop(0) is inefficient, use collections.deque.popleft()
             bundle = orig_bundles.pop(0) if orig_bundles else document.create_bundle()
             bundle.add_tree(self._buffer)
+            if self._buffer.newdoc and self._buffer.newdoc is not True:
+                document.meta["docname"] = self._buffer.newdoc
             self._buffer = None
 
-        filehandle = self.next_filehandle()
+        filehandle = self.filehandle
         if filehandle is None:
-            self.finished = True
-            return
+            filehandle = self.next_filehandle()
+            if filehandle is None:
+                self.finished = True
+                return
 
+        trees_loaded = 0
         while True:
             root = self.filtered_read_tree(document)
             if root is None:
+                if trees_loaded == 0 and self.files.has_next_file():
+                    filehandle = self.next_filehandle()
+                    continue
                 self.finished = not self.files.has_next_file()
                 break
             add_to_the_last_bundle = 0
+            trees_loaded += 1
 
             tree_id = root.sent_id
             if tree_id is not None:
@@ -123,7 +133,19 @@ class BaseReader(Block):
             if self.zone != 'keep':
                 root.zone = self.zone
 
-            # assign new/next bundle to bundle if needed
+            # The `# newdoc` comment in CoNLL-U marks a start of a new document.
+            if root.newdoc:
+                if not bundle and root.newdoc is not True:
+                    document.meta["docname"] = root.newdoc
+                if bundle and self.split_docs:
+                    self._buffer = root
+                    if orig_bundles:
+                        logging.warning("split_docs=1 but the doc had contained %d bundles",
+                                        len(orig_bundles))
+                    self.finished = False
+                    return
+
+            # assign new/next bundle to `bundle` if needed
             if not bundle or not add_to_the_last_bundle:
                 if self.bundles_per_doc and bundle and self.bundles_per_doc == bundle.number:
                     self._buffer = root
