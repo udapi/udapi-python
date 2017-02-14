@@ -1,4 +1,5 @@
 """"Conllu is a reader block for the CoNLL-U files."""
+import logging
 import re
 
 from udapi.core.basereader import BaseReader
@@ -68,7 +69,7 @@ class Conllu(BaseReader):
 
         root.comment = root.comment + line[1:] + "\n"
 
-    # pylint: disable=too-many-locals,too-many-branches
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def read_tree(self, document=None):
@@ -87,8 +88,10 @@ class Conllu(BaseReader):
                 self.parse_comment_line(line, root)
             else:
                 fields = line.split('\t')
-                if self.strict and len(fields) != len(self.node_attributes):
-                    raise RuntimeError('Wrong number of columns in %r' % line)
+                if len(fields) != len(self.node_attributes):
+                    if self.strict:
+                        raise RuntimeError('Wrong number of columns in %r' % line)
+                    fields.extend(['_'] * (len(self.node_attributes) - len(fields)))
                 # multi-word tokens will be processed later
                 if '-' in fields[0]:
                     mwts.append(fields)
@@ -105,7 +108,13 @@ class Conllu(BaseReader):
                 # TODO slow implementation of speed-critical loading
                 for (n_attribute, attribute_name) in enumerate(self.node_attributes):
                     if attribute_name == 'head':
-                        parents.append(int(fields[n_attribute]))
+                        try:
+                            parents.append(int(fields[n_attribute]))
+                        except ValueError as exception:
+                            if not self.strict and fields[n_attribute] == '_':
+                                logging.warning("Empty parent/head index in '%s'", line)
+                            else:
+                                raise exception
                     elif attribute_name == 'ord':
                         setattr(node, 'ord', int(fields[n_attribute]))
                     elif attribute_name == 'deps':
