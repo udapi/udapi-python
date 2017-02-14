@@ -84,7 +84,7 @@ class Convert1to2(Block):
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
-        logging.warning('node %s %s: %s', node.address(), short_msg, long_msg)
+        logging.debug('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.is_root():
             pass
         elif node.misc['ToDo']:
