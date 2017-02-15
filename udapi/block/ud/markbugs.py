@@ -47,7 +47,7 @@ class MarkBugs(Block):
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
-        if self.skip_re.search(short_msg):
+        if self.skip_re is not None and self.skip_re.search(short_msg):
             return
         logging.debug('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.misc['Bug']:
