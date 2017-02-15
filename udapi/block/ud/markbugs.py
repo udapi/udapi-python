@@ -52,7 +52,7 @@ class MarkBugs(Block):
 
     # pylint: disable=too-many-branches
     def process_node(self, node):
-        deprel, upos, feats = node.deprel, node.upos, node.feats
+        form, deprel, upos, feats = node.form, node.deprel, node.upos, node.feats
         parent = node.parent
 
         for dep in ('aux', 'fixed', 'appos', 'goeswith'):
@@ -127,6 +127,12 @@ class MarkBugs(Block):
                 for goeswith_node in span:
                     if goeswith_node.misc['SpaceAfter'] == 'No':
                         self.log(goeswith_node, 'goeswith-space', "deprel=goeswith SpaceAfter=No")
+
+        if upos == 'SYM' and form.isalpha():
+            self.log(node, 'sym-alpha', "upos=SYM but all form chars are alphabetical: " + form)
+
+        if upos == 'PUNCT' and  any(char.isalpha() for char in form):
+            self.log(node, 'punct-alpha', "upos=PUNCT but form has alphabetical char(s): " + form)
 
     def after_process_document(self, document):
         total = 0
