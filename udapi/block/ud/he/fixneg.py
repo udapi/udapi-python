@@ -17,6 +17,8 @@ class FixNeg(Block):
                 node.deprel = 'cop'
                 # I think deprel=cop Polarity=Neg is enough and VerbType=Cop is not needed
                 del node.feats['VerbType']
+                # This way we have solved the ToDo=neg
+                if node.misc['ToDo'] == 'neg':
+                    del node.misc['ToDo']
             else:
-                node.print_subtree()
                 logging.warning("Strange node %s with deprel=neg", node)
