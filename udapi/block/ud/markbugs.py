@@ -15,8 +15,9 @@ searched for "Bug=" occurences.
 Author: Martin Popel
 based on descriptions at http://universaldependencies.org/svalidation.html
 """
-import logging
 import collections
+import logging
+import re
 
 from udapi.core.block import Block
 
@@ -30,18 +31,24 @@ REQUIRED_FEATURE_FOR_UPOS = {
 class MarkBugs(Block):
     """Block for checking suspicious/wrong constructions in UD v2."""
 
-    def __init__(self, save_stats=True, **kwargs):
+    def __init__(self, save_stats=True, skip=None, **kwargs):
         """Create the MarkBugs block object.
 
         Args:
         save_stats: store the bug statistics overview into `document.misc["bugs"]`?
+        skip: a regex. If `re.search(skip, short_msg)` the node is not reported.
+            You can use e.g. `skip=no-(VerbForm|NumType|PronType)`.
+            Default = None (or empty string) which means no skipping.
         """
         super().__init__(**kwargs)
         self.save_stats = save_stats
         self.stats = collections.Counter()
+        self.skip_re = re.compile(skip) if (skip is not None and skip != '') else None
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
+        if self.skip_re.search(short_msg):
+            return
         logging.debug('node %s %s: %s', node.address(), short_msg, long_msg)
         if node.misc['Bug']:
             if short_msg not in node.misc['Bug']:
