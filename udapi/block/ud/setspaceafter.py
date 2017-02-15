@@ -59,8 +59,14 @@ class SetSpaceAfter(Block):
     def mark_no_space(self, node):
         """Mark a node with SpaceAfter=No unless it is a goeswith exception."""
         if not self.is_goeswith_exception(node):
-            node.misc['SpaceAfter'] = 'No'
-            self.changed = True
+            mwt = node.multiword_token
+            if mwt:
+                if mwt.words[-1] == node:
+                    mwt.misc['SpaceAfter'] = 'No'
+                    self.changed = True
+            else:
+                node.misc['SpaceAfter'] = 'No'
+                self.changed = True
 
     @staticmethod
     def is_goeswith_exception(node):
@@ -68,8 +74,6 @@ class SetSpaceAfter(Block):
 
         Deprel=goeswith means that a space was (incorrectly) present in the original text,
         so we should not add SpaceAfter=No in these cases.
+        We expect valid annotation of goeswith (no gaps, first token as head).
         """
-        if node.deprel == 'goeswith':
-            return node.precedes(node.parent)
-        first_right_child = next((n for n in node.children if node.precedes(n)), None)
-        return first_right_child and first_right_child.deprel == 'goeswith'
+        return node.next_node.deprel == 'goeswith'
