@@ -35,8 +35,8 @@ class Convert1to2(Block):
         Args:
         skip: comma separated list of transformations to skip. Default=empty string (no skipping).
             possible values are:
-            upos, upos_copula, deprel_simple, neg, nmod, nmod,
-            feats, remnants, goeswith, coord, text.
+            upos, upos_copula, deprel_simple, neg, nmod, feats,
+            remnants, goeswith, flat, fixed, appos, coord, text.
             If you cannot guess their meaning, consult the source code:-(.
         save_stats: store the ToDo statistics overview into `document.misc["todo"]`?
         """
@@ -45,7 +45,7 @@ class Convert1to2(Block):
         self.skip = {k for k in skip.split(',')}
         self.save_stats = save_stats
 
-    def process_tree(self, tree):
+    def process_tree(self, tree): # pylint: disable=too-many-branches
         """Apply all the changes on the current tree.
 
         This method is automatically called on each tree by Udapi.
@@ -67,8 +67,9 @@ class Convert1to2(Block):
                 self.change_nmod(node)
             if 'feats' not in self.skip:
                 self.change_feats(node)
-            if 'goeswith' not in self.skip:
-                self.change_goeswith(node)
+            for deprel in ('goeswith', 'flat'):
+                if deprel not in self.skip:
+                    self.change_headfinal(node, deprel)
 
         # edits which need access to the whole tree.
         if 'remnants' not in self.skip:
@@ -202,15 +203,15 @@ class Convert1to2(Block):
             self.log(node, 'gen', 'NumType=Gen not allowed in UD v2')
 
     @staticmethod
-    def change_goeswith(node):
-        """deprel=goeswith must be a head-initial flat structure."""
-        if node.deprel == 'goeswith' and node.precedes(node.parent):
+    def change_headfinal(node, deprel):
+        """deprel=goeswith|flat|fixed|appos must be a head-initial flat structure."""
+        if node.deprel == deprel and node.precedes(node.parent):
             old_head = node.parent
-            all_goeswith = [n for n in old_head.children if n.deprel == 'goeswith']
-            other_children = [n for n in old_head.children if n.deprel != 'goeswith']
+            all_goeswith = [n for n in old_head.children if n.deprel == deprel]
+            other_children = [n for n in old_head.children if n.deprel != deprel]
             all_goeswith[0].parent = old_head.parent
             all_goeswith[0].deprel = old_head.deprel
-            old_head.deprel = 'goeswith'
+            old_head.deprel = deprel
             for a_node in all_goeswith[1:] + other_children + [old_head]:
                 a_node.parent = all_goeswith[0]
 
