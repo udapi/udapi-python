@@ -67,6 +67,9 @@ class Convert1to2(Block):
                 self.change_nmod(node)
             if 'feats' not in self.skip:
                 self.change_feats(node)
+
+        # semi-local edits: the neighboring nodes should have fixed deprel before running this
+        for node in tree.descendants:
             for deprel in ('goeswith', 'flat'):
                 if deprel not in self.skip:
                     self.change_headfinal(node, deprel)
