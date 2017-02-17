@@ -7,6 +7,7 @@ from udapi.core.block import Block
 class To2(Block):
     """Block for fixing the remaining cases (after ud.Convert1to2) in UD_Irish."""
 
+    # pylint: disable=too-many-branches
     def process_node(self, node):
         if node.feats['Case'] == 'Com':
             node.feats['Case'] = 'NomAcc'
@@ -26,9 +27,8 @@ class To2(Block):
             node.upos = 'AUX'
         if node.xpos == 'Foreign':
             node.feats['Foreign'] = 'Yes'
-        #if 'nmod' in node.misc['ToDo']:
-        #    del node.misc['ToDo']
-        del node.misc['ToDo']
+        if 'nmod' in node.misc['ToDo']:
+            del node.misc['ToDo']
 
         if node.feats['VerbForm'] in ('Inf', 'Vnoun', 'Ger'):
             if node.prev_node.lemma == 'ag' and node.prev_node.parent == node:
