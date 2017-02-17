@@ -41,8 +41,8 @@ class DualDict(collections.abc.MutableMapping):
     def __str__(self):
         if self._string is None:
             serialized = []
-            for name in sorted(self._dict, key=lambda s: s.lower()):
-                serialized.append('%s=%s' % (name, self._dict[name]))
+            for name, value in sorted(self._dict.items(), key=lambda s: s[0].lower()):
+                serialized.append('%s=%s' % (name, value))
             self._string = '|'.join(serialized) if serialized else '_'
         return self._string
 
