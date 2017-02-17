@@ -25,23 +25,27 @@ class TextModeTreesHtml(TextModeTrees):
     This block is a subclass of `TextModeTrees`, see its documentation for more info.
     """
 
-    def __init__(self, color=True, **kwargs):
+    def __init__(self, color=True, title='Udapi visualization', **kwargs):
         """Create new TextModeTreesHtml block object.
 
         Args: see `TextModeTrees`.
         Color is by default set to `True` (even if the output is redirected to a file of pipe).
         You can force `color=0` e.g. if you want the node highlighting
         (see the `mark` parameter) to be more eye-catching.
+
+        title: What title metadata to use for the html?
         """
         super().__init__(color=color, **kwargs)
+        self.title = title
 
     def before_process_document(self, document):
         # TextModeTrees.before_process_document changes the color property,
         # we need to skip this, but call BaseWriter's method which redirects stdout.
         super(TextModeTrees, self).before_process_document(document) #pylint: disable=bad-super-call
-        print("<!DOCTYPE html>\n<html>\n<head>\n<style>")
-        print(STYLE)
-        print("</style>\n</head>\n<body>\n<pre>")
+        print('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">')
+        print('<title>' + self.title + '</title>')
+        print('<style>' + STYLE)
+        print('</style>\n</head>\n<body>\n<pre>')
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
