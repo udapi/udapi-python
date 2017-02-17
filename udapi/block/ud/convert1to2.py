@@ -22,8 +22,8 @@ DEPREL_CHANGE = {
     "nsubjpass": "nsubj:pass",
     "csubjpass": "csubj:pass",
     "auxpass": "aux:pass",
-    "name": "flat", # or "flat:name"?
-    "foreign": "flat", # or "flat:foreign"?
+    "name": "flat:name",
+    "foreign": "flat", # "flat:foreign" not needed once we have Foreign=Yes in FEATS
 }
 
 class Convert1to2(Block):
@@ -205,13 +205,14 @@ class Convert1to2(Block):
     @staticmethod
     def change_headfinal(node, deprel):
         """deprel=goeswith|flat|fixed|appos must be a head-initial flat structure."""
-        if node.deprel == deprel and node.precedes(node.parent):
+        if node.udeprel == deprel and node.precedes(node.parent):
+            full_deprel = node.deprel
             old_head = node.parent
-            all_goeswith = [n for n in old_head.children if n.deprel == deprel]
-            other_children = [n for n in old_head.children if n.deprel != deprel]
+            all_goeswith = [n for n in old_head.children if n.udeprel == deprel]
+            other_children = [n for n in old_head.children if n.udeprel != deprel]
             all_goeswith[0].parent = old_head.parent
             all_goeswith[0].deprel = old_head.deprel
-            old_head.deprel = deprel
+            old_head.deprel = full_deprel
             for a_node in all_goeswith[1:] + other_children + [old_head]:
                 a_node.parent = all_goeswith[0]
 

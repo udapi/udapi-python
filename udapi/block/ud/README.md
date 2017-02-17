@@ -50,7 +50,7 @@ See http://universaldependencies.org/v2/summary.html for the description of all 
 
 ### Supported edits
 * UPOS: CONJ→CCONJ, whatever→AUX if copula
-* DEPREL: mwe→fixed, dobj→obj, *pass→*:pass, name→flat, foreign→flat(+Foreign=Yes)
+* DEPREL: mwe→fixed, dobj→obj, *pass→*:pass, name→flat:name, foreign→flat(+Foreign=Yes)
 * DEPREL: neg→advmod/det (plus distinguish interjections and negation particles)
 * DEPREL: nmod→obl if parent is not nominal
 * Reattach cc and punct (commas, semicolons) to the following conjunct

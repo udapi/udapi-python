@@ -99,6 +99,14 @@ class Node(object):
         return "node<%s, %s>" % (self.address(), self.form)
 
     @property
+    def udeprel(self):
+        """Return the universal part of dependency relation, e.g. `acl` instead of `acl:relcl`.
+
+        So you can write `node.udeprel` instead of `node.deprel.split(':')[0]`.
+        """
+        return self.deprel.split(':')[0] if self.deprel is not None else None
+
+    @property
     def feats(self):
         """Property for morphological features stored as a `Feats` object.
 
