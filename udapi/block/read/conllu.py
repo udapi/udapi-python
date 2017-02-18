@@ -15,12 +15,16 @@ RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
-    def __init__(self, strict=False,
+    def __init__(self, strict=False, separator='tab',
                  attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
         """Create the Conllu reader object.
 
         Args:
         strict: raise an exception if errors found (default=False, i.e. a robust mode)
+        separator: How are the columns separated?
+            Default='tab' is the only possibility in valid CoNLL-U files.
+            'space' means one or more whitespaces (this does not allow forms with space).
+            'doublespace' means two or more spaces.
         attributes: comma-separated list of column names in the input files
             (default='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc')
             Changing the default can be used for loading CoNLL-like formats (not valid CoNLL-U).
@@ -43,6 +47,7 @@ class Conllu(BaseReader):
         super().__init__(**kwargs)
         self.node_attributes = attributes.split(',')
         self.strict = strict
+        self.separator = separator
 
 
     @staticmethod
@@ -87,7 +92,14 @@ class Conllu(BaseReader):
             if line[0] == '#':
                 self.parse_comment_line(line, root)
             else:
-                fields = line.split('\t')
+                if self.separator == 'tab':
+                    fields = line.split('\t')
+                elif self.separator == 'space':
+                    fields = line.split()
+                elif self.separator == 'doublespace':
+                    fields = re.split('  +', line)
+                else:
+                    raise ValueError('separator=%s is not valid' % self.separator)
                 if len(fields) != len(self.node_attributes):
                     if self.strict:
                         raise RuntimeError('Wrong number of columns in %r' % line)
