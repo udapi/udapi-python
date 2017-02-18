@@ -10,8 +10,8 @@ class Feats(udapi.core.dualdict.DualDict):
 
     def is_singular(self):
         """Is the grammatical number singular (feats['Number'] contains 'Sing')?"""
-        return self['Number'].find('Sing') != -1
+        return 'Sing' in self['Number']
 
     def is_plural(self):
         """Is the grammatical number plural (feats['Number'] contains 'Plur')?"""
-        return self['Number'].find('Plur') != -1
+        return 'Plur' in self['Number']
