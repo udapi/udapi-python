@@ -50,14 +50,12 @@ class Conllu(BaseWriter):
                 print('\t'.join([mwt.ord_range(),
                                  mwt.form if mwt.form is not None else '_',
                                  '_\t_\t_\t_\t_\t_\t_', str(mwt.misc)]))
-            values = [str(getattr(node, attr_name)) for attr_name in self.node_attributes]
+            values = [getattr(node, attr_name) for attr_name in self.node_attributes]
+            values = ['_' if v is None else str(v) for v in values]
             try:
                 values[6] = str(node.parent.ord)
             except AttributeError:
                 values[6] = '0'
-            for index in range(0, len(values)):
-                if values[index] is None:
-                    values[index] = '_'
             print('\t'.join(values))
             if node.ord == next_empty_ord:
                 empty = empty_nodes.pop(0)
