@@ -1,6 +1,5 @@
 """DualDict is a dict with lazily synchronized string representation."""
 import collections.abc
-import logging
 
 class DualDict(collections.abc.MutableMapping):
     """DualDict class serves as dict with lazily synchronized string representation.
@@ -34,7 +33,7 @@ class DualDict(collections.abc.MutableMapping):
             if args:
                 raise ValueError('If string is specified, no other arg is allowed ' + str(args))
             if kwargs:
-                raise ValueError('If string is specified, no other kwarg is allowed ' +str(kwargs))
+                raise ValueError('If string is specified, no other kwarg is allowed ' + str(kwargs))
         self._dict = dict(args, **kwargs)
         self._string = string
 
@@ -42,20 +41,21 @@ class DualDict(collections.abc.MutableMapping):
         if self._string is None:
             serialized = []
             for name, value in sorted(self._dict.items(), key=lambda s: s[0].lower()):
-                serialized.append('%s=%s' % (name, value))
+                if value is True:
+                    serialized.append(name)
+                else:
+                    serialized.append('%s=%s' % (name, value))
             self._string = '|'.join(serialized) if serialized else '_'
         return self._string
 
     def _deserialize_if_empty(self):
         if not self._dict and self._string is not None and self._string != '_':
             for raw_feature in self._string.split('|'):
-                try:
-                    name, value = raw_feature.split('=')
-                except ValueError as exception:
-                    logging.error("<%s> contains <%s> which does not contain one '=' symbol.",
-                                  self._string, raw_feature)
-                    raise exception
-
+                namevalue = raw_feature.split('=', 1)
+                if len(namevalue) == 2:
+                    name, value = namevalue
+                else:
+                    name, value = namevalue[0], True
                 self._dict[name] = value
 
     def __getitem__(self, key):
