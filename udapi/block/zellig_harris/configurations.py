@@ -55,8 +55,8 @@ class Configurations(Block):
             methods = globals()
             method = methods.get(query_id)
         except Exception as exception:
-            logging.fatal(' - no such query %s', query_id)
-            sys.exit(1)
+            logging.critical(' - no such query %s', query_id)
+            raise RuntimeError('No such query %s' % query_id)
 
         triples = []
         try:
@@ -64,7 +64,6 @@ class Configurations(Block):
         except ValueError as exception:
             if self.verbose:
                 logging.info(' - no configurations: %s', exception)
-            pass
 
         if len(triples) == 0:
             if self.verbose:

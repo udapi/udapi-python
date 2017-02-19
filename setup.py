@@ -18,5 +18,6 @@ setup(
     packages=find_packages(),
     scripts=['bin/udapy'],
     tests_require=['pytest'],
+    install_requires=['colorama', 'termcolor'],
     python_requires='>=3.3'
 )

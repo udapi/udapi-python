@@ -1,12 +1,11 @@
+"""RehangPrepositions demo block."""
 from udapi.core.block import Block
 
 
 class RehangPrepositions(Block):
-
+    """This block takes all prepositions (upos=ADP) and rehangs them above their parent."""
     def process_node(self, node):
-
-        if str(node.upostag) == "ADP":  # TODO: why the hell is str needed
-
+        if node.upos == "ADP":
             origparent = node.parent
-            node.set_parent(origparent.parent)
-            origparent.set_parent(node)
+            node.parent = origparent.parent
+            origparent.parent = node

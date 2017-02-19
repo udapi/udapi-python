@@ -1,5 +1,3 @@
-import logging
-
 from udapi.block.zellig_harris.enhancedeps import *
 
 
@@ -8,7 +6,7 @@ def en_verb_mydobj(node):
     Extract the 'myobj' relation.
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
 
     if node.feats.get('Tense', '') != 'Past':
@@ -26,4 +24,3 @@ def en_verb_mydobj(node):
             triples.append((node, 'dobj', child_node))
 
     return triples
-

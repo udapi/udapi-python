@@ -1,0 +1,29 @@
+# Udapi project overrides some of the default pylint settings
+
+[MASTER]
+
+# The author of zellig_harris blocks does not use pylint.
+ignore=zellig_harris
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+# Most of the code is in a method in a class, which adds 8 spaces,
+# so with the default limit 79, there would be just 71 chars left.
+# By increasing the limit to 100, I hope we improve the readability
+# (we can afford more descriptive variable/method names,
+# while not having to break too many lines.)
+max-line-length=100
+
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+# Including TODO into the list of problems is a bad idea, I think.
+notes=FIXME,XXX
+
+[MESSAGES CONTROL]
+
+# The purpose of locally disabling a warning is to disable it:-).
+# If needed we can detect those places with `ack 'pylint: disable'`.
+disable=locally-disabled,locally-enabled

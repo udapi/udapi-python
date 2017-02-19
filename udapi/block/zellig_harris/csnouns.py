@@ -13,19 +13,6 @@ class CsNouns(Configurations):
 
     """
 
-    def __init__(self, args=None):
-        """
-        Initialization.
-
-        :param args: A dict of optional parameters.
-
-        """
-        if args is None:
-            args = {}
-
-        # Call the constructor of the parent object.
-        super(CsNouns, self).__init__(args)
-
     def process_node(self, node):
         """
         Extract context configurations for Czech nouns.
@@ -34,7 +21,7 @@ class CsNouns(Configurations):
 
         """
         # We want to extract contexts only for the .
-        if str(node.upostag) not in self.pos:
+        if str(node.upos) not in self.pos:
             return
 
         if self.verbose:

@@ -1,61 +1,45 @@
-from udapi.core.node import Node
+"""Root class represents the technical root node in each tree."""
+import logging
 
+from udapi.core.node import Node, ListOfNodes
+from udapi.core.mwt import MWT
 
-class TreexException(Exception):
-    """
-    Common ancestor for Treex exception.
-
-    """
-
-    def __init__(self, message):
-        self.message = message
-
-    def __str__(self):
-        return 'TREEX-FATAL: ' + self.__class__.__name__ + ': ' + self.message
-
-
-class RuntimeException(TreexException):
-    """
-    Block runtime exception.
-
-    """
-
-    def __init__(self, text):
-        TreexException.__init__(self, text)
-
+# 7 instance attributes is too low (CoNLL-U has 10 columns)
+# The set of public attributes/properties and methods of Root was well-thought.
+# pylint: disable=too-many-instance-attributes
 
 class Root(Node):
-    """
-    Class for representing root nodes (technical roots) in Universal Dependency trees.
+    """Class for representing root nodes (technical roots) in UD trees."""
+    __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts',
+                 'empty_nodes', 'text', 'comment', 'newpar', 'newdoc']
 
-    """
-    __slots__ = list()
-    __slots__.append('_sent_id')   # A sentence identifier.
-    __slots__.append('_zone')      # A zone.
-    __slots__.append('_bundle')    # A bundle.
-    __slots__.append('_children')  # An ord-ordeded list of children nodes.
-    __slots__.append('_aux')       # Other technical attributes.
-
-    def __init__(self, data=None):
-        # Initialize data if not given
-        if data is None:
-            data = dict()
-
+    # pylint: disable=too-many-arguments
+    def __init__(self, sent_id=None, zone=None, comment='', text=None, newpar=None, newdoc=None):
+        """Create new root node."""
         # Call constructor of the parent object.
-        super(Root, self).__init__(data)
+        super().__init__()
 
-        self._sent_id = None
-        self._zone = None
+        self.ord = 0
+        self.form = '<ROOT>'
+        self.lemma = '<ROOT>'
+        self.upos = '<ROOT>'
+        self.xpos = '<ROOT>'
+        self.deprel = '<ROOT>'
+        self.comment = comment
+        self.text = text
+        self.newpar = newpar
+        self.newdoc = newdoc
+
+        self._sent_id = sent_id
+        self._zone = zone
         self._bundle = None
-        self._children = list()
-        self._aux = dict()
-        self._aux['descendants'] = []
-
-        for name in data:
-            setattr(self, name, data[name])
+        self._descendants = []
+        self._mwts = []
+        self.empty_nodes = [] # TODO: private
 
     @property
     def sent_id(self):
+        """ID of this tree, stored in the sent_id comment in CoNLL-U."""
         return self._sent_id
 
     @sent_id.setter
@@ -63,22 +47,8 @@ class Root(Node):
         self._sent_id = sent_id
 
     @property
-    def zone(self):
-        return self._zone
-
-    @zone.setter
-    def zone(self, zone):
-        """
-        Specify which zone the root belongs to
-
-        """
-        if self.bundle:
-            self.bundle.check_zone(self, zone)
-
-        self._zone = zone
-
-    @property
     def bundle(self):
+        """Return the bundle which this tree belongs to."""
         return self._bundle
 
     @bundle.setter
@@ -86,116 +56,174 @@ class Root(Node):
         self._bundle = bundle
 
     @property
-    def children(self):
-        return self._children
+    def zone(self):
+        """Return zone (string label) of this tree."""
+        return self._zone
 
-    @children.setter
-    def children(self, children):
-        self._children = children
-
-    @property
-    def aux(self):
-        return self._aux
-
-    @aux.setter
-    def aux(self, value):
-        self._aux = value
-
-    # TODO: this enumeration looks silly, can we code the multiple 'read-only
-    # attributes' more cleverly?
-
-    @property
-    def ord(self):
-        return 0
-
-    @property
-    def form(self):
-        return '<ROOT>'
-
-    @property
-    def lemma(self):
-        return '<ROOT>'
-
-    @property
-    def upostag(self):
-        return '<ROOT>'
-
-    @property
-    def xpostag(self):
-        return '<ROOT>'
-
-    @property
-    def raw_feats(self):
-        return '<ROOT>'
-
-    @property
-    def deprel(self):
-        return '<ROOT>'
-
-    @property
-    def deps(self):
-        return '<ROOT>'
-
-    @property
-    def misc(self):
-        return '<ROOT>'
-
-    @property
-    def feats(self):
-        return '<ROOT>'
+    @zone.setter
+    def zone(self, zone):
+        """Specify which zone the root belongs to."""
+        if self._bundle:
+            self._bundle.check_zone(zone)
+        self._zone = zone
 
     @property
     def parent(self):
+        """Return dependency parent (head) node.
+
+        This root-specific implementation returns always None.
+        """
         return None
 
     @parent.setter
-    def parent(self, new_parent):
+    def parent(self, _):
+        """Attempts at setting parent of root result in AttributeError exception."""
         raise AttributeError('The technical root cannot have a parent.')
 
+    @property
     def descendants(self):
-        """
-        Return a list of all descendants of the current node, i.e. the all non-technical
-        node from the dependency tree.
+        """Return a list of all descendants of the current node.
 
-        :return: A list of descendant nodes.
-        :rtype: list
-
+        The nodes are sorted by their ord.
+        This root-specific implementation returns all the nodes in the tree except the root itself.
         """
-        return self._aux['descendants']
+        return ListOfNodes(self._descendants, origin=self)
 
     def is_descendant_of(self, node):
+        """Is the current node a descendant of the node given as argument?
+
+        This root-specific implementation returns always False.
+        """
         return False
 
     def is_root(self):
-        """
-        Returns True for all Root instances.
-
-        """
+        """Return True for all Root instances."""
         return True
 
-    def remove(self):
-        """
-        Remove the whole tree from its bundle
+    def remove(self, children=None):
+        """Remove the whole tree from its bundle.
 
+        Args:
+        children: a string specifying what to do if the root has any children.
+            The default (None) is to delete them (and all their descendants).
+            `warn` means to issue a warning.
         """
-        self.bundle.trees = [
-            root for root in self.bundle.trees if root == self]
+        if children is not None and self.children:
+            logging.warning('%s is being removed by remove(children=%s), '
+                            ' but it has (unexpected) children', self, children)
+        self.bundle.trees = [root for root in self.bundle.trees if root != self]
 
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
-        raise RuntimeException(
-            'Technical root cannot be shifted as it is always the first node')
+        """Attempts at changing the word order of root result in Exception."""
+        raise Exception('Technical root cannot be shifted as it is always the first node')
 
     def address(self):
+        """Full (document-wide) id of the root.
+
+        The general format of root nodes is:
+        root.bundle.bundle_id + '/' + root.zone, e.g. s123/en_udpipe.
+        If zone is empty, the slash is excluded as well, e.g. s123.
+        If bundle is missing (could occur during loading), '?' is used instead.
+        Root's address is stored in CoNLL-U files as sent_id (in a special comment).
+        TODO: Make sure root.sent_id returns always the same string as root.address.
         """
-        Full (document-wide) id of the root.
+        zone = '/' + self.zone if self.zone else ''
+        if self._bundle is not None:
+            return self._bundle.address() + zone
+        elif self.sent_id is not None:
+            return self.sent_id + zone
+        else:
+            return '?' + zone
 
+    # TODO document whether misc is a string or dict or it can be both
+    def create_multiword_token(self, words=None, form=None, misc=None):
+        """Create and return a new multi-word token (MWT) in this tree.
+
+        The new MWT can be optionally initialized using the following args.
+        Args:
+        words: a list of nodes which are part of the new MWT
+        form: string representing the surface form of the new MWT
+        misc: misc attribute of the new MWT
         """
-        partial_ids = []
+        mwt = MWT(words, form, misc, root=self)
+        self._mwts.append(mwt)
+        return mwt
 
-        if self.bundle:
-            partial_ids.append(self.bundle.id)
+    @property
+    def multiword_tokens(self):
+        """Return a list of all multi-word tokens in this tree."""
+        return self._mwts
 
-        if self.zone:
-            partial_ids.append(self.zone)
+    # TODO should this setter be part of the public API?
+    @multiword_tokens.setter
+    def multiword_tokens(self, mwts):
+        """Set the list of all multi-word tokens in this tree."""
+        self._mwts = mwts
 
-        return '/'.join(partial_ids)
+    def _update_ordering(self):
+        """Update the ord attribute of all nodes.
+
+        Update also the list of all tree nodes stored in root._descendants.
+        This method is automatically called after node removal or reordering.
+        """
+        self._descendants = sorted(self.unordered_descendants(), key=lambda node: node.ord)
+        for (new_ord, node) in enumerate(self._descendants, 1):
+            node.ord = new_ord
+
+    def get_sentence(self, if_missing='detokenize'):
+        """Return either the stored `root.text` or (if None) `root.compute_text()`.
+
+        Args:
+        if_missing: What to do if `root.text` is `None`? (default=detokenize)
+         * `detokenize`: use `root.compute_text()` to compute the sentence.
+         * `empty`: return an empty string
+         * `warn_detokenize`, `warn_empty`: in addition emit a warning via `logging.warning()`
+         * `fatal`: raise an exception
+        """
+        sentence = self.text
+        if sentence is not None:
+            return sentence
+        if if_missing == 'fatal':
+            raise RuntimeError('Tree %s has empty root.text.' % self.address())
+        if if_missing.startswith('warn'):
+            logging.warning('Tree %s has empty root.text.', self.address())
+        if if_missing.endswith('detokenize'):
+            return self.compute_text()
+        return ''
+
+    def add_comment(self, string):
+        """Add a given `string` to `root.comment` separated by a newline and space."""
+        if self.comment is None:
+            self.comment = string
+        else:
+            self.comment += "\n " + string
+
+    @property
+    def token_descendants(self):
+        """Return all tokens (one-word or multi-word) in the tree.
+
+        ie. return a list of `core.Node` and `core.MWT` instances,
+        whose forms create the raw sentence. Skip nodes, which are part of multi-word tokens.
+
+        For example with:
+        1-2    vámonos   _
+        1      vamos     ir
+        2      nos       nosotros
+        3-4    al        _
+        3      a         a
+        4      el        el
+        5      mar       mar
+
+        `[n.form for n in root.token_descendants]` will return `['vámonos', 'al', 'mar']`.
+        """
+        result = []
+        last_mwt_id = 0
+        for node in self._descendants:
+            mwt = node.multiword_token
+            if mwt:
+                if node.ord > last_mwt_id:
+                    last_mwt_id = mwt.words[-1].ord
+                    result.append(mwt)
+            else:
+                result.append(node)
+        return result

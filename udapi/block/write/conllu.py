@@ -1,100 +1,75 @@
-import logging
-import sys
-
-from udapi.core.block import Block
+"""Conllu class is a a writer of files in the CoNLL-U format."""
+from udapi.core.basewriter import BaseWriter
 
 
-class Conllu(Block):
-    """
-    A writer of files in the CoNLL-U format.
+class Conllu(BaseWriter):
+    """A writer of files in the CoNLL-U format."""
 
-    """
-
-    def __init__(self, args=None):
-        if args is None:
-            args = {}
-
-        super(Block, self).__init__()
+    def __init__(self, print_sent_id=True, print_text=True, print_empty_trees=True, **kwargs):
+        super().__init__(**kwargs)
+        self.print_sent_id = print_sent_id
+        self.print_text = print_text
+        self.print_empty_trees = print_empty_trees
 
         # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
-                                "raw_feats", "head", "deprel", "raw_deps", "misc"]
+        self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
+                                "feats", "parent", "deprel", "raw_deps", "misc"]
 
-        # File handler
-        self.filename = None
-        self.file_handler = None
-        if 'file_handler' in args:
-            self.file_handler = args['file_handler']
-            self.filename = self.file_handler.name
-        elif 'filename' in args:
-            self.filename = args['filename']
-            logging.debug('Opening file %s', self.filename)
-            # CoNLL-U specification requires utf8 and \n newlines even on Windows (\r\n is forbidden).
-            # Python3 uses os.linesep by default, so we need to override it
-            # with newline='\n'.
-            self.file_handler = open(
-                self.filename, 'wt', encoding='utf-8', newline='\n')
-        else:
-            logging.warning('No filename specified, using STDOUT.')
-            self.file_handler = sys.stdout
+    def process_tree(self, tree): # pylint: disable=too-many-branches
+        nodes = tree.descendants
 
-    def process_document(self, document):
-        """
-        FIXME
+        # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
+        # we need to skip the whole tree (including possible comments).
+        if not nodes and not self.print_empty_trees:
+            return
 
-        :param document:
-        :return:
-        """
-        number_of_written_bundles = 0
-        for bundle in document.bundles:
-            if (number_of_written_bundles % 1000) == 0:
-                logging.info('Wrote %d bundles', number_of_written_bundles)
+        if self.print_sent_id:
+            if tree.newdoc:
+                value = ' id = ' + tree.newdoc if tree.newdoc is not True else ''
+                print('# newdoc' + value)
+            if tree.newpar:
+                value = ' id = ' + tree.newpar if tree.newpar is not True else ''
+                print('# newpar' + value)
+            print('# sent_id = ' + tree.address())
 
-            tree_number = 0
-            for root in bundle:
-                tree_number += 1
-                if tree_number > 1:
-                    self.file_handler.write("#UDAPI_BUNDLE_CONTINUES\n")
+        if self.print_text:
+            print("# text = " + tree.get_sentence())
 
-                # Skip empty sentences (no nodes, just a comment). They are not
-                # allowed in CoNLL-U.
-                if root.descendants():
-                    # Comments.
-                    try:
-                        self.file_handler.write(root._aux['comment'])
-                    except:
-                        pass
+        comment = tree.comment
+        if comment:
+            comment = comment.rstrip()
+            print('#' + comment.replace('\n', '\n#'))
 
-                    # Zones.
-                    try:
-                        self.file_handler.write(
-                            '#UDAPI_ZONE=' + root.zone() + "\n")
-                    except:
-                        pass
+        last_mwt_id = 0
+        empty_nodes = list(tree.empty_nodes)
+        next_empty_ord = int(float(empty_nodes[0].ord)) if empty_nodes else -1
+        for node in nodes:
+            mwt = node.multiword_token
+            if mwt and node.ord > last_mwt_id:
+                last_mwt_id = mwt.words[-1].ord
+                print('\t'.join([mwt.ord_range(),
+                                 mwt.form if mwt.form is not None else '_',
+                                 '_\t_\t_\t_\t_\t_\t_', str(mwt.misc)]))
+            values = [getattr(node, attr_name) for attr_name in self.node_attributes]
+            values = ['_' if v is None else str(v) for v in values]
+            try:
+                values[6] = str(node.parent.ord)
+            except AttributeError:
+                values[6] = '0'
+            print('\t'.join(values))
+            if node.ord == next_empty_ord:
+                empty = empty_nodes.pop(0)
+                values = [str(getattr(empty, a)) for a in self.node_attributes]
+                values[6] = '_'
+                values[7] = '_'
+                print('\t'.join(values))
+                next_empty_ord = int(float(empty_nodes[0].ord)) if empty_nodes else -1
 
-                    # Nodes.
-                    for node in root.descendants():
-                        values = [getattr(node, node_attribute)
-                                  for node_attribute in self.node_attributes]
-                        values[0] = str(values[0])
+        # Empty sentences are not allowed in CoNLL-U,
+        # but with print_empty_trees==1 (which is the default),
+        # we will print an artificial node, so we can print the comments.
+        if not nodes:
+            print("1\t_\t_\t_\t_\t_\t0\t_\t_\tEmpty=Yes")
 
-                        try:
-                            values[6] = str(node.parent.ord)
-                        except:
-                            values[6] = '0'
-
-                        for index in range(0, len(values)):
-                            if values[index] is None:
-                                values[index] = ''
-
-                        self.file_handler.write(
-                            '\t'.join([value for value in values]))
-                        self.file_handler.write('\n')
-
-                    # Each tree in CoNLL-U (including the last tree in a file)
-                    # must end with an empty line.
-                    self.file_handler.write('\n')
-
-                number_of_written_bundles += 1
-
-        logging.info('Wrote %d bundles', number_of_written_bundles)
+        # Empty line separates trees in CoNLL-U (and is required after the last tree as well)
+        print("")
