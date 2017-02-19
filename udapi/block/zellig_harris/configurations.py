@@ -12,32 +12,29 @@ class Configurations(Block):
 
     """
 
-    def __init__(self, args=None):
+    def __init__(self, pos=None, print_lemmas=None, verbose=None):
         """
         Initialization.
 
         :param args: A dict of optional parameters.
 
         """
-        if args is None:
-            args = {}
-
         # Call the constructor of the parent object.
-        super(Configurations, self).__init__(args)
+        super(Configurations, self).__init__()
 
         # Process the 'POS' argument.
         self.pos = []
-        if 'pos' in args:
-            self.pos = args['pos'].split(',')
+        if pos is not None:
+            self.pos = pos.split(',')
 
         # Process the 'print_lemmas' argument.
         self.print_lemmas = False
-        if 'print_lemmas' in args and args['print_lemmas'] == '1':
+        if print_lemmas is not None and print_lemmas == 1:
             self.print_lemmas = True
 
         # Process the 'print_lemmas' argument.
         self.verbose = False
-        if 'verbose' in args and args['verbose'] == '1':
+        if verbose is not None and verbose == 1:
             self.verbose = True
 
     def apply_query(self, query_id, node):

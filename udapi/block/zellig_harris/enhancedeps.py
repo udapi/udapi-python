@@ -58,7 +58,7 @@ def echildren(node):
 
     # Rule (B)
     for node_parent in node_parents:
-        if node.upostag == 'VERB' and (node_parent.upostag == 'AUX' or node_parent.lemma in ['chtít', 'moci', 'smět', 'mít', 'muset', 'umět']):
+        if node.upos == 'VERB' and (node_parent.upos == 'AUX' or node_parent.lemma in ['chtít', 'moci', 'smět', 'mít', 'muset', 'umět']):
             for candidate_child in node_parent.children:
                 # Check if the candidate child is not in the current node children already.
                 if candidate_child not in echildren_list:
