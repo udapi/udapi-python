@@ -32,8 +32,13 @@ class Vislcg(BaseReader):
                 if words:
                     words[0].form = form
                     if len(words) > 1:
-                        for word in words[1:]:
-                            word.form = '_'
+                        split_forms = form.split()
+                        if len(words) == len(split_forms):
+                            for word, split_form in zip(words, split_forms):
+                                word.form = split_form
+                        else:
+                            for word in words[1:]:
+                                word.form = '_'
                         root.create_multiword_token(words, form=form)
                     words = []
                 form = line[2:-2]
