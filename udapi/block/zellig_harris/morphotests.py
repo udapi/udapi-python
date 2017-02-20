@@ -1,6 +1,6 @@
 from udapi.block.zellig_harris.enhancedeps import *
 
-def en_finite_verbform(node):
+def en_verb_finite_form_YN(node):
     '''
     Says whether whether a verb node has finite form,
     taking into account analytical verb forms,
@@ -29,7 +29,7 @@ def en_finite_verbform(node):
     return False
 
 
-def en_passive_verbform(node):
+def en_verb_passive_form_YN(node):
     '''
     Says
     :param node:

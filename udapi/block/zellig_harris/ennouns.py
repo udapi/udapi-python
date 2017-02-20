@@ -5,7 +5,6 @@ from udapi.core.block import Block
 from udapi.block.zellig_harris.configurations import *
 from udapi.block.zellig_harris.queries import *
 
-
 class EnNouns(Configurations):
     """
     A block for extraction context configurations for English nouns.
@@ -41,4 +40,5 @@ class EnNouns(Configurations):
             logging.info('')
             logging.info('Processing node %s/%s', node.root.sent_id, node)
 
-        self.apply_query('en_verb_mydobj', node)
+        #self.apply_query('en_verb_mydobj', node)
+        self.apply_query('en_noun_is_subj_relcl', node)
