@@ -31,22 +31,31 @@ REQUIRED_FEATURE_FOR_UPOS = {
 class MarkBugs(Block):
     """Block for checking suspicious/wrong constructions in UD v2."""
 
-    def __init__(self, save_stats=True, skip=None, **kwargs):
+    def __init__(self, save_stats=True, tests=None, skip=None, **kwargs):
         """Create the MarkBugs block object.
 
         Args:
         save_stats: store the bug statistics overview into `document.misc["bugs"]`?
-        skip: a regex. If `re.search(skip, short_msg)` the node is not reported.
+        tests: a regex of tests to include.
+            If `not re.search(tests, short_msg)` the node is not reported.
+            You can use e.g. `tests=aux-chain|cop-upos` to apply only those two tests.
+            Default = None (or empty string or '.*') which all tests.
+        skip: a regex of tests to exclude.
+            If `re.search(skip, short_msg)` the node is not reported.
             You can use e.g. `skip=no-(VerbForm|NumType|PronType)`.
+            This has higher priority than the `tests` regex.
             Default = None (or empty string) which means no skipping.
         """
         super().__init__(**kwargs)
         self.save_stats = save_stats
         self.stats = collections.Counter()
+        self.tests_re = re.compile(tests) if (tests is not None and tests != '') else None
         self.skip_re = re.compile(skip) if (skip is not None and skip != '') else None
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
+        if self.tests_re is not None and not self.tests_re.search(short_msg):
+            return
         if self.skip_re is not None and self.skip_re.search(short_msg):
             return
         logging.debug('node %s %s: %s', node.address(), short_msg, long_msg)
