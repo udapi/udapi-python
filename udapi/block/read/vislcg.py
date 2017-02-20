@@ -23,6 +23,7 @@ class Vislcg(BaseReader):
                 break
             if line[0] == '#':
                 # Are comments allowed in VISL-cg?
+                # FMT: Yes :)
                 continue
 
             if line[0].isspace():
@@ -60,15 +61,17 @@ class Vislcg(BaseReader):
                 raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
 
         return root
-
+    
     @staticmethod
     def _node(line, root):
-        fields = shlex.split(line)
-        lemma = fields[0]
-        xpos = fields[1]
-        feats_list = fields[2:-2]
+        delim = line.rfind('"');
+        lemma = line[2:delim]
+        fields = line[delim+1:].split()
+        xpos = fields[0]
+        feats_list = fields[3:-2]
         feats = '|'.join(feats_list) if feats_list else '_'
         deprel = fields[-2][1:]
         parent_ord = int(fields[-1].split('->')[1])
         node = root.create_child(lemma=lemma, xpos=xpos, feats=feats, deprel=deprel)
         return node, parent_ord
+
