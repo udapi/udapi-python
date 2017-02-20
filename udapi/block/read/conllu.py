@@ -160,9 +160,6 @@ class Conllu(BaseReader):
             except IndexError:
                 raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
 
-        # Set root attributes (descendants for faster iteration of all nodes in a tree).
-        root._descendants = nodes[1:] # pylint: disable=protected-access
-
         # Create multi-word tokens.
         for fields in mwts:
             range_start, range_end = fields[0].split('-')
