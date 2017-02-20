@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import logging
-
 from udapi.core.block import Block
 
 
@@ -232,24 +230,6 @@ def en_verb_controllee_YN(node):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def enhance_deps(node, new_dependence):
     """
     Add a new dependence to the node.deps, but firstly check
@@ -269,28 +249,17 @@ def enhance_deps(node, new_dependence):
 
 class EnhanceDeps(Block):
     """
-    Identify new relations between nodes in the dependency tree (an analogy of effective parents/children from PML).
+    Identify new relations between nodes in the dependency tree
+    (an analogy of effective parents/children from PML).
     Add these new relations into secondary dependencies slot.
 
     """
 
-    def __init__(self, args=None):
-        """
-        Initialization.
-
-        :param args: A dict of optional parameters.
-
-        """
-        super(Block, self).__init__()
-
-        if args is None:
-            args = {}
-
     def process_node(self, node):
         """
         Enhance secondary dependencies by application of the following rules:
-        1. when the current node A has a deprel 'conj' to its parent B, create a new secondary dependence
-           (B.parent, B.deprel) to A
+        1. when the current node A has a deprel 'conj' to its parent B,
+           create a new secondary dependence (B.parent, B.deprel) to A
         2. when the current node A has a deprel 'conj' to its parent B, look at B.children C
            when C.deprel is in {subj, subjpass, iobj, dobj, compl} and there is no A.children D
            such that C.deprel == D.deprel, add a new secondary dependence (A, C.deprel) to C
@@ -338,11 +307,11 @@ def en_verb_finite_form_YN(node):
     if node.upostag != 'VERB':
         raise ValueError('Is not a verb.')
 
-    if node.feats.get('VerbForm', '') == 'Fin':
+    if node.feats['VerbForm'] == 'Fin':
         return True
 
 
-    if node.feats.get('VerbForm', '') not in ['Inf', 'Part', 'Ger']:
+    if node.feats['VerbForm'] not in ['Inf', 'Part', 'Ger']:
         raise ValueError('Unexpected VerbForm.')
 
     if node.deprel == 'xcomp':
@@ -365,10 +334,10 @@ def en_verb_passive_form_YN(node):
 
     if node.upostag != 'VERB':
         raise ValueError('Is not a verb.')
-    if node.feats.get('Voice', '') == 'Pass':
+    if node.feats['Voice'] == 'Pass':
         return True
 
-    if node.feats.get('VerbForm', '') == 'Part' and node.feats.get('Tense', '') == 'Past':
+    if node.feats['VerbForm'] == 'Part' and node.feats['Tense'] == 'Past':
         return True
 
 

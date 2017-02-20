@@ -1,8 +1,7 @@
 import logging
-from udapi.block.zellig_harris.enhancedeps import *
-# from udapi.block.zellig_harris.morphotests import *
-import udapi.block.zellig_harris.enhancedeps
 
+from udapi.block.zellig_harris.enhancedeps import *
+from udapi.block.zellig_harris.morphotests import *
 
 # this is a mock function
 # - it technically works, but linguistically it's nonsense
@@ -11,13 +10,13 @@ def en_verb_mydobj(node):
     Extract the 'myobj' relation.
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
 
-    if node.feats.get('Tense', '') != 'Past':
+    if node.feats['Tense'] != 'Past':
         raise ValueError('Is not in the past tense.')
 
-    if node.feats.get('VerbForm', '') != 'Part':
+    if node.feats['VerbForm'] != 'Part':
         raise ValueError('Is not in a participle form.')
 
     triples = []
@@ -55,7 +54,7 @@ def en_noun_is_subj_relcl(node):
     :param node:
     :return: n-tuple containing triples
     '''
-    if node.upostag not in ['PROPN', 'NOUN']:
+    if node.upos not in ['PROPN', 'NOUN']:
         raise ValueError('Is not a noun.')
     mynode_echildren_list = echildren(node)
     relcl_verbs_list = []
@@ -115,3 +114,4 @@ def en_noun_is_subj_relcl(node):
         triples.append((node, 'nsubj', relcl_verb))
 
     return triples
+

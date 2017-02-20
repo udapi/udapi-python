@@ -39,7 +39,7 @@ class Baseline(Block):
         :param args: A dict of optional parameters.
 
         """
-        super(Block, self).__init__()
+        super(Baseline, self).__init__(args)
 
         if args is None:
             args = {}
@@ -122,7 +122,7 @@ class Baseline(Block):
 
         """
         # We want to extract contexts only for verbs.
-        if str(node.upostag) not in self.pos:
+        if str(node.upos) not in self.pos:
             return
 
         # Process node's parent.

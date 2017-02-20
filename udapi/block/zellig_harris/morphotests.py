@@ -1,4 +1,7 @@
+import logging
+
 from udapi.block.zellig_harris.enhancedeps import *
+
 
 def en_verb_finite_form_YN(node):
     '''
@@ -8,14 +11,14 @@ def en_verb_finite_form_YN(node):
     :param node:
     :return: boolean
     '''
-    if node.upostag != 'VERB':
+
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
 
-    if node.feats.get('VerbForm', '') == 'Fin':
+    if node.feats['VerbForm'] == 'Fin':
         return True
 
-
-    if node.feats.get('VerbForm', '') not in ['Inf', 'Part', 'Ger']:
+    if node.feats['VerbForm'] not in ['Inf', 'Part', 'Ger']:
         raise ValueError('Unexpected VerbForm.')
 
     if node.deprel == 'xcomp':
@@ -23,7 +26,7 @@ def en_verb_finite_form_YN(node):
 
     echildren_list = echildren(node)
     for echild in echildren_list:
-        if echild.upostag == 'AUX':
+        if echild.upos == 'AUX':
             return True
 
     return False
@@ -34,22 +37,15 @@ def en_verb_passive_form_YN(node):
     Says
     :param node:
     :return: boolean
-    '''
+'''
 
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
-    if node.feats.get('Voice', '') == 'Pass':
+
+    if node.feats['Voice'] == 'Pass':
         return True
 
-    if node.feats.get('VerbForm', '') == 'Part' and node.feats.get('Tense', '') == 'Past':
+    if node.feats['VerbForm'] == 'Part' and node.feats['Tense'] == 'Past':
         return True
 
-
-
-
-
-
-
-
-
-
+    return False

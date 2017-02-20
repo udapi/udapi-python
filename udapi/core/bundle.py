@@ -1,8 +1,10 @@
 """Bundle class represents one sentence."""
 
-import logging
+import re
 
 from udapi.core.root import Root
+
+VALID_ZONE_REGEX = re.compile("^[a-z-]*(_[A-Za-z0-9-]+)?$")
 
 
 class Bundle(object):
@@ -14,19 +16,26 @@ class Bundle(object):
     Trees in one bundle are distinguished by a zone label.
     """
 
-    __slots__ = ["trees", "number", "id", "_aux", "_document"]
+    __slots__ = ["trees", "number", "bundle_id", "_document"]
+
+    def __init__(self, bundle_id=None, document=None):
+        self.trees = []
+        self.bundle_id = bundle_id
+        self._document = document
+
+    def __str__(self):
+        if self.bundle_id is None:
+            return 'bundle without id'
+        return "bundle id='%s'" % self.bundle_id
+
+    def __iter__(self):
+        return iter(self.trees)
 
     def document(self):
         """returns the document in which the bundle is contained"""
         return self._document
 
-    def __init__(self):
-        self.trees = []
-
-    def __iter__(self):
-        return iter(self.trees)
-
-    def get_tree(self, zone):
+    def get_tree(self, zone=''):
         """returns the tree root whose zone is equal to zone"""
 
         trees = [tree for tree in self.trees if tree.zone == zone]
@@ -38,36 +47,37 @@ class Bundle(object):
             raise Exception("More than one tree with zone=" +
                             zone + " in the bundle")
 
-    def check_new_zone(self, root, new_zone):
-        """
-        FIXME
-
-        """
-        for root in root.bundle.trees:
-            if root != changed_root and root.zone == zone:
-                raise Exception("Zone " + zone +
-                                " already exists in the bundle")
-
     def create_tree(self, zone=None):
-        """returns the root of a newly added tree whose zone is equal to zone"""
+        """Return the root of a newly added tree with a given zone."""
         root = Root()
-        root.set_zone(zone)
-        root._bundle = self
+        root.zone = zone
         self.add_tree(root)
         return root
 
-    def add_tree(self, root):
-        """
-        Add an existing tree to the bundle
+    def check_zone(self, new_zone):
+        """Raise an exception if the zone is invalid or already exists."""
+        if not VALID_ZONE_REGEX.match(new_zone):
+            raise ValueError("'{}' is not a valid zone name ({})".format(
+                new_zone, VALID_ZONE_REGEX.pattern))
+        if new_zone == 'all':
+            raise ValueError("'all' cannot be used as a zone name")
+        if new_zone in [x.zone for x in self.trees]:
+            raise Exception("Tree with zone '%s' already exists in %s" % (new_zone, self))
 
-        """
+    def add_tree(self, root):
+        """Add an existing tree to the bundle."""
+        if root.zone is None:
+            root.zone = ''
+        self.check_zone(root.zone)
         root.bundle = self
-        logging.debug('setting bundle')
-        self.check_new_zone(root, root.zone)
         self.trees.append(root)
         return root
 
     def remove(self):
-        "remove a bundle from the document"
-        document.bundles = [
-            bundle for bundle in document.bundles if not bundle == self]
+        """Remove a bundle from the document."""
+        self.document.bundles = [
+            bundle for bundle in self.document.bundles if not bundle == self]
+
+    def address(self):
+        """Return bundle_id or '?' if missing."""
+        return self.bundle_id if self.bundle_id is not None else '?'

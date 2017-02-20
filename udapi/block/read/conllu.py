@@ -1,227 +1,172 @@
+""""Conllu is a reader block for the CoNLL-U files."""
 import logging
 import re
-import bz2
 
 from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
 
+# Compile a set of regular expressions that will be searched over the lines.
+# The equal sign after sent_id was added to the specification in UD v2.0.
+# This reader accepts also older-style sent_id (until UD v2.0 treebanks are released).
+RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
+RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
+RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
 
 class Conllu(BaseReader):
-    """
-    A reader of the Conll-u files.
+    """A reader of the CoNLL-U files."""
 
-    """
+    def __init__(self, strict=False, separator='tab',
+                 attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
+        """Create the Conllu reader object.
 
-    def __init__(self, args=None):
-        if args is None:
-            args = {}
+        Args:
+        strict: raise an exception if errors found (default=False, i.e. a robust mode)
+        separator: How are the columns separated?
+            Default='tab' is the only possibility in valid CoNLL-U files.
+            'space' means one or more whitespaces (this does not allow forms with space).
+            'doublespace' means two or more spaces.
+        attributes: comma-separated list of column names in the input files
+            (default='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc')
+            Changing the default can be used for loading CoNLL-like formats (not valid CoNLL-U).
+            For ignoring a column, use "_" as its name.
+            Column "ord" marks the column with 1-based word-order number/index (usualy called ID).
+            Column "head" marks the column with dependency parent index (word-order number).
 
-        super(BaseReader, self).__init__()
+            For example, for CoNLL-X which uses name1=value1|name2=value2 format of FEATS, use
+            `attributes=ord,form,lemma,upos,xpos,feats,head,deprel,_,_`
+            but note attributes that upos, feats and deprel will contain language-specific values,
+            not valid according to UD guidelines and a further conversion will be needed.
+            You will loose the projective_HEAD and projective_DEPREL attributes.
 
-        # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upostag", "xpostag",
-                                "feats", "head", "deprel", "deps", "misc"]
+            For CoNLL-2009 you can use `attributes=ord,form,lemma,_,upos,_,feats,_,head,_,deprel`.
+            You will loose the predicted_* attributes and semantic/predicate annotation.
 
-        # TODO: this should be invoked from the parent class
-        self.finished = False
+            TODO: allow storing the rest of columns in misc, e.g. `node.misc[feats]`
+            for feats which do not use the name1=value1|name2=value2 format.
+        """
+        super().__init__(**kwargs)
+        self.node_attributes = attributes.split(',')
+        self.strict = strict
+        self.separator = separator
 
-        # Strict.
-        self.strict = False
-        if 'strict' in args and args['strict'] in [True, 1, '1', 'True', 'true']:
-            self.strict = True
 
-        # ID filter.
-        self.sentence_id_filter = None
-        if 'sentence_id_filter' in args:
-            self.sentence_id_filter = re.compile(args['sentence_id_filter'])
+    @staticmethod
+    def parse_comment_line(line, root):
+        """Parse one line of CoNLL-U and fill sent_id, text, newpar, newdoc in root."""
+        sent_id_match = RE_SENT_ID.match(line)
+        if sent_id_match is not None:
+            root.sent_id = sent_id_match.group(1)
+            return
 
-        # Bundles per document.
-        self.bundles_per_document = float("inf")
-        if 'bundles_per_document' in args:
-            self.bundles_per_document = int(args['bundles_per_document'])
+        text_match = RE_TEXT.match(line)
+        if text_match is not None:
+            root.text = text_match.group(1)
+            return
 
-        # File handler
-        self.filename = None
-        self.file_handler = None
-        if 'file_handler' in args:
-            self.file_handler = args['file_handler']
-            self.filename = self.file_handler.name
-        elif 'filename' in args:
-            self.filename = args['filename']
-            filename_extension = self.filename.split('.')[-1]
-
-            # Use bz2 lib when bz2 file is given.
-            if filename_extension == 'bz2':
-                logging.info('Opening BZ2 file %s', self.filename)
-                self.file_handler = bz2.open(
-                    self.filename, 'rt', encoding='utf-8')
+        pardoc_match = RE_NEWPARDOC.match(line)
+        if pardoc_match is not None:
+            value = True if pardoc_match.group(2) is None else pardoc_match.group(2)
+            if pardoc_match.group(1) == 'newpar':
+                root.newpar = value
             else:
-                logging.info('Opening regular file %s', self.filename)
-                self.file_handler = open(self.filename, 'rt', encoding='utf-8')
-        else:
-            raise ValueError('No file to process')
+                root.newdoc = value
+            return
 
-        # Remember total number of bundles
-        self.total_number_of_bundles = 0
+        root.comment = root.comment + line[1:] + "\n"
 
-    def _get_next_raw_bundle(self):
-        """
-        Read lines for one bundle from the self.file_handler.
-        Bundles are separated by an empty line.
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # Maybe the code could be refactored, but it is speed-critical,
+    # so benchmarking is needed because calling extra methods may result in slowdown.
+    def read_tree(self, document=None):
+        if self.filehandle is None:
+            return None
 
-        :return: A list of lines that represent one bundle.
-        :rtype: list
-
-        """
-        lines = []
-        for line in self.file_handler:
+        root = Root()
+        nodes = [root]
+        parents = [0]
+        mwts = []
+        for line in self.filehandle:
             line = line.rstrip()
             if line == '':
                 break
-
-            lines.append(line)
-
-        return lines
-
-    def process_document(self, document):
-        logging.info('Attributes = %r', self.node_attributes)
-
-        number_of_processed_bundles = -1
-        number_of_loaded_bundles = 0
-
-        # Compile a set of regular expressions that will be searched over the
-        # lines.
-        re_comment_like = re.compile(r'^#')
-        re_sentence_id = re.compile(r'^# sent_id (\S+)')
-        re_multiword_tokens = re.compile(r'^\d+-')
-
-        # While there are some raw bundles, we process them.
-        while 42:
-            if number_of_loaded_bundles > 0 and (number_of_loaded_bundles % 1000) == 0:
-                logging.info('Processed %7d bundles. Loaded %7d bundles (%7d in total)',
-                             number_of_processed_bundles, number_of_loaded_bundles, self.total_number_of_bundles)
-
-            # If we can not add next bundle, return document.
-            if number_of_loaded_bundles >= self.bundles_per_document:
-                logging.debug(
-                    'Reached number of requested bundles (%d)', self.bundles_per_document)
-                return document
-
-            # Obtain a raw bundle.
-            raw_bundle = self._get_next_raw_bundle()
-            number_of_processed_bundles += 1
-
-            if len(raw_bundle) == 0:
-                logging.debug('No next bundle to process')
-                break
-
-            # Check if all lines have correct number of data fields.
-            # Skip invalid bundle otherwise.
-            if self.strict:
-                raw_bundle_check = True
-                for line in raw_bundle:
-                    if re_comment_like.search(line) is not None:
-                        continue
-                    if len(line.split('\t')) != len(self.node_attributes):
-                        raw_bundle_check = False
-
-                if not raw_bundle_check:
-                    raise RuntimeError(
-                        'Detected an invalid bundle: %r' % raw_bundle)
-
-            # Initialize the data structures.
-            root_node = Root()
-            nodes = [root_node]
-            comments = []
-
-            # Try to process a raw bundle.
-            try:
-                # Process lines.
-                for (n_line, line) in enumerate(raw_bundle):
-                    logging.debug('Processing line %r', line)
-
-                    # Sentence identifier.
-                    match = re_sentence_id.search(line)
-                    if match is not None:
-                        sent_id = match.group(1)
-                        logging.debug(
-                            'Matched sent_id keyword with value %s', sent_id)
-                        root_node.sent_id = sent_id
-                        continue
-
-                    # Comments.
-                    match = re_comment_like.search(line)
-                    if match is not None:
-                        comments.append(line[1:])
-                        continue
-
-                    # FIXME Multi-word tokens are temporarily avoided.
-                    if re_multiword_tokens.search(line):
-                        logging.debug('Skipping multi-word tokens %s', line)
-                        continue
-
-                    # Otherwise the line is a tab-separated list of node
-                    # attributes.
-                    node = root_node.create_child()
-                    raw_node_attributes = line.split('\t')
-                    for (n_attribute, attribute_name) in enumerate(self.node_attributes):
-                        if attribute_name == 'feats':
-                            attribute_name = 'raw_feats'
-                        if attribute_name == 'deps':
-                            attribute_name = 'raw_deps'
-                        setattr(node, attribute_name,
-                                raw_node_attributes[n_attribute])
-
-                    nodes.append(node)
-
-                    # TODO: kde se v tomhle sloupecku berou podtrzitka
-                    try:
-                        node.head = int(node.head)
-                    except ValueError:
-                        node.head = 0
-
-                    # TODO: poresit multitokeny
-                    try:
-                        node.ord = int(node.ord)
-                    except ValueError:
-                        pass
-
-                # At least one node should be parsed.
-                if len(nodes) == 0:
-                    raise ValueError(
-                        'Probably two empty lines following each other.')
-
-                # If specified, check sentence ID to match the sentence ID
-                # filter.
-                if self.sentence_id_filter is not None:
-                    if self.sentence_id_filter.match(root_node.sent_id) is None:
-                        logging.debug('Skipping sentence %s as it does not match the sentence ID filter.',
-                                      root_node.sent_id)
-                        continue
-
-                # Set parents for each node.
-                nodes[0].aux['comments'] = '\n'.join(comments)
-                nodes[0].aux['descendants'] = nodes[1:]
-                for node in nodes[1:]:
-                    node.parent = nodes[node.head]
-
-                # Create a new bundle with a new root node.
-                bundle = document.create_bundle()
-                bundle.add_tree(root_node)
-            except Exception as exception:
-                if self.strict:
-                    raise RuntimeError('An exception occurred at bundle %d (%s): %s.' % (number_of_processed_bundles,
-                                                                                         root_node.sent_id, exception))
+            if line[0] == '#':
+                self.parse_comment_line(line, root)
+            else:
+                if self.separator == 'tab':
+                    fields = line.split('\t')
+                elif self.separator == 'space':
+                    fields = line.split()
+                elif self.separator == 'doublespace':
+                    fields = re.split('  +', line)
                 else:
-                    logging.warning('An exception occurred at bundle %d (%s): %r. Skipping this bundle.',
-                                    number_of_processed_bundles, root_node.sent_id, exception)
+                    raise ValueError('separator=%s is not valid' % self.separator)
+                if len(fields) != len(self.node_attributes):
+                    if self.strict:
+                        raise RuntimeError('Wrong number of columns in %r' % line)
+                    fields.extend(['_'] * (len(self.node_attributes) - len(fields)))
+                # multi-word tokens will be processed later
+                if '-' in fields[0]:
+                    mwts.append(fields)
+                    continue
+                if '.' in fields[0]:
+                    empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
+                                                    xpos=fields[4], feats=fields[5], misc=fields[9])
+                    empty.ord = fields[0]
+                    empty.raw_deps = fields[8] # TODO
                     continue
 
-            number_of_loaded_bundles += 1
-            self.total_number_of_bundles += 1
+                node = root.create_child()
 
-        logging.info('Processed %7d bundles. Loaded %7d bundles.', number_of_processed_bundles,
-                     number_of_loaded_bundles)
+                # TODO slow implementation of speed-critical loading
+                for (n_attribute, attribute_name) in enumerate(self.node_attributes):
+                    if attribute_name == 'head':
+                        try:
+                            parents.append(int(fields[n_attribute]))
+                        except ValueError as exception:
+                            if not self.strict and fields[n_attribute] == '_':
+                                logging.warning("Empty parent/head index in '%s'", line)
+                            else:
+                                raise exception
+                    elif attribute_name == 'ord':
+                        setattr(node, 'ord', int(fields[n_attribute]))
+                    elif attribute_name == 'deps':
+                        setattr(node, 'raw_deps', fields[n_attribute])
+                    elif attribute_name != '_':
+                        setattr(node, attribute_name, fields[n_attribute])
 
-        self.finished = True
-        return document
+                nodes.append(node)
+
+        # If no nodes were read from the filehandle (so only root remained in nodes),
+        # we return None as a sign of failure (end of file or more than one empty line).
+        if len(nodes) == 1:
+            return None
+
+        # Empty sentences are not allowed in CoNLL-U,
+        # but if the users want to save just the sentence string and/or sent_id
+        # they need to create one artificial node and mark it with Empty=Yes.
+        # In that case, we will delete this node, so the tree will have just the (technical) root.
+        # See also udapi.block.write.Conllu, which is compatible with this trick.
+        if len(nodes) == 2 and nodes[1].misc == 'Empty=Yes':
+            nodes.pop()
+
+        # Set dependency parents (now, all nodes of the tree are created).
+        # TODO: parent setter checks for cycles, but this is something like O(n*log n)
+        # if done for each node. It could be done faster if the whole tree is checked at once.
+        # Also parent setter removes the node from its old parent's list of children,
+        # this could be skipped here by not using `node = root.create_child()`.
+        for node_ord, node in enumerate(nodes[1:], 1):
+            try:
+                node.parent = nodes[parents[node_ord]]
+            except IndexError:
+                raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
+
+        # Set root attributes (descendants for faster iteration of all nodes in a tree).
+        root._descendants = nodes[1:] # pylint: disable=protected-access
+
+        # Create multi-word tokens.
+        for fields in mwts:
+            range_start, range_end = fields[0].split('-')
+            words = nodes[int(range_start):int(range_end)+1]
+            root.create_multiword_token(words, form=fields[1], misc=fields[-1])
+
+        return root
