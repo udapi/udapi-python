@@ -1,4 +1,6 @@
 """Vislcg is a reader block the VISL-cg format."""
+import shlex
+
 from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
 
@@ -61,8 +63,8 @@ class Vislcg(BaseReader):
 
     @staticmethod
     def _node(line, root):
-        fields = line.split()
-        lemma = fields[0][1:-1]
+        fields = shlex.split(line)
+        lemma = fields[0]
         xpos = fields[1]
         feats_list = fields[2:-2]
         feats = '|'.join(feats_list) if feats_list else '_'
