@@ -54,58 +54,42 @@ def en_noun_is_subj_relcl(node):
     :param node:
     :return: n-tuple containing triples
     '''
+
     if node.upos not in ['PROPN', 'NOUN']:
         raise ValueError('Is not a noun.')
-    mynode_echildren_list = echildren(node)
+
     relcl_verbs_list = []
+    mynode_echildren_list = echildren(node)
+    logging.info('Echildren for node %s: %r', node, [node.form for node in mynode_echildren_list])
+
     for mynode_echild in mynode_echildren_list:
-        if true_deprel(mynode_echild) == 'acl:relcl' or mynode_echild.deprel == 'acl:relcl':
-            # print('RELATIVE CLAUSE')
+        if true_deprel(mynode_echild) == 'acl:relcl':
             relcl_verbs_list.append(mynode_echild)
+
     if len(relcl_verbs_list) == 0:
         raise ValueError('Not subject of any relative clause')
-    for relcl_verb in relcl_verbs_list:
-        if en_verb_passive_form_YN(relcl_verb):
-            continue
-    if len(relcl_verbs_list) == 0:
-        raise ValueError('Verb in relative clause is passive')
 
     triples = []
     for relcl_verb in relcl_verbs_list:
+        # if en_verb_passive_form_YN(relcl_verb):
+        #     logging.info('Passive form for candidate verb %s', relcl_verb)
+        #     continue
+
         wrong_subjects_list = echildren(relcl_verb)
+        logging.info('Candidate: %s, %r', relcl_verb, [node.form for node in wrong_subjects_list])
         for wrong_subject in wrong_subjects_list:
-            if (true_deprel(wrong_subject) not in ['nsubj',
-                                                   'nsubjpass',
-                                                   'csubj',
-                                                   'csubjpass'] \
-                        or wrong_subject.deprel not in ['nsubj',
-                                                        'nsubjpass',
-                                                        'csubj',
-                                                        'csubjpass']) \
-                    and wrong_subject.lemma not in ['where',
-                                                    'how',
-                                                    'why',
-                                                    'when']:
+            if true_deprel(wrong_subject) not in ['nsubj', 'nsubjpass', 'csubj','csubjpass'] and wrong_subject.lemma not in ['where', 'how', 'why', 'when']:
                 wrong_subjects_list.remove(wrong_subject)
 
         for wrong_subject in wrong_subjects_list:
-            if true_deprel(wrong_subject) in ['nsubjpass',
-                                              'csubj',
-                                              'csubjpass'] \
-                    or wrong_subject.deprel in ['nsubjpass',
-                                                'csubj',
-                                                'csubjpass']:
+            if true_deprel(wrong_subject) in ['nsubjpass', 'csubj', 'csubjpass']:
                 raise ValueError('Verb has its own regular subject - passive or clausal')
 
-            if wrong_subject.lemma in ['where',
-                                       'how',
-                                       'why',
-                                       'when']:
+            if wrong_subject.lemma in ['where', 'how', 'why', 'when']:
                 raise ValueError('Noun is an adverbial, not subject.')
 
-
-            if wrong_subject.deprel == 'nsubj' and wrong_subject.feats.get('PronType', '') != 'Rel':
-               raise ValueError('Verb has its own subject.01')
+            if wrong_subject.deprel == 'nsubj' and wrong_subject.feats['PronType'] != 'Rel':
+                raise ValueError('Verb has its own subject.01')
 
             if len(wrong_subjects_list) == 0:  # NB when recycling this script for extraction of other arguments from relclauses.
                 # For object relclauses the list will have to be empty of potential objects!!!

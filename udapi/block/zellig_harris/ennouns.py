@@ -26,7 +26,7 @@ class EnNouns(Configurations):
 
         if self.verbose:
             logging.info('')
-            logging.info('Processing node %s/%s', node.root.sent_id, node)
+            logging.info('Processing node %s/%s', node.root.address(), node)
 
         #self.apply_query('en_verb_mydobj', node)
         self.apply_query('en_noun_is_subj_relcl', node)

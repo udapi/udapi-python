@@ -84,7 +84,7 @@ class Configurations(Block):
         if self.verbose:
             logging.info('')
             logging.info('---')
-            logging.info('Sentence ID : %s', tree.sent_id)
+            logging.info('Sentence ID : %s', tree.address())
             logging.info('Sentence    : %s', ' '.join([node.form for node in tree.descendants()]))
             logging.info('---')
 
