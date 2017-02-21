@@ -65,7 +65,7 @@ class Vislcg(BaseReader):
         # so we cannot use fields = shlex.split(line)
         # Let's hope that xpos, feats and deprel do not contain any quotes.
         end_quote_pos = line.rfind('"');
-        lemma = line[2:end_quote_pos]
+        lemma = line[1:end_quote_pos]
         fields = line[end_quote_pos+1:].split()
         xpos = fields[0]
         feats_list = fields[3:-2]
