@@ -114,15 +114,21 @@ class Convert1to2(Block):
         if node.deprel == 'cop' and node.upos not in ("AUX", "PRON"):
             node.upos = "AUX"
 
-    @staticmethod
-    def change_deprel_simple(node):
+    def change_deprel_simple(self, node):
         """mwe→fixed, dobj→obj, *pass→*:pass, name→flat, foreign→flat+Foreign=Yes."""
-        if node.deprel == 'foreign':
+        if node.udeprel == 'foreign':
             node.feats['Foreign'] = 'Yes'
+        udeprel, sdeprel = node.udeprel, node.sdeprel
         try:
-            node.deprel = DEPREL_CHANGE[node.deprel]
+            node.deprel = DEPREL_CHANGE[udeprel]
         except KeyError:
-            pass
+            return
+        if sdeprel:
+            if ':' in node.deprel:
+                self.log(node, 'deprel', 'deprel=%s:%s new_deprel=%s but %s is lost' %
+                         (udeprel, sdeprel, node.deprel, sdeprel))
+            else:
+                node.deprel += ':' + sdeprel
 
     def change_neg(self, node):
         """neg→advmod/det/ToDo + Polarity=Neg.
