@@ -72,7 +72,7 @@ class Conllu(BaseReader):
                 root.newdoc = value
             return
 
-        root.comment = root.comment + line[1:] + "\n"
+        root.comment += line[1:] + "\n"
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,

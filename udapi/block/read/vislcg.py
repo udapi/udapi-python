@@ -1,6 +1,4 @@
 """Vislcg is a reader block the VISL-cg format."""
-import shlex
-
 from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
 
@@ -22,13 +20,11 @@ class Vislcg(BaseReader):
             if line == '':
                 break
             if line[0] == '#':
-                # Are comments allowed in VISL-cg?
-                # FMT: Yes :)
+                root.comment += line[1:] + "\n"
                 continue
 
             if line[0].isspace():
-                line.lstrip(line)
-                node, parent_ord = self._node(line, root)
+                node, parent_ord = self._node(line.lstrip(), root)
                 words.append(node)
                 parents.append(parent_ord)
             else:
@@ -61,12 +57,16 @@ class Vislcg(BaseReader):
                 raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
 
         return root
-    
+
     @staticmethod
     def _node(line, root):
-        delim = line.rfind('"');
-        lemma = line[2:delim]
-        fields = line[delim+1:].split()
+        # line contains "lemma" xpos feat1 feat2 .. featN @deprel #ord->parent.ord
+        # Lemma can contain spaces, but quotes within lemma are not escaped,
+        # so we cannot use fields = shlex.split(line)
+        # Let's hope that xpos, feats and deprel do not contain any quotes.
+        end_quote_pos = line.rfind('"');
+        lemma = line[2:end_quote_pos]
+        fields = line[end_quote_pos+1:].split()
         xpos = fields[0]
         feats_list = fields[3:-2]
         feats = '|'.join(feats_list) if feats_list else '_'
@@ -74,4 +74,3 @@ class Vislcg(BaseReader):
         parent_ord = int(fields[-1].split('->')[1])
         node = root.create_child(lemma=lemma, xpos=xpos, feats=feats, deprel=deprel)
         return node, parent_ord
-
