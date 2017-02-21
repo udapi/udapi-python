@@ -107,6 +107,21 @@ class Node(object):
         return self.deprel.split(':')[0] if self.deprel is not None else None
 
     @property
+    def sdeprel(self):
+        """Return the language-specific part of dependency relation.
+
+        E.g. if deprel = `acl:relcl` then sdeprel = `relcl`.
+        If deprel=`acl` then sdeprel = empty string.
+        If deprel is `None` then `node.sdeprel` will return `None` as well.
+        """
+        if self.deprel is None:
+            return None
+        parts = self.deprel.split(':', 1)
+        if len(parts) == 2:
+            return parts[1]
+        return ''
+
+    @property
     def feats(self):
         """Property for morphological features stored as a `Feats` object.
 
