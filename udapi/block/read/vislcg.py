@@ -27,20 +27,21 @@ class Vislcg(BaseReader):
                 node, parent_ord = self._node(line.lstrip(), root)
                 words.append(node)
                 parents.append(parent_ord)
-            else:
-                if words:
-                    words[0].form = form
-                    if len(words) > 1:
-                        split_forms = form.split()
-                        if len(words) == len(split_forms):
-                            for word, split_form in zip(words, split_forms):
-                                word.form = split_form
-                        else:
-                            for word in words[1:]:
-                                word.form = '_'
-                        root.create_multiword_token(words, form=form)
-                    words = []
-                form = line[2:-2]
+                continue
+
+            if words:
+                words[0].form = form
+                if len(words) > 1:
+                    split_forms = form.split()
+                    if len(words) == len(split_forms):
+                        for word, split_form in zip(words, split_forms):
+                            word.form = split_form
+                    else:
+                        for word in words[1:]:
+                            word.form = '_'
+                    root.create_multiword_token(words, form=form)
+                words = []
+            form = line[2:-2]
 
         if words:
             words[0].form = form
@@ -64,7 +65,7 @@ class Vislcg(BaseReader):
         # Lemma can contain spaces, but quotes within lemma are not escaped,
         # so we cannot use fields = shlex.split(line)
         # Let's hope that xpos, feats and deprel do not contain any quotes.
-        end_quote_pos = line.rfind('"');
+        end_quote_pos = line.rfind('"')
         lemma = line[1:end_quote_pos]
         fields = line[end_quote_pos+1:].split()
         xpos = fields[0]
