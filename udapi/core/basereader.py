@@ -21,7 +21,7 @@ class BaseReader(Block):
         self.finished = False
         self.sent_id_filter = None
         if sent_id_filter is not None:
-            self.sent_id_filter = re.compile(sent_id_filter)
+            self.sent_id_filter = re.compile(str(sent_id_filter))
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
         self.split_docs = split_docs
 
