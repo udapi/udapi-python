@@ -66,5 +66,13 @@ if __name__ == "__main__":
         args.scenario = args.scenario + ['marked_only=1']
     if args.no_color:
         args.scenario = args.scenario + ['color=0']
+
     runner = Run(args)
-    runner.execute()
+    # udapy is often piped to head etc., e.g.
+    # `seq 1000 | udapy -s read.Sentences | head`
+    # Let's prevent Python from reporting (with distracting stacktrace)
+    # "BrokenPipeError: [Errno 32] Broken pipe"
+    try:
+        runner.execute()
+    except (BrokenPipeError, IOError):
+        pass
