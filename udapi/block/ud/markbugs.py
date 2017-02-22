@@ -118,6 +118,9 @@ class MarkBugs(Block):
         if parent.deprel == 'punct':
             self.log(node, 'punct-child', 'parent.deprel=punct')
 
+        if upos == 'PUNCT' and deprel != 'punct':
+            self.log(node, 'punct-deprel', 'upos=PUNCT deprel!=punct (but %s)' % deprel)
+
         # See http://universaldependencies.org/u/overview/syntax.html#the-status-of-function-words
         # TODO: Promotion by Head Elision: It is difficult to detect this exception.
         #       So far, I have just excluded "det" from the forbidded parent.deprel set
@@ -147,7 +150,7 @@ class MarkBugs(Block):
         if upos == 'SYM' and form.isalpha():
             self.log(node, 'sym-alpha', "upos=SYM but all form chars are alphabetical: " + form)
 
-        if upos == 'PUNCT' and  any(char.isalpha() for char in form):
+        if upos == 'PUNCT' and any(char.isalpha() for char in form):
             self.log(node, 'punct-alpha', "upos=PUNCT but form has alphabetical char(s): " + form)
 
     def after_process_document(self, document):
