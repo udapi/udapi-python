@@ -71,11 +71,20 @@ class MarkBugs(Block):
         form, deprel, upos, feats = node.form, node.deprel, node.upos, node.feats
         parent = node.parent
 
-        for dep in ('aux', 'fixed', 'appos', 'goeswith'):
+        for dep in ('aux', 'fixed', 'goeswith', 'list'):
             if deprel == dep and parent.deprel == dep:
                 self.log(node, dep + '-chain', dep + ' dependencies should not form a chain.')
 
-        for dep in ('flat', 'fixed', 'conj', 'appos', 'goeswith'):
+        # 'appos-chain' is more difficult to test because nested appositions are allowed.
+        # The commented-out code below prevents just some of the false alarms
+        # (those where changing the nested appos into flat would result in non-projectivity).
+        # Unfortunatelly, there are still too many false alarms, so let's skip this test completely.
+        # It seems that multiple appositions as siblings are much less common than nested.
+        # if deprel == 'appos' and parent.deprel == 'appos':
+        #     if not node.precedes(parent.children[-1]):
+        #         self.log(node, 'appos-chain', 'appos should not form a chain except when nested.')
+
+        for dep in ('flat', 'fixed', 'conj', 'appos', 'goeswith', 'list'):
             if deprel == dep and node.precedes(parent):
                 self.log(node, dep + '-rightheaded',
                          dep + ' relations should be left-headed, not right.')
