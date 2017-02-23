@@ -72,3 +72,12 @@ class TextModeTreesHtml(TextModeTrees):
     def colorize_attr(attr, value, marked):
         """Return a string with color markup for a given attr and its value."""
         return "<span class='%s'>%s</span>" % (attr, escape(value))
+
+    def print_headers(self, root):
+        if self.print_sent_id:
+            print('# sent_id = ' + escape(root.address()))
+        if self.print_text:
+            text = "# text = " + (root.get_sentence() if root.is_root() else root.compute_text())
+            print(escape(text))
+        if self.print_comments and root.comment:
+            print(escape('#' + self.colorize_comment(root.comment.rstrip().replace('\n', '\n#'))))

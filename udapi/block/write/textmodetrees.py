@@ -214,17 +214,21 @@ class TextModeTrees(BaseWriter):
                 stack = sorted(stack, key=lambda x: -self._gaps[x.ord])
 
         # Print headers (if required) and the tree itself
+        self.print_headers(root)
+        for line in self.lines:
+            print(line)
+
+        if self.add_empty_line:
+            print('')
+
+    def print_headers(self, root):
+        """Print sent_id, text and other comments related to the tree."""
         if self.print_sent_id:
             print('# sent_id = ' + root.address())
         if self.print_text:
             print("# text = " + (root.get_sentence() if root.is_root() else root.compute_text()))
         if self.print_comments and root.comment:
             print('#' + self.colorize_comment(root.comment.rstrip().replace('\n', '\n#')))
-        for line in self.lines:
-            print(line)
-
-        if self.add_empty_line:
-            print('')
 
     def _ends(self, idx, chars):
         return bool(self.lines[idx] and self.lines[idx][-1] in chars)
