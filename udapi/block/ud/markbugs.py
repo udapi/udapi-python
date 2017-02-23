@@ -66,7 +66,7 @@ class MarkBugs(Block):
             node.misc['Bug'] = short_msg
         self.stats[short_msg] += 1
 
-    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-branches, too-many-statements
     def process_node(self, node):
         form, deprel, upos, feats = node.form, node.deprel, node.upos, node.feats
         parent = node.parent
@@ -118,9 +118,6 @@ class MarkBugs(Block):
         if parent.deprel == 'punct':
             self.log(node, 'punct-child', 'parent.deprel=punct')
 
-        if upos == 'PUNCT' and deprel != 'punct':
-            self.log(node, 'punct-deprel', 'upos=PUNCT deprel!=punct (but %s)' % deprel)
-
         # See http://universaldependencies.org/u/overview/syntax.html#the-status-of-function-words
         # TODO: Promotion by Head Elision: It is difficult to detect this exception.
         #       So far, I have just excluded "det" from the forbidded parent.deprel set
@@ -152,6 +149,17 @@ class MarkBugs(Block):
 
         if upos == 'PUNCT' and any(char.isalpha() for char in form):
             self.log(node, 'punct-alpha', "upos=PUNCT but form has alphabetical char(s): " + form)
+
+        if upos == 'PUNCT' and deprel not in ('punct', 'fixed', 'goeswith', 'root'):
+            self.log(node, 'punct-deprel', 'upos=PUNCT deprel!=punct|fixed|goeswith|root (but %s)'
+                     % deprel)
+
+        # http://universaldependencies.org/u/dep/cc.html says
+        #   "cc is the relation between a conjunct and a preceding
+        #   [coordinating conjunction](http://universaldependencies.org/u/pos/CCONJ)."
+        # No other upos is allowed in the documentation, although e.g. PART is common in the data.
+        if deprel == 'cc' and upos != 'CCONJ':
+            self.log(node, 'cc-upos', "deprel=cc upos!=CCONJ (but %s): " % upos)
 
     def after_process_document(self, document):
         total = 0
