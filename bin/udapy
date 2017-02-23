@@ -48,7 +48,8 @@ elif args.quiet:
 else:
     level = logging.INFO
 
-logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s', level=level)
+logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s',
+                    level=level)
 
 # Process and provide the scenario.
 if __name__ == "__main__":
@@ -74,5 +75,5 @@ if __name__ == "__main__":
     # "BrokenPipeError: [Errno 32] Broken pipe"
     try:
         runner.execute()
-    except (BrokenPipeError, IOError):
+    except BrokenPipeError:
         pass

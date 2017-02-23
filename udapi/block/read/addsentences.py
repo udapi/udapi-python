@@ -34,7 +34,7 @@ class AddSentences(BaseReader):
         for bundle in document.bundles:
             line = self.filehandle.readline()
             if line == '':
-                raise IOError('File does not have enoush lines')
+                raise IOError('File does not have enough lines')
             root = bundle.get_tree(zone=self.zone)
             root.text = line.rstrip()
         self.finished = not self.files.has_next_file()
