@@ -85,9 +85,9 @@ class Node(object):
         self.lemma = lemma
         self.upos = upos
         self.xpos = xpos
-        self._feats = Feats(string=feats)
+        self._feats = Feats(feats)
         self.deprel = deprel
-        self._misc = DualDict(string=misc)
+        self._misc = DualDict(misc)
         self._raw_deps = '_'
         self._deps = None
         self._parent = None

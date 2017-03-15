@@ -28,14 +28,13 @@ class DualDict(collections.abc.MutableMapping):
     """
     __slots__ = ['_string', '_dict']
 
-    def __init__(self, string=None, *args, **kwargs):
-        if string is not None:
-            if args:
-                raise ValueError('If string is specified, no other arg is allowed ' + str(args))
-            if kwargs:
-                raise ValueError('If string is specified, no other kwarg is allowed ' + str(kwargs))
-        self._dict = dict(args, **kwargs)
-        self._string = string
+    def __init__(self, value=None, **kwargs):
+        if value is not None and kwargs:
+            raise ValueError('If value is specified, no other kwarg is allowed ' + str(kwargs))
+        self._dict = dict(**kwargs)
+        self._string = None
+        if value is not None:
+            self.set_mapping(value)
 
     def __str__(self):
         if self._string is None:

@@ -9,7 +9,7 @@ class MWT(object):
     def __init__(self, words=None, form=None, misc=None, root=None):
         self.words = words if words is not None else []
         self.form = form
-        self._misc = DualDict(string=misc)
+        self._misc = DualDict(misc)
         self.root = root
         for word in self.words:
             word._mwt = self # pylint: disable=W0212
