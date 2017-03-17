@@ -9,8 +9,10 @@ class AddMwt(Block):
         if analysis is None:
             return
         orig_attr = {}
-        for attr in 'form lemma upos xpos feats deprel misc'.split():
+        for attr in 'form lemma upos xpos deprel'.split():
             orig_attr[attr] = getattr(node, attr)
+        orig_attr['feats'] = node.feats.copy()
+        orig_attr['misc'] = node.misc.copy()
 
         forms = analysis['form'].split()
         main = analysis.get('main', 0)
@@ -39,6 +41,11 @@ class AddMwt(Block):
                 for i, new_node in enumerate(nodes):
                     if values[i] == '*':
                         setattr(new_node, attr, orig_attr[attr])
+                    elif attr == 'feats' and '*' in values[i]:
+                        new_node.feats = values[i]
+                        for feat_name, feat_value in list(new_node.feats.items()):
+                            if feat_value == '*':
+                                new_node.feats[feat_name] = orig_attr['feats'][feat_name]
                     else:
                         setattr(new_node, attr, values[i])
 

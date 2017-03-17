@@ -1,5 +1,6 @@
 """DualDict is a dict with lazily synchronized string representation."""
 import collections.abc
+import copy
 
 class DualDict(collections.abc.MutableMapping):
     """DualDict class serves as dict with lazily synchronized string representation.
@@ -92,6 +93,10 @@ class DualDict(collections.abc.MutableMapping):
     def clear(self):
         self._string = '_'
         self._dict.clear()
+
+    def copy(self):
+        """Return a deep copy of this instance."""
+        return copy.deepcopy(self)
 
     def set_mapping(self, value):
         """Set the mapping from a dict or string.
