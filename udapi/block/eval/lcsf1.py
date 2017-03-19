@@ -1,7 +1,7 @@
 """Block eval.LcsF1 for evaluating differences between sentences with P/R/F1."""
 from udapi.core.basewriter import BaseWriter
 
-class LcsF1(BaseWriter):
+class LcsF1(BaseWriter): # pylint: disable=too-many-instance-attributes
     """Evaluate differences between sentences (in different zones) with P/R/F1."""
 
     def __init__(self, gold_zone, attributes='form', focus='.*', details=4, **kwargs):
@@ -50,7 +50,8 @@ class LcsF1(BaseWriter):
         # my %pred_zones = %{$self->_stats->{zones}};
         # my @pz = keys %pred_zones;
         # if (!@pz) {
-        #     warn 'Block Eval::LcsF1 was not applied to any zone. Check the parameter zones='.$self->zones;
+        #     warn 'Block Eval::LcsF1 was not applied to any zone. Check the parameter zones='
+        #          . $self->zones;
         # } elsif (@pz > 1){
         #     warn "Block Eval::LcsF1 was applied to more than one zone (@pz). "
         #        . 'The results are mixed together. Check the parameter zones='.$self->zones;
@@ -76,7 +77,8 @@ class LcsF1(BaseWriter):
         # }
 
 
-        print("%-9s = %7d\n"*3 % ('predicted', self.pred, 'gold', self.gold, 'correct', self.correct))
+        print("%-9s = %7d\n"*3
+              % ('predicted', self.pred, 'gold', self.gold, 'correct', self.correct))
         # ($pred, $gold) = map {$_||1} ($pred, $gold); # prevent division by zero
         # my $prec = $correct / $pred;
         # my $rec  = $correct / $gold;
