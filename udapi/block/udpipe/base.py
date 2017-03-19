@@ -3,6 +3,11 @@ from udapi.core.block import Block
 from udapi.tool.udpipe import UDPipe
 
 KNOWN_MODELS = {
+    'en': 'models/udpipe/english-ud-1.2-160523.udpipe',
+}
+
+# TODO use the new models once UDPipe 1.1 is published and available on PyPI as ufal.udpipe
+V2_KNOWN_MODELS = {
     'grc': 'models/udpipe/2.0/ancient_greek-proiel-ud-2.0-conll17-170315.udpipe',
     'grc_proiel': 'models/udpipe/2.0/ancient_greek-ud-2.0-conll17-170315.udpipe',
     'ar': 'models/udpipe/2.0/arabic-ud-2.0-conll17-170315.udpipe',
