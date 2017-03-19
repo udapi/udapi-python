@@ -35,6 +35,16 @@ class UDPipe:
         if self.error.occurred():
             raise IOError("UDPipe error " + self.error.message)
         self.conllu_reader.files.filehandle = io.StringIO(out_data)
-        parsed = self.conllu_reader.read_tree()
-        # pylint: disable=protected-access
-        root._children, root._descendants = parsed._children, parsed._descendants
+        parsed_root = self.conllu_reader.read_tree()
+        nodes = [root] + root.descendants
+        for parsed_node in parsed_root.descendants:
+            node = nodes[parsed_node.ord]
+            node.parent = nodes[parsed_node.parent.ord]
+            for attr in 'upos xpos lemma feats'.split():
+                setattr(node, attr, getattr(parsed_node, attr))
+
+        # TODO: benchmark which solution is the fastest one. E.g. we could also do
+        #for node, parsed_node in zip(root.descendants, parsed_root.descendants):
+        #    parsed_node.misc = node.misc
+        ## pylint: disable=protected-access
+        #root._children, root._descendants = parsed_root._children, parsed_root._descendants
