@@ -1,19 +1,19 @@
-"""Block morpho.TokenizeOnWhitespace"""
+"""Block tokenize.OnWhitespace"""
 from udapi.core.block import Block
 
-class TokenizeOnWhitespace(Block):
+class OnWhitespace(Block):
     """"Base tokenizer, splits on whitespaces, fills SpaceAfter=No."""
 
     @staticmethod
     def tokenize_sentence(string):
         """A method to be overriden in subclasses."""
-        return string
+        return string.split()
 
     def process_tree(self, root):
         if root.children:
             raise ValueError('Tree %s is already tokenized.' % root)
         sentence = ' '.join(root.text.split())
-        tokens = self.tokenize_sentence(sentence).split()
+        tokens = self.tokenize_sentence(sentence)
         for i, token in enumerate(tokens, 1):
             space_after = False
 
