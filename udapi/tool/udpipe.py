@@ -2,7 +2,7 @@
 import io
 import os
 
-from ufal.udpipe import Model, Pipeline, ProcessingError # pylint: disable=no-name-in-module
+from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence # pylint: disable=no-name-in-module
 from udapi.block.read.conllu import Conllu as ConlluReader
 
 class UDPipe:
@@ -17,6 +17,7 @@ class UDPipe:
             raise IOError("Cannot load model from file '%s'" % path)
         self.error = ProcessingError()
         self.conllu_reader = ConlluReader()
+        self.tokenizer = self.tool.newTokenizer(Model.DEFAULT)
 
     def model_path(self):
         """Return absolute path to the model file to be loaded."""
@@ -48,3 +49,43 @@ class UDPipe:
         #    parsed_node.misc = node.misc
         ## pylint: disable=protected-access
         #root._children, root._descendants = parsed_root._children, parsed_root._descendants
+
+    def tokenize_tag_parse_tree(self, root):
+        """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`."""
+        if root.children:
+            raise ValueError('Tree already contained nodes before tokenization')
+
+        # tokenization (I cannot turn off segmenter, so I need to join the segments)
+        self.tokenizer.setText(root.text)
+        u_sentence = Sentence()
+        is_another = self.tokenizer.nextSentence(u_sentence)
+        u_words    = u_sentence.words
+        n_words    = u_words.size() - 1
+        if is_another:
+            u_sent_cont = Sentence()
+            while self.tokenizer.nextSentence(u_sent_cont):
+                n_cont = u_sent_cont.words.size() - 1
+                for i in range(1, n_cont+1):
+                    u_w = u_sent_cont.words[i]
+                    n_words += 1
+                    u_w.id = n_words
+                    u_words.append(u_w)
+
+        # tagging and parsing
+        self.tool.tag(u_sentence, Model.DEFAULT)
+        self.tool.parse(u_sentence, Model.DEFAULT)
+
+        # converting UDPipe nodes to Udapi nodes
+        heads, nodes = [], [root]
+        for i in range(1, u_words.size()):
+            u_w = u_words[i]
+            node = root.create_child(
+                form=u_w.form, lemma=u_w.lemma, upos=u_w.upostag,
+                xpos=u_w.xpostag, feats=u_w.feats, deprel=u_w.deprel,
+            )
+            node.misc = u_w.misc
+            heads.append(u_w.head)
+            nodes.append(node)
+        for node in nodes[1:]:
+            head = heads.pop(0)
+            node.parent = nodes[head]

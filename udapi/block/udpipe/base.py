@@ -79,7 +79,7 @@ class Base(Block):
 
     # pylint: disable=too-many-arguments
     def __init__(self, model=None, model_alias=None,
-                 tokenize=False, tag=True, parse=True, **kwargs):
+                 tokenize=True, tag=True, parse=True, **kwargs):
         """Create the udpipe.En block object."""
         super().__init__(**kwargs)
         self.model, self.model_alias = model, model_alias
@@ -100,6 +100,8 @@ class Base(Block):
 
     def process_tree(self, root):
         tok, tag, par = self.tokenize, self.tag, self.parse
+        if tok and tag and par:
+            return self.tool.tokenize_tag_parse_tree(root)
         if not tok and tag and par:
             return self.tool.tag_parse_tree(root)
         # TODO
