@@ -15,7 +15,7 @@ class Filter(Block):
     # keep only trees which contain ToDo|Bug nodes
     udapy -s util.Filter keep_tree_if_node='re.match("ToDo|Bug", str(node.misc))' < in > filtered
 
-    # keep only non-projective trees, annotate non-projective edges with Mark=nofeats and show.
+    # keep only non-projective trees, annotate non-projective edges with Mark=nonproj and show.
     udapy -T util.Filter keep_tree_if_node='node.is_nonprojective()' mark=nonproj < in | less -R
 
     # delete trees which contain deprel=remnant
