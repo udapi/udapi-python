@@ -163,6 +163,9 @@ class MarkBugs(Block):
             self.log(node, 'punct-deprel', 'upos=PUNCT deprel!=punct|fixed|goeswith|root (but %s)'
                      % deprel)
 
+        if upos == 'PUNCT' and node.is_nonprojective():
+            self.log(node, 'punct-nonproj', 'upos=PUNCT and edge is non-projective')
+
         # http://universaldependencies.org/u/dep/cc.html says
         #   "cc is the relation between a conjunct and a preceding
         #   [coordinating conjunction](http://universaldependencies.org/u/pos/CCONJ)."
