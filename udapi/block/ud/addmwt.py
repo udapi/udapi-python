@@ -57,6 +57,7 @@ class AddMwt(Block):
         """Return a dict with MWT info or None if `node` does not represent a multiword token.
 
         An example return value is::
+
         {
             'form': 'aby bych',
             'lemma': 'aby být',

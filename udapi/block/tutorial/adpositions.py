@@ -1,14 +1,15 @@
 """tutorial.Adpositions block template.
 
-Example usage:
-for a in */sample.conllu; do
+Example usage::
+
+ for a in */sample.conllu; do
     printf '%50s ' $a;
     udapy tutorial.Adpositions < $a;
-done | tee results.txt
+ done | tee results.txt
 
-# What are the English postpositions?
-cat UD_English/sample.conllu | udapy -TM util.Mark \
- node='node.upos == "ADP" and node.parent.precedes(node)' | less -R
+ # What are the English postpositions?
+ cat UD_English/sample.conllu | udapy -TM util.Mark \
+   node='node.upos == "ADP" and node.parent.precedes(node)' | less -R
 """
 from udapi.core.block import Block
 

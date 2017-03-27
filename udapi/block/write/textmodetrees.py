@@ -20,64 +20,67 @@ COLOR_OF = {
 class TextModeTrees(BaseWriter):
     """An ASCII pretty printer of dependency trees.
 
-    SYNOPSIS
-    # from command line (visualize CoNLL-U files)
-    udapy write.TextModeTrees color=1 < file.conllu | less -R
+    .. code-block:: bash
 
-    # is scenario (examples of other parameters)
-    write.TextModeTrees indent=1 print_sent_id=1 print_sentence=1
-    write.TextModeTrees zones=en,cs attributes=form,lemma,upos minimize_cross=0
+      # from the command line (visualize CoNLL-U files)
+      udapy write.TextModeTrees color=1 < file.conllu | less -R
 
-    DESCRIPTION
+    In scenario (examples of other parameters)::
+
+      write.TextModeTrees indent=1 print_sent_id=1 print_sentence=1
+      write.TextModeTrees zones=en,cs attributes=form,lemma,upos minimize_cross=0
+
     This block prints dependency trees in plain-text format.
-    For example the following CoNLL-U file (with tabs instead of spaces)
+    For example the following CoNLL-U file (with tabs instead of spaces)::
 
-    1  I     I     PRON  PRP Number=Sing|Person=1 2  nsubj     _ _
-    2  saw   see   VERB  VBD Tense=Past           0  root      _ _
-    3  a     a     DET   DT  Definite=Ind         4  det       _ _
-    4  dog   dog   NOUN  NN  Number=Sing          2  dobj      _ _
-    5  today today NOUN  NN  Number=Sing          2  nmod:tmod _ SpaceAfter=No
-    6  ,     ,     PUNCT ,   _                    2  punct     _ _
-    7  which which DET   WDT PronType=Rel         10 nsubj     _ _
-    8  was   be    VERB  VBD Person=3|Tense=Past  10 cop       _ _
-    9  a     a     DET   DT  Definite=Ind         10 det       _ _
-    10 boxer boxer NOUN  NN  Number=Sing          4  acl:relcl _ SpaceAfter=No
-    11 .     .     PUNCT .   _                    2  punct     _ _
+      1  I     I     PRON  PRP Number=Sing|Person=1 2  nsubj     _ _
+      2  saw   see   VERB  VBD Tense=Past           0  root      _ _
+      3  a     a     DET   DT  Definite=Ind         4  det       _ _
+      4  dog   dog   NOUN  NN  Number=Sing          2  dobj      _ _
+      5  today today NOUN  NN  Number=Sing          2  nmod:tmod _ SpaceAfter=No
+      6  ,     ,     PUNCT ,   _                    2  punct     _ _
+      7  which which DET   WDT PronType=Rel         10 nsubj     _ _
+      8  was   be    VERB  VBD Person=3|Tense=Past  10 cop       _ _
+      9  a     a     DET   DT  Definite=Ind         10 det       _ _
+      10 boxer boxer NOUN  NN  Number=Sing          4  acl:relcl _ SpaceAfter=No
+      11 .     .     PUNCT .   _                    2  punct     _ _
 
-    will be printed (with the default parameters) as
-    ─┮
-     │ ╭─╼ I PRON nsubj
-     ╰─┾ saw VERB root
-       │                        ╭─╼ a DET det
-       ├────────────────────────┾ dog NOUN dobj
-       ├─╼ today NOUN nmod:tmod │
-       ├─╼ , PUNCT punct        │
-       │                        │ ╭─╼ which DET nsubj
-       │                        │ ├─╼ was VERB cop
-       │                        │ ├─╼ a DET det
-       │                        ╰─┶ boxer NOUN acl:relcl
-       ╰─╼ . PUNCT punct
+    will be printed (with the default parameters) as::
+
+      ─┮
+       │ ╭─╼ I PRON nsubj
+       ╰─┾ saw VERB root
+         │                        ╭─╼ a DET det
+         ├────────────────────────┾ dog NOUN dobj
+         ├─╼ today NOUN nmod:tmod │
+         ├─╼ , PUNCT punct        │
+         │                        │ ╭─╼ which DET nsubj
+         │                        │ ├─╼ was VERB cop
+         │                        │ ├─╼ a DET det
+         │                        ╰─┶ boxer NOUN acl:relcl
+         ╰─╼ . PUNCT punct
 
     Some non-projective trees cannot be printed witout crossing edges.
-    TextModeTrees uses a special "bridge" symbol ─╪─ to mark this:
-    ─┮
-     │ ╭─╼ 1
-     ├─╪───┮ 2
-     ╰─┶ 3 │
-           ╰─╼ 4
+    TextModeTrees uses a special "bridge" symbol ─╪─ to mark this::
 
-    By default parameter `color=auto`, so if the output is printed to the console
+      ─┮
+       │ ╭─╼ 1
+       ├─╪───┮ 2
+       ╰─┶ 3 │
+             ╰─╼ 4
+
+    By default parameter ``color=auto``, so if the output is printed to the console
     (not file or pipe), each node attribute is printed in different color.
     If a given node's MISC contains any of `ToDo`, `Bug` or `Mark` attributes
     (or any other specified in the parameter `mark`), the node will be highlighted
     (by reveresing the background and foreground colors).
 
     This block's method `process_tree` can be called on any node (not only root),
-    which is useful for printing subtrees using `node.print_subtree()`,
+    which is useful for printing subtrees using ``node.print_subtree()``,
     which is internally implemented using this block.
 
     SEE ALSO
-    `write.TextModeTreesHtml`
+    :py:class:`.TextModeTreesHtml`
     """
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,

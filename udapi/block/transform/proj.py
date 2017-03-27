@@ -6,13 +6,14 @@ http://www.maltparser.org/userguide.html#singlemalt_proj
 http://www.maltparser.org/optiondesc.html#pproj-marking_strategy
 
 TODO: implement also path and head+path strategies.
+
 TODO: Sometimes it would be better (intuitively)
-      to lower the gap-node (if its whole subtree is in the gap
-      and if this does not cause more non-projectivities)
-      rather than to lift several nodes whose parent-edge crosses this gap.
-      We would need another label value (usually the lowering is of depth 1),
-      but the advantage is that reconstruction of lowered edges
-      during deprojectivization is simple and needs no heuristics.
+to lower the gap-node (if its whole subtree is in the gap
+and if this does not cause more non-projectivities)
+rather than to lift several nodes whose parent-edge crosses this gap.
+We would need another label value (usually the lowering is of depth 1),
+but the advantage is that reconstruction of lowered edges
+during deprojectivization is simple and needs no heuristics.
 """
 from udapi.core.block import Block
 
@@ -59,4 +60,4 @@ class Proj(Block):
         elif self.label == 'deprel':
             node.deprel = '%s:%s+%s' % (node.udeprel, node.sdeprel, label)
         else:
-            raise(ValueError('Unknown parameter label=%s' % self.label))
+            raise ValueError('Unknown parameter label=%s' % self.label)

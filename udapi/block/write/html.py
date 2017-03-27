@@ -5,17 +5,19 @@ from udapi.core.basewriter import BaseWriter
 class Html(BaseWriter):
     """A writer for HTML+JavaScript+SVG visualization of dependency trees.
 
-    Usage:
-    # from the command line
-    udapy write.Html < file.conllu > file.html
-    firefox file.html
+    .. code-block:: bash
 
-    # for offline use, we need to download first three JavaScript libraries
-    wget https://code.jquery.com/jquery-2.1.4.min.js
-    wget https://cdn.rawgit.com/eligrey/FileSaver.js/master/FileSaver.min.js
-    wget https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js
-    udapy write.Html path_to_js=. < file.conllu > file.html
-    firefox file.html
+      # from the command line
+      udapy write.Html < file.conllu > file.html
+      firefox file.html
+
+    For offline use, we need to download first three JavaScript libraries::
+
+      wget https://code.jquery.com/jquery-2.1.4.min.js
+      wget https://cdn.rawgit.com/eligrey/FileSaver.js/master/FileSaver.min.js
+      wget https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js
+      udapy write.Html path_to_js=. < file.conllu > file.html
+      firefox file.html
 
     This writer produces an html file with drawings of the dependency trees
     in the document (there are buttons for selecting which bundle will be shown).

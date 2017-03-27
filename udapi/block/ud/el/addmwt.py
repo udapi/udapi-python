@@ -3,7 +3,7 @@
 Notice that this should be used only for converting existing conllu files.
 Ideally a tokenizer should have already split the MWTs.
 Also notice that this block does not deal with the relatively rare
-PRON(Person=2)+'*+PRON(Person=3, i.e. "σ'το" and "στο") MWTs.
+``PRON(Person=2)+'*+PRON(Person=3, i.e. "σ'το" and "στο")`` MWTs.
 """
 import udapi.block.ud.addmwt
 

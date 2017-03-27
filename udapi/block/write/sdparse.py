@@ -8,33 +8,35 @@ class Sdparse(BaseWriter):
     """A writer of files in the Stanford dependencies format, suitable for Brat visualization.
 
     Usage:
-    udapy write.Sdparse print_upos=0 < in.conllu
+    ``udapy write.Sdparse print_upos=0 < in.conllu``
 
     Example output::
 
-    ~~~ sdparse
-    Corriere Sport da pagina 23 a pagina 26
-    name(Corriere, Sport)
-    case(pagina-4, da)
-    nmod(Corriere, pagina-4)
-    nummod(pagina-4, 23)
-    case(pagina-7, a)
-    nmod(Corriere, pagina-7)
-    nummod(pagina-7, 26)
-    ~~~
+      ~~~ sdparse
+      Corriere Sport da pagina 23 a pagina 26
+      name(Corriere, Sport)
+      case(pagina-4, da)
+      nmod(Corriere, pagina-4)
+      nummod(pagina-4, 23)
+      case(pagina-7, a)
+      nmod(Corriere, pagina-7)
+      nummod(pagina-7, 26)
+      ~~~
 
     To visualize it, use embedded Brat, e.g. go to
-    http://universaldependencies.org/visualization.html#editing
+    http://universaldependencies.org/visualization.html#editing.
     Click the edit button and paste the output of this writer excluding the `~~~` marks.
 
     Notes:
-    Original Stanford dependencies format (http://nlp.stanford.edu/software/dependencies_manual.pdf)
+    The original `Stanford dependencies format
+    <http://nlp.stanford.edu/software/dependencies_manual.pdf>`_
     allows explicit specification of the root dependency, e.g. `root(ROOT-0, makes-8)`.
     However, this is not allowed by Brat, so this writer does not print it.
 
     UD v2.0 allows tokens with spaces, but I am not aware of any Brat support.
 
     Alternatives:
+
     * `write.Conllu` Brat recently supports also the CoNLL-U input
     * `write.TextModeTrees` may be more readable/useful in some usecases
     * `write.Html` dtto, press "Save as SVG" button, convert to pdf

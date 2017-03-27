@@ -275,13 +275,16 @@ class Convert1to2(Block):
         Remnant's parent is always the correlate (same-role) node.
         Usually, correlate's parent is the head of the whole ellipsis subtree,
         i.e. the first conjunct. However, sometimes remnants are deeper, e.g.
-        'Over 300 Iraqis are reported dead and 500 wounded.' with edges:
-         nsubjpass(reported, Iraqis)
-         nummod(Iraqis, 300)
-         remnant(300, 500)
+        'Over 300 Iraqis are reported dead and 500 wounded.' with edges::
+
+          nsubjpass(reported, Iraqis)
+          nummod(Iraqis, 300)
+          remnant(300, 500)
+
         Let's expect all remnants in one tree are part of the same ellipsis structure.
+
         TODO: theoretically, there may be more ellipsis structures with remnants in one tree,
-              but I have no idea how to distinguish them from the deeper-remnants cases.
+        but I have no idea how to distinguish them from the deeper-remnants cases.
         """
         remnants = [n for n in root.descendants if n.deprel == 'remnant']
         if not remnants:

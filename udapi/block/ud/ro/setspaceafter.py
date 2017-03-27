@@ -1,7 +1,8 @@
 """Block ud.ro.SetSpaceAfter for heuristic setting of SpaceAfter=No in Romanian.
 
-Usage:
-udapy -s ud.ro.SetSpaceAfter < in.conllu > fixed.conllu
+Usage::
+
+  udapy -s ud.ro.SetSpaceAfter < in.conllu > fixed.conllu
 
 Author: Martin Popel
 """
@@ -13,13 +14,16 @@ class SetSpaceAfter(udapi.block.ud.setspaceafter.SetSpaceAfter):
     """Block for heuristic setting of the SpaceAfter=No MISC attribute in Romanian.
 
     Romanian uses many contractions, e.g.
-    raw    | meaning | tokenized | lemmatized
-    -------|---------|-----------|-----------
-    n-ar   | nu ar   | n- ar     | nu avea
-    să-i   | să îi   | să -i     | să el
-    într-o | în o    | într- o   | întru un
-    nu-i   | nu îi   | nu -i     | nu el
-    nu-i   | nu e    | nu -i     | nu fi
+
+    =======  =======  =========  ==========
+    raw      meaning  tokenized  lemmatized
+    =======  =======  =========  ==========
+    n-ar     nu ar    n- ar      nu avea
+    să-i     să îi    să -i      să el
+    într-o   în o     într- o    întru un
+    nu-i     nu îi    nu -i      nu el
+    nu-i     nu e     nu -i      nu fi
+    =======  =======  =========  ==========
 
     Detokenization is quite simple: no space after word-final hyphen and before word-initial hyphen.
     There are just two exceptions, I have found:

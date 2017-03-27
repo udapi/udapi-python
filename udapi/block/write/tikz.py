@@ -7,19 +7,20 @@ from udapi.core.basewriter import BaseWriter
 class Tikz(BaseWriter):
     r"""A writer of files in the LaTeX with tikz-dependency format.
 
-    Usage:
-    udapy write.Tikz < my.conllu > my.tex
-    pdflatex my.tex
-    xdg-open my.pdf
+    Usage::
+
+      udapy write.Tikz < my.conllu > my.tex
+      pdflatex my.tex
+      xdg-open my.pdf
 
     Long sentences may result in too large pictures.
     You can tune the width (in addition to changing fontsize or using minipage and rescaling) with
-      ``\begin{deptext}[column sep=0.2cm]``
+    ``\begin{deptext}[column sep=0.2cm]``
     or individually for each word:
-      ``My \&[.5cm] dog \& etc.``
+    ``My \&[.5cm] dog \& etc.``
     By default, the height of the horizontal segment of a dependency edge is proportional
     to the distance between the linked words. You can tune the height with:
-     ``\depedge[edge unit distance=1.5ex]{9}{1}{deprel}``
+    ``\depedge[edge unit distance=1.5ex]{9}{1}{deprel}``
 
     See `tikz-dependency documentation
     <http://mirrors.ctan.org/graphics/pgf/contrib/tikz-dependency/tikz-dependency-doc.pdf>`_
