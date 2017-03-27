@@ -2,6 +2,7 @@
 Python framework for processing Universal Dependencies data
 
 [![Build Status](https://travis-ci.org/udapi/udapi-python.svg?branch=master)](https://travis-ci.org/udapi/udapi-python)
+[![Website](https://img.shields.io/website-up-down-green-red/http/udapi.github.io.svg)](http://udapi.github.io)
 
 ## Requirements
 - You need Python 3.3 or higher.
