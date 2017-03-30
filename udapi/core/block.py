@@ -5,8 +5,8 @@ import logging
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data."""
 
-    def __init__(self, **kwargs):
-        pass
+    def __init__(self, zones='all'):
+        self.zones = zones
 
     def process_start(self):
         """A hook method that is executed before processing UD data"""
@@ -28,7 +28,8 @@ class Block(object):
     def process_bundle(self, bundle):
         """Process a UD bundle"""
         for tree in bundle:
-            self.process_tree(tree)
+            if self._should_process_tree(tree):
+                self.process_tree(tree)
 
     def process_document(self, document):
         """Process a UD document"""
@@ -44,3 +45,12 @@ class Block(object):
     def after_process_document(self, document):
         """This method is called after each process_document."""
         pass
+
+    def _should_process_tree(self, tree):
+        if self.zones == 'all':
+            return True
+        if self.zones == '' and tree.zone == '':
+            return True
+        if tree.zone in self.zones.split(','):
+            return True
+        return False
