@@ -14,6 +14,8 @@ class SetSpaceAfterFromText(Block):
 
     def process_tree(self, root):
         text = root.text
+        if text is None:
+            raise ValueError('Tree %s has no text, cannot use ud.SetSpaceAfterFromText' % root)
         computed = root.compute_text()
         if text == computed:
             return
