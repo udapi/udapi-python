@@ -44,6 +44,11 @@ class Root(Node):
 
     @sent_id.setter
     def sent_id(self, sent_id):
+        if self._bundle is not None:
+            parts = sent_id.split('/', 1)
+            self._bundle.bundle_id = parts[0]
+            if len(parts) == 2:
+                self.zone = parts[1]
         self._sent_id = sent_id
 
     @property

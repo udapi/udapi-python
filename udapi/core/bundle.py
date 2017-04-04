@@ -16,12 +16,23 @@ class Bundle(object):
     Trees in one bundle are distinguished by a zone label.
     """
 
-    __slots__ = ["trees", "number", "bundle_id", "_document"]
+    __slots__ = ["trees", "number", "_bundle_id", "_document"]
 
     def __init__(self, bundle_id=None, document=None):
         self.trees = []
-        self.bundle_id = bundle_id
+        self._bundle_id = bundle_id
         self._document = document
+
+    @property
+    def bundle_id(self):
+        """ID of this bundle."""
+        return self._bundle_id
+
+    @bundle_id.setter
+    def bundle_id(self, bundle_id):
+        self._bundle_id = bundle_id
+        for tree in self.trees:
+            tree._sent_id = bundle_id + '/' + tree.zone # pylint: disable=protected-access
 
     def __str__(self):
         if self.bundle_id is None:

@@ -128,7 +128,6 @@ class BaseReader(Block):
                     root.zone = parts[1]
                 add_to_the_last_bundle = bundle_id == last_bundle_id
                 last_bundle_id = bundle_id
-                root.sent_id = None
 
             if self.zone != 'keep':
                 root.zone = self.zone
