@@ -23,6 +23,9 @@ DEPREL_CHANGE = {
     "predet": "det:predet",
     "gmod": "amod",
     "gobj": "obj",
+    "postneg": "neg", # will be changed to advmod + Polarity=Neg in ud.Convert1to2
+    "pronl": "obj", # TODO: or expl? UD_French seems to use a mix of both
+    "redup": "compound:plur",
 }
 
 FEATS_CHANGE = {
@@ -56,6 +59,7 @@ FEATS_CHANGE = {
     "degree=sup_a": "Degree=Abs",
     "degree=sup_r": "Degree=Sup",
     "case=obl": "Case=Acc",
+    "tense=impf": "Tense=Imp",
 }
 
 class Google2ud(Convert1to2):
@@ -133,6 +137,21 @@ class Google2ud(Convert1to2):
             else:
                 node.misc['Proper'] = node.feats['Proper']
             del node.feats['Proper']
+
+        # Indonesian uses prefixes (me, di, ber, ke,...) and suffixes (an, kan, i,...),
+        # which are written without spaces with the main word/stem (according to the raw text).
+        # These could be treated as syntactic words and annotated using multi-word tokens.
+        # However, there is no annotation about their dependency relations (just suff, pref)
+        # and UD_Indonesian v2.0 keeps them as one word with the stem. So let's follow this style.
+        if node.upos == 'AFFIX':
+            if node.deprel == 'suff':
+                node.prev_node.form += node.form
+            elif node.deprel == 'pref':
+                node.next_node.form = node.form + node.next_node.form
+            else:
+                self.log(node, 'affix', 'upos=AFFIX deprel=' + node.deprel)
+                return
+            node.remove(children='rehang')
 
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
