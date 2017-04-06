@@ -465,15 +465,68 @@ class Node(object):
         """Is this node a leaf, ie. a node without any children?"""
         return not self.children
 
+    def _get_attr(self, name): # pylint: disable=too-many-return-statements
+        if name == 'dir':
+            if self.parent.is_root():
+                return 'root'
+            return 'left' if self.precedes(self.parent) else 'right'
+        if name == 'edge':
+            if self.parent.is_root():
+                return 0
+            return self.ord - self.parent.ord
+        if name == 'children':
+            return len(self.children)
+        if name == 'siblings':
+            return len(self.parent.children) - 1
+        if name == 'depth':
+            value = 0
+            tmp = self
+            while not tmp.is_root():
+                tmp = tmp.parent
+                value += 1
+            return value
+        if name == 'feats_split':
+            return str(self.feats).split('|')
+        return getattr(self, name)
+
     def get_attrs(self, attrs, undefs=None, stringify=True):
-        """Return multiple attributes, possibly subsitituting empty ones.
+        """Return multiple attributes or pseudo-attributes, possibly substituting empty ones.
+
+        Pseudo-attributes:
+        p_xy is the (pseudo) attribute xy of the parent node.
+        c_xy is a list of the (pseudo) attributes xy of the children nodes.
+        dir: 'left' = the node is a left child of its parent,
+             'right' = the node is a rigth child of its parent,
+             'root' = the node's parent is the technical root.
+        edge: length of the edge to parent (`node.ord - node.parent.ord`) or 0 if parent is root
+        children: number of children nodes.
+        siblings: number of siblings nodes.
+        depth: depth in the dependency tree (technical root has depth=0, highest word has depth=1).
+        feats_split: list of name=value formatted strings of the FEATS.
 
         Args:
-        attrs: A list of attribute names, e.g. ['form', 'lemma'].
+        attrs: A list of attribute names, e.g. ``['form', 'lemma', 'p_upos']``.
         undefs: A value to be used instead of None for empty (undefined) values.
         stringify: Apply `str()` on each value (except for None)
         """
-        values = [getattr(self, name) for name in attrs]
+        values = []
+        for name in attrs:
+            if name.startswith('p_'):
+                if name == 'p_feats_split':
+                    values.extend(self.parent._get_attr(name[2:]))
+                else:
+                    values.append(self.parent._get_attr(name[2:]))
+            elif name.startswith('c_'):
+                for child in self.children:
+                    if name == 'c_feats_split':
+                        values.extend(child._get_attr(name[2:]))
+                    else:
+                        values.append(child._get_attr(name[2:]))
+            elif name == 'feats_split':
+                values.extend(self._get_attr(name))
+            else:
+                values.append(self._get_attr(name))
+
         if undefs is not None:
             values = [x if x is not None else undefs for x in values]
         if stringify:
