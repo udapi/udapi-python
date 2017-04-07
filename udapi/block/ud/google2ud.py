@@ -9,11 +9,12 @@ from udapi.block.ud.setspaceafterfromtext import SetSpaceAfterFromText
 DEPREL_CHANGE = {
     "ROOT": "root",
     "prep": "case",
+    "ncomp": "case", # TODO ?
     "p": "punct",
     "poss": "nmod:poss",
     "ps": "case",
-    "num": "nummod", # TODO ??
-    "number": "nummod", # TODO ??
+    "num": "nummod",
+    "number": "nummod", # TODO ?
     "tmod": "nmod:tmod",
     "vmod": "acl",
     "rcmod": "acl:relcl",
@@ -26,15 +27,35 @@ DEPREL_CHANGE = {
     "postneg": "neg", # will be changed to advmod + Polarity=Neg in ud.Convert1to2
     "pronl": "obj", # TODO: or expl? UD_French seems to use a mix of both
     "redup": "compound:plur",
+    "oblcomp": "obl",
+    "mes": "dep", # TODO ?
+    "mwn": "compound:n", # nominal multi-word
+    "mwa": "compound:a", # adjectival multi-word
+    "mwv": "compound:v", # verbal multi-word
+    "asp": "aux", # aspectual particle
+    "rcmodrel": "mark:relcl",
+    "auxcaus": "aux", # redundant with Voice=Cau
+    "topic": "dep",
+    "possessive": "case",
+    "quantmod": "det", # TODO UD_Hindi uses "dep" for the same words
+    # TODO: "ref" - in basic dependencies it should be rehanged and relabelled
+    "conjv": "compound:conjv",
 }
 
 FEATS_CHANGE = {
     "proper=false": "",
     "case=prep": "",
+    "case=unsp_c": "",
     "gender=unsp_g": "",
+    "gender_antecedent=unsp_g": "",
     "voice=unsp_v": "",
     "number=unsp_n": "",
+    "number_antecedent=unsp_n": "",
     "tense=unsp_t": "",
+    "mood=unsp_m": "",
+    "animacy=unsp_r": "",
+    "aspect=unsp_a": "",
+    "case=rel": "", # redundant with rcmodrel (mark:relcl)
     "reciprocity=non-rcp": "",
     "reciprocity=rcp": "PronType=Rcp",
     "aspect=imperf": "Aspect=Imp",
@@ -42,24 +63,30 @@ FEATS_CHANGE = {
     "form=short": "Variant=Short",
     "person=reflex": "Reflex=Yes",
     "case=reflex": "Reflex=Yes",
+    "case=dir": "Case=Nom",
     "gender=pl_tantum": "Number=Ptan",
-    "gender_antecedent=fem_a": "Gender=Fem",
-    "gender_antecedent=masc_a": "Gender=Masc",
-    "gender_antecedent=neut_a": "Gender=Neut",
-    "number_antecedent=sing_a": "Number=Sing",
-    "number_antecedent=plur_a": "Number=Plur",
-    "person_antecedent=1_a": "Person=1",
-    "person_antecedent=2_a": "Person=2",
-    "person_antecedent=3_a": "Person=3",
+    "gender_antecedent=fem_a": "Gender[psor]=Fem",
+    "gender_antecedent=masc_a": "Gender[psor]=Masc",
+    "gender_antecedent=neut_a": "Gender[psor]=Neut",
+    "number_antecedent=sing_a": "Number[psor]=Sing",
+    "number_antecedent=plur_a": "Number[psor]=Plur",
+    "person_antecedent=1_a": "Person[psor]=1",
+    "person_antecedent=2_a": "Person[psor]=2",
+    "person_antecedent=3_a": "Person[psor]=3",
     "definiteness=def": "Definite=Def",
     "definiteness=indef": "Definite=Ind",
     "mood=sub1": "Mood=Sub", # TODO: what is the difference between sub1 and sub2 in German?
     "mood=sub2": "Mood=Sub",
+    "mood=inter": "PronType=Int", # TODO or keep Mood=Inter (it is used in UD_Chinese)
     "tense=cnd": "Mood=Cnd",
     "degree=sup_a": "Degree=Abs",
     "degree=sup_r": "Degree=Sup",
     "case=obl": "Case=Acc",
     "tense=impf": "Tense=Imp",
+    "animacy=rat": "Animacy=Hum",
+    "animacy=irrat": "Animacy=Nhum",
+    "honorific=hon": "Polite=Form",
+    "mood=psm": "Tense=Fut", # TODO ?
 }
 
 class Google2ud(Convert1to2):
@@ -108,7 +135,7 @@ class Google2ud(Convert1to2):
         """Remove language prefixes, capitalize names and values, apply FEATS_CHANGE."""
         orig_feats = dict(node.feats)
         node.feats = None
-        for name, value in orig_feats.items():
+        for name, value in sorted(orig_feats.items()):
             name = name.split('/')[1]
             if name == 'inflection_type':
                 node.misc['InflectionType'] = value.capitalize()
@@ -143,15 +170,18 @@ class Google2ud(Convert1to2):
         # These could be treated as syntactic words and annotated using multi-word tokens.
         # However, there is no annotation about their dependency relations (just suff, pref)
         # and UD_Indonesian v2.0 keeps them as one word with the stem. So let's follow this style.
+        # Chinese AFFIXes are more tricky to convert.
+        # It seems these words are quite often tagged as PART in UD_Chinese.
         if node.upos == 'AFFIX':
             if node.deprel == 'suff':
                 node.prev_node.form += node.form
+                node.remove(children='rehang')
             elif node.deprel == 'pref':
                 node.next_node.form = node.form + node.next_node.form
+                node.remove(children='rehang')
             else:
                 self.log(node, 'affix', 'upos=AFFIX deprel=' + node.deprel)
-                return
-            node.remove(children='rehang')
+                node.upos = 'PART'
 
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
@@ -169,12 +199,26 @@ class Google2ud(Convert1to2):
             else:
                 node.deprel = 'compound'
         elif node.deprel in ('pobj', 'pcomp'):
-            if node.parent.deprel == 'case':
+            if node.parent.deprel in ('case', 'prep'):
                 preposition = node.parent
                 node.parent = preposition.parent
                 preposition.parent = node
-                node.deprel = 'nmod' if node.deprel == 'pobj' else 'xcomp' # TODO check xcomp
+
                 # ud.Convert1to2 will change 'nmod' to 'obl' if needed
+                node.deprel = 'nmod' if node.deprel == 'pobj' else 'xcomp' # TODO check xcomp
+
+                # Prepositions should not have any children (except for deprel=fixed/mwe), see
+                # http://universaldependencies.org/u/overview/syntax.html#multiword-function-words.
+                # Unfortunatelly, there are many annotation errors and it is almost always better
+                # to rehang the extra children (at least to prevent spurious non-projectivities).
+                # In case of PUNCTuation it is surely correct.
+                # Otherwise, let's mark it as ToDo.
+                for extra_prep_child in preposition.children:
+                    if extra_prep_child.udeprel in ('fixed', 'mwe'):
+                        continue
+                    extra_prep_child.parent = node
+                    if extra_prep_child.upos != 'PUNCT':
+                        self.log(extra_prep_child, 'ex-adp-child', 'was an extra adposition child')
             else:
                 self.log(node, node.deprel, node.deprel + ' but parent.deprel!=case')
                 node.deprel = 'obj'
@@ -184,6 +228,9 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'partmod':
             node.deprel = 'ccomp'
             node.feats['VerbForm'] = 'Part'
+        elif node.deprel == 'suff':
+            node.misc['OrigDeprel'] = 'suff'
+            node.deprel = 'dep'
 
     def fix_quotes(self, node):
         """Reconstruct the original quotes."""
