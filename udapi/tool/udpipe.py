@@ -2,8 +2,9 @@
 import io
 import os
 
-from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence # pylint: disable=no-name-in-module
+from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence  # pylint: disable=no-name-in-module
 from udapi.block.read.conllu import Conllu as ConlluReader
+
 
 class UDPipe:
     '''Wrapper for UDPipe (more pythonic than ufal.udpipe).'''
@@ -45,9 +46,9 @@ class UDPipe:
                 setattr(node, attr, getattr(parsed_node, attr))
 
         # TODO: benchmark which solution is the fastest one. E.g. we could also do
-        #for node, parsed_node in zip(root.descendants, parsed_root.descendants):
+        # for node, parsed_node in zip(root.descendants, parsed_root.descendants):
         #    parsed_node.misc = node.misc
-        ## pylint: disable=protected-access
+        # pylint: disable=protected-access
         #root._children, root._descendants = parsed_root._children, parsed_root._descendants
 
     def tokenize_tag_parse_tree(self, root):
@@ -59,13 +60,13 @@ class UDPipe:
         self.tokenizer.setText(root.text)
         u_sentence = Sentence()
         is_another = self.tokenizer.nextSentence(u_sentence)
-        u_words    = u_sentence.words
-        n_words    = u_words.size() - 1
+        u_words = u_sentence.words
+        n_words = u_words.size() - 1
         if is_another:
             u_sent_cont = Sentence()
             while self.tokenizer.nextSentence(u_sent_cont):
                 n_cont = u_sent_cont.words.size() - 1
-                for i in range(1, n_cont+1):
+                for i in range(1, n_cont + 1):
                     u_w = u_sent_cont.words[i]
                     n_words += 1
                     u_w.id = n_words

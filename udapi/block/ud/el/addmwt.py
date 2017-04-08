@@ -24,8 +24,9 @@ for v in MWTS.values():
     v['xpos'] = 'AsPpSp AtDf'
     v['deprel'] = 'case det'
     # The following are the default values
-    #v['main'] = 0 # which of the two words will inherit the original children (if any)
-    #v['shape'] = 'siblings', # the newly created nodes will be siblings
+    # v['main'] = 0 # which of the two words will inherit the original children (if any)
+    # v['shape'] = 'siblings', # the newly created nodes will be siblings
+
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""

@@ -23,6 +23,7 @@ def _parse_block_name(block_name):
     # Return a path and the last name as a class name.
     return '.'.join(names[:-1]), names[-1]
 
+
 def _parse_command_line_arguments(scenario):
     """
     Obtain a list of block names and a list of their arguments from the command line arguments list.
@@ -65,6 +66,7 @@ def _parse_command_line_arguments(scenario):
 
     return block_names, block_args
 
+
 def _import_blocks(block_names, block_args):
     """
     Parse block names, import particular packages and call the constructor for each object.
@@ -84,16 +86,16 @@ def _import_blocks(block_names, block_args):
         try:
             command = "from " + module + " import " + class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
-            exec(command) # pylint: disable=exec-used
+            exec(command)  # pylint: disable=exec-used
         except Exception:
             logging.warning("Error when trying import the block %s", block_name)
             raise
 
         # Run the imported module.
-        kwargs = block_args[block_id] # pylint: disable=unused-variable
+        kwargs = block_args[block_id]  # pylint: disable=unused-variable
         command = "b%s(**kwargs)" % block_id
         logging.debug("Trying to evaluate this: %s", command)
-        new_block_instance = eval(command) # pylint: disable=eval-used
+        new_block_instance = eval(command)  # pylint: disable=eval-used
         blocks.append(new_block_instance)
 
     return blocks
@@ -132,7 +134,7 @@ class Run(object):
         readers = []
         for block in blocks:
             try:
-                block.finished # pylint: disable=pointless-statement
+                block.finished  # pylint: disable=pointless-statement
                 readers.append(block)
             except AttributeError:
                 pass

@@ -12,6 +12,7 @@ ADP_HEAD_PREFERENCES = {
     'PUNCT': -10,
 }
 
+
 class To2(Block):
     """Block for fixing the remaining cases (before ud.Convert1to2) in UD_Galician."""
 

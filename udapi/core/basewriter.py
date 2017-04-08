@@ -5,6 +5,7 @@ import logging
 from udapi.core.block import Block
 from udapi.core.files import Files
 
+
 class BaseWriter(Block):
     """Base class for all reader blocks."""
 

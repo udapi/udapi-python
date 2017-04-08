@@ -38,7 +38,7 @@ and a delta relative to percentage within all nodes.
 This helps to highlight what is special about the matching nodes.
 """
 from collections import Counter
-import re # may be useful in eval, thus pylint: disable=unused-import
+import re  # may be useful in eval, thus pylint: disable=unused-import
 
 from udapi.core.block import Block
 
@@ -46,6 +46,8 @@ STATS = 'dir,edge,depth,children,siblings,p_upos,p_lemma,c_upos,form,lemma,upos,
 
 # We need eval in this block
 # pylint: disable=eval-used
+
+
 class See(Block):
     """Print statistics about the nodes specified by the parameter `node`."""
 

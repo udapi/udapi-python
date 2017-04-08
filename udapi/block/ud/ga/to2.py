@@ -4,6 +4,7 @@ Author: Martin Popel
 """
 from udapi.core.block import Block
 
+
 class To2(Block):
     """Block for fixing the remaining cases (after ud.Convert1to2) in UD_Irish."""
 

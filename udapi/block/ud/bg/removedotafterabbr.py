@@ -7,6 +7,7 @@ Author: Martin Popel
 """
 from udapi.core.block import Block
 
+
 class RemoveDotAfterAbbr(Block):
     """Block for deleting extra PUNCT nodes after abbreviations.
 

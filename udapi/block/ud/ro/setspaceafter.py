@@ -10,6 +10,7 @@ import re
 
 import udapi.block.ud.setspaceafter
 
+
 class SetSpaceAfter(udapi.block.ud.setspaceafter.SetSpaceAfter):
     """Block for heuristic setting of the SpaceAfter=No MISC attribute in Romanian.
 
@@ -37,7 +38,7 @@ class SetSpaceAfter(udapi.block.ud.setspaceafter.SetSpaceAfter):
 
             # Mark contractions like -i, -și, -l, -urilor, but not negative numbers like -12,3.
             # Store SpaceAfter=No to the previous node.
-            next_form = nodes[i+1].form
+            next_form = nodes[i + 1].form
             if re.match('-.*[^0-9,.]', next_form):
                 self.mark_no_space(node)
 

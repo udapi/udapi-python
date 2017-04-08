@@ -17,6 +17,7 @@ during deprojectivization is simple and needs no heuristics.
 """
 from udapi.core.block import Block
 
+
 class Proj(Block):
     """Projectivize the trees à la Nivre & Nilsson (2005)."""
 

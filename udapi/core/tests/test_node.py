@@ -110,7 +110,7 @@ class TestDocument(unittest.TestCase):
             root3.print_subtree(color=False, attributes='form', print_sent_id=0, print_text=0)
             self.assertEqual(capture.getvalue(), expected3)
         finally:
-            sys.stdout = sys.__stdout__ # pylint: disable=redefined-variable-type
+            sys.stdout = sys.__stdout__  # pylint: disable=redefined-variable-type
 
     def test_feats(self):
         """Test the morphological featrues."""
@@ -120,7 +120,7 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(str(node.feats), '_')
         node.feats = None
         self.assertEqual(str(node.feats), '_')
-        node.feats = {} # pylint: disable=redefined-variable-type
+        node.feats = {}  # pylint: disable=redefined-variable-type
         self.assertEqual(str(node.feats), '_')
 
         node.feats = 'Mood=Ind|Person=1|Voice=Act'

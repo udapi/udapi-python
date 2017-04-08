@@ -1,6 +1,7 @@
 """Block eval.Parsing for evaluating UAS and LAS - gold and pred must have the same tokens."""
 from udapi.core.basewriter import BaseWriter
 
+
 class Parsing(BaseWriter):
     """Evaluate labeled and unlabeled attachment score (LAS and UAS)."""
 

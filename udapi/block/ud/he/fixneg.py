@@ -6,6 +6,7 @@ import logging
 
 from udapi.core.block import Block
 
+
 class FixNeg(Block):
     """Block for fixing the remaining cases (after ud.Convert1to2) of deprel=neg in UD_Hebrew."""
 

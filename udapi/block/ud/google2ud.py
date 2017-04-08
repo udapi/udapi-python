@@ -9,12 +9,12 @@ from udapi.block.ud.setspaceafterfromtext import SetSpaceAfterFromText
 DEPREL_CHANGE = {
     "ROOT": "root",
     "prep": "case",
-    "ncomp": "case", # TODO ?
+    "ncomp": "case",  # TODO ?
     "p": "punct",
     "poss": "nmod:poss",
     "ps": "case",
     "num": "nummod",
-    "number": "nummod", # TODO ?
+    "number": "nummod",  # TODO ?
     "tmod": "nmod:tmod",
     "vmod": "acl",
     "rcmod": "acl:relcl",
@@ -24,20 +24,20 @@ DEPREL_CHANGE = {
     "predet": "det:predet",
     "gmod": "amod",
     "gobj": "obj",
-    "postneg": "neg", # will be changed to advmod + Polarity=Neg in ud.Convert1to2
-    "pronl": "obj", # TODO: or expl? UD_French seems to use a mix of both
+    "postneg": "neg",  # will be changed to advmod + Polarity=Neg in ud.Convert1to2
+    "pronl": "obj",  # TODO: or expl? UD_French seems to use a mix of both
     "redup": "compound:plur",
     "oblcomp": "obl",
-    "mes": "dep", # TODO ?
-    "mwn": "compound:n", # nominal multi-word
-    "mwa": "compound:a", # adjectival multi-word
-    "mwv": "compound:v", # verbal multi-word
-    "asp": "aux", # aspectual particle
+    "mes": "dep",  # TODO ?
+    "mwn": "compound:n",  # nominal multi-word
+    "mwa": "compound:a",  # adjectival multi-word
+    "mwv": "compound:v",  # verbal multi-word
+    "asp": "aux",         # aspectual particle
     "rcmodrel": "mark:relcl",
-    "auxcaus": "aux", # redundant with Voice=Cau
+    "auxcaus": "aux",     # redundant with Voice=Cau
     "topic": "dep",
     "possessive": "case",
-    "quantmod": "det", # TODO UD_Hindi uses "dep" for the same words
+    "quantmod": "det",  # TODO UD_Hindi uses "dep" for the same words
     # TODO: "ref" - in basic dependencies it should be rehanged and relabelled
     "conjv": "compound:conjv",
 }
@@ -55,7 +55,7 @@ FEATS_CHANGE = {
     "mood=unsp_m": "",
     "animacy=unsp_r": "",
     "aspect=unsp_a": "",
-    "case=rel": "", # redundant with rcmodrel (mark:relcl)
+    "case=rel": "",  # redundant with rcmodrel (mark:relcl)
     "reciprocity=non-rcp": "",
     "reciprocity=rcp": "PronType=Rcp",
     "aspect=imperf": "Aspect=Imp",
@@ -75,9 +75,9 @@ FEATS_CHANGE = {
     "person_antecedent=3_a": "Person[psor]=3",
     "definiteness=def": "Definite=Def",
     "definiteness=indef": "Definite=Ind",
-    "mood=sub1": "Mood=Sub", # TODO: what is the difference between sub1 and sub2 in German?
+    "mood=sub1": "Mood=Sub",  # TODO: what is the difference between sub1 and sub2 in German?
     "mood=sub2": "Mood=Sub",
-    "mood=inter": "PronType=Int", # TODO or keep Mood=Inter (it is used in UD_Chinese)
+    "mood=inter": "PronType=Int",  # TODO or keep Mood=Inter (it is used in UD_Chinese)
     "tense=cnd": "Mood=Cnd",
     "degree=sup_a": "Degree=Abs",
     "degree=sup_r": "Degree=Sup",
@@ -86,8 +86,9 @@ FEATS_CHANGE = {
     "animacy=rat": "Animacy=Hum",
     "animacy=irrat": "Animacy=Nhum",
     "honorific=hon": "Polite=Form",
-    "mood=psm": "Tense=Fut", # TODO ?
+    "mood=psm": "Tense=Fut",  # TODO ?
 }
+
 
 class Google2ud(Convert1to2):
     """Convert Google Universal Dependency Treebank into UD style."""
@@ -111,11 +112,11 @@ class Google2ud(Convert1to2):
             self.fix_feats(node)
             self.fix_upos(node)
             self.fix_deprel(node)
-            #self.fix_quotes(node)
+            # self.fix_quotes(node)
 
         # This needs to be executed after all other deprels are converted
         for node in root.descendants:
-            if node.deprel in ('acomp', 'attr'): # TODO not sure about attr
+            if node.deprel in ('acomp', 'attr'):  # TODO not sure about attr
                 copula = node.parent
                 node.parent = copula.parent
                 node.deprel = copula.deprel
@@ -183,6 +184,9 @@ class Google2ud(Convert1to2):
                 self.log(node, 'affix', 'upos=AFFIX deprel=' + node.deprel)
                 node.upos = 'PART'
 
+        if node.upos == 'PUNCT' and node.form in ('$', '£'):
+            node.upos = 'SYM'
+
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
 
@@ -205,7 +209,7 @@ class Google2ud(Convert1to2):
                 preposition.parent = node
 
                 # ud.Convert1to2 will change 'nmod' to 'obl' if needed
-                node.deprel = 'nmod' if node.deprel == 'pobj' else 'xcomp' # TODO check xcomp
+                node.deprel = 'nmod' if node.deprel == 'pobj' else 'xcomp'  # TODO check xcomp
 
                 # Prepositions should not have any children (except for deprel=fixed/mwe), see
                 # http://universaldependencies.org/u/overview/syntax.html#multiword-function-words.

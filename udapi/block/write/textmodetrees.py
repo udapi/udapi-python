@@ -17,6 +17,8 @@ COLOR_OF = {
 # Too many instance variables, arguments, branches...
 # I don't see how to fix this while not making the code less readable or more difficult to use.
 # pylint: disable=R0902,R0912,R0913,R0914
+
+
 class TextModeTrees(BaseWriter):
     """An ASCII pretty printer of dependency trees.
 
@@ -181,17 +183,17 @@ class TextModeTrees(BaseWriter):
 
         # Precompute the number of non-projective gaps for each subtree
         if self.minimize_cross:
-            self._gaps = [0,] * (1 + len(root.root.descendants))
+            self._gaps = [0, ] * (1 + len(root.root.descendants))
             self._compute_gaps(root)
 
         # Precompute lines for printing
-        stack = [root,]
+        stack = [root, ]
         while stack:
             node = stack.pop()
             children = node.children(add_self=1)
             min_idx, max_idx = self._index_of[children[0].ord], self._index_of[children[-1].ord]
-            max_length = max([self.lengths[i] for i in range(min_idx, max_idx+1)])
-            for idx in range(min_idx, max_idx+1):
+            max_length = max([self.lengths[i] for i in range(min_idx, max_idx + 1)])
+            for idx in range(min_idx, max_idx + 1):
                 idx_node = allnodes[idx]
                 filler = '─' if self._ends(idx, '─╭╰├╪') else ' '
                 self._add(idx, filler * (max_length - self.lengths[idx]))

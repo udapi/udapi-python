@@ -1,6 +1,7 @@
 """Block ud.RemoveMwt for removing multi-word tokens."""
 from udapi.core.block import Block
 
+
 class RemoveMwt(Block):
     """Substitute MWTs with one word representing the whole MWT."""
 
@@ -26,7 +27,7 @@ class RemoveMwt(Block):
         """DEPREL of the whole MWT"""
         return words[0].deprel
         # Alternatively, we could define deprel subtypes
-        #return words[0].deprel + ':' + ','.join([w.deprel for w in words[1:]])
+        # return words[0].deprel + ':' + ','.join([w.deprel for w in words[1:]])
 
     @staticmethod
     def guess_feats(words):

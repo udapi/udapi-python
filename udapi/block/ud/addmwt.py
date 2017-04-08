@@ -1,6 +1,7 @@
 """Abstract base class ud.AddMwt for heuristic detection of multi-word tokens."""
 from udapi.core.block import Block
 
+
 class AddMwt(Block):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
 
@@ -24,7 +25,7 @@ class AddMwt(Block):
             nodes.append(new_node)
         node.form = forms[main]
         nodes.append(node)
-        for form in forms[main+1:]:
+        for form in forms[main + 1:]:
             new_node = parent.create_child(form=form)
             new_node.shift_after_node(nodes[-1])
             nodes.append(new_node)

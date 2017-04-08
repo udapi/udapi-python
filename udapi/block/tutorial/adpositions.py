@@ -13,6 +13,7 @@ Example usage::
 """
 from udapi.core.block import Block
 
+
 class Adpositions(Block):
     """Compute the number of prepositions and postpositions."""
 

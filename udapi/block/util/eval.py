@@ -5,10 +5,12 @@ import re
 
 from udapi.core.block import Block
 
-pp = pprint.pprint # pylint: disable=invalid-name
+pp = pprint.pprint  # pylint: disable=invalid-name
 
 # We need exec in this block and the variables this etc. are not unused but provided for the exec
 # pylint: disable=exec-used,unused-variable
+
+
 class Eval(Block):
     r"""Special block for evaluating code given by parameters.
 
@@ -66,7 +68,7 @@ class Eval(Block):
 
         if self.bundle or self.before_bundle or self.after_bundle or self.tree or self.node:
             for bundle in doc.bundles:
-                #TODO if self._should_process_bundle(bundle):
+                # TODO if self._should_process_bundle(bundle):
                 self.process_bundle(bundle)
 
     def process_bundle(self, bundle):
@@ -83,7 +85,7 @@ class Eval(Block):
         if self.tree or self.node:
             trees = bundle.trees
             for tree in trees:
-                #TODO if not self._should_process_tree(tree): continue
+                # TODO if not self._should_process_tree(tree): continue
                 self.process_tree(tree)
 
         if self.after_bundle:

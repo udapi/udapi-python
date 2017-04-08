@@ -9,6 +9,7 @@ import logging
 
 from udapi.core.block import Block
 
+
 class SetSpaceAfterFromText(Block):
     """Block for setting of the SpaceAfter=No MISC attribute according to the sentence text."""
 

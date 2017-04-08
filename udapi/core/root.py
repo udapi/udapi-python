@@ -8,6 +8,7 @@ from udapi.core.mwt import MWT
 # The set of public attributes/properties and methods of Root was well-thought.
 # pylint: disable=too-many-instance-attributes
 
+
 class Root(Node):
     """Class for representing root nodes (technical roots) in UD trees."""
     __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts',
@@ -35,7 +36,7 @@ class Root(Node):
         self._bundle = None
         self._descendants = []
         self._mwts = []
-        self.empty_nodes = [] # TODO: private
+        self.empty_nodes = []  # TODO: private
 
     @property
     def sent_id(self):

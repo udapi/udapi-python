@@ -1,6 +1,7 @@
 """Block tokenize.OnWhitespace"""
 from udapi.core.block import Block
 
+
 class OnWhitespace(Block):
     """"Base tokenizer, splits on whitespaces, fills SpaceAfter=No."""
 

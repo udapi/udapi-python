@@ -1,10 +1,12 @@
 """Filter is a special block for keeping/deleting subtrees specified by parameters."""
-import re # may be useful in eval, thus pylint: disable=unused-import
+import re  # may be useful in eval, thus pylint: disable=unused-import
 
 from udapi.core.block import Block
 
 # We need eval in this block
 # pylint: disable=eval-used
+
+
 class Filter(Block):
     """Special block for keeping/deleting subtrees specified by parameters.
 
@@ -25,8 +27,7 @@ class Filter(Block):
     udapy -s util.Filter delete_subtree='node.deprel == "remnant"' < in > filtered
     """
 
-
-    def __init__(self, # pylint: disable=too-many-arguments
+    def __init__(self,  # pylint: disable=too-many-arguments
                  delete_tree=None, delete_tree_if_node=None, delete_subtree=None,
                  keep_tree=None, keep_tree_if_node=None, keep_subtree=None,
                  mark=None, **kwargs):
@@ -72,7 +73,7 @@ class Filter(Block):
         self.keep_subtree = keep_subtree
         self.mark = mark
 
-    def process_tree(self, tree): # pylint: disable=too-many-branches
+    def process_tree(self, tree):  # pylint: disable=too-many-branches
         root = tree
 
         if self.delete_tree is not None:

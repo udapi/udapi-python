@@ -5,6 +5,7 @@ TODO: implement also path and head+path strategies.
 """
 from udapi.core.block import Block
 
+
 class Deproj(Block):
     """De-projectivize the trees à la Nivre & Nilsson (2005)."""
 
@@ -33,7 +34,7 @@ class Deproj(Block):
             node.parent = reconstructed_parent
 
     def head_strategy(self, node, label):
-        queue = [n for n in node.parent.children if n!=node] # TODO deque
+        queue = [n for n in node.parent.children if n != node]  # TODO deque
         while queue:
             adept = queue.pop(0)
             if adept.udeprel == label:

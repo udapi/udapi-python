@@ -97,4 +97,4 @@ class Tikz(BaseWriter):
             else:
                 print(r'\depedge{%d}{%d}{%s}' % (node.parent.ord, node.ord, node.deprel))
         print(r'\end{dependency}')
-        print('') # empty line marks a new paragraph in LaTeX
+        print('')  # empty line marks a new paragraph in LaTeX

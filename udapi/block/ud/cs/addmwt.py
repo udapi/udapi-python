@@ -43,6 +43,7 @@ for prep in 'na za o'.split():
         'shape': 'subtree',
     }
 
+
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
 

@@ -9,6 +9,7 @@ import logging
 
 from udapi.core.block import Block
 
+
 class GoeswithFromText(Block):
     """Block for splitting nodes and attaching via goeswith according to the the sentence text.
 
@@ -96,6 +97,6 @@ class GoeswithFromText(Block):
                 else:
                     last_node.misc['SpaceAfter'] = 'No'
             else:
-                assert False # we have checked the whole sentence already
+                assert False  # we have checked the whole sentence already
         if text:
             logging.warning('Extra text "%s" in tree %s', text, root)

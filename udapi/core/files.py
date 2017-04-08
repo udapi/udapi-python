@@ -7,6 +7,7 @@ import bz2
 import gzip
 import lzma
 
+
 class Files(object):
     """Helper class for iterating over filenames.
 
@@ -71,7 +72,7 @@ class Files(object):
                 filenames = [line.rstrip('\n') for line in filelist]
             directory = os.path.dirname(token[1:])
             if directory != '.':
-                filenames = [f if f[0] != '/' else directory+'/'+f for f in filenames]
+                filenames = [f if f[0] != '/' else directory + '/' + f for f in filenames]
         else:
             filenames = token
         return filenames

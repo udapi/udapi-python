@@ -2,6 +2,7 @@
 from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
 
+
 class Vislcg(BaseReader):
     """A reader of the VISL-cg format, suitable for VISL Constraint Grammer Parser."""
 
@@ -67,7 +68,7 @@ class Vislcg(BaseReader):
         # Let's hope that xpos, feats and deprel do not contain any quotes.
         end_quote_pos = line.rfind('"')
         lemma = line[1:end_quote_pos]
-        fields = line[end_quote_pos+1:].split()
+        fields = line[end_quote_pos + 1:].split()
         xpos = fields[0]
         feats_list = fields[3:-2]
         feats = '|'.join(feats_list) if feats_list else '_'

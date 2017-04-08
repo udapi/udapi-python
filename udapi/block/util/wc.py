@@ -1,6 +1,7 @@
 """Wc is a special block for printing statistics (word count etc)."""
 from udapi.core.block import Block
 
+
 class Wc(Block):
     """Special block for printing statistics (word count etc)."""
 

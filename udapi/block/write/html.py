@@ -73,7 +73,7 @@ class Html(BaseWriter):
             js_t_v = self.path_to_js + '/js-treex-view.js'
 
         print('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">')
-        print('<title>Udapi viewer</title>') # TODO doc.loaded_from
+        print('<title>Udapi viewer</title>')  # TODO doc.loaded_from
         for js_file in (jquery, fsaver, js_t_v):
             print('<script src="%s"></script>' % js_file)
         print('</head>\n<body>')
@@ -134,7 +134,7 @@ class Html(BaseWriter):
         multiline_feats = feats.replace('|', r'\n')
         print(',{{"id":{id_node},"parent":{id_parent},"order":{order},{firstson_str}{rbrother_str}'
               '"data":{{"ord":{order},"form":"{form}","lemma":"{lemma}","upos":"{upos}",'
-              '"xpos":"{xpos}","feats":"{feats}","deprel":"{deprel}",' # TODO: deps
+              '"xpos":"{xpos}","feats":"{feats}","deprel":"{deprel}",'  # TODO: deps
               '"misc":"{misc}","id":"{address}"}},'
               '"labels":["{form}","#{{#bb0000}}{upos}","#{{#0000bb}}{deprel}"],'
               '"hint":"lemma={lemma}\\n{multiline_feats}"}}'.format(**locals()))
@@ -150,6 +150,7 @@ def _id(node):
     if node is None:
         return 'null'
     return '"n%s"' % node.address().replace('#', '-').replace('/', '-')
+
 
 def _esc(string):
     if string is None:

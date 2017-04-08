@@ -16,6 +16,7 @@ from udapi.core.basewriter import BaseWriter
 from udapi.block.write.conllu import Conllu
 from udapi.core.run import _parse_block_name
 
+
 class FindBug(BaseWriter):
     """Debug another block by finding a minimal testcase conllu file."""
 
@@ -31,14 +32,14 @@ class FindBug(BaseWriter):
         try:
             command = "from " + module + " import " + class_name + " as b"
             logging.debug("Trying to run command: %s", command)
-            exec(command) # pylint: disable=exec-used
+            exec(command)  # pylint: disable=exec-used
         except Exception:
             logging.warning("Error when trying import the block %s", self.block)
             raise
 
-        command = "b()" # TODO params as kwargs
+        command = "b()"  # TODO params as kwargs
         logging.debug("Trying to evaluate this: %s", command)
-        new_block = eval(command) # pylint: disable=eval-used
+        new_block = eval(command)  # pylint: disable=eval-used
 
         doc_copy = copy.deepcopy(document)
         writer = Conllu(files=self.orig_files)
@@ -48,12 +49,12 @@ class FindBug(BaseWriter):
                           self.block, bundle_no, bundle.bundle_id)
             try:
                 new_block.process_bundle(bundle)
-            except Exception as exc: # pylint: disable=broad-except
+            except Exception as exc:  # pylint: disable=broad-except
                 logging.warning('util.FindBug found a problem in bundle %d in block %s: %r',
                                 bundle_no, self.block, exc)
                 logging.warning('Printing a minimal example to %s', self.orig_files)
 
-                for tree in document.bundles[bundle_no-1].trees:
+                for tree in document.bundles[bundle_no - 1].trees:
                     writer.process_tree(tree)
 
                 if self.first_error_only:

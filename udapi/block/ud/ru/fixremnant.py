@@ -4,6 +4,7 @@ Author: Martin Popel
 """
 from udapi.core.block import Block
 
+
 class FixRemnant(Block):
     """ad-hoc fixing the remaining cases (after ud.Convert1to2) of deprel=remnant in UD_Russian."""
 

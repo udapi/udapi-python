@@ -9,6 +9,7 @@ import collections
 
 from udapi.core.block import Block
 
+
 class SetSpaceAfter(Block):
     """Block for heuristic setting of the SpaceAfter=No MISC attribute."""
 
@@ -40,14 +41,14 @@ class SetSpaceAfter(Block):
             not_after += '“'
 
         for i, node in enumerate(nodes[:-1]):
-            next_form = nodes[i+1].form
+            next_form = nodes[i + 1].form
             if node.form in self.not_after or next_form in not_before:
                 self.mark_no_space(node)
             if matching_quotes and node.form == '"':
                 if odd_indexed_quote:
                     self.mark_no_space(node)
                 elif i:
-                    self.mark_no_space(nodes[i-1])
+                    self.mark_no_space(nodes[i - 1])
                 odd_indexed_quote = not odd_indexed_quote
 
         if matching_quotes and nodes[-1].form == '"':

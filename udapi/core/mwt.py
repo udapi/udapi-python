@@ -12,7 +12,7 @@ class MWT(object):
         self._misc = DualDict(misc)
         self.root = root
         for word in self.words:
-            word._mwt = self # pylint: disable=W0212
+            word._mwt = self  # pylint: disable=W0212
 
     @property
     def misc(self):
@@ -33,7 +33,7 @@ class MWT(object):
     def remove(self):
         """Delete this multi-word token (but keep its words)."""
         for word in self.words:
-            word._mwt = None # pylint: disable=W0212
+            word._mwt = None  # pylint: disable=W0212
         self.root.multiword_tokens = [tok for tok in self.root.multiword_tokens if tok != self]
 
     def address(self):

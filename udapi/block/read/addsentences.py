@@ -3,6 +3,8 @@ from udapi.core.basereader import BaseReader
 
 # pylint: disable=abstract-method
 # read_tree() does not need to be installed here
+
+
 class AddSentences(BaseReader):
     """A reader for adding plain-text sentences (one sentence per line) files.
 

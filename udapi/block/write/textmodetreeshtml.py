@@ -1,5 +1,5 @@
 """An ASCII pretty printer of colored dependency trees in HTML."""
-from html import escape # pylint: disable=no-name-in-module
+from html import escape  # pylint: disable=no-name-in-module
 
 from udapi.block.write.textmodetrees import TextModeTrees
 
@@ -14,6 +14,7 @@ STYLE = '''
   .ord {color: green;}
   mark {box-shadow: 0px 0px 0px 1px red; font-weight: bold;}
 '''
+
 
 class TextModeTreesHtml(TextModeTrees):
     """An ASCII pretty printer of colored dependency trees in HTML.
@@ -41,7 +42,8 @@ class TextModeTreesHtml(TextModeTrees):
     def before_process_document(self, document):
         # TextModeTrees.before_process_document changes the color property,
         # we need to skip this, but call BaseWriter's method which redirects stdout.
-        super(TextModeTrees, self).before_process_document(document) #pylint: disable=bad-super-call
+        super(TextModeTrees, self).before_process_document(
+            document)  # pylint: disable=bad-super-call
         print('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">')
         print('<title>' + self.title + '</title>')
         print('<style>' + STYLE)
@@ -49,7 +51,6 @@ class TextModeTreesHtml(TextModeTrees):
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
-
 
     def after_process_document(self, document):
         super().after_process_document(document)

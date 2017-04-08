@@ -8,6 +8,7 @@ Author: Martin Popel
 import logging
 from udapi.core.block import Block
 
+
 class SplitUnderscoreTokens(Block):
     """Block for spliting tokens with underscores and attaching the new nodes using deprel=flat.
 

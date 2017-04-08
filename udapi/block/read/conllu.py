@@ -12,6 +12,7 @@ RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
 RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
 
+
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
@@ -48,7 +49,6 @@ class Conllu(BaseReader):
         self.node_attributes = attributes.split(',')
         self.strict = strict
         self.separator = separator
-
 
     @staticmethod
     def parse_comment_line(line, root):
@@ -112,7 +112,7 @@ class Conllu(BaseReader):
                     empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
                                                     xpos=fields[4], feats=fields[5], misc=fields[9])
                     empty.ord = fields[0]
-                    empty.raw_deps = fields[8] # TODO
+                    empty.raw_deps = fields[8]  # TODO
                     continue
 
                 node = root.create_child()
@@ -163,7 +163,7 @@ class Conllu(BaseReader):
         # Create multi-word tokens.
         for fields in mwts:
             range_start, range_end = fields[0].split('-')
-            words = nodes[int(range_start):int(range_end)+1]
+            words = nodes[int(range_start):int(range_end) + 1]
             root.create_multiword_token(words, form=fields[1], misc=fields[-1])
 
         return root

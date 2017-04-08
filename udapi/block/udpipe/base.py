@@ -74,6 +74,7 @@ V2_KNOWN_MODELS = {
     'vi': 'models/udpipe/2.0/vietnamese-ud-2.0-conll17-170315.udpipe',
 }
 
+
 class Base(Block):
     """Base class for all UDPipe blocks."""
 

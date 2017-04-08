@@ -20,6 +20,7 @@ from udapi.core.feats import Feats
 # The set of public attributes/properties and methods of Node was well-thought.
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
+
 class Node(object):
     """Class for representing nodes in Universal Dependency trees.
 
@@ -62,22 +63,22 @@ class Node(object):
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
     __slots__ = [
-        'ord',       # Word-order index of the node (root has 0).
-        'form',      # Word form or punctuation symbol.
-        'lemma',     # Lemma of word form.
-        'upos',      # Universal PoS tag
-        'xpos',      # Language-specific part-of-speech tag; underscore if not available.
-        'deprel',    # UD dependency relation to the HEAD (root iff HEAD = 0).
-        '_misc',     # Any other annotation as udapi.core.dualdict.DualDict object.
-        '_raw_deps', # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
-        '_deps',     # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
-        '_feats',    # Morphological features as udapi.core.feats.Feats object.
-        '_parent',   # Parent node.
-        '_children', # Ord-ordered list of child nodes.
-        '_mwt',      # multi-word token in which this word participates
+        'ord',        # Word-order index of the node (root has 0).
+        'form',       # Word form or punctuation symbol.
+        'lemma',      # Lemma of word form.
+        'upos',       # Universal PoS tag.
+        'xpos',       # Language-specific part-of-speech tag; underscore if not available.
+        'deprel',     # UD dependency relation to the HEAD (root iff HEAD = 0).
+        '_misc',      # Any other annotation as udapi.core.dualdict.DualDict object.
+        '_raw_deps',  # Enhanced dependencies (head-deprel pairs) in their original CoNLLU format.
+        '_deps',      # Deserialized enhanced dependencies in a list of {parent, deprel} dicts.
+        '_feats',     # Morphological features as udapi.core.feats.Feats object.
+        '_parent',    # Parent node.
+        '_children',  # Ord-ordered list of child nodes.
+        '_mwt',       # Multi-word token in which this word participates.
     ]
 
-    def __init__(self, form=None, lemma=None, upos=None, # pylint: disable=too-many-arguments
+    def __init__(self, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
                  xpos=None, feats=None, deprel=None, misc=None):
         """Create a new node and initialize its attributes using the keyword arguments."""
         self.ord = None
@@ -346,8 +347,8 @@ class Node(object):
         """Create and return a new empty node child of the current node."""
         new_node = Node(**kwargs)
         self.root.empty_nodes.append(new_node)
-        #self.enh_children.append(new_node) TODO
-        #new_node.enh_parents.append(self) TODO
+        # self.enh_children.append(new_node) TODO
+        # new_node.enh_parents.append(self) TODO
         return new_node
 
     # TODO: make private: _unordered_descendants
@@ -465,7 +466,7 @@ class Node(object):
         """Is this node a leaf, ie. a node without any children?"""
         return not self.children
 
-    def _get_attr(self, name): # pylint: disable=too-many-return-statements
+    def _get_attr(self, name):  # pylint: disable=too-many-return-statements
         if name == 'dir':
             if self.parent.is_root():
                 return 'root'
@@ -652,6 +653,7 @@ class ListOfNodes(list):
     nodes = node.children()
     nodes = node.children(add_self=True, following_only=True)
     """
+
     def __init__(self, iterable, origin):
         """Create a new ListOfNodes.
 
@@ -710,7 +712,7 @@ def find_minimal_common_treelet(*args):
     new_nodes = {}
     highest = None
     while len(nodes) > 1:
-        node = nodes.pop(0) # TODO deque
+        node = nodes.pop(0)  # TODO deque
         parent = node.parent
         if parent is None:
             highest = node

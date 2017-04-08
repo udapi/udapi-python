@@ -1,6 +1,7 @@
 """Feats class for storing morphological features of nodes in UD trees."""
 import udapi.core.dualdict
 
+
 class Feats(udapi.core.dualdict.DualDict):
     """Feats class for storing morphological features of nodes in UD trees.
 

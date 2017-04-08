@@ -23,8 +23,9 @@ DEPREL_CHANGE = {
     "csubjpass": "csubj:pass",
     "auxpass": "aux:pass",
     "name": "flat:name",
-    "foreign": "flat", # "flat:foreign" not needed once we have Foreign=Yes in FEATS
+    "foreign": "flat",  # "flat:foreign" not needed once we have Foreign=Yes in FEATS
 }
+
 
 class Convert1to2(Block):
     """Block for converting UD v1 to UD v2."""
@@ -45,7 +46,7 @@ class Convert1to2(Block):
         self.skip = {k for k in skip.split(',')}
         self.save_stats = save_stats
 
-    def process_tree(self, tree): # pylint: disable=too-many-branches
+    def process_tree(self, tree):  # pylint: disable=too-many-branches
         """Apply all the changes on the current tree.
 
         This method is automatically called on each tree by Udapi.

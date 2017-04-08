@@ -2,6 +2,7 @@
 import collections.abc
 import copy
 
+
 class DualDict(collections.abc.MutableMapping):
     """DualDict class serves as dict with lazily synchronized string representation.
 

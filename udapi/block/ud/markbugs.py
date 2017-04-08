@@ -28,6 +28,7 @@ REQUIRED_FEATURE_FOR_UPOS = {
     'VERB': 'VerbForm',
 }
 
+
 class MarkBugs(Block):
     """Block for checking suspicious/wrong constructions in UD v2."""
 

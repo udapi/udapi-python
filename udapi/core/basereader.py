@@ -6,6 +6,8 @@ from udapi.core.block import Block
 from udapi.core.files import Files
 
 # pylint: disable=too-many-instance-attributes
+
+
 class BaseReader(Block):
     """Base class for all reader blocks."""
 
@@ -64,7 +66,6 @@ class BaseReader(Block):
         The implementation in this base clases raises `NotImplementedError`.
         """
         raise NotImplementedError("Class %s doesn't implement read_tree" % self.__class__.__name__)
-
 
     def filtered_read_tree(self, document=None):
         """Load and return one more tree matching the `sent_id_filter`.

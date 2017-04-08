@@ -13,6 +13,7 @@ ESCAPE_TABLE = {
     '|': '§verbar.',
 }
 
+
 class Vislcg(BaseWriter):
     """A writer of files in the VISL-cg format, suitable for VISL Constraint Grammer Parser.
 

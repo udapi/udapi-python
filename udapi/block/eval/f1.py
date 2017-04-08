@@ -56,6 +56,8 @@ import re
 from udapi.core.basewriter import BaseWriter
 
 # pylint: disable=too-many-instance-attributes,invalid-name
+
+
 class F1(BaseWriter):
     """Evaluate differences between sentences (in different zones) with P/R/F1.
 
@@ -156,17 +158,17 @@ class F1(BaseWriter):
                 _f1 = 2 * _prec * _rec / ((_prec + _rec) or 1)
                 print('%-10s %5d %5d %5d %6.2f%% %6.2f%% %6.2f%%'
                       % (token, self._pred[token], self._gold[token], self._common[token],
-                         100*_prec, 100*_rec, 100*_f1))
+                         100 * _prec, 100 * _rec, 100 * _f1))
             print('=== Totals ===')
 
-        print("%-9s = %7d\n"*3
+        print("%-9s = %7d\n" * 3
               % ('predicted', self.pred, 'gold', self.gold, 'correct', self.correct), end='')
-        pred, gold = self.pred or 1, self.gold or 1 # prevent division by zero
+        pred, gold = self.pred or 1, self.gold or 1  # prevent division by zero
         precision = self.correct / pred
         recall = self.correct / gold
         f1 = 2 * precision * recall / ((precision + recall) or 1)
         print("%-9s = %6.2f%%\n" * 3
-              % ('precision', 100*precision, 'recall', 100*recall, 'F1', 100*f1), end='')
+              % ('precision', 100 * precision, 'recall', 100 * recall, 'F1', 100 * f1), end='')
 
 
 # difflib.SequenceMatcher does not compute LCS, so let's implement it here
@@ -175,16 +177,16 @@ def find_lcs(x, y):
     """Find longest common subsequence."""
     m, n = len(x), len(y)
     C = [[0] * (n + 1) for _ in range(m + 1)]
-    for i in range(1, m+1):
-        for j in range(1, n+1):
-            C[i][j] = C[i-1][j-1] + 1 if x[i-1] == y[j-1] else max(C[i][j-1], C[i-1][j])
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            C[i][j] = C[i - 1][j - 1] + 1 if x[i - 1] == y[j - 1] else max(C[i][j - 1], C[i - 1][j])
     index = C[m][n]
     lcs = [None] * index
     while m > 0 and n > 0:
-        if x[m-1] == y[n-1]:
-            lcs[index-1] = x[m-1]
-            m, n, index = m-1, n-1, index-1
-        elif C[m-1][n] > C[m][n-1]:
+        if x[m - 1] == y[n - 1]:
+            lcs[index - 1] = x[m - 1]
+            m, n, index = m - 1, n - 1, index - 1
+        elif C[m - 1][n] > C[m][n - 1]:
             m -= 1
         else:
             n -= 1

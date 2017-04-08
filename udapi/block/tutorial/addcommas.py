@@ -1,10 +1,11 @@
 """tutorial.AddCommas block template."""
 from udapi.core.block import Block
 
+
 class AddCommas(Block):
     """Heuristically insert nodes for missing commas."""
 
-    def process_node(self, node):      
+    def process_node(self, node):
         if self.should_add_comma_before(node):
             comma = node.create_child(form=',', deprel='punct', upos='PUNCT')
             comma.shift_before_node(node)
@@ -18,5 +19,5 @@ class AddCommas(Block):
             return True
         if any(n.deprel == 'appos' for n in prev_node.children):
             return True
-        
+
         return False

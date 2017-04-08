@@ -1,10 +1,12 @@
 """util.Mark is a special block for marking nodes specified by parameters."""
-import re # may be useful in eval, thus pylint: disable=unused-import
+import re  # may be useful in eval, thus pylint: disable=unused-import
 
 from udapi.core.block import Block
 
 # We need eval in this block
 # pylint: disable=eval-used
+
+
 class Mark(Block):
     """Mark nodes specified by parameters.
 
@@ -12,6 +14,7 @@ class Mark(Block):
     # see non-projective trees with non-projective edges highlighted
     udapy -TM util.Mark node='node.is_nonprojective()' < in | less -R
     """
+
     def __init__(self, node, mark=1, **kwargs):
         """Create the Mark block object.
 
