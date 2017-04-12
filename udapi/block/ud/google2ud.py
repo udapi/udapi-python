@@ -5,6 +5,7 @@ udapy -s ud.Google2ud < google.conllu > ud2.conllu
 """
 from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.setspaceafterfromtext import SetSpaceAfterFromText
+from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 
 DEPREL_CHANGE = {
     "ROOT": "root",
@@ -101,6 +102,9 @@ class Google2ud(Convert1to2):
         super().__init__(**kwargs)
         self.lang = lang
         self._spaceafter_block = SetSpaceAfterFromText()
+        self._addmwt_block = None
+        if lang == 'de':
+            self._addmwt_block = de_AddMwt()
 
     def process_tree(self, root):
         comment_lines = root.comment.split("\n")
@@ -108,11 +112,14 @@ class Google2ud(Convert1to2):
         root.text = comment_lines[1].strip()
         root.comment = ''
 
+        # In German: "im" -> "in dem" etc.
+        if self._addmwt_block:
+            self._addmwt_block.process_tree(root)
+
         for node in root.descendants:
             self.fix_feats(node)
             self.fix_upos(node)
             self.fix_deprel(node)
-            # self.fix_quotes(node)
 
         # This needs to be executed after all other deprels are converted
         for node in root.descendants:
@@ -235,10 +242,3 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'suff':
             node.misc['OrigDeprel'] = 'suff'
             node.deprel = 'dep'
-
-    def fix_quotes(self, node):
-        """Reconstruct the original quotes."""
-        if node.xpos == '``':
-            node.form = '„' if self.lang == 'de' else '"'
-        elif node.xpos == "''":
-            node.form = '“' if self.lang == 'de' else '"'
