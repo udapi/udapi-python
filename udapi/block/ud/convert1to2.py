@@ -146,7 +146,7 @@ class Convert1to2(Block):
             if 'Neg' not in node.feats['PronType']:
                 node.feats['Polarity'] = 'Neg'
 
-            if node.upos in ['ADV', 'PART']:
+            if node.upos in ['ADV', 'PART', 'AUX']:
                 node.deprel = 'advmod'
             elif node.upos == 'DET':
                 node.deprel = 'det'

@@ -41,6 +41,8 @@ DEPREL_CHANGE = {
     "quantmod": "det",  # TODO UD_Hindi uses "dep" for the same words
     # TODO: "ref" - in basic dependencies it should be rehanged and relabelled
     "conjv": "compound:conjv",
+    "advphmod": "advmod",
+    "clas": "clf",
 }
 
 FEATS_CHANGE = {
@@ -88,6 +90,13 @@ FEATS_CHANGE = {
     "animacy=irrat": "Animacy=Nhum",
     "honorific=hon": "Polite=Form",
     "mood=psm": "Tense=Fut",  # TODO ?
+    "form=fin": "VerbForm=Fin",
+    "form=ger": "VerbForm=Ger",
+    #"form=irr": "VerbForm=?",
+    #"form=adn": "VerbForm=?",
+    "formality=fml": "Polite=Form",
+    "Evidentiality=Nfh": "Evident=Nfh",
+    "Evidentiality=Fh": "Evident=Fh",
 }
 
 
@@ -155,11 +164,13 @@ class Google2ud(Convert1to2):
                 if new != '':
                     new_name, new_value = new.split('=')
                     node.feats[new_name] = new_value
+            elif name[0].isupper():
+                node.feats[name] = value
             else:
                 node.feats[name.capitalize()] = value.capitalize()
 
     def fix_upos(self, node):
-        """PRT→PART, .→PUNCT, NOUN+Proper→PROPN."""
+        """PRT→PART, .→PUNCT, NOUN+Proper→PROPN, VERB+neg→AUX."""
         if node.upos == '.':
             node.upos = 'PUNCT'
         elif node.upos == 'PRT':
@@ -172,6 +183,10 @@ class Google2ud(Convert1to2):
             else:
                 node.misc['Proper'] = node.feats['Proper']
             del node.feats['Proper']
+
+        # Japanese uses negators with deprel=neg, which should be changed to advmod in Convert1to2.
+        if node.upos == "VERB" and node.deprel == "neg":
+            node.upos = "AUX"
 
         # Indonesian uses prefixes (me, di, ber, ke,...) and suffixes (an, kan, i,...),
         # which are written without spaces with the main word/stem (according to the raw text).
