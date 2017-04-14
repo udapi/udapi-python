@@ -46,7 +46,7 @@ def en_noun_is_dobj_of(node):
 # Silvie does not alter the above functions until understood how they work.
 # Creating new ones instead if these work improperly.
 
-#####Silvie's functions
+####Silvie's functions
 def en_noun_is_subj_relcl(node):
     '''
     Extract the 'nsubj' relation from a relative clause.
@@ -96,6 +96,191 @@ def en_noun_is_subj_relcl(node):
                 raise ValueError('Subject-relative clause must contain a relative pronoun subject!')
 
         triples.append((node, 'nsubj', relcl_verb))
+        with open('C:\log_SILVIE.txt', 'a') as file:
+            file.write('haha')
 
     return triples
+
+
+"""Iveta -  en_verb_has_subject_is_relcl"""
+
+
+def en_verb_has_subject_is_relcl(node):
+     if node.upos != 'VERB':
+         raise ValueError('It is not a verb.')
+     if true_deprel(node) != 'acl:relcl':
+         raise ValueError('It is not a relative clause.')
+     ekids_controllees_list = []
+     if en_verb_controller_YN(node):
+         ekids_01_list = echildren(node)
+
+         for ekid_01 in ekids_01_list:
+             if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
+                 ekids_controllees_list.append(ekid_01)
+
+     ekids_list = echildren(node)
+     relsubjs_list = []
+     for ekid in ekids_list:
+         if true_deprel(ekid) == 'nsubj' and ekid.feats['PronType'] == 'Rel':
+             relsubjs_list.append(ekid)
+     if len(relsubjs_list) == 0:
+         raise ValueError('Relative clause, but not subject relclause.')
+     epar_list = eparents(node)
+     triples = []
+     for epar in epar_list:
+         if epar.upos in ('NOUN', 'PROPN'):
+             triples.append((node, 'nsubj', epar))
+             for ekid_controllee in ekids_controllees_list:
+                 triples.append((ekid_controllee, 'nsubj', epar))
+     return triples
+
+
+
+
+def en_verb_has_iobj_is_relclActive(node):   #does not check controlled werbs
+     if node.upos != 'VERB':
+         raise ValueError('It is not a verb.')
+     if true_deprel(node) != 'acl:relcl':
+         raise ValueError('It is not a relative clause.')
+     # ekids_controllees_list = []
+     # if en_verb_controller_YN(node):
+     #    ekids_01_list = echildren(node)
+
+    #   for ekid_01 in ekids_01_list:
+     #        if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
+     #            ekids_controllees_list.append(ekid_01)
+
+     ekids_list = echildren(node)
+     reliobjs_list = []
+     for ekid in ekids_list:
+         if true_deprel(ekid) == 'iobj' and ekid.feats['PronType'] == 'Rel':
+             reliobjs_list.append(ekid)
+     if len(reliobjs_list) == 0:
+         raise ValueError('Relative clause, but not iobject relclause.')
+     epar_list = eparents(node)
+     triples =[]
+     for epar in epar_list:
+         if epar.upos in ('NOUN', 'PROPN'):
+             triples.append((node, 'iobj', epar))
+         #    for ekid_controllee in ekids_controllees_list:
+         #        triples.append((ekid_controllee, 'nsubj', epar))
+     return triples
+
+
+def en_verb_has_iobj_is_relclPassive(node):  # does not check controlled werbs
+    if node.upos != 'VERB':
+        raise ValueError('It is not a verb.')
+    if true_deprel(node) != 'acl:relcl':
+        raise ValueError('It is not a relative clause.')
+        # ekids_controllees_list = []
+        # if en_verb_controller_YN(node):
+        #    ekids_01_list = echildren(node)
+
+        #   for ekid_01 in ekids_01_list:
+    #        if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
+    #            ekids_controllees_list.append(ekid_01)
+
+    ekids_list = echildren(node)
+    reliobjs_list = []
+    dobjs_list=[]
+    for ekid in ekids_list:
+        if true_deprel(ekid) == 'nsubjpass' and ekid.feats['PronType'] == 'Rel':
+            reliobjs_list.append(ekid)
+        if true_deprel(ekid) in ['dobj','ccomp','xcomp']:
+            dobjs_list.append(ekid)
+    if len(reliobjs_list) == 0:
+        raise ValueError('Relative clause, but not obj relclause.')
+    if len(dobjs_list) ==0:
+        raise ValueError('Is not indirect object.')
+    epar_list = eparents(node)
+    triples = []
+    for epar in epar_list:
+        if epar.upos in ('NOUN', 'PROPN'):
+            triples.append((node, 'iobj', epar))
+            #    for ekid_controllee in ekids_controllees_list:
+            #        triples.append((ekid_controllee, 'nsubj', epar))
+    return triples
+
+
+
+
+def en_verb_has_dobj_is_relclPassive(node):  # does not check controlled werbs
+    if node.upos != 'VERB':
+        raise ValueError('It is not a verb.')
+    if true_deprel(node) != 'acl:relcl':
+        raise ValueError('It is not a relative clause.')
+        # ekids_controllees_list = []
+        # if en_verb_controller_YN(node):
+        #    ekids_01_list = echildren(node)
+
+        #   for ekid_01 in ekids_01_list:
+    #        if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
+    #            ekids_controllees_list.append(ekid_01)
+
+    ekids_list = echildren(node)
+    reldobjs_list = []
+    dobjs_list=[]
+    for ekid in ekids_list:
+        if true_deprel(ekid) == 'nsubjpass' and ekid.feats['PronType'] == 'Rel':
+            reldobjs_list.append(ekid)
+        if true_deprel(ekid) in ['dobj','ccomp','xcomp']:
+            dobjs_list.append(ekid)
+    if len(reldobjs_list) == 0:
+        raise ValueError('Relative clause, but not obj relclause.')
+    if len(dobjs_list) !=0:
+        raise ValueError('Is not direct object.')
+    epar_list = eparents(node)
+    triples = []
+    for epar in epar_list:
+        if epar.upos in ('NOUN', 'PROPN'):
+            triples.append((node, 'iobj', epar))
+            #    for ekid_controllee in ekids_controllees_list:
+            #        triples.append((ekid_controllee, 'nsubj', epar))
+    return triples
+
+
+
+
+
+def en_verb_has_dobj_is_relclActive(node):  # does not check controlled werbs
+    if node.upos != 'VERB':
+        raise ValueError('It is not a verb.')
+    if true_deprel(node) != 'acl:relcl':
+        raise ValueError('It is not a relative clause.')
+        # ekids_controllees_list = []
+        # if en_verb_controller_YN(node):
+        #    ekids_01_list = echildren(node)
+
+        #   for ekid_01 in ekids_01_list:
+    #        if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
+    #            ekids_controllees_list.append(ekid_01)
+    active=False
+    ekids_list = echildren(node)
+    for ekid in ekids_list:
+        if true_deprel(ekid) == 'nsubj':
+            active=True;
+        if true_deprel(ekid) == 'nsubj' and ekid.feats['PronType'] == 'Rel':
+            raise ValueError('It is a subject clause.')
+        if (true_deprel(ekid) == 'dobj' and not(ekid.feats['PronType'] == 'Rel')):
+            raise ValueError('Is not direct object.')
+
+    if not active:
+        raise ValueError('Verb is not active')
+
+    epar_list = eparents(node)
+    triples = []
+    for epar in epar_list:
+        if epar.upos in ('NOUN', 'PROPN'):
+            triples.append((node, 'dobj', epar))
+            #    for ekid_controllee in ekids_controllees_list:
+            #        triples.append((ekid_controllee, 'nsubj', epar))
+    return triples
+
+
+
+
+
+
+
+
 

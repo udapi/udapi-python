@@ -138,7 +138,7 @@ def en_verb_controller_YN(node):
     :return: boolean
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
     result = False
     verb_echildren_list = echildren(node)
@@ -157,7 +157,7 @@ def en_verb_controllee_YN(node):
     :return: boolean
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
     result = False
     if true_deprel(node) == 'xcomp':
@@ -175,7 +175,7 @@ def en_verb_finite_form_YN(node):
     :return: boolean
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
 
     if node.feats['VerbForm'] == 'Fin':
@@ -190,7 +190,7 @@ def en_verb_finite_form_YN(node):
 
     echildren_list = echildren(node)
     for echild in echildren_list:
-        if echild.upostag == 'AUX':
+        if echild.upos == 'AUX':
             return True
 
     return False
@@ -204,7 +204,7 @@ def en_verb_passive_form_YN(node):
     :return: boolean
 
     """
-    if node.upostag != 'VERB':
+    if node.upos != 'VERB':
         raise ValueError('Is not a verb.')
 
     if node.feats['Voice'] == 'Pass':

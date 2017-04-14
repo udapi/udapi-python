@@ -42,7 +42,7 @@ class BaseWriter(Block):
                 else:
                     logging.warning('docname_as_file=1 but the document contains no docname')
             else:
-                sys.stdout = sys.__stdout__
+                 sys.stdout = sys.__stdout__
             return
 
         old_filehandle = sys.stdout
@@ -56,6 +56,7 @@ class BaseWriter(Block):
         elif filename == '-':
             logging.info('Writing to stdout.')
             sys.stdout = sys.__stdout__
+
         else:
             logging.info('Writing to file %s.', filename)
             sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)

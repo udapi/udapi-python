@@ -28,5 +28,6 @@ class EnVerbs(Configurations):
         if self.verbose:
             logging.info('')
             logging.info('Processing node %s/%s', node.root.sent_id, node)
+            logging.info('Processing node %s/%s', node.root.sent_id, node)
 
-        self.apply_query('en_verb_mydobj', node)
+        self.apply_query('en_verb_has_dobj_is_relclActive', node)
