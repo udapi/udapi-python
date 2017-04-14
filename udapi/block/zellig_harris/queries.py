@@ -47,60 +47,60 @@ def en_noun_is_dobj_of(node):
 # Creating new ones instead if these work improperly.
 
 ####Silvie's functions
-def en_noun_is_subj_relcl(node):
-    '''
-    Extract the 'nsubj' relation from a relative clause.
-    Example: the man who called me yesterday (-> 'man' is subject of 'call')
-    :param node:
-    :return: n-tuple containing triples
-    '''
-
-    if node.upos not in ['PROPN', 'NOUN']:
-        raise ValueError('Is not a noun.')
-
-    relcl_verbs_list = []
-    mynode_echildren_list = echildren(node)
-    logging.info('Echildren for node %s: %r', node, [node.form for node in mynode_echildren_list])
-
-    for mynode_echild in mynode_echildren_list:
-        if true_deprel(mynode_echild) == 'acl:relcl':
-            relcl_verbs_list.append(mynode_echild)
-
-    if len(relcl_verbs_list) == 0:
-        raise ValueError('Not subject of any relative clause')
-
-    triples = []
-    for relcl_verb in relcl_verbs_list:
-        # if en_verb_passive_form_YN(relcl_verb):
-        #     logging.info('Passive form for candidate verb %s', relcl_verb)
-        #     continue
-
-        wrong_subjects_list = echildren(relcl_verb)
-        logging.info('Candidate: %s, %r', relcl_verb, [node.form for node in wrong_subjects_list])
-        for wrong_subject in wrong_subjects_list:
-            if true_deprel(wrong_subject) not in ['nsubj', 'nsubjpass', 'csubj','csubjpass'] and wrong_subject.lemma not in ['where', 'how', 'why', 'when']:
-                wrong_subjects_list.remove(wrong_subject)
-
-        for wrong_subject in wrong_subjects_list:
-            if true_deprel(wrong_subject) in ['nsubjpass', 'csubj', 'csubjpass']:
-                raise ValueError('Verb has its own regular subject - passive or clausal')
-
-            if wrong_subject.lemma in ['where', 'how', 'why', 'when']:
-                raise ValueError('Noun is an adverbial, not subject.')
-
-            if wrong_subject.deprel == 'nsubj' and wrong_subject.feats['PronType'] != 'Rel':
-                raise ValueError('Verb has its own subject.01')
-
-            if len(wrong_subjects_list) == 0:  # NB when recycling this script for extraction of other arguments from relclauses.
-                # For object relclauses the list will have to be empty of potential objects!!!
-                raise ValueError('Subject-relative clause must contain a relative pronoun subject!')
-
-        triples.append((node, 'nsubj', relcl_verb))
-        with open('C:\log_SILVIE.txt', 'a') as file:
-            file.write('haha')
-
-    return triples
-
+# def en_noun_is_subj_relcl(node):
+#     '''
+#     Extract the 'nsubj' relation from a relative clause.
+#     Example: the man who called me yesterday (-> 'man' is subject of 'call')
+#     :param node:
+#     :return: n-tuple containing triples
+#     '''
+#
+#     if node.upos not in ['PROPN', 'NOUN']:
+#         raise ValueError('Is not a noun.')
+#
+#     relcl_verbs_list = []
+#     mynode_echildren_list = echildren(node)
+#     logging.info('Echildren for node %s: %r', node, [node.form for node in mynode_echildren_list])
+#
+#     for mynode_echild in mynode_echildren_list:
+#         if true_deprel(mynode_echild) == 'acl:relcl':
+#             relcl_verbs_list.append(mynode_echild)
+#
+#     if len(relcl_verbs_list) == 0:
+#         raise ValueError('Not subject of any relative clause')
+#
+#     triples = []
+#     for relcl_verb in relcl_verbs_list:
+#         # if en_verb_passive_form_YN(relcl_verb):
+#         #     logging.info('Passive form for candidate verb %s', relcl_verb)
+#         #     continue
+#
+#         wrong_subjects_list = echildren(relcl_verb)
+#         logging.info('Candidate: %s, %r', relcl_verb, [node.form for node in wrong_subjects_list])
+#         for wrong_subject in wrong_subjects_list:
+#             if true_deprel(wrong_subject) not in ['nsubj', 'nsubjpass', 'csubj','csubjpass'] and wrong_subject.lemma not in ['where', 'how', 'why', 'when']:
+#                 wrong_subjects_list.remove(wrong_subject)
+#
+#         for wrong_subject in wrong_subjects_list:
+#             if true_deprel(wrong_subject) in ['nsubjpass', 'csubj', 'csubjpass']:
+#                 raise ValueError('Verb has its own regular subject - passive or clausal')
+#
+#             if wrong_subject.lemma in ['where', 'how', 'why', 'when']:
+#                 raise ValueError('Noun is an adverbial, not subject.')
+#
+#             if wrong_subject.deprel == 'nsubj' and wrong_subject.feats['PronType'] != 'Rel':
+#                 raise ValueError('Verb has its own subject.01')
+#
+#             if len(wrong_subjects_list) == 0:  # NB when recycling this script for extraction of other arguments from relclauses.
+#                 # For object relclauses the list will have to be empty of potential objects!!!
+#                 raise ValueError('Subject-relative clause must contain a relative pronoun subject!')
+#
+#         triples.append((node, 'nsubj', relcl_verb))
+#         with open('C:\log_SILVIE.txt', 'a') as file:
+#             file.write('haha')
+#
+#     return triples
+#
 
 """Iveta -  en_verb_has_subject_is_relcl"""
 
@@ -233,7 +233,7 @@ def en_verb_has_dobj_is_relclPassive(node):  # does not check controlled werbs
     triples = []
     for epar in epar_list:
         if epar.upos in ('NOUN', 'PROPN'):
-            triples.append((node, 'iobj', epar))
+            triples.append((node, 'dobj', epar))
             #    for ekid_controllee in ekids_controllees_list:
             #        triples.append((ekid_controllee, 'nsubj', epar))
     return triples

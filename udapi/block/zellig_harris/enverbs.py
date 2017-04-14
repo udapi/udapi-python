@@ -31,3 +31,8 @@ class EnVerbs(Configurations):
             logging.info('Processing node %s/%s', node.root.sent_id, node)
 
         self.apply_query('en_verb_has_dobj_is_relclActive', node)
+        self.apply_query('en_verb_has_subject_is_relcl', node)
+        self.apply_query('en_verb_has_iobj_is_relclActive', node)
+        self.apply_query('en_verb_has_iobj_is_relclActive', node)
+        self.apply_query('en_verb_has_iobj_is_relclPassive', node)
+        self.apply_query('en_verb_has_dobj_is_relclPassive', node)
