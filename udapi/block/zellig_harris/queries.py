@@ -110,15 +110,34 @@ def en_verb_has_subject_is_relcl(node):
          raise ValueError('It is not a verb.')
      if true_deprel(node) != 'acl:relcl':
          raise ValueError('It is not a relative clause.')
-     ekids_controllees_list = []
+     ekids_controlleesAct_list = []
+     ekids_controlleesPass_list = []
+     ekids_controlleesPass_dobj_list = []
+     ekids_controlleesPass_iobj_list = []
+     ekids_01_list = echildren(node)
      if en_verb_controller_YN(node):
-         ekids_01_list = echildren(node)
-
          for ekid_01 in ekids_01_list:
-             if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
-                 ekids_controllees_list.append(ekid_01)
+             # print(true_deprel(ekid_01), ekid_01.lemma)
+             if true_deprel(ekid_01) == 'xcomp' and ekid_01.upos == 'VERB':
+                 if not (en_verb_passive_form_YN(ekid_01)):
+                     ekids_controlleesAct_list.append(ekid_01)
+                 else:
+                     ekids_controlleesPass_list.append(ekid_01)
 
-     ekids_list = echildren(node)
+         for ekid in ekids_controlleesPass_list:
+             dobj_bool = False
+             eskids = eschildren(ekid)
+             for eskid in eskids:
+                 if eskid.deprel in ('dobj', 'ccomp') or (eskid.deprel == 'xcomp' and not (eskid.lemma in ('call', 'consider'))):
+                     dobj_bool = True
+                     ekids_controlleesPass_iobj_list.append(ekid)
+                     continue
+             if not(dobj_bool):
+                 ekids_controlleesPass_dobj_list.append(ekid)
+
+
+
+     ekids_list = ekids_01_list
      relsubjs_list = []
      for ekid in ekids_list:
          if true_deprel(ekid) == 'nsubj' and ekid.feats['PronType'] == 'Rel':
@@ -130,8 +149,12 @@ def en_verb_has_subject_is_relcl(node):
      for epar in epar_list:
          if epar.upos in ('NOUN', 'PROPN'):
              triples.append((node, 'nsubj', epar))
-             for ekid_controllee in ekids_controllees_list:
+             for ekid_controllee in ekids_controlleesAct_list:
                  triples.append((ekid_controllee, 'nsubj', epar))
+             for ekid_controllee in ekids_controlleesPass_dobj_list:
+                 triples.append((ekid_controllee, 'dobj', epar))
+             for ekid_controllee in ekids_controlleesPass_iobj_list:
+                 triples.append((ekid_controllee, 'iobj', epar))
      return triples
 
 
@@ -223,10 +246,11 @@ def en_verb_has_dobj_is_relclPassive(node):  # does not check controlled werbs
     for ekid in ekids_list:
         if true_deprel(ekid) == 'nsubjpass' and ekid.feats['PronType'] == 'Rel':
             reldobjs_list.append(ekid)
-        if true_deprel(ekid) in ['dobj','ccomp','xcomp']:
+        if true_deprel(ekid) in ['dobj','ccomp'] or (true_deprel(ekid) == 'xcomp' and not (ekid.lemma in ('call', 'consider'))):
+            # todo: funkce - seznam sloves, ktera maji xcomp jako doplnek adj nebo noun
             dobjs_list.append(ekid)
     if len(reldobjs_list) == 0:
-        raise ValueError('Relative clause, but not obj relclause.')
+        raise ValueError('Relative clause, but not obj, probably subject relclause.')
     if len(dobjs_list) !=0:
         raise ValueError('Is not direct object.')
     epar_list = eparents(node)
@@ -247,33 +271,41 @@ def en_verb_has_dobj_is_relclActive(node):  # does not check controlled werbs
         raise ValueError('It is not a verb.')
     if true_deprel(node) != 'acl:relcl':
         raise ValueError('It is not a relative clause.')
-        # ekids_controllees_list = []
-        # if en_verb_controller_YN(node):
-        #    ekids_01_list = echildren(node)
-
-        #   for ekid_01 in ekids_01_list:
-    #        if true_deprel(ekid_01) == 'xcomp' and not (en_verb_passive_form_YN(ekid_01)):
-    #            ekids_controllees_list.append(ekid_01)
     active=False
     ekids_list = echildren(node)
     for ekid in ekids_list:
         if true_deprel(ekid) == 'nsubj':
-            active=True;
+            active=True
         if true_deprel(ekid) == 'nsubj' and ekid.feats['PronType'] == 'Rel':
             raise ValueError('It is a subject clause.')
         if (true_deprel(ekid) == 'dobj' and not(ekid.feats['PronType'] == 'Rel')):
             raise ValueError('Is not direct object.')
-
     if not active:
         raise ValueError('Verb is not active')
-
     epar_list = eparents(node)
     triples = []
-    for epar in epar_list:
-        if epar.upos in ('NOUN', 'PROPN'):
-            triples.append((node, 'dobj', epar))
-            #    for ekid_controllee in ekids_controllees_list:
-            #        triples.append((ekid_controllee, 'nsubj', epar))
+    if not (en_verb_controller_YN(node)):
+        for epar in epar_list:
+            if epar.upos in ('NOUN', 'PROPN'):
+                triples.append((node, 'dobj', epar))
+
+    else:
+         descends_list = node.descendants
+         real_controllees = []
+         for descend in descends_list:
+             controlee_bool=False
+             if descend.deprel == 'xcomp' and descend.upos == 'VERB':
+                desc_kids = echildren(descend)
+                for desc_kid in desc_kids:
+                    if desc_kid.deprel == 'xcomp' and desc_kid.upos=='VERB':
+                       controllee_bool=True
+                if not(controlee_bool):
+                    real_controllees.append(descend)
+
+         for epar in epar_list:
+             if epar.upos in ('NOUN', 'PROPN'):
+                for real_controllee in real_controllees:
+                    triples.append((real_controllee, 'dobj', epar))
     return triples
 
 

@@ -111,6 +111,30 @@ def echildren(node):
 
     return echildren_list
 
+##vincent
+# def echildren(node):
+#     if node.deprel != 'conj':
+#        target = node
+#     if node.deprel == 'conj':
+#         target = node.parent
+#     immediate_children_list = target.children
+#     all_children_list = immediate_children_list
+#     for imchild in immediate_children_list:
+#         descendants_list = imchild.children
+#         if imchild == target:
+#            continue
+#         descendants_list = imchild.children
+#         for descendant in descendants_list:
+#             if descendant.deprel == 'conj':
+#                 all_children_list.append(descendant)
+#         if len(all_children_list) == 0:
+#             raise ValueError('No echildren.')
+#     return all_children_list
+#
+#
+
+
+
 
 def eschildren(node):
     """
@@ -143,7 +167,7 @@ def en_verb_controller_YN(node):
     result = False
     verb_echildren_list = echildren(node)
     for verb_echild in verb_echildren_list:
-        if true_deprel(verb_echild) == 'xcomp':
+        if true_deprel(verb_echild) == 'xcomp' and verb_echild.upos == 'VERB':
             result = True
             break
     return result
@@ -209,9 +233,10 @@ def en_verb_passive_form_YN(node):
 
     if node.feats['Voice'] == 'Pass':
         return True
-
-    if node.feats['VerbForm'] == 'Part' and node.feats['Tense'] == 'Past':
+    elif node.feats['VerbForm'] == 'Part' and node.feats['Tense'] == 'Past':
         return True
+    else:
+        return False
 
 
 

@@ -28,11 +28,13 @@ class EnVerbs(Configurations):
         if self.verbose:
             logging.info('')
             logging.info('Processing node %s/%s', node.root.sent_id, node)
-            logging.info('Processing node %s/%s', node.root.sent_id, node)
+           # logging.info('Processing node %s/%s', node.root.sent_id, node)
 
-        self.apply_query('en_verb_has_dobj_is_relclActive', node)
+
         self.apply_query('en_verb_has_subject_is_relcl', node)
-        self.apply_query('en_verb_has_iobj_is_relclActive', node)
-        self.apply_query('en_verb_has_iobj_is_relclActive', node)
-        self.apply_query('en_verb_has_iobj_is_relclPassive', node)
-        self.apply_query('en_verb_has_dobj_is_relclPassive', node)
+       # self.apply_query('en_verb_has_iobj_is_relclActive', node)
+       # self.apply_query('en_verb_has_iobj_is_relclPassive', node)
+       # self.apply_query('en_verb_has_dobj_is_relclPassive', node)
+       # self.apply_query('en_verb_has_dobj_is_relclActive', node)
+
+
