@@ -171,7 +171,8 @@ class MarkBugs(Block):
         #   "cc is the relation between a conjunct and a preceding
         #   [coordinating conjunction](http://universaldependencies.org/u/pos/CCONJ)."
         # No other upos is allowed in the documentation, although e.g. PART is common in the data.
-        if deprel == 'cc' and upos != 'CCONJ':
+        # There are clear cases of adverbs in role of cc (e.g. "respektive" in Swedish and Czech).
+        if deprel == 'cc' and upos not in ('CCONJ', 'ADV'):
             self.log(node, 'cc-upos', "deprel=cc upos!=CCONJ (but %s): " % upos)
 
     def after_process_document(self, document):
