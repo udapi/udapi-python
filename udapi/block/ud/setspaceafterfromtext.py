@@ -17,8 +17,7 @@ class SetSpaceAfterFromText(Block):
         text = root.text
         if text is None:
             raise ValueError('Tree %s has no text, cannot use ud.SetSpaceAfterFromText' % root)
-        computed = root.compute_text()
-        if text == computed:
+        if text == root.compute_text():
             return
 
         for node in root.token_descendants:

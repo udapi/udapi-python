@@ -31,30 +31,33 @@ from udapi.core.mwt import MWT
 class ComplyWithText(Block):
     """Adapt the nodes to comply with the text."""
 
-    def __init__(self, fix_text=True, prefer_mwt=True, allow_goeswith=True, **kwargs):
+    def __init__(self, fix_text=True, prefer_mwt=True, allow_goeswith=True, max_mwt_length=4,
+                 **kwargs):
         """Args:
-        fix_text - After all heuristics are applied, the token forms may still not match the text.
-                   Should we edit the text to match the token forms (as a last resort)?
-                   Default=True.
+        fix_text: After all heuristics are applied, the token forms may still not match the text.
+            Should we edit the text to match the token forms (as a last resort)? Default=True.
         prefer_mwt - What to do if multiple subsequent nodes correspond to a text written
-                     without spaces and non-word characters (punctuation)?
-                     E.g. if "3pm doesn't" is annotated with four nodes "3 pm does n't".
-                     We can use either SpaceAfter=No, or create a multi-word token (MWT).
-                     Note that if there is space or punctuation, SpaceAfter=No will be used always
-                     (e.g. "3 p.m." annotated with three nodes "3 p. m.").
-                     If the character sequence does not match exactly, MWT will be used always
-                     (e.g. "3pm doesn't" annotated with four nodes "3 p.m. does not").
-                     Thus this parameter influences only the "unclear" cases.
-                     Default=True (i.e. prefer multi-word tokens over SpaceAfter=No).
+            without spaces and non-word characters (punctuation)?
+            E.g. if "3pm doesn't" is annotated with four nodes "3 pm does n't".
+            We can use either SpaceAfter=No, or create a multi-word token (MWT).
+            Note that if there is space or punctuation, SpaceAfter=No will be used always
+            (e.g. "3 p.m." annotated with three nodes "3 p. m.").
+            If the character sequence does not match exactly, MWT will be used always
+            (e.g. "3pm doesn't" annotated with four nodes "3 p.m. does not").
+            Thus this parameter influences only the "unclear" cases.
+            Default=True (i.e. prefer multi-word tokens over SpaceAfter=No).
         allow_goeswith - If a node corresponds to multiple space-separated strings in text,
-                         which are not allowed as tokens with space, we can either leave this diff
-                         unresolved or create new nodes and join them with the `goeswith` deprel.
-                         Default=True (i.e. add the goeswith nodes if applicable).
+            which are not allowed as tokens with space, we can either leave this diff
+            unresolved or create new nodes and join them with the `goeswith` deprel.
+            Default=True (i.e. add the goeswith nodes if applicable).
+        max_mwt_length - Maximum length of newly created multi-word tokens (in syntactic words).
+            Default=4.
         """
         super().__init__(**kwargs)
         self.fix_text = fix_text
         self.prefer_mwt = prefer_mwt
         self.allow_goeswith = allow_goeswith
+        self.max_mwt_length = max_mwt_length
 
     def process_tree(self, root):
         text = root.text
@@ -79,6 +82,11 @@ class ComplyWithText(Block):
         matcher = difflib.SequenceMatcher(None, tree_split_forms, text_split_forms, autojunk=False)
         diffs = list(matcher.get_opcodes())
 
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            print('=== After matcher:')
+            for diff in diffs:
+                print(self.diff2str(diff, tree_split_forms, text_split_forms))
+
         # Make sure each diff starts on original token boundary.
         # If not, merge the diff with the previous diff.
         # E.g. (equal, ["5"], ["5"]), (replace, ["-","6"], ["–","7"])
@@ -88,7 +96,7 @@ class ComplyWithText(Block):
 
             if edit != 'insert' and tree_split_nodes[tree_lo] is None:
                 if edit == 'equal':
-                    while tree_split_nodes[tree_lo] is None and tree_lo < tree_hi:
+                    while tree_lo < tree_hi and tree_split_nodes[tree_lo] is None:
                         tree_lo += 1
                         text_lo += 1
                     if tree_lo == tree_hi:
@@ -97,21 +105,29 @@ class ComplyWithText(Block):
                         diffs[i] = ('equal', tree_lo, tree_hi, text_lo, text_hi)
                     diffs[i - 1] = ('replace', diffs[i - 1][1], tree_lo, diffs[i - 1][3], text_lo)
                 else:
-                    if diffs[i - 1][0] != 'equal':
-                        diffs[i - 1] = ('replace', diffs[i - 1][1],
-                                        tree_hi, diffs[i - 1][3], text_hi)
+                    prev_i = i - 1
+                    while diffs[prev_i][0] == 'ignore':
+                        prev_i -= 1
+                    if diffs[prev_i][0] != 'equal':
+                        diffs[prev_i] = ('replace', diffs[prev_i][1],
+                                         tree_hi, diffs[prev_i][3], text_hi)
                         diffs[i] = ('ignore', 0, 0, 0, 0)
                     else:
-                        p_tree_hi = diffs[i - 1][2] - 1
-                        p_text_hi = diffs[i - 1][4] - 1
+                        p_tree_hi = diffs[prev_i][2] - 1
+                        p_text_hi = diffs[prev_i][4] - 1
                         while tree_split_nodes[p_tree_hi] is None:
                             p_tree_hi -= 1
                             p_text_hi -= 1
-                            assert p_tree_hi >= diffs[i - 1][1]
-                            assert p_text_hi >= diffs[i - 1][3]
-                        diffs[i - 1] = ('equal', diffs[i - 1][1], p_tree_hi,
-                                        diffs[i - 1][3], p_text_hi)
+                            assert p_tree_hi >= diffs[prev_i][1]
+                            assert p_text_hi >= diffs[prev_i][3]
+                        diffs[prev_i] = ('equal', diffs[prev_i][1], p_tree_hi,
+                                         diffs[prev_i][3], p_text_hi)
                         diffs[i] = ('replace', p_tree_hi, tree_hi, p_text_hi, text_hi)
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            print('=== After re-merging split tokens:')
+            for diff in diffs:
+                print(self.diff2str(diff, tree_split_forms, text_split_forms))
 
         # TODO split diffs if possible, e.g.
         # ['_', 'atenuación', '_', 'de', 'os'] --> ['_atenuación_', 'dos']
@@ -193,6 +209,10 @@ class ComplyWithText(Block):
             # TODO: enlarge the MWT instead of failing.
             elif any(isinstance(n, MWT) for n in nodes):
                 logging.warning('Unable to solve partial-MWT diff:\n%s -> %s', nodes_str, form)
+            # MWT with too many words are suspicious.
+            elif len(nodes) > self.max_mwt_length:
+                logging.warning('Not creating too long (%d>%d) MWT:\n%s -> %s',
+                                len(nodes), self.max_mwt_length, nodes_str, form)
             # Otherwise, create a new MWT.
             else:
                 node.root.create_multiword_token(nodes, form)

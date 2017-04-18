@@ -1,10 +1,10 @@
-"""Block ud.google2ud for converting Google Universal Dependency Treebank into UD.
+"""Block ud.Google2ud for converting Google Universal Dependency Treebank into UD.
 
 Usage:
 udapy -s ud.Google2ud < google.conllu > ud2.conllu
 """
 from udapi.block.ud.convert1to2 import Convert1to2
-from udapi.block.ud.setspaceafterfromtext import SetSpaceAfterFromText
+from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 
 DEPREL_CHANGE = {
@@ -92,8 +92,8 @@ FEATS_CHANGE = {
     "mood=psm": "Tense=Fut",  # TODO ?
     "form=fin": "VerbForm=Fin",
     "form=ger": "VerbForm=Ger",
-    #"form=irr": "VerbForm=?",
-    #"form=adn": "VerbForm=?",
+    # "form=irr": "VerbForm=?",
+    # "form=adn": "VerbForm=?",
     "formality=fml": "Polite=Form",
     "Evidentiality=Nfh": "Evident=Nfh",
     "Evidentiality=Fh": "Evident=Fh",
@@ -103,23 +103,31 @@ FEATS_CHANGE = {
 class Google2ud(Convert1to2):
     """Convert Google Universal Dependency Treebank into UD style."""
 
-    def __init__(self, lang='unk', **kwargs):
+    def __init__(self, lang='unk', non_mwt_langs='ar en ja ko zh', **kwargs):
         """Create the Google2ud block instance.
 
         See ``Convert1to2`` for all the args.
         """
         super().__init__(**kwargs)
         self.lang = lang
-        self._spaceafter_block = SetSpaceAfterFromText()
         self._addmwt_block = None
         if lang == 'de':
             self._addmwt_block = de_AddMwt()
+
+        # UD_English v2.0 still uses "do n't" with SpaceAfter=No,
+        # instead of annotating it as a multiword token.
+        # In several other languages it is also common
+        # that syntactic words are not separated with a space without being an MWT.
+        self._comply_block = ComplyWithText(prefer_mwt=bool(lang not in non_mwt_langs.split()))
 
     def process_tree(self, root):
         comment_lines = root.comment.split("\n")
         root.sent_id = comment_lines[0].strip().replace(' ', '-')
         root.text = comment_lines[1].strip()
         root.comment = ''
+
+        if self._comply_block:
+            self._comply_block.process_tree(root)
 
         # In German: "im" -> "in dem" etc.
         if self._addmwt_block:
@@ -140,9 +148,6 @@ class Google2ud(Convert1to2):
                 copula.deprel = 'cop'
                 for child in copula.children:
                     child.parent = node
-
-        # call ud.SetSpaceAfterFromText
-        self._spaceafter_block.process_tree(root)
 
         # call ud.Convert1to2
         super().process_tree(root)
