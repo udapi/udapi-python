@@ -83,9 +83,9 @@ class ComplyWithText(Block):
         diffs = list(matcher.get_opcodes())
 
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            print('=== After matcher:')
+            logging.warning('=== After matcher:')
             for diff in diffs:
-                print(self.diff2str(diff, tree_split_forms, text_split_forms))
+                logging.warning(self.diff2str(diff, tree_split_forms, text_split_forms))
 
         # Make sure each diff starts on original token boundary.
         # If not, merge the diff with the previous diff.
@@ -93,41 +93,42 @@ class ComplyWithText(Block):
         # is changed into (replace, ["5","-","6"], ["5","–","7"])
         for i, diff in enumerate(diffs):
             edit, tree_lo, tree_hi, text_lo, text_hi = diff
+            if edit != 'insert' and tree_split_nodes[tree_lo] is not None:
+                continue
 
-            if edit != 'insert' and tree_split_nodes[tree_lo] is None:
-                if edit == 'equal':
-                    while tree_lo < tree_hi and tree_split_nodes[tree_lo] is None:
-                        tree_lo += 1
-                        text_lo += 1
-                    if tree_lo == tree_hi:
-                        diffs[i] = ('ignore', 0, 0, 0, 0)
-                    else:
-                        diffs[i] = ('equal', tree_lo, tree_hi, text_lo, text_hi)
-                    diffs[i - 1] = ('replace', diffs[i - 1][1], tree_lo, diffs[i - 1][3], text_lo)
+            prev_i = i - 1
+            while diffs[prev_i][0] == 'ignore':
+                prev_i -= 1
+            if edit == 'equal':
+                while tree_lo < tree_hi and tree_split_nodes[tree_lo] is None:
+                    tree_lo += 1
+                    text_lo += 1
+                if tree_lo == tree_hi:
+                    diffs[i] = ('ignore', 0, 0, 0, 0)
                 else:
-                    prev_i = i - 1
-                    while diffs[prev_i][0] == 'ignore':
-                        prev_i -= 1
-                    if diffs[prev_i][0] != 'equal':
-                        diffs[prev_i] = ('replace', diffs[prev_i][1],
-                                         tree_hi, diffs[prev_i][3], text_hi)
-                        diffs[i] = ('ignore', 0, 0, 0, 0)
-                    else:
-                        p_tree_hi = diffs[prev_i][2] - 1
-                        p_text_hi = diffs[prev_i][4] - 1
-                        while tree_split_nodes[p_tree_hi] is None:
-                            p_tree_hi -= 1
-                            p_text_hi -= 1
-                            assert p_tree_hi >= diffs[prev_i][1]
-                            assert p_text_hi >= diffs[prev_i][3]
-                        diffs[prev_i] = ('equal', diffs[prev_i][1], p_tree_hi,
-                                         diffs[prev_i][3], p_text_hi)
-                        diffs[i] = ('replace', p_tree_hi, tree_hi, p_text_hi, text_hi)
+                    diffs[i] = ('equal', tree_lo, tree_hi, text_lo, text_hi)
+                diffs[prev_i] = ('replace', diffs[prev_i][1], tree_lo, diffs[prev_i][3], text_lo)
+            else:
+                if diffs[prev_i][0] != 'equal':
+                    diffs[prev_i] = ('replace', diffs[prev_i][1],
+                                     tree_hi, diffs[prev_i][3], text_hi)
+                    diffs[i] = ('ignore', 0, 0, 0, 0)
+                else:
+                    p_tree_hi = diffs[prev_i][2] - 1
+                    p_text_hi = diffs[prev_i][4] - 1
+                    while tree_split_nodes[p_tree_hi] is None:
+                        p_tree_hi -= 1
+                        p_text_hi -= 1
+                        assert p_tree_hi >= diffs[prev_i][1]
+                        assert p_text_hi >= diffs[prev_i][3]
+                    diffs[prev_i] = ('equal', diffs[prev_i][1], p_tree_hi,
+                                     diffs[prev_i][3], p_text_hi)
+                    diffs[i] = ('replace', p_tree_hi, tree_hi, p_text_hi, text_hi)
 
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            print('=== After re-merging split tokens:')
+            logging.warning('=== After re-merging split tokens:')
             for diff in diffs:
-                print(self.diff2str(diff, tree_split_forms, text_split_forms))
+                logging.warning(self.diff2str(diff, tree_split_forms, text_split_forms))
 
         # TODO split diffs if possible, e.g.
         # ['_', 'atenuación', '_', 'de', 'os'] --> ['_atenuación_', 'dos']
@@ -245,9 +246,10 @@ class ComplyWithText(Block):
     @staticmethod
     def tokenize(string):
         return re.findall(r'\w+|[^\w\s]', string)
+        # return string
 
     @staticmethod
     def diff2str(diff, tree, text):
-        old = tree[diff[1]:diff[2]]
-        new = text[diff[3]:diff[4]]
-        return '{:7} {!r:>50} --> {!r}'.format(diff[0], old, new)
+        old = ' '.join(tree[diff[1]:diff[2]])
+        new = ' '.join(text[diff[3]:diff[4]])
+        return '{:7} {!s:>50} --> {!s}'.format(diff[0], old, new)
