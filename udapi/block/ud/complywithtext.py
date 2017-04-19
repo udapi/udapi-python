@@ -10,6 +10,14 @@ of the raw text and concatenation of tokens' forms.
 However, it is quite difficult to map these character-level diffs to token-level diffs
 (one character-level diff may partially overlap with two tokens).
 
+We need to insert spaces into the sequences to prevent mis-alignment.
+For example, text "énfase na necesidade" with 4 nodes "énfase en a necesidade"
+should be solved by adding multiword token "na" over the nodes "en" and "a".
+However, running LCS (or difflib) over the character sequences
+"énfaseenanecesidade"
+"énfasenanecesidade"
+may result in énfase -> énfas.
+
 So this implementation starts with running a LCS-like algorithm (difflib) on a sequence of tokens
 (instead of sequence of characters). Tokens from trees are obtain with `root.token_descendants`
 (these tokens may be standard nodes for syntactic words or multi-word tokens).
@@ -59,6 +67,18 @@ class ComplyWithText(Block):
         self.allow_goeswith = allow_goeswith
         self.max_mwt_length = max_mwt_length
 
+    @staticmethod
+    def allow_space(form):
+        """Is space allowed within this token form?"""
+        return re.fullmatch('[0-9 ]+([,.][0-9]+)?', form)
+
+    @staticmethod
+    def store_orig_form(node, new_form):
+        """Store the original form of this node into MISC, unless the change is common&expected."""
+        _ = new_form
+        if node.form not in ("''", "``"):
+            node.misc['OrigForm'] = node.form
+
     def process_tree(self, root):
         text = root.text
         if text is None:
@@ -70,93 +90,21 @@ class ComplyWithText(Block):
         if text == root.compute_text():
             return
 
-        # To improve the 1-1 alignment, let's tokenize the text on spaces and punctuation.
-        # We need to tokenize the token forms in the exactly same way, e.g. "5-6" -> "5" "-" "6".
-        tree_nodes = root.token_descendants
-        tree_forms = [t.form for t in tree_nodes]
-        text_forms = text.split()
-        tree_split_forms, tree_split_nodes = self.tokenize_list(tree_forms, tree_nodes)
-        text_split_forms, text_split_nodes = self.tokenize_list(text_forms, text_forms)
+        tree_chars, char_nodes = _nodes_to_chars(root.token_descendants)
 
-        # Align. difflib does may not give LCS, but usually it is good enough.
-        matcher = difflib.SequenceMatcher(None, tree_split_forms, text_split_forms, autojunk=False)
+        # Align. difflib may not give LCS, but usually it is good enough.
+        matcher = difflib.SequenceMatcher(None, tree_chars, text, autojunk=False)
         diffs = list(matcher.get_opcodes())
+        _log_diffs(diffs, tree_chars, text, 'matcher')
 
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.warning('=== After matcher:')
-            for diff in diffs:
-                logging.warning(self.diff2str(diff, tree_split_forms, text_split_forms))
+        diffs = self.unspace_diffs(diffs, tree_chars, text)
+        _log_diffs(diffs, tree_chars, text, 'unspace')
 
-        # Make sure each diff starts on original token boundary.
-        # If not, merge the diff with the previous diff.
-        # E.g. (equal, ["5"], ["5"]), (replace, ["-","6"], ["–","7"])
-        # is changed into (replace, ["5","-","6"], ["5","–","7"])
-        for i, diff in enumerate(diffs):
-            edit, tree_lo, tree_hi, text_lo, text_hi = diff
-            if edit != 'insert' and tree_split_nodes[tree_lo] is not None:
-                continue
+        diffs = self.merge_diffs(diffs, char_nodes)
+        _log_diffs(diffs, tree_chars, text, 'merge')
 
-            prev_i = i - 1
-            while diffs[prev_i][0] == 'ignore':
-                prev_i -= 1
-            if edit == 'equal':
-                while tree_lo < tree_hi and tree_split_nodes[tree_lo] is None:
-                    tree_lo += 1
-                    text_lo += 1
-                if tree_lo == tree_hi:
-                    diffs[i] = ('ignore', 0, 0, 0, 0)
-                else:
-                    diffs[i] = ('equal', tree_lo, tree_hi, text_lo, text_hi)
-                diffs[prev_i] = ('replace', diffs[prev_i][1], tree_lo, diffs[prev_i][3], text_lo)
-            else:
-                if diffs[prev_i][0] != 'equal':
-                    diffs[prev_i] = ('replace', diffs[prev_i][1],
-                                     tree_hi, diffs[prev_i][3], text_hi)
-                    diffs[i] = ('ignore', 0, 0, 0, 0)
-                else:
-                    p_tree_hi = diffs[prev_i][2] - 1
-                    p_text_hi = diffs[prev_i][4] - 1
-                    while tree_split_nodes[p_tree_hi] is None:
-                        p_tree_hi -= 1
-                        p_text_hi -= 1
-                        assert p_tree_hi >= diffs[prev_i][1]
-                        assert p_text_hi >= diffs[prev_i][3]
-                    diffs[prev_i] = ('equal', diffs[prev_i][1], p_tree_hi,
-                                     diffs[prev_i][3], p_text_hi)
-                    diffs[i] = ('replace', p_tree_hi, tree_hi, p_text_hi, text_hi)
-
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            logging.warning('=== After re-merging split tokens:')
-            for diff in diffs:
-                logging.warning(self.diff2str(diff, tree_split_forms, text_split_forms))
-
-        # TODO split diffs if possible, e.g.
-        # ['_', 'atenuación', '_', 'de', 'os'] --> ['_atenuación_', 'dos']
-        # should be divided into two diffs:
-        # ['_', 'atenuación', '_'] --> ['_atenuación_']
-        # ['de', 'os'] --> ['dos']
-        # This would probably need running another SequenceMatcher on characters
-        # and then aligning the tokens/nodes.
-
-        for diff in diffs:
-            edit, tree_lo, tree_hi, text_lo, text_hi = diff
-
-            # Focus only on edits of type 'replace', log insertions and deletions as failures.
-            if edit in ('equal', 'ignore'):
-                continue
-            if edit in ('insert', 'delete'):
-                logging.warning('Unable to solve token-vs-text mismatch\n%s',
-                                self.diff2str(diff, tree_split_forms, text_split_forms))
-                continue
-
-            # Revert the splittng and solve the diff.
-            nodes = [n for n in tree_split_nodes[tree_lo:tree_hi] if n is not None]
-            form = text_split_forms[text_lo]
-            for i in range(text_lo + 1, text_hi):
-                if text_split_nodes[i] is not None:
-                    form += ' '
-                form += text_split_forms[i]
-            self.solve_diff(nodes, form)
+        # Solve diffs.
+        self.solve_diffs(diffs, tree_chars, char_nodes, text)
 
         # Fill SpaceAfter=No.
         tmp_text = text
@@ -179,9 +127,82 @@ class ComplyWithText(Block):
                 root.add_comment('ToDoOrigText = ' + root.text)
                 root.text = computed_text
 
+    def unspace_diffs(self, orig_diffs, tree_chars, text):
+        diffs = []
+        for diff in orig_diffs:
+            edit, tree_lo, tree_hi, text_lo, text_hi = diff
+            if edit != 'insert':
+                if tree_chars[tree_lo] == ' ':
+                    tree_lo += 1
+                if tree_chars[tree_hi - 1] == ' ':
+                    tree_hi -= 1
+            old = tree_chars[tree_lo:tree_hi]
+            new = text[text_lo:text_hi]
+            if old == '' and new == '':
+                continue
+            elif old == new:
+                edit = 'equal'
+            elif old == '':
+                edit = 'insert'
+            diffs.append((edit, tree_lo, tree_hi, text_lo, text_hi))
+        return diffs
+
+    def merge_diffs(self, orig_diffs, char_nodes):
+        """Make sure each diff starts on original token boundary.
+
+        If not, merge the diff with the previous diff.
+        E.g. (equal, "5", "5"), (replace, "-6", "–7")
+        is changed into (replace, "5-6", "5–7")
+        """
+        diffs = []
+        for diff in orig_diffs:
+            edit, tree_lo, tree_hi, text_lo, text_hi = diff
+            if edit != 'insert' and char_nodes[tree_lo] is not None:
+                diffs.append(diff)
+            elif edit == 'equal':
+                while tree_lo < tree_hi and char_nodes[tree_lo] is None:
+                    tree_lo += 1
+                    text_lo += 1
+                diffs[-1] = ('replace', diffs[-1][1], tree_lo, diffs[-1][3], text_lo)
+                if tree_lo < tree_hi:
+                    diffs.append(('equal', tree_lo, tree_hi, text_lo, text_hi))
+            else:
+                if not diffs:
+                    diffs = [diff]
+                elif diffs[-1][0] != 'equal':
+                    diffs[-1] = ('replace', diffs[-1][1], tree_hi, diffs[-1][3], text_hi)
+                else:
+                    p_tree_hi = diffs[-1][2] - 1
+                    p_text_hi = diffs[-1][4] - 1
+                    while char_nodes[p_tree_hi] is None:
+                        p_tree_hi -= 1
+                        p_text_hi -= 1
+                        assert p_tree_hi >= diffs[-1][1]
+                        assert p_text_hi >= diffs[-1][3]
+                    diffs[-1] = ('equal', diffs[-1][1], p_tree_hi, diffs[-1][3], p_text_hi)
+                    diffs.append(('replace', p_tree_hi, tree_hi, p_text_hi, text_hi))
+        return diffs
+
+    def solve_diffs(self, diffs, tree_chars, char_nodes, text):
+        for diff in diffs:
+            edit, tree_lo, tree_hi, text_lo, text_hi = diff
+
+            # Focus only on edits of type 'replace', log insertions and deletions as failures.
+            if edit == 'equal':
+                continue
+            if edit in ('insert', 'delete'):
+                logging.warning('Unable to solve token-vs-text mismatch\n%s',
+                                _diff2str(diff, tree_chars, text))
+                continue
+
+            # Revert the splittng and solve the diff.
+            nodes = [n for n in char_nodes[tree_lo:tree_hi] if n is not None]
+            form = text[text_lo:text_hi]
+            self.solve_diff(nodes, form.strip())
+
     def solve_diff(self, nodes, form):
         """Fix a given (minimal) tokens-vs-text inconsistency."""
-        nodes_str = ' '.join([n.form for n in nodes])
+        nodes_str = ' '.join([n.form for n in nodes])  # just for debugging
         node = nodes[0]
 
         # First, solve the cases when the text contains a space.
@@ -193,7 +214,7 @@ class ComplyWithText(Block):
                 elif self.allow_goeswith:
                     forms = form.split()
                     node.form = forms[0]
-                    for split_form in reversed(form[1:]):
+                    for split_form in reversed(forms[1:]):
                         new = node.create_child(form=split_form, deprel='goeswith', upos=node.upos)
                         new.shift_after_node(node)
                 else:
@@ -223,33 +244,29 @@ class ComplyWithText(Block):
             self.store_orig_form(node, form)
             node.form = form
 
-    def allow_space(self, form):
-        return re.fullmatch('[0-9 ]+([,.][0-9]+)?', form)
 
-    def store_orig_form(self, node, new_form):
-        if node.form not in ("''", "``"):
-            node.misc['OrigForm'] = node.form
+def _nodes_to_chars(nodes):
+    chars, char_nodes = [], []
+    for node in nodes:
+        form = node.form
+        if node.misc['SpaceAfter'] != 'No' and node != nodes[-1]:
+            form += ' '
+        chars.extend(form)
+        char_nodes.append(node)
+        char_nodes.extend([None] * (len(form) - 1))
+    return ''.join(chars), char_nodes
 
-    def tokenize_list(self, strings, nodes):
-        new_strings = []
-        new_nodes = []
-        for string, node in zip(strings, nodes):
-            new_nodes.append(node)
-            substrings = self.tokenize(string)
-            if len(substrings) > 1:
-                new_strings.extend(substrings)
-                new_nodes.extend([None] * (len(substrings) - 1))
-            else:
-                new_strings.append(string)
-        return new_strings, new_nodes
 
-    @staticmethod
-    def tokenize(string):
-        return re.findall(r'\w+|[^\w\s]', string)
-        # return string
+def _log_diffs(diffs, tree_chars, text, msg):
+    if logging.getLogger().isEnabledFor(logging.DEBUG):
+        logging.warning('=== After %s:', msg)
+        for diff in diffs:
+            logging.warning(_diff2str(diff, tree_chars, text))
 
-    @staticmethod
-    def diff2str(diff, tree, text):
-        old = ' '.join(tree[diff[1]:diff[2]])
-        new = ' '.join(text[diff[3]:diff[4]])
-        return '{:7} {!s:>50} --> {!s}'.format(diff[0], old, new)
+
+def _diff2str(diff, tree, text):
+    old = '|' + ''.join(tree[diff[1]:diff[2]]) + '|'
+    new = '|' + ''.join(text[diff[3]:diff[4]]) + '|'
+    if diff[0] == 'equal':
+        return '{:7} {!s:>50}'.format(diff[0], old)
+    return '{:7} {!s:>50} --> {!s}'.format(diff[0], old, new)
