@@ -39,6 +39,7 @@ DEPREL_CHANGE = {
     "topic": "dep",
     "possessive": "case",
     "quantmod": "det",  # TODO UD_Hindi uses "dep" for the same words
+    "agent": "obl:agent",
     # TODO: "ref" - in basic dependencies it should be rehanged and relabelled
     "conjv": "compound:conjv",
     "advphmod": "advmod",

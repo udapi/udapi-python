@@ -1,17 +1,19 @@
 r"""Block ComplyWithText for adapting the nodes to comply with the text.
 
 Implementation design details:
-Most of the inconsistencies between tree tokens and the raw text are simple to solve.
+Usually, most of the inconsistencies between tree tokens and the raw text are simple to solve.
 However, there may be also rare cases when it is not clear how to align the tokens
-with the text. This block tries to solve the general case using several heuristics.
+(nodes in the tree) with the raw text (stored in ``root.text``).
+This block tries to solve the general case using several heuristics.
 
-One possible implementation is to find the LCS (longest common subsequence)
-of the raw text and concatenation of tokens' forms.
-However, it is quite difficult to map these character-level diffs to token-level diffs
-(one character-level diff may partially overlap with two tokens).
+It starts with running a LCS-like algorithm (LCS = longest common subsequence)
+``difflib.SequenceMatcher`` on the raw text and concatenation of tokens' forms,
+i.e. on sequences of characters (as opposed to running LCS on sequences of tokens).
 
-We need to insert spaces into the sequences to prevent mis-alignment.
-For example, text "énfase na necesidade" with 4 nodes "énfase en a necesidade"
+To prevent mis-alignment problems, we keep the spaces present in the raw text
+and we insert spaces into the concatenated forms (``tree_chars``) according to ``SpaceAfter=No``.
+An example of a mis-alignment problem:
+text "énfase na necesidade" with 4 nodes "énfase en a necesidade"
 should be solved by adding multiword token "na" over the nodes "en" and "a".
 However, running LCS (or difflib) over the character sequences
 "énfaseenanecesidade"
