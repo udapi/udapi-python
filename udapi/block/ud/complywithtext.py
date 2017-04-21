@@ -20,14 +20,6 @@ However, running LCS (or difflib) over the character sequences
 "énfasenanecesidade"
 may result in énfase -> énfas.
 
-So this implementation starts with running a LCS-like algorithm (difflib) on a sequence of tokens
-(instead of sequence of characters). Tokens from trees are obtain with `root.token_descendants`
-(these tokens may be standard nodes for syntactic words or multi-word tokens).
-From the raw text (`root.text`), we obtain "tokens" by splitting it on spaces and punctuation
-(or more precisely any non-word character -- ``re.findall(r'\w+|[^\w\s]', string)``).
-This tokenization is just approximate, to increase the chance of 1-1 alignment.
-This heuristics does not work for languages written without spaces (e.g. Chinese, Japanese).
-
 Author: Martin Popel
 """
 import difflib

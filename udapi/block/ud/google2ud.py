@@ -5,6 +5,7 @@ udapy -s ud.Google2ud < google.conllu > ud2.conllu
 """
 from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.complywithtext import ComplyWithText
+from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 
 DEPREL_CHANGE = {
@@ -115,6 +116,10 @@ class Google2ud(Convert1to2):
         if lang == 'de':
             self._addmwt_block = de_AddMwt()
 
+        self._fixchain_block = None
+        if lang in {'pt'}:
+            self._fixchain_block = FixChain()
+
         # UD_English v2.0 still uses "do n't" with SpaceAfter=No,
         # instead of annotating it as a multiword token.
         # In several other languages it is also common
@@ -152,6 +157,17 @@ class Google2ud(Convert1to2):
 
         # call ud.Convert1to2
         super().process_tree(root)
+
+        if self._fixchain_block:
+            self._fixchain_block.process_tree(root)
+
+        if self.lang == 'pt':
+            for node in root.descendants[2:]:
+                if node.deprel == 'goeswith' and node.prev_node.form == '-':
+                    node.parent.form += '-' + node.form
+                    node.parent.misc['SpaceAfter'] = node.misc['SpaceAfter']
+                    node.prev_node.remove(children='rehang')
+                    node.remove(children='rehang')
 
     @staticmethod
     def fix_feats(node):
