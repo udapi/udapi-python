@@ -7,6 +7,7 @@ from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
+from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
 
 DEPREL_CHANGE = {
     "ROOT": "root",
@@ -115,6 +116,8 @@ class Google2ud(Convert1to2):
         self._addmwt_block = None
         if lang == 'de':
             self._addmwt_block = de_AddMwt()
+        elif lang == 'pt':
+            self._addmwt_block = pt_AddMwt()
 
         self._fixchain_block = None
         if lang in {'pt'}:
