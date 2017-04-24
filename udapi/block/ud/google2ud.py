@@ -25,7 +25,6 @@ DEPREL_CHANGE = {
     "prt": "compound:prt",
     "preconj": "cc:preconj",
     "predet": "det:predet",
-    "gmod": "amod",
     "gobj": "obj",
     "postneg": "neg",  # will be changed to advmod + Polarity=Neg in ud.Convert1to2
     "pronl": "obj",  # TODO: or expl? UD_French seems to use a mix of both
@@ -289,3 +288,5 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'suff':
             node.misc['OrigDeprel'] = 'suff'
             node.deprel = 'dep'
+        elif node.deprel == 'gmod':
+            node.deprel = 'nmod' if node.feats['Case'] == 'Gen' else 'nmod:gmod'
