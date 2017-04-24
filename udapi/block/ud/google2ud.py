@@ -138,10 +138,6 @@ class Google2ud(Convert1to2):
         if self._comply_block:
             self._comply_block.process_tree(root)
 
-        # In German: "im" -> "in dem" etc.
-        if self._addmwt_block:
-            self._addmwt_block.process_tree(root)
-
         for node in root.descendants:
             self.fix_feats(node)
             self.fix_upos(node)
@@ -161,10 +157,15 @@ class Google2ud(Convert1to2):
         # call ud.Convert1to2
         super().process_tree(root)
 
+        # In German: "im" -> "in dem" etc.
+        # This needs to be applied after prepositions are under nouns.
+        if self._addmwt_block:
+            self._addmwt_block.process_tree(root)
+
         if self._fixchain_block:
             self._fixchain_block.process_tree(root)
 
-        if self.lang == 'pt':
+        if self.lang in {'pt', 'it'}:
             for node in root.descendants[2:]:
                 if node.deprel == 'goeswith' and node.prev_node.form == '-':
                     node.parent.form += '-' + node.form
