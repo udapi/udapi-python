@@ -173,6 +173,12 @@ class Google2ud(Convert1to2):
                     node.prev_node.remove(children='rehang')
                     node.remove(children='rehang')
 
+        # This must follow fixing the hyphen-goeswith. E.g. "Primeira Dama"
+        if self.lang in {'pt'}:
+            for node in root.descendants:
+                if node.deprel == 'goeswith':
+                    node.deprel = 'compound'
+
     @staticmethod
     def fix_feats(node):
         """Remove language prefixes, capitalize names and values, apply FEATS_CHANGE."""
