@@ -164,9 +164,11 @@ class Google2ud(Convert1to2):
         if self._fixchain_block:
             self._fixchain_block.process_tree(root)
 
-        if self.lang in {'pt', 'it'}:
+        if self.lang in {'pt', 'it', 'ru'}:
             for node in root.descendants[2:]:
-                if node.deprel == 'goeswith' and node.prev_node.form == '-':
+                if (node.deprel == 'goeswith' and node.prev_node.form == '-'
+                    and node.parent == node.prev_node.parent
+                    and node.parent == node.prev_node.prev_node):
                     node.parent.form += '-' + node.form
                     node.parent.misc['SpaceAfter'] = node.misc['SpaceAfter']
                     node.prev_node.remove(children='rehang')
