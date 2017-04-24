@@ -79,6 +79,23 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
         analysis = MWTS.get(node.form.lower(), None)
+
+        # If the input is e.g.:
+        # 1   na      _ ADP  _ _ deprel_x ?
+        # 2   verdade _ NOUN _ _ fixed    1
+        # The expected output is:
+        # 1-2 na      _ _    _ _ _        _
+        # 1   em      _ ADP  _ _ deprel_x ?
+        # 2   a       _ DET  _ _ fixed    1
+        # 3   verdade _ NOUN _ _ fixed    1
+        if analysis and analysis['deprel'] == 'case det' and node.udeprel != 'case':
+            copy = dict(analysis)
+            copy['deprel'] = '* det'
+            copy['shape'] = 'subtree'
+            first_child = next((c for c in node.children if node.precedes(c)), None)
+            if first_child is not None and first_child.udeprel == 'fixed':
+                copy['deprel'] = '* fixed'
+            return copy
         if analysis is not None:
             return analysis
 
