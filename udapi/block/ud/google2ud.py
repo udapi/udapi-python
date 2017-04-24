@@ -302,3 +302,6 @@ class Google2ud(Convert1to2):
             node.deprel = 'dep'
         elif node.deprel == 'gmod':
             node.deprel = 'nmod' if node.feats['Case'] == 'Gen' else 'nmod:gmod'
+        elif node.deprel == 'cc':
+            if node.upos == 'PUNCT' and node.form == ',':
+                node.deprel = 'punct'
