@@ -11,23 +11,44 @@ import udapi.block.ud.addmwt
 MWTS = {
     'à':       {'form': 'a a', 'lemma': 'a o'},
     'às':      {'form': 'a as', 'lemma': 'a o'},
-    # 'ao':      {'form': 'a o', 'lemma': 'a o'},  # Sometimes annotated just as ao/ao/ADP/case
+    'ao':      {'form': 'a o', 'lemma': 'a o'},
     'aos':     {'form': 'a os', 'lemma': 'a o'},
     'da':      {'form': 'de a', 'lemma': 'de o'},
     'das':     {'form': 'de as', 'lemma': 'de o'},
+    'dessa':   {'form': 'de essa', 'lemma': 'de esse'},
+    'dessas':  {'form': 'de essas', 'lemma': 'de esse'},
+    'desse':   {'form': 'de esse', 'lemma': 'de esse'},
+    'desses':  {'form': 'de esses', 'lemma': 'de esse'},
     'desta':   {'form': 'de esta', 'lemma': 'de este'},
-    'dele':    {'form': 'de ele', 'lemma': 'de ele', 'upos': 'ADP PRON', 'deprel': 'case *'},
-    'deles':   {'form': 'de eles', 'lemma': 'de eles', 'upos': 'ADP PRON', 'deprel': 'case *'},
-    # 'disso': {'form': 'de isso', TODO}
+    'destas':  {'form': 'de estas', 'lemma': 'de este'},
+    'deste':   {'form': 'de este', 'lemma': 'de este'},
+    'destes':  {'form': 'de estes', 'lemma': 'de este'},
+    'disso':   {'form': 'de isso', 'lemma': 'de este'},
+    'disto':   {'form': 'de isto', 'lemma': 'de este'},
     'do':      {'form': 'de o', 'lemma': 'de o'},  # 'upos': 'ADP PRON', 'deprel': 'case *''
     'dos':     {'form': 'de os', 'lemma': 'de o'},
+    'dum':     {'form': 'de um', 'lemma': 'de um'},
+    'duma':    {'form': 'de uma', 'lemma': 'de um'},
+    'dumas':   {'form': 'de umas', 'lemma': 'de um'},
+    'duns':    {'form': 'de uns', 'lemma': 'de um'},
     'na':      {'form': 'em a', 'lemma': 'em o'},
+    'nas':     {'form': 'em as', 'lemma': 'em o'},  # ADP PRON
+    'nesses':  {'form': 'em esses', 'lemma': 'em esse'},
     'nesta':   {'form': 'em esta', 'lemma': 'em este'},
+    'neste':   {'form': 'em este', 'lemma': 'em este'},
+    'nisto':   {'form': 'em isto', 'lemma': 'em este',
+                'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
     'no':      {'form': 'em o', 'lemma': 'em o'},
     'nos':     {'form': 'em os', 'lemma': 'em o'},
+    'num':     {'form': 'em um', 'lemma': 'em um'},
     'numa':    {'form': 'em uma', 'lemma': 'em um'},
+    'numas':   {'form': 'em umas', 'lemma': 'em um'},
+    'nuns':    {'form': 'em uns', 'lemma': 'em um'},
+    'pela':    {'form': 'por a', 'lemma': 'por o'},
+    'pelas':   {'form': 'por as', 'lemma': 'por o'},
     'pelos':   {'form': 'por os', 'lemma': 'por o'},
     'pelo':    {'form': 'por o', 'lemma': 'por o'},
+    # TODO daí = de aí = ADP ADV = case advmod
 }
 
 # shared values for all entries in MWTS
@@ -40,6 +61,16 @@ for v in MWTS.values():
     # The following are the default values
     # v['main'] = 0 # which of the two words will inherit the original children (if any)
     # v['shape'] = 'siblings', # the newly created nodes will be siblings
+
+for pronoun in 'ela ele eles elas'.split():
+    MWTS['d' + pronoun] = {
+        'form': 'de ' + pronoun,
+        'lemma': 'de ' + pronoun,
+        'upos': 'ADP PRON',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
 
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
@@ -58,6 +89,36 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 'upos': '* PRON',
                 'feats': '* _',
                 'deprel': '* nsubj',  # or '* expl'
+                'main': 0,
+                'shape': 'subtree',
+            }
+        elif node.form.lower().endswith('-lo') and node.upos == 'VERB':
+            return {
+                'form': node.form.lower()[:-3] + ' lo',
+                'lemma': '* ele',
+                'upos': '* PRON',
+                'feats': '* _',
+                'deprel': '* obj',
+                'main': 0,
+                'shape': 'subtree',
+            }
+        elif node.form.lower().endswith('-los') and node.upos == 'VERB':
+            return {
+                'form': node.form.lower()[:-4] + ' los',
+                'lemma': '* eles',
+                'upos': '* PRON',
+                'feats': '* _',
+                'deprel': '* obj',
+                'main': 0,
+                'shape': 'subtree',
+            }
+        elif node.form.lower().endswith('-o') and node.upos == 'VERB':
+            return {
+                'form': node.form.lower()[:-2] + ' o',
+                'lemma': '* ele',
+                'upos': '* PRON',
+                'feats': '* _',
+                'deprel': '* obj',
                 'main': 0,
                 'shape': 'subtree',
             }
