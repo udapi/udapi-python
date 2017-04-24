@@ -6,6 +6,7 @@ udapy -s ud.Google2ud < google.conllu > ud2.conllu
 from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.fixchain import FixChain
+from udapi.block.ud.fixrightheaded import FixRightheaded
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
 
@@ -118,6 +119,10 @@ class Google2ud(Convert1to2):
         elif lang == 'pt':
             self._addmwt_block = pt_AddMwt()
 
+        self._fixrigheaded_block = None
+        if lang in {'hi'}:
+            self._fixrigheaded_block = FixRightheaded()
+
         self._fixchain_block = None
         if lang in {'pt'}:
             self._fixchain_block = FixChain()
@@ -161,6 +166,11 @@ class Google2ud(Convert1to2):
         if self._addmwt_block:
             self._addmwt_block.process_tree(root)
 
+        # deprel=fixed,flat,... should be always head-initial
+        if self._fixrigheaded_block:
+            self._fixrigheaded_block.process_tree(root)
+
+        # and it form a flat structure, not a chain.
         if self._fixchain_block:
             self._fixchain_block.process_tree(root)
 
