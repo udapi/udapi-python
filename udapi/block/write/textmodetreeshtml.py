@@ -42,8 +42,8 @@ class TextModeTreesHtml(TextModeTrees):
     def before_process_document(self, document):
         # TextModeTrees.before_process_document changes the color property,
         # we need to skip this, but call BaseWriter's method which redirects stdout.
-        super(TextModeTrees, self).before_process_document(
-            document)  # pylint: disable=bad-super-call
+        # pylint: disable=bad-super-call
+        super(TextModeTrees, self).before_process_document(document)
         print('<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">')
         print('<title>' + self.title + '</title>')
         print('<style>' + STYLE)
