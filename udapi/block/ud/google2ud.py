@@ -7,6 +7,7 @@ from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.fixrightheaded import FixRightheaded
+from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
 
@@ -113,6 +114,7 @@ class Google2ud(Convert1to2):
         """
         super().__init__(**kwargs)
         self.lang = lang
+
         self._addmwt_block = None
         if lang == 'de':
             self._addmwt_block = de_AddMwt()
@@ -123,6 +125,10 @@ class Google2ud(Convert1to2):
         # TODO: add 'de'
         if lang in {'ar', 'en', 'fr', 'hi', 'ru', 'th', 'tr', 'zh'}:
             self._fixrigheaded_block = FixRightheaded()
+
+        self._fixpunct_block = None
+        if lang in {'de'}:
+            self._fixpunct_block = FixPunct()
 
         self._fixchain_block = None
         if lang in {'pt'}:
@@ -162,18 +168,13 @@ class Google2ud(Convert1to2):
         # call ud.Convert1to2
         super().process_tree(root)
 
-        # In German: "im" -> "in dem" etc.
-        # This needs to be applied after prepositions are under nouns.
-        if self._addmwt_block:
-            self._addmwt_block.process_tree(root)
-
-        # deprel=fixed,flat,... should be always head-initial
-        if self._fixrigheaded_block:
-            self._fixrigheaded_block.process_tree(root)
-
-        # and it form a flat structure, not a chain.
-        if self._fixchain_block:
-            self._fixchain_block.process_tree(root)
+        for block in (
+                self._addmwt_block,        # e.g. "im" -> "in dem" in de. Must follow Convert1to2.
+                self._fixrigheaded_block,  # deprel=fixed,flat,... should be always head-initial
+                self._fixchain_block,      # and form a flat structure, not a chain.
+                self._fixpunct_block):     # commas should depend on the subord unit.
+            if block:
+                block.process_tree(root)
 
         if self.lang in {'it', 'pt', 'ru'}:
             for node in root.descendants[2:]:

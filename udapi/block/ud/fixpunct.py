@@ -21,16 +21,36 @@ For example, the left neighbor (node i-1) may have its parent at i-3,
 and the node i-2 forms a gap (does not depend on i-3).
 """
 from udapi.core.block import Block
+# pylint: disable=no-self-use
 
+PAIRED_PUNCT = {
+    '(': ')',
+    '[': ']',
+    '{': '}',
+    '„': '“', # Czech and German quotation marks
+    }
 
 class FixPunct(Block):
     """Make sure punct nodes are attached punctuation is attached projectively."""
 
-    def process_node(self, node):
-        # TODO fix punct-child
-        if node.upos != "PUNCT" or not node.is_leaf():
-            return
+    def process_tree(self, root):
+        # First, make sure no PUNCT has children
+        for node in root.descendants:
+            while node.parent.upos == "PUNCT":
+                node.parent = node.parent.parent
 
+        # Then make sure subordinate punctuations have correct parent.
+        for node in root.descendants:
+            if node.upos == "PUNCT":
+                self._fix_subord_punct(node)
+
+        # Then fix paired punctuations: quotes and brackets.
+        for node in root.descendants:
+            closing_punct = PAIRED_PUNCT.get(node.form, None)
+            if closing_punct is not None:
+                self._fix_paired_punct(root, node, closing_punct)
+
+    def _fix_subord_punct(self, node):
         # Initialize the candidates (left and right) with the nearest nodes excluding punctuation.
         l_cand, r_cand = node.prev_node, node.next_node
         while l_cand.ord > 0 and l_cand.upos == "PUNCT":
@@ -53,5 +73,39 @@ class FixPunct(Block):
         # (which can happen in rare non-projective cases), we arbitrarily prefer r_cand.
         if l_cand is not None and not l_cand.is_root() and l_cand.is_descendant_of(r_cand):
             node.parent = l_cand
+            node.deprel = "punct"
         elif r_cand is not None:
             node.parent = r_cand
+            node.deprel = "punct"
+
+    def _fix_paired_punct(self, root, opening_node, closing_punct):
+        nested_level = 0
+        for node in root.descendants[opening_node.ord:]:
+            if node.form == opening_node.form:
+                nested_level += 1
+            elif node.form == closing_punct:
+                if nested_level > 0:
+                    nested_level -= 0
+                else:
+                    self._fix_pair(root, opening_node, node)
+                    return
+
+    def _fix_pair(self, root, opening_node, closing_node):
+        head = None
+        for node in root.descendants[opening_node.ord : closing_node.ord - 1]:
+            if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
+                if head is not None:
+                    return
+                else:
+                    head = node
+
+        closing_node.parent = head
+        opening_node.parent = head
+        # We expect at least one of the brackets to be already attached to the head
+        # (and the other probably higher).
+        # If it is not the case, maybe there are projectivity issues
+        # and we should not enforce attachment to the head.
+        #if opening_node.parent == head:
+        #    closing_node.parent = head
+        #elif closing_node.parent == head:
+        #    opening_node.parent = head
