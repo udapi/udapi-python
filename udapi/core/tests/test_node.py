@@ -68,17 +68,17 @@ class TestDocument(unittest.TestCase):
                      "─┮\n"
                      " │ ╭─╼ Slovenská ADJ amod\n"
                      " ╰─┾ ústava NOUN root\n"
-                     "   ├─╼ : PUNCT punct\n"
+                     "   ┡─╼ : PUNCT punct\n"
                      "   ╰─┮ pro ADP appos\n"
-                     "     ├─╼ i CONJ cc\n"
+                     "     ┡─╼ i CONJ cc\n"
                      "     ╰─╼ proti ADP conj\n"
                      "\n")
         expected2 = ("─┮\n"
                      " │ ╭─╼ Slovenská Case=Nom|Degree=Pos|Gender=Fem|Negative=Pos|Number=Sing _\n"
                      " ╰─┾ ústava Case=Nom|Gender=Fem|Negative=Pos|Number=Sing SpaceAfter=No\n"
-                     "   ├─╼ : _ _\n"
+                     "   ┡─╼ : _ _\n"
                      "   ╰─┮ pro AdpType=Prep|Case=Acc LId=pro-1\n"
-                     "     ├─╼ i _ LId=i-1\n"
+                     "     ┡─╼ i _ LId=i-1\n"
                      "     ╰─╼ proti AdpType=Prep|Case=Dat LId=proti-1\n"
                      "\n")
 
@@ -91,7 +91,7 @@ class TestDocument(unittest.TestCase):
         nodes[4].parent = nodes[2]
         expected3 = ("─┮\n"
                      " │ ╭─╼ 1\n"
-                     " ├─╪───┮ 2\n"
+                     " ┡─╪───┮ 2\n"
                      " ╰─┶ 3 │\n"
                      "       ╰─╼ 4\n"
                      "\n")

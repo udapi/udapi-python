@@ -133,10 +133,10 @@ class TextModeTrees(BaseWriter):
         self._horiz = line + '╼'
         self._draw = [[line + '┾', line + '┮'], [line + '┶', self._horiz]]
 
-        # _space[is_bottommost][is_topmost]
+        # _space[precedes_parent][is_topmost_or_bottommost]
         # _vert[is_crossing]
         space = ' ' * indent
-        self._space = [[space + '├', space + '╭'], [space + '╰']]
+        self._space = [[space + '┡', space + '╰'], [space + '┢', space + '╭']]
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
@@ -195,7 +195,7 @@ class TextModeTrees(BaseWriter):
             max_length = max([self.lengths[i] for i in range(min_idx, max_idx + 1)])
             for idx in range(min_idx, max_idx + 1):
                 idx_node = allnodes[idx]
-                filler = '─' if self._ends(idx, '─╭╰├╪') else ' '
+                filler = '─' if self._ends(idx, '─╭╰╪┡┢') else ' '
                 self._add(idx, filler * (max_length - self.lengths[idx]))
 
                 topmost = idx == min_idx
@@ -205,9 +205,9 @@ class TextModeTrees(BaseWriter):
                     self.add_node(idx, node)
                 else:
                     if idx_node.parent is not node:
-                        self._add(idx, self._vert[self._ends(idx, '─╭╰├╪')])
+                        self._add(idx, self._vert[self._ends(idx, '─╭╰╪┡┢')])
                     else:
-                        self._add(idx, self._space[botmost][topmost])
+                        self._add(idx, self._space[idx < node.ord][topmost or botmost])
                         if idx_node.is_leaf():
                             self._add(idx, self._horiz)
                             self.add_node(idx, idx_node)
