@@ -81,8 +81,8 @@ FEATS_CHANGE = {
     "person_antecedent=3_a": "Person[psor]=3",
     "definiteness=def": "Definite=Def",
     "definiteness=indef": "Definite=Ind",
-    "mood=sub1": "Mood=Sub",  # TODO: what is the difference between sub1 and sub2 in German?
-    "mood=sub2": "Mood=Sub",
+    "mood=sub1": "Mood=Sub",  # TODO: Tense=Pres (in German)
+    "mood=sub2": "Mood=Sub",  # TODO: Tense=Past (in German)
     "mood=inter": "PronType=Int",  # TODO or keep Mood=Inter (it is used in UD_Chinese)
     "tense=cnd": "Mood=Cnd",
     "degree=sup_a": "Degree=Abs",
@@ -175,11 +175,11 @@ class Google2ud(Convert1to2):
         if self._fixchain_block:
             self._fixchain_block.process_tree(root)
 
-        if self.lang in {'pt', 'it', 'ru'}:
+        if self.lang in {'it', 'pt', 'ru'}:
             for node in root.descendants[2:]:
                 if (node.deprel == 'goeswith' and node.prev_node.form == '-'
-                    and node.parent == node.prev_node.parent
-                    and node.parent == node.prev_node.prev_node):
+                        and node.parent == node.prev_node.parent
+                        and node.parent == node.prev_node.prev_node):
                     node.parent.form += '-' + node.form
                     node.parent.misc['SpaceAfter'] = node.misc['SpaceAfter']
                     node.prev_node.remove(children='rehang')
@@ -272,7 +272,7 @@ class Google2ud(Convert1to2):
             else:
                 node.deprel = 'compound'
         elif node.deprel in ('pobj', 'pcomp'):
-            if node.parent.deprel in ('case', 'prep'):
+            if node.parent.deprel in ('case', 'prep'):  # or node.parent.upos in ('DET', 'ADP'):
                 preposition = node.parent
                 node.parent = preposition.parent
                 preposition.parent = node
