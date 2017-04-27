@@ -82,8 +82,8 @@ FEATS_CHANGE = {
     "person_antecedent=3_a": "Person[psor]=3",
     "definiteness=def": "Definite=Def",
     "definiteness=indef": "Definite=Ind",
-    "mood=sub1": "Mood=Sub",  # TODO: Tense=Pres (in German)
-    "mood=sub2": "Mood=Sub",  # TODO: Tense=Past (in German)
+    "mood=sub1": "Mood=Sub|Tense=Pres",  # de
+    "mood=sub2": "Mood=Sub|Tense=Past",  # de
     "mood=inter": "PronType=Int",  # TODO or keep Mood=Inter (it is used in UD_Chinese)
     "tense=cnd": "Mood=Cnd",
     "degree=sup_a": "Degree=Abs",
@@ -187,7 +187,7 @@ class Google2ud(Convert1to2):
                     node.remove(children='rehang')
 
         # This must follow fixing the hyphen-goeswith. E.g. "Primeira Dama"
-        if self.lang in {'pt'}:
+        if self.lang in {'pt', 'de'}:
             for node in root.descendants:
                 if node.deprel == 'goeswith':
                     node.deprel = 'compound'
@@ -207,8 +207,9 @@ class Google2ud(Convert1to2):
             new = FEATS_CHANGE.get(name + '=' + value)
             if new is not None:
                 if new != '':
-                    new_name, new_value = new.split('=')
-                    node.feats[new_name] = new_value
+                    for new_pair in new.split('|'):
+                        new_name, new_value = new_pair.split('=')
+                        node.feats[new_name] = new_value
             elif name[0].isupper():
                 node.feats[name] = value
             else:
