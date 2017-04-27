@@ -144,7 +144,8 @@ class Google2ud(Convert1to2):
         comment_lines = root.comment.split("\n")
         root.sent_id = comment_lines[0].strip().replace(' ', '-')
         root.text = comment_lines[1].strip()
-        root.comment = ''
+        # The third line of comments contains the English translation.
+        root.comment = '' if self.lang == "en" or len(comment_lines) < 3 else comment_lines[2]
 
         if self._comply_block:
             self._comply_block.process_tree(root)
