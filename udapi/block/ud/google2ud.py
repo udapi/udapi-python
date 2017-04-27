@@ -150,6 +150,10 @@ class Google2ud(Convert1to2):
         if self._comply_block:
             self._comply_block.process_tree(root)
 
+        # TODO solve multi-word prepositions first
+        # if node.deprel in ('pobj', 'pcomp'):
+        #   if node.parent.deprel in ('pobj', 'pcomp'):
+
         for node in root.descendants:
             self.fix_feats(node)
             self.fix_upos(node)
@@ -280,13 +284,19 @@ class Google2ud(Convert1to2):
             else:
                 node.deprel = 'compound'
         elif node.deprel in ('pobj', 'pcomp'):
-            if node.parent.deprel in ('case', 'prep'):  # or node.parent.upos in ('DET', 'ADP'):
+            if node.parent.deprel in ('case', 'prep', 'conj'):
                 preposition = node.parent
                 node.parent = preposition.parent
                 preposition.parent = node
 
                 # ud.Convert1to2 will change 'nmod' to 'obl' if needed
-                node.deprel = 'nmod' if node.deprel == 'pobj' else 'xcomp'  # TODO check xcomp
+                if preposition.deprel == 'conj':
+                    node.deprel = 'conj'
+                    preposition.deprel = 'case'
+                elif node.deprel == 'pobj':
+                    node.deprel = 'nmod'
+                else:
+                    node.deprel = 'xcomp'  # TODO check if pcomp -> xcomp is correct
 
                 # Prepositions should not have any children (except for deprel=fixed/mwe), see
                 # http://universaldependencies.org/u/overview/syntax.html#multiword-function-words.
