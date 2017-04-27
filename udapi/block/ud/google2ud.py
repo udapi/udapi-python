@@ -259,6 +259,11 @@ class Google2ud(Convert1to2):
         if node.upos == "NUM" and node.deprel == "det" and not node.form.isnumeric():
             node.upos = "DET"
 
+        if self.lang == 'de' and node.upos == 'CONJ' and node.form.lower() == 'zu':
+            node.deprel = 'mark'
+            node.upos = 'PART'
+            node.xpos = 'RP'
+
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
 
