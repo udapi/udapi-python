@@ -311,3 +311,8 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'cc':
             if node.upos == 'PUNCT' and node.form == ',':
                 node.deprel = 'punct'
+        elif node.deprel == 'parataxis':
+            if node.children:
+                cc_node = node.descendants[0].prev_node
+                if cc_node.udeprel == 'cc' and cc_node.parent == node.parent:
+                    node.deprel = 'conj'
