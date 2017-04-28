@@ -36,6 +36,7 @@ MWTS = {
     'nesses':  {'form': 'em esses', 'lemma': 'em esse'},
     'nesta':   {'form': 'em esta', 'lemma': 'em este'},
     'neste':   {'form': 'em este', 'lemma': 'em este'},
+    'nisso':   {'form': 'em isso', 'lemma': 'em este'},
     'nisto':   {'form': 'em isto', 'lemma': 'em este',
                 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
     'no':      {'form': 'em o', 'lemma': 'em o'},
