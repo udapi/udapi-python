@@ -150,9 +150,9 @@ class Google2ud(Convert1to2):
         if self._comply_block:
             self._comply_block.process_tree(root)
 
-        # TODO solve multi-word prepositions first
-        # if node.deprel in ('pobj', 'pcomp'):
-        #   if node.parent.deprel in ('pobj', 'pcomp'):
+        # Multi-word prepositions must be solved before fix_deprel() fixes pobj+pcomp.
+        for node in root.descendants:
+            self.fix_multiword_prep(node)
 
         for node in root.descendants:
             self.fix_feats(node)
@@ -196,6 +196,42 @@ class Google2ud(Convert1to2):
             for node in root.descendants:
                 if node.deprel == 'goeswith':
                     node.deprel = 'compound'
+
+    def fix_multiword_prep(self, node):
+        """Solve pobj/pcomp depending on pobj/pcomp.
+
+         Only some of these cases are multi-word prepositions (which should get deprel=fixed).
+         """
+        if node.deprel in ('pobj', 'pcomp') and node.parent.deprel in ('pobj', 'pcomp'):
+            lo_prep = node.parent
+            hi_prep = node.parent.parent
+            if hi_prep.deprel != 'prep':
+                return
+            # E.g. in "from A to B", the Google style attaches "to"/pcomp under "from"/prep.
+            # Let's use this heuristics: if the prepositions are not next to each other,
+            # they should be siblings (as in "from A to B").
+            if abs(lo_prep.ord - hi_prep.ord) != 1:
+                lo_prep.parent = hi_prep.parent
+                lo_prep.deprel = 'prep'
+            # Some languages (e.g. pt) in UDv2 do not use multi-word prepositions at all.
+            elif self.lang in {'pt'}:
+                node.parent = hi_prep
+                lo_prep.parent = node
+                lo_prep.deprel = 'case'
+            # Otherwise, they are probably multi-word prepositions, e.g. "according to",
+            # but they can also be sibling prepositions, e.g. "out of".
+            # The Google style does not distinguish those and I don't see any heuristics,
+            # so let's mark these cases as ToDo.
+            else:
+                first_prep, second_prep = hi_prep, lo_prep
+                if lo_prep.precedes(hi_prep):
+                    first_prep, second_prep = lo_prep, hi_prep
+                    first_prep.parent = hi_prep.parent
+                    second_prep.parent = first_prep
+                for prep_child in second_prep.children:
+                    prep_child.parent = first_prep
+                second_prep.deprel = 'fixed'
+                self.log(second_prep, 'unsure-multi-prep', 'deprel=fixed, but may be siblings')
 
     @staticmethod
     def fix_feats(node):
