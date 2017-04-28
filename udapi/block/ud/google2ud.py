@@ -147,8 +147,14 @@ class Google2ud(Convert1to2):
         # The third line of comments contains the English translation.
         root.comment = '' if self.lang == "en" or len(comment_lines) < 3 else comment_lines[2]
 
+        # ud.ComplyWithText is the very first step because it may change the tokenization
+        # and also it fills SpaceAfter=No, which is used in further steps.
         if self._comply_block:
             self._comply_block.process_tree(root)
+
+        # deprel=goeswith must be fixed next because it also changes tokenization
+        for node in root.descendants:
+            self.fix_goeswith(node)
 
         # Multi-word prepositions must be solved before fix_deprel() fixes pobj+pcomp.
         for node in root.descendants:
@@ -186,16 +192,44 @@ class Google2ud(Convert1to2):
                 if (node.deprel == 'goeswith' and node.prev_node.form == '-'
                         and node.parent == node.prev_node.parent
                         and node.parent == node.prev_node.prev_node):
-                    node.parent.form += '-' + node.form
-                    node.parent.misc['SpaceAfter'] = node.misc['SpaceAfter']
-                    node.prev_node.remove(children='rehang')
-                    node.remove(children='rehang')
+                    self._merge_with(node.parent, node.prev_node)
+                    self._merge_with(node.parent, node)
 
         # This must follow fixing the hyphen-goeswith. E.g. "Primeira Dama"
         if self.lang in {'pt', 'de'}:
             for node in root.descendants:
                 if node.deprel == 'goeswith':
                     node.deprel = 'compound'
+
+    def fix_goeswith(self, node):
+        """Solve deprel=goeswith which is almost always wrong in the Google annotation."""
+        if node.deprel != 'goeswith':
+            return
+        if self.lang in {'fr'}:
+            if node.parent.precedes(node) and node.prev_node.misc['SpaceAfter'] == 'No':
+                self._merge_with(node.prev_node, node)
+            elif node.precedes(node.parent) and node.misc['SpaceAfter'] == 'No':
+                self._merge_with(node.next_node, node)
+
+    @staticmethod
+    def _merge_with(node, delete_node):
+        """Concat forms, merge feats, remove `delete_node`, and keep SpaceAfter of the right node.
+
+        Should be called only on neighboring nodes.
+        """
+        if node.precedes(delete_node):
+            node.form += delete_node.form
+            node.misc['SpaceAfter'] = delete_node.misc['SpaceAfter']
+        else:
+            node.form = delete_node.form + node.form
+        if node.parent == delete_node:
+            node.parent = delete_node.parent
+        for child in delete_node.children:
+            child.parent = node
+        delete_node.feats.update(node.feats)
+        node.feats = delete_node.feats
+        # node.misc['Merge'] = 1
+        delete_node.remove()
 
     def fix_multiword_prep(self, node):
         """Solve pobj/pcomp depending on pobj/pcomp.
