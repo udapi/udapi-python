@@ -631,6 +631,11 @@ class Node(object):
         # For projective edges, span must include all the nodes between parent and self.
         return len(span) != distance - 1
 
+    @property
+    def no_space_after(self):
+        """Boolean property as a shortcut for `node.misc["SpaceAfter"] == "No"`."""
+        return self.misc["SpaceAfter"] == "No"
+
 
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.
