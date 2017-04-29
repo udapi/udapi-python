@@ -365,8 +365,11 @@ class Google2ud(Convert1to2):
             node.upos = 'PART'
             node.xpos = 'RP'
 
-        if self.lang == 'fr' and node.upos == 'PROPN' and node.form.lower() in FR_DAYS_MONTHS:
-            node.upos = 'NOUN'
+        if self.lang == 'fr':
+            if node.upos == 'PROPN' and node.form.lower() in FR_DAYS_MONTHS:
+                node.upos = 'NOUN'
+            if node.form == 'États-Unis':
+                node.upos = 'PROPN'
 
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
