@@ -441,3 +441,6 @@ class Google2ud(Convert1to2):
                 if nsubj is not None:
                     node.deprel = 'nsubj'
                     nsubj.deprel = 'expl' if nsubj.upos == 'PRON' else 'dislocated'
+        elif node.deprel == 'appos':
+            if self.lang == 'fr' and node.parent.form in {'M.', 'Mme', 'Dr'}:
+                node.deprel = 'flat:name'
