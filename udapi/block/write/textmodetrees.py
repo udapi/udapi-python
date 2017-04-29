@@ -87,7 +87,7 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='', print_doc_meta=True, print_comments=False,
+                 print_undef_as='_', print_doc_meta=True, print_comments=False,
                  mark='ToDo|Bug|Mark', marked_only=False, **kwargs):
         """Create new TextModeTrees block object.
 
