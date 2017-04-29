@@ -126,8 +126,7 @@ class Google2ud(Convert1to2):
             self._addmwt_block = pt_AddMwt()
 
         self._fixrigheaded_block = None
-        # TODO: add 'de'
-        if lang in {'ar', 'en', 'fr', 'hi', 'ru', 'th', 'tr', 'zh'}:
+        if lang in {'ar', 'de', 'en', 'fr', 'hi', 'ru', 'th', 'tr', 'zh'}:
             self._fixrigheaded_block = FixRightheaded()
 
         self._fixpunct_block = None

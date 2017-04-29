@@ -23,12 +23,24 @@ and the node i-2 forms a gap (does not depend on i-3).
 from udapi.core.block import Block
 # pylint: disable=no-self-use
 
+# TODO Add a heuristics for ASCI "quotes".
+# TODO Add ‘single’ quotes, but make sure these symbols are not used e.g. as apostrophes.
+# TODO We need to know the language, there are many other quotation styles,
+#      e.g. Finnish and Swedish uses the same symbol for opening and closing: ”X”.
+#      Danish uses uses the French quotes, but switched: »X«.
 PAIRED_PUNCT = {
     '(': ')',
     '[': ']',
     '{': '}',
-    '„': '“', # Czech and German quotation marks
+    '“': '”',   # quotation marks used in English,...
+    '„': '“',   # Czech, German, Russian,...
+    '«': '»',   # French, Russian, Spanish,...
+    '‹': '›',   # dtto
+    '《': '》',  # Korean, Chinese
+    '「': '」',  # Chinese, Japanese
+    '『': '』',  # dtto
     }
+
 
 class FixPunct(Block):
     """Make sure punct nodes are attached punctuation is attached projectively."""
@@ -41,7 +53,7 @@ class FixPunct(Block):
 
         # Then make sure subordinate punctuations have correct parent.
         for node in root.descendants:
-            if node.upos == "PUNCT":
+            if node.upos == "PUNCT" and not PAIRED_PUNCT.get(node.form, None):
                 self._fix_subord_punct(node)
 
         # Then fix paired punctuations: quotes and brackets.
@@ -91,21 +103,14 @@ class FixPunct(Block):
                     return
 
     def _fix_pair(self, root, opening_node, closing_node):
-        head = None
-        for node in root.descendants[opening_node.ord : closing_node.ord - 1]:
+        heads = []
+        for node in root.descendants[opening_node.ord: closing_node.ord - 1]:
             if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
-                if head is not None:
-                    return
-                else:
-                    head = node
-
-        closing_node.parent = head
-        opening_node.parent = head
-        # We expect at least one of the brackets to be already attached to the head
-        # (and the other probably higher).
-        # If it is not the case, maybe there are projectivity issues
-        # and we should not enforce attachment to the head.
-        #if opening_node.parent == head:
-        #    closing_node.parent = head
-        #elif closing_node.parent == head:
-        #    opening_node.parent = head
+                if node.upos != 'PUNCT':
+                    heads.append(node)
+        if len(heads) == 1:
+            opening_node.parent = heads[0]
+            closing_node.parent = heads[0]
+        elif len(heads) > 1:
+            opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
+            closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
