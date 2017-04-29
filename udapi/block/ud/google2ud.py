@@ -437,4 +437,4 @@ class Google2ud(Convert1to2):
                 nsubj = next((n for n in node.parent.children if n.udeprel == 'nsubj'), None)
                 if nsubj is not None:
                     node.deprel = 'nsubj'
-                    nsubj.deprel = 'expl'
+                    nsubj.deprel = 'expl' if nsubj.upos == 'PRON' else 'dislocated'
