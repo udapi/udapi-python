@@ -152,9 +152,17 @@ class Google2ud(Convert1to2):
         if self._comply_block:
             self._comply_block.process_tree(root)
 
-        # deprel=goeswith must be fixed next because it also changes tokenization
-        for node in root.descendants:
-            self.fix_goeswith(node)
+        # `deprel=goeswith` must be fixed now because it also changes the number of nodes.
+        # Unlike UDv2, Google style uses `goeswith` mostly to fix "wrong" tokenization,
+        # e.g. "e-mail" written correctly without spaces, but tokenized into three words.
+        # Moreover, the hyphen is not always marked with `goeswith`.
+        if self.lang in {'de', 'fr', 'it', 'pt', 'ru'}:
+            for node in root.descendants:
+                if node.form == '-' and node.no_space_after and node.prev_node.no_space_after:
+                    if 'goeswith' in (node.prev_node.deprel, node.next_node.deprel):
+                        node.deprel = 'goeswith'
+            for node in root.descendants:
+                self.fix_goeswith(node)
 
         # Multi-word prepositions must be solved before fix_deprel() fixes pobj+pcomp.
         for node in root.descendants:
@@ -187,29 +195,38 @@ class Google2ud(Convert1to2):
             if block:
                 block.process_tree(root)
 
-        if self.lang in {'it', 'pt', 'ru'}:
-            for node in root.descendants[2:]:
-                if (node.deprel == 'goeswith' and node.prev_node.form == '-'
-                        and node.parent == node.prev_node.parent
-                        and node.parent == node.prev_node.prev_node):
-                    self._merge_with(node.parent, node.prev_node)
-                    self._merge_with(node.parent, node)
-
-        # This must follow fixing the hyphen-goeswith. E.g. "Primeira Dama"
-        if self.lang in {'pt', 'de'}:
-            for node in root.descendants:
-                if node.deprel == 'goeswith':
-                    node.deprel = 'compound'
-
     def fix_goeswith(self, node):
         """Solve deprel=goeswith which is almost always wrong in the Google annotation."""
         if node.deprel != 'goeswith':
             return
-        if self.lang in {'fr'}:
-            if node.parent.precedes(node) and node.prev_node.misc['SpaceAfter'] == 'No':
-                self._merge_with(node.prev_node, node)
-            elif node.precedes(node.parent) and node.misc['SpaceAfter'] == 'No':
+
+        # It has been decided German should use "compound" and keep e.g. "E-mail" as three words.
+        # The only two cases we want to merge are:
+        # * dots marking ordinal numbers (21. Oktober) should be merged with the number
+        #   keeping the upos of the number (Google has the dot as parent, don't ask me why).
+        #   There are still bugs in the output ("Oktober" depends on "21.") which I give up.
+        # * apostrophes in foreign words "don't" or "Smith'" (the original English was "Smith's").
+        if self.lang == 'de':
+            if (node.precedes(node.parent) and node.misc['SpaceAfter'] == 'No'
+                    and node.next_node.form in ".'"):
+                node.next_node.upos = node.upos
                 self._merge_with(node.next_node, node)
+            elif (node.parent.precedes(node) and node.prev_node.misc['SpaceAfter'] == 'No'
+                  and node.prev_node.form in ".'"):
+                node.prev_node.upos = node.upos
+                self._merge_with(node.prev_node, node)
+            else:
+                node.deprel = 'compound'
+
+        # Other languages use goeswith for marking Google-tokenization errors.
+        # In Portuguese, there are in addition cases like "Primeira Dama".
+        elif self.lang in {'fr', 'it', 'pt', 'ru'}:
+            if node.precedes(node.parent) and node.misc['SpaceAfter'] == 'No':
+                self._merge_with(node.next_node, node)
+            elif node.parent.precedes(node) and node.prev_node.misc['SpaceAfter'] == 'No':
+                self._merge_with(node.prev_node, node)
+            elif self.lang in {'pt'}:
+                node.deprel = 'compound'
 
     @staticmethod
     def _merge_with(node, delete_node):
