@@ -103,6 +103,10 @@ FEATS_CHANGE = {
     "Evidentiality=Fh": "Evident=Fh",
 }
 
+FR_DAYS_MONTHS = ('lundi mardi mercredi jeudi vendredi samedi dimanche '
+                  'janvier février mars avril mai juin juillet août '
+                  'septembre octobre novembre décembre'.split())
+
 
 class Google2ud(Convert1to2):
     """Convert Google Universal Dependency Treebank into UD style."""
@@ -161,6 +165,9 @@ class Google2ud(Convert1to2):
                 if node.form == '-' and node.no_space_after and node.prev_node.no_space_after:
                     if 'goeswith' in (node.prev_node.deprel, node.next_node.deprel):
                         node.deprel = 'goeswith'
+                    if self.lang == 'fr':
+                        node.deprel = 'goeswith'
+                        node.parent = node.next_node
             for node in root.descendants:
                 self.fix_goeswith(node)
 
@@ -168,9 +175,12 @@ class Google2ud(Convert1to2):
         for node in root.descendants:
             self.fix_multiword_prep(node)
 
+        # Fixing feats, upos and deprel in separate steps (the order is important).
         for node in root.descendants:
             self.fix_feats(node)
+        for node in root.descendants:
             self.fix_upos(node)
+        for node in root.descendants:
             self.fix_deprel(node)
 
         # This needs to be executed after all other deprels are converted
@@ -355,6 +365,9 @@ class Google2ud(Convert1to2):
             node.upos = 'PART'
             node.xpos = 'RP'
 
+        if self.lang == 'fr' and node.upos == 'PROPN' and node.form.lower() in FR_DAYS_MONTHS:
+            node.upos = 'NOUN'
+
     def fix_deprel(self, node):
         """Convert Google dependency relations to UD deprels.
 
@@ -365,9 +378,9 @@ class Google2ud(Convert1to2):
         except KeyError:
             pass
 
-        if node.deprel == 'nn':
+        if node.deprel in ('nn', 'compound'):
             if node.upos == 'PROPN' and node.parent.upos == 'PROPN':
-                node.deprel = 'flat'
+                node.deprel = 'flat:name'
             else:
                 node.deprel = 'compound'
         elif node.deprel in ('pobj', 'pcomp'):
@@ -419,3 +432,9 @@ class Google2ud(Convert1to2):
                 cc_node = node.descendants[0].prev_node
                 if cc_node.udeprel == 'cc' and cc_node.parent == node.parent:
                     node.deprel = 'conj'
+        elif node.deprel == 'dislocated':
+            if self.lang == 'fr':
+                nsubj = next((n for n in node.parent.children if n.udeprel == 'nsubj'), None)
+                if nsubj is not None:
+                    node.deprel = 'nsubj'
+                    nsubj.deprel = 'expl'
