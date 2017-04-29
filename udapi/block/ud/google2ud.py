@@ -316,20 +316,21 @@ class Google2ud(Convert1to2):
             else:
                 node.feats[name.capitalize()] = value.capitalize()
 
+        # Don't loose info about proper names which will not have upos=PROPN.
+        if node.feats['Proper'] == 'True':
+            if node.xpos not in {'NNP', 'NNPS'}:
+                node.misc['Proper'] = 'True'
+            del node.feats['Proper']
+
     def fix_upos(self, node):
         """PRT→PART, .→PUNCT, NOUN+Proper→PROPN, VERB+neg→AUX."""
         if node.upos == '.':
             node.upos = 'PUNCT'
         elif node.upos == 'PRT':
             node.upos = 'PART'
-        if node.feats['Proper']:
-            if node.upos == 'NOUN':
+        elif node.upos == 'NOUN':
+            if node.xpos in {'NNP', 'NNPS'}:
                 node.upos = 'PROPN'
-                if node.feats['Proper'] != 'True':
-                    self.log(node, 'unexpected-proper', 'Proper=' + node.feats['Proper'])
-            else:
-                node.misc['Proper'] = node.feats['Proper']
-            del node.feats['Proper']
 
         # Japanese uses negators with deprel=neg, which should be changed to advmod in Convert1to2.
         if node.upos == "VERB" and node.deprel == "neg":

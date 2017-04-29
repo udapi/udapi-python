@@ -81,7 +81,7 @@ class FixPunct(Block):
                 r_cand = r_cand.parent
 
         # Now select between l_cand and r_cand -- which will be the new parent?
-        # The lower one. Note that one if neither is descendant of the other and neither is None
+        # The lower one. Note that if neither is descendant of the other and neither is None
         # (which can happen in rare non-projective cases), we arbitrarily prefer r_cand.
         if l_cand is not None and not l_cand.is_root() and l_cand.is_descendant_of(r_cand):
             node.parent = l_cand
