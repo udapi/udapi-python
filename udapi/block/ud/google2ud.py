@@ -51,6 +51,7 @@ DEPREL_CHANGE = {
 
 FEATS_CHANGE = {
     "proper=false": "",
+    "Proper=false": "",
     "case=prep": "",
     "case=unsp_c": "",
     "gender=unsp_g": "",
