@@ -134,7 +134,7 @@ class Google2ud(Convert1to2):
             self._fixrigheaded_block = FixRightheaded()
 
         self._fixpunct_block = None
-        if lang in {'de'}:
+        if lang in {'de', 'fr'}:
             self._fixpunct_block = FixPunct()
 
         self._fixchain_block = None
