@@ -14,8 +14,17 @@ class AddSentences(BaseReader):
     `cat in.conllu | udapy -s read.Conllu read.AddSentences files=in.txt > merged.conllu`
     """
 
-    def __init__(self, zone='', **kwargs):
+    def __init__(self, zone='', into='text', **kwargs):
+        """Args:
+        into: name of the comment-attribute where the sentence should be stored. Default = text.
+            That is the sentence is stored in `root.text` and in CoNLL-U it will look like e.g.
+            `# text = John loves Mary.`
+            Any other name than "text" is stored to `root.comment`, so e.g. `into=english_text`
+            will result in a CoNLL-U with a comment line:
+            `# english_text = John loves Mary.`
+        """
         super().__init__(zone=zone, **kwargs)
+        self.into = into
 
     @staticmethod
     def is_multizone_reader():
@@ -38,5 +47,8 @@ class AddSentences(BaseReader):
             if line == '':
                 raise IOError('File does not have enough lines')
             root = bundle.get_tree(zone=self.zone)
-            root.text = line.rstrip()
+            if self.into == 'text':
+                root.text = line.rstrip()
+            else:
+                root.comment += ' ' + self.into + " = " + line.rstrip() + "\n"
         self.finished = not self.files.has_next_file()
