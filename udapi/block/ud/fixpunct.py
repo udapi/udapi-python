@@ -23,8 +23,6 @@ and the node i-2 forms a gap (does not depend on i-3).
 from udapi.core.block import Block
 # pylint: disable=no-self-use
 
-# TODO Add a heuristics for ASCI "quotes".
-# TODO Add ‘single’ quotes, but make sure these symbols are not used e.g. as apostrophes.
 # TODO We need to know the language, there are many other quotation styles,
 #      e.g. Finnish and Swedish uses the same symbol for opening and closing: ”X”.
 #      Danish uses uses the French quotes, but switched: »X«.
@@ -32,6 +30,8 @@ PAIRED_PUNCT = {
     '(': ')',
     '[': ']',
     '{': '}',
+    '"': '"',   # ASCII double quotes
+    "'": "'",   # ASCII single quotes
     '“': '”',   # quotation marks used in English,...
     '„': '“',   # Czech, German, Russian,...
     '«': '»',   # French, Russian, Spanish,...
@@ -44,6 +44,12 @@ PAIRED_PUNCT = {
 
 class FixPunct(Block):
     """Make sure punct nodes are attached punctuation is attached projectively."""
+
+    def __init__(self, conservative=True, **kwargs):
+        """Create the ud.FixPunct block instance."""
+        super().__init__(**kwargs)
+        self.conservative = conservative
+        self._is_closing = dict()
 
     def process_tree(self, root):
         # First, make sure no PUNCT has children
@@ -58,11 +64,18 @@ class FixPunct(Block):
 
         # Then fix paired punctuations: quotes and brackets.
         for node in root.descendants:
-            closing_punct = PAIRED_PUNCT.get(node.form, None)
-            if closing_punct is not None:
-                self._fix_paired_punct(root, node, closing_punct)
+            if self._is_closing.get(node.ord):
+                del self._is_closing[node.ord]
+            else:
+                closing_punct = PAIRED_PUNCT.get(node.form, None)
+                if closing_punct is not None:
+                    self._fix_paired_punct(root, node, closing_punct)
 
     def _fix_subord_punct(self, node):
+        # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
+        if node.form == '.' and node.parent == node.prev_node:  # and node.parent.form.isdigit():
+            return
+
         # Initialize the candidates (left and right) with the nearest nodes excluding punctuation.
         l_cand, r_cand = node.prev_node, node.next_node
         while l_cand.ord > 0 and l_cand.upos == "PUNCT":
@@ -84,23 +97,37 @@ class FixPunct(Block):
         # The lower one. Note that if neither is descendant of the other and neither is None
         # (which can happen in rare non-projective cases), we arbitrarily prefer r_cand.
         if l_cand is not None and not l_cand.is_root() and l_cand.is_descendant_of(r_cand):
-            node.parent = l_cand
-            node.deprel = "punct"
+            cand = l_cand
         elif r_cand is not None:
-            node.parent = r_cand
-            node.deprel = "punct"
+            cand = r_cand
+        else:
+            return
+
+        # The guidelines say:
+        #    Within the relevant unit, a punctuation mark is attached
+        #    at the highest possible node that preserves projectivity.
+        # However, sometimes it is difficult to detect the unit (and its head).
+        # E.g. in "Der Mann, den Sie gestern kennengelernt haben, kam wieder."
+        # the second comma should depend on "kennengelernt", not on "Mann"
+        # because the unit is just the relative clause.
+        # "Conservative" means try to keep the parent, unless we are sure it is wrong.
+        if self.conservative and node.parent.is_descendant_of(cand):
+            pass
+        else:
+            node.parent = cand
+        node.deprel = "punct"
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
         nested_level = 0
         for node in root.descendants[opening_node.ord:]:
-            if node.form == opening_node.form:
-                nested_level += 1
-            elif node.form == closing_punct:
+            if node.form == closing_punct:
                 if nested_level > 0:
                     nested_level -= 0
                 else:
                     self._fix_pair(root, opening_node, node)
                     return
+            elif node.form == opening_node.form:
+                nested_level += 1
 
     def _fix_pair(self, root, opening_node, closing_node):
         heads = []
@@ -111,6 +138,8 @@ class FixPunct(Block):
         if len(heads) == 1:
             opening_node.parent = heads[0]
             closing_node.parent = heads[0]
+            self._is_closing[closing_node.ord] = True
         elif len(heads) > 1:
             opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
             closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
+            self._is_closing[closing_node.ord] = True
