@@ -138,7 +138,7 @@ class Google2ud(Convert1to2):
             self._fixpunct_block = FixPunct()
 
         self._fixchain_block = None
-        if lang in {'pt'}:
+        if lang in {'pt', 'ru'}:
             self._fixchain_block = FixChain()
 
         # UD_English v2.0 still uses "do n't" with SpaceAfter=No,
