@@ -133,9 +133,8 @@ class Google2ud(Convert1to2):
         if lang in {'ar', 'de', 'en', 'fr', 'hi', 'ru', 'th', 'tr', 'zh'}:
             self._fixrigheaded_block = FixRightheaded()
 
-        self._fixpunct_block = None
-        if lang in {'de', 'fr'}:
-            self._fixpunct_block = FixPunct()
+        # Normalize the attachment of punctuation for all languages.
+        self._fixpunct_block = FixPunct()
 
         self._fixchain_block = None
         if lang in {'pt', 'ru'}:
