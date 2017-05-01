@@ -45,11 +45,10 @@ PAIRED_PUNCT = {
 class FixPunct(Block):
     """Make sure punct nodes are attached punctuation is attached projectively."""
 
-    def __init__(self, conservative=True, **kwargs):
+    def __init__(self, **kwargs):
         """Create the ud.FixPunct block instance."""
         super().__init__(**kwargs)
-        self.conservative = conservative
-        self._is_closing = dict()
+        self._punct_type = None
 
     def process_tree(self, root):
         # First, make sure no PUNCT has children
@@ -57,19 +56,23 @@ class FixPunct(Block):
             while node.parent.upos == "PUNCT":
                 node.parent = node.parent.parent
 
-        # Then make sure subordinate punctuations have correct parent.
+        # Second, fix paired punctuations: quotes and brackets, marking them in _punct_type.
+        # This should be done before handling the subordinate punctuation,
+        # in order to prevent non-projectivities e.g. in dot-before-closing-quote style sentences:
+        #   I call him "Bob."
+        # Here both quotes and the sentence-final dot should be attached to "Bob".
+        # (As you can see on the previous line, I don't like this American typographic rule.)
+        self._punct_type = [None] * (1 + len(root.descendants))
         for node in root.descendants:
-            if node.upos == "PUNCT" and not PAIRED_PUNCT.get(node.form, None):
-                self._fix_subord_punct(node)
-
-        # Then fix paired punctuations: quotes and brackets.
-        for node in root.descendants:
-            if self._is_closing.get(node.ord):
-                del self._is_closing[node.ord]
-            else:
+            if self._punct_type[node.ord] != 'closing':
                 closing_punct = PAIRED_PUNCT.get(node.form, None)
                 if closing_punct is not None:
                     self._fix_paired_punct(root, node, closing_punct)
+
+        # Third, fix subordinate punctuation (i.e. any punctuation not marked in _punct_type).
+        for node in root.descendants:
+            if node.upos == "PUNCT" and not self._punct_type[node.ord]:
+                self._fix_subord_punct(node)
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
@@ -84,13 +87,17 @@ class FixPunct(Block):
             r_cand = r_cand.next_node
 
         # Climb up from the candidates, until we would reach the root or "cross" the punctuation.
+        # If the candidates' descendants span across the punctuation, we also stop
+        # because climbing higher would cause a non-projectivity (the punct would be the gap).
         if l_cand.is_root():
             l_cand = None
         else:
-            while not l_cand.parent.is_root() and l_cand.parent.precedes(node):
+            while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
+                   and not node.precedes(l_cand.descendants(add_self=1)[-1])):
                 l_cand = l_cand.parent
         if r_cand is not None:
-            while not r_cand.parent.is_root() and node.precedes(r_cand.parent):
+            while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
+                   and not r_cand.descendants(add_self=1)[0].precedes(node)):
                 r_cand = r_cand.parent
 
         # Now select between l_cand and r_cand -- which will be the new parent?
@@ -100,6 +107,8 @@ class FixPunct(Block):
             cand = l_cand
         elif r_cand is not None:
             cand = r_cand
+        elif l_cand is not None:
+            cand = l_cand
         else:
             return
 
@@ -110,10 +119,8 @@ class FixPunct(Block):
         # E.g. in "Der Mann, den Sie gestern kennengelernt haben, kam wieder."
         # the second comma should depend on "kennengelernt", not on "Mann"
         # because the unit is just the relative clause.
-        # "Conservative" means try to keep the parent, unless we are sure it is wrong.
-        if self.conservative and node.parent.is_descendant_of(cand):
-            pass
-        else:
+        # We try to be conservative and keep the parent, unless we are sure it is wrong.
+        if not node.parent.is_descendant_of(cand):
             node.parent = cand
         node.deprel = "punct"
 
@@ -138,8 +145,10 @@ class FixPunct(Block):
         if len(heads) == 1:
             opening_node.parent = heads[0]
             closing_node.parent = heads[0]
-            self._is_closing[closing_node.ord] = True
+            self._punct_type[opening_node.ord] = 'opening'
+            self._punct_type[closing_node.ord] = 'closing'
         elif len(heads) > 1:
             opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
             closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
-            self._is_closing[closing_node.ord] = True
+            self._punct_type[opening_node.ord] = 'opening'
+            self._punct_type[closing_node.ord] = 'closing'
