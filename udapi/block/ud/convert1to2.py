@@ -183,10 +183,15 @@ class Convert1to2(Block):
 
     def change_nmod(self, node):
         """nmod→obl if parent is not nominal, but predicate."""
-        if node.deprel == 'nmod':
+        if node.udeprel == 'nmod':
             parent_is_nominal = self.is_nominal(node.parent)
             if parent_is_nominal == 'no':
-                node.deprel = 'obl'
+                if node.sdeprel:
+                    node.deprel = 'obl' + ':' + node.sdeprel
+                else:
+                    node.deprel = 'obl'
+            elif node.deprel == 'nmod:tmod':
+                node.deprel = 'obl:tmod'
             elif parent_is_nominal == 'maybe':
                 self.log(node, 'nmod', 'deprel=nmod, but parent is ambiguous nominal/predicate')
 
