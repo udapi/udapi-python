@@ -39,7 +39,11 @@ PAIRED_PUNCT = {
     '《': '》',  # Korean, Chinese
     '「': '」',  # Chinese, Japanese
     '『': '』',  # dtto
+    '¿': '?',   # Spanish question quotation marks
+    '¡': '!',   # Spanish exclamation quotation marks
     }
+
+FINAL_PUNCT = '.?!'
 
 
 class FixPunct(Block):
@@ -76,11 +80,17 @@ class FixPunct(Block):
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
-        if node.form == '.' and node.parent == node.prev_node:  # and node.parent.form.isdigit():
+        # TODO: detect these cases somehow
+        # Numbers can be detected with `node.parent.form.isdigit()`,
+        # but abbreviations are more tricky because the Abbr=Yes feature is not always used.
+        if node.form == '.' and node.parent == node.prev_node:
             return
 
         # Initialize the candidates (left and right) with the nearest nodes excluding punctuation.
+        # Final punctuation should not be attached to any following, so exclude r_cand there.
         l_cand, r_cand = node.prev_node, node.next_node
+        if node.form in FINAL_PUNCT:
+            r_cand = None
         while l_cand.ord > 0 and l_cand.upos == "PUNCT":
             l_cand = l_cand.prev_node
         while r_cand is not None and r_cand.upos == "PUNCT":
