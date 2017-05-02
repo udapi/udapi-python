@@ -496,6 +496,8 @@ class Node(object):
         Pseudo-attributes:
         p_xy is the (pseudo) attribute xy of the parent node.
         c_xy is a list of the (pseudo) attributes xy of the children nodes.
+        l_xy is the (pseudo) attribute xy of the previous (left in LTR langs) node.
+        r_xy is the (pseudo) attribute xy of the following (right in LTR langs) node.
         dir: 'left' = the node is a left child of its parent,
              'right' = the node is a rigth child of its parent,
              'root' = the node's parent is the technical root.
@@ -512,21 +514,20 @@ class Node(object):
         """
         values = []
         for name in attrs:
+            nodes = [self]
             if name.startswith('p_'):
-                if name == 'p_feats_split':
-                    values.extend(self.parent._get_attr(name[2:]))
-                else:
-                    values.append(self.parent._get_attr(name[2:]))
+                nodes, name = [self.parent], name[2:]
             elif name.startswith('c_'):
-                for child in self.children:
-                    if name == 'c_feats_split':
-                        values.extend(child._get_attr(name[2:]))
-                    else:
-                        values.append(child._get_attr(name[2:]))
-            elif name == 'feats_split':
-                values.extend(self._get_attr(name))
-            else:
-                values.append(self._get_attr(name))
+                nodes, name = self.children, name[2:]
+            elif name.startswith('l_'):
+                nodes, name = [self.prev_node], name[2:]
+            elif name.startswith('r_'):
+                nodes, name = [self.next_node], name[2:]
+            for node in (n for n in nodes if n is not None):
+                if name == 'feats_split':
+                    values.extend(node._get_attr(name))
+                else:
+                    values.append(node._get_attr(name))
 
         if undefs is not None:
             values = [x if x is not None else undefs for x in values]
