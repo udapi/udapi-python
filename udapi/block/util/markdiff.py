@@ -19,8 +19,9 @@ class MarkDiff(Block):
             return
         nodes, gold_nodes = tree.descendants, gold_tree.descendants
         if len(nodes) != len(gold_nodes):
-            # TODO use eval.F1.find_lcs
-            tree.misc['Mark'] = self.mark
+            # TODO use eval.F1.find_lcs to find the nodes responsible for the diff
+            tree.add_comment('Mark = %s' % self.mark)
+            gold_tree.add_comment('Mark = %s' % self.mark)
         else:
             for node, gold_node in zip(nodes, gold_nodes):
                 self.diff_nodes(node, gold_node)
