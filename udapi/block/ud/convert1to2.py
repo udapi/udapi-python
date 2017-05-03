@@ -171,14 +171,16 @@ class Convert1to2(Block):
         Used in `change_nmod`."""
         if node.upos in ["VERB", "AUX", "ADV"]:
             return 'no'
+        # check whether the node is a predicate
+        # (either has a nsubj/csubj dependendent or a copula dependent)
+        has_cop = any("subj" in child.deprel or child.deprel == 'cop' for child in node.children)
+        # Adjectives are very likely complements of copula verbs.
+        if node.upos == "ADJ":
+            return "no" if has_cop else "maybe"
         # Include NUM for examples such as "one of the guys"
         # and DET for examples such as "some/all of them"
         if node.upos in ["NOUN", "PRON", "PROPN", "NUM", "DET"]:
-            # check whether the node is a predicate
-            # (either has a nsubj/csubj dependendent or a copula dependent)
-            if any(["subj" in child.deprel or child.deprel == 'cop' for child in node.children]):
-                return 'maybe'
-            return 'yes'
+            return "maybe" if has_cop else "yes"
         return 'maybe'
 
     def change_nmod(self, node):
