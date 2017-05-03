@@ -327,7 +327,14 @@ class Google2ud(Convert1to2):
 
     def fix_upos(self, node):
         """PRT→PART, .→PUNCT, NOUN+Proper→PROPN, VERB+neg→AUX."""
-        if node.upos == '.':
+        if node.xpos == 'SYM':  # These are almost always tagged as upos=X which is wrong.
+            node.upos = 'SYM'
+            if node.deprel in {'punct', 'p'}:
+                if node.form in "_-.؟”'":
+                    node.upos == 'PUNCT'
+                else:
+                    node.deprel = 'dep'  # This is another way how to say deprel=todo.
+        elif node.upos == '.':
             node.upos = 'PUNCT'
         elif node.upos == 'PRT':
             node.upos = 'PART'
