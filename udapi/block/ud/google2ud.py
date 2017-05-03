@@ -385,6 +385,8 @@ class Google2ud(Convert1to2):
             node.deprel = 'mark'
             node.upos = 'PART'
             node.xpos = 'RP'
+            if node.parent.deprel == 'aux':
+                node.parent = node.parent.parent
 
         if self.lang == 'fr':
             if node.upos == 'PROPN' and node.form.lower() in FR_DAYS_MONTHS:
