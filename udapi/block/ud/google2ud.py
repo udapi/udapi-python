@@ -331,7 +331,7 @@ class Google2ud(Convert1to2):
             node.upos = 'SYM'
             if node.deprel in {'punct', 'p'}:
                 if node.form in "_-.؟”'":
-                    node.upos == 'PUNCT'
+                    node.upos = 'PUNCT'
                 else:
                     node.deprel = 'dep'  # This is another way how to say deprel=todo.
         elif node.upos == '.':
