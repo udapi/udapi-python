@@ -111,8 +111,9 @@ class TextModeTrees(BaseWriter):
         print_doc_meta: Print `document.meta` metadata before each document?
         print_comments: Print comments (other than sent_id and text)?
         mark: a regex. If `re.search(mark, str(node.misc))` the node is highlighted.
-            If `print_comments and re.search(mark, root.comment)` the comment is highlighted.
-            Empty string means no highlighting. Default = 'ToDo|Bug|Mark'.
+            If `print_comments and re.search(r'^ (%s) = ' % mark, root.comment, re.M)`
+            the comment is highlighted.
+            Empty string means no highlighting. Default = 'ToDo|ToDoOrigText|Bug|Mark'.
         marked_only: print only trees containing one or more marked nodes/comments. Default=False.
         """
         super().__init__(**kwargs)
@@ -140,7 +141,10 @@ class TextModeTrees(BaseWriter):
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
-        self.mark_re = re.compile(mark, re.S) if (mark is not None and mark != '') else None
+        self.mark_re, self.comment_mark_re = None, None
+        if mark is not None and mark != '':
+            self.mark_re = re.compile(mark)
+            self.comment_mark_re = re.compile(r'^ (%s) = ' % mark, re.M)
         self._index_of = []
         self._gaps = []
         self.lines = []
@@ -170,7 +174,7 @@ class TextModeTrees(BaseWriter):
             return True
         if not self.print_comments or root.comment is None or self.mark_re is None:
             return False
-        return self.mark_re.search(root.comment)
+        return self.comment_mark_re.search(root.comment)
 
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
