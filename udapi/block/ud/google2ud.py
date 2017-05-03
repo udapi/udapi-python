@@ -281,6 +281,14 @@ class Google2ud(Convert1to2):
                 node.parent = hi_prep
                 lo_prep.parent = node
                 lo_prep.deprel = 'case'
+            elif self.lang == 'es' and lo_prep.form in {'entre', 'en', 'a'}:
+                node.parent = hi_prep
+                lo_prep.parent = node
+                lo_prep.deprel = 'case'
+            elif self.lang == 'es' and lo_prep.form == 'para':
+                node.parent, node.deprel = hi_prep.parent, 'obj'
+                lo_prep.deprel, hi_prep.deprel = 'mark', 'mark'
+                lo_prep.parent, hi_prep.parent = node, node
             # Otherwise, they are probably multi-word prepositions, e.g. "according to",
             # but they can also be sibling prepositions, e.g. "out of".
             # The Google style does not distinguish those and I don't see any heuristics,
@@ -294,7 +302,10 @@ class Google2ud(Convert1to2):
                 for prep_child in second_prep.children:
                     prep_child.parent = first_prep
                 second_prep.deprel = 'fixed'
-                self.log(second_prep, 'unsure-multi-prep', 'deprel=fixed, but may be siblings')
+                if self.lang == 'es' and lo_prep.form == 'par':
+                    pass
+                else:
+                    self.log(second_prep, 'unsure-multi-prep', 'deprel=fixed, but may be siblings')
 
     @staticmethod
     def fix_feats(node):
