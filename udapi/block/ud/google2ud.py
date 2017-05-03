@@ -337,7 +337,7 @@ class Google2ud(Convert1to2):
             del node.feats['Proper']
 
     def fix_upos(self, node):
-        """PRT→PART, .→PUNCT, NOUN+Proper→PROPN, VERB+neg→AUX."""
+        """PRT→PART, .→PUNCT, NOUN+Proper→PROPN, VERB+neg→AUX etc."""
         if node.xpos == 'SYM':  # These are almost always tagged as upos=X which is wrong.
             node.upos = 'SYM'
             if node.deprel in {'punct', 'p'}:
@@ -387,6 +387,9 @@ class Google2ud(Convert1to2):
             node.xpos = 'RP'
             if node.parent.deprel == 'aux':
                 node.parent = node.parent.parent
+
+        if node.upos == 'CONJ' and node.deprel == 'mark':
+            node.upos = 'SCONJ'
 
         if self.lang == 'fr':
             if node.upos == 'PROPN' and node.form.lower() in FR_DAYS_MONTHS:
