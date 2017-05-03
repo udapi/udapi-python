@@ -202,7 +202,7 @@ class Root(Node):
         if self.comment is None:
             self.comment = string
         else:
-            self.comment += "\n " + string
+            self.comment = self.comment.rstrip() + "\n " + string
 
     @property
     def token_descendants(self):
