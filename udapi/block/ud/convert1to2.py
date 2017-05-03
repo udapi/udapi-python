@@ -169,7 +169,7 @@ class Convert1to2(Block):
         """Returns 'no' (for predicates), 'yes' (sure nominals) or 'maybe'.
 
         Used in `change_nmod`."""
-        if node.upos in ["VERB", "AUX", "ADJ", "ADV"]:
+        if node.upos in ["VERB", "AUX", "ADV"]:
             return 'no'
         # Include NUM for examples such as "one of the guys"
         # and DET for examples such as "some/all of them"
@@ -192,6 +192,8 @@ class Convert1to2(Block):
                     node.deprel = 'obl'
             elif node.deprel == 'nmod:tmod':
                 node.deprel = 'obl:tmod'
+            elif node.deprel == 'nmod:poss':
+                node.deprel = 'nmod:poss'
             elif parent_is_nominal == 'maybe':
                 self.log(node, 'nmod', 'deprel=nmod, but parent is ambiguous nominal/predicate')
 
