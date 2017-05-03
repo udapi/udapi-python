@@ -47,6 +47,9 @@ class ExGoogle2ud(Block):
             elif node.deprel == 'nmod:tmod':
                 node.deprel = 'obl:tmod'
 
+        if node.deprel == 'obl:gmod' and self.lang == 'ar':
+            node.deprel = 'obl'
+            node.feats['Case'] = 'Gen'
 
     @staticmethod
     def is_nominal(node):
