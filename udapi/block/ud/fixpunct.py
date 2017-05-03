@@ -86,39 +86,59 @@ class FixPunct(Block):
         if node.form == '.' and node.parent == node.prev_node:
             return
 
+        # Even non-paired punctuation like commas and dashes may work as paired.
+        # Detect such cases and try to preserve, but only if projective.
+        p_desc = node.parent.descendants(add_self=1)
+        if node in (p_desc[0], p_desc[-1]) and len(p_desc) == p_desc[-1].ord - p_desc[0].ord + 1:
+            if (p_desc[0].upos == 'PUNCT' and p_desc[-1].upos == 'PUNCT'
+                    and p_desc[0].parent == node.parent and p_desc[-1].parent == node.parent):
+                return
+
         # Initialize the candidates (left and right) with the nearest nodes excluding punctuation.
         # Final punctuation should not be attached to any following, so exclude r_cand there.
         l_cand, r_cand = node.prev_node, node.next_node
         if node.form in FINAL_PUNCT:
             r_cand = None
         while l_cand.ord > 0 and l_cand.upos == "PUNCT":
+            if self._punct_type[l_cand.ord] == 'opening':
+                l_cand = None
+                break
             l_cand = l_cand.prev_node
         while r_cand is not None and r_cand.upos == "PUNCT":
+            if self._punct_type[r_cand.ord] == 'closing':
+                r_cand = None
+                break
             r_cand = r_cand.next_node
 
         # Climb up from the candidates, until we would reach the root or "cross" the punctuation.
         # If the candidates' descendants span across the punctuation, we also stop
         # because climbing higher would cause a non-projectivity (the punct would be the gap).
+        l_path, r_path = [l_cand], [r_cand]
         if l_cand.is_root():
             l_cand = None
         else:
             while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
                    and not node.precedes(l_cand.descendants(add_self=1)[-1])):
                 l_cand = l_cand.parent
+                l_path.append(l_cand)
         if r_cand is not None:
             while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
                    and not r_cand.descendants(add_self=1)[0].precedes(node)):
                 r_cand = r_cand.parent
+                r_path.append(r_cand)
 
         # Now select between l_cand and r_cand -- which will be the new parent?
         # The lower one. Note that if neither is descendant of the other and neither is None
-        # (which can happen in rare non-projective cases), we arbitrarily prefer r_cand.
-        if l_cand is not None and not l_cand.is_root() and l_cand.is_descendant_of(r_cand):
-            cand = l_cand
-        elif r_cand is not None:
-            cand = r_cand
+        # (which can happen in rare non-projective cases), we arbitrarily prefer l_cand,
+        # but if the original parent is either on l_path or r_path, we keep it as acceptable.
+        if l_cand is not None and l_cand.is_descendant_of(r_cand):
+            cand, path = l_cand, l_path
+        elif r_cand is not None and r_cand.is_descendant_of(l_cand):
+            cand, path = r_cand, r_path
         elif l_cand is not None:
-            cand = l_cand
+            cand, path = l_cand, l_path + r_path
+        elif r_cand is not None:
+            cand, path = r_cand, l_path + r_path
         else:
             return
 
@@ -130,7 +150,7 @@ class FixPunct(Block):
         # the second comma should depend on "kennengelernt", not on "Mann"
         # because the unit is just the relative clause.
         # We try to be conservative and keep the parent, unless we are sure it is wrong.
-        if not node.parent.is_descendant_of(cand):
+        if node.parent not in path:
             node.parent = cand
         node.deprel = "punct"
 
