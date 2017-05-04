@@ -17,7 +17,8 @@ class ExGoogle2ud(Block):
     def __init__(self, lang='unk', **kwargs):
         super().__init__(**kwargs)
         self.lang = lang
-        self._fixpunct_block = FixPunct()
+
+        self._fixpunct_block = None if self.lang == 'it' else FixPunct()
         self._fixrigheaded_block = FixRightheaded()
         self._fixchain_block = FixChain()
         self._comply_block = None
