@@ -6,6 +6,7 @@ so we cannot simply rerun the newer version of ud.Google2ud on the original Goog
 from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.fixrightheaded import FixRightheaded
+from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.core.block import Block
 
 
@@ -18,12 +19,16 @@ class ExGoogle2ud(Block):
         self._fixpunct_block = FixPunct()
         self._fixrigheaded_block = FixRightheaded()
         self._fixchain_block = FixChain()
+        self._comply_block = None
+        if lang == 'ja':
+            self._comply_block = ComplyWithText()
 
     def process_tree(self, root):
         for node in root.descendants:
             self.fix_node(node)
 
         for block in (
+                self._comply_block,
                 self._fixrigheaded_block,  # deprel=fixed,flat,... should be always head-initial
                 self._fixchain_block,      # and form a flat structure, not a chain.
                 self._fixpunct_block):     # commas should depend on the subord unit.
