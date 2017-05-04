@@ -8,6 +8,7 @@ from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.fixrightheaded import FixRightheaded
 from udapi.core.block import Block
 
+
 class ExGoogle2ud(Block):
     """Convert former Google Universal Dependency Treebank into UD style."""
 
@@ -50,6 +51,9 @@ class ExGoogle2ud(Block):
         if node.deprel == 'obl:gmod' and self.lang == 'ar':
             node.deprel = 'obl'
             node.feats['Case'] = 'Gen'
+
+        if node.upos == 'CCONJ' and node.deprel == 'mark':
+            node.upos = 'SCONJ'
 
     @staticmethod
     def is_nominal(node):
