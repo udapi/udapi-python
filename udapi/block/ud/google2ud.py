@@ -9,6 +9,7 @@ from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.fixrightheaded import FixRightheaded
 from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
+from udapi.block.ud.es.addmwt import AddMwt as es_AddMwt
 from udapi.block.ud.fr.addmwt import AddMwt as fr_AddMwt
 from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
 
@@ -124,6 +125,8 @@ class Google2ud(Convert1to2):
         self._addmwt_block = None
         if lang == 'de':
             self._addmwt_block = de_AddMwt()
+        elif lang == 'es':
+            self._addmwt_block = es_AddMwt()
         elif lang == 'fr':
             self._addmwt_block = fr_AddMwt()
         elif lang == 'pt':

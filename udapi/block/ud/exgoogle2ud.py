@@ -7,6 +7,7 @@ from udapi.block.ud.fixchain import FixChain
 from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.fixrightheaded import FixRightheaded
 from udapi.block.ud.complywithtext import ComplyWithText
+from udapi.block.ud.es.addmwt import AddMwt as es_AddMwt
 from udapi.core.block import Block
 
 
@@ -23,11 +24,16 @@ class ExGoogle2ud(Block):
         if lang == 'ja':
             self._comply_block = ComplyWithText()
 
+        self._addmwt_block = None
+        if lang == 'es':
+            self._addmwt_block = es_AddMwt()
+
     def process_tree(self, root):
         for node in root.descendants:
             self.fix_node(node)
 
         for block in (
+                self._addmwt_block,
                 self._comply_block,
                 self._fixrigheaded_block,  # deprel=fixed,flat,... should be always head-initial
                 self._fixchain_block,      # and form a flat structure, not a chain.
@@ -46,7 +52,7 @@ class ExGoogle2ud(Block):
                 else:
                     node.deprel = 'dep'  # This is another way how to say deprel=todo.
 
-        if node.udeprel == 'nmod' and node.deprel != 'nmod':
+        if self.lang != 'es' and node.udeprel == 'nmod' and node.deprel != 'nmod':
             parent_is_nominal = self.is_nominal(node.parent)
             if parent_is_nominal == 'no':
                 node.deprel = 'obl' + ':' + node.sdeprel
