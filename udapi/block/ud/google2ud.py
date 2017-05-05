@@ -32,7 +32,6 @@ DEPREL_CHANGE = {
     "gobj": "obj",
     "postneg": "neg",  # will be changed to advmod + Polarity=Neg in ud.Convert1to2
     "pronl": "obj",  # TODO: or expl? UD_French seems to use a mix of both
-    "redup": "compound:plur",  # TODO: compound:plur in Indonesian; compound:redup elsewhere
     "oblcomp": "obl",
     "mes": "clf",  # TODO: structural transformation needed
     "mwn": "compound:n",  # nominal multi-word
@@ -473,3 +472,5 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'appos':
             if self.lang == 'fr' and node.parent.form in {'M.', 'Mme', 'Dr'}:
                 node.deprel = 'flat:name'
+        elif node.deprel == 'redup':
+            node.deprel = 'compound:plur' if self.lang == 'id' else 'compound:redup'
