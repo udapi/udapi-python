@@ -37,6 +37,10 @@ for v in MWTS.values():
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
 
+    def __init__(self, verbpron=False, **kwargs):
+        super().__init__(**kwargs)
+        self.verbpron = verbpron
+
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
         analysis = MWTS.get(node.form.lower(), None)
@@ -44,7 +48,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         if analysis is not None:
             return analysis
 
-        if node.upos not in {'VERB', 'AUX'}:
+        if not self.verbpron or node.upos not in {'VERB', 'AUX'}:
             return None
 
         form = node.form.lower()

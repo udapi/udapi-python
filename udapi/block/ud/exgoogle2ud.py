@@ -8,6 +8,7 @@ from udapi.block.ud.fixpunct import FixPunct
 from udapi.block.ud.fixrightheaded import FixRightheaded
 from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.es.addmwt import AddMwt as es_AddMwt
+from udapi.block.ud.joinasmwt import JoinAsMwt
 from udapi.core.block import Block
 
 
@@ -26,8 +27,10 @@ class ExGoogle2ud(Block):
             self._comply_block = ComplyWithText()
 
         self._addmwt_block = None
+        self._joinasmwt_block = None
         if lang == 'es':
             self._addmwt_block = es_AddMwt()
+            self._joinasmwt_block = JoinAsMwt()
 
     def process_tree(self, root):
         for node in root.descendants:
@@ -35,6 +38,7 @@ class ExGoogle2ud(Block):
 
         for block in (
                 self._addmwt_block,
+                self._joinasmwt_block,
                 self._comply_block,
                 self._fixrigheaded_block,  # deprel=fixed,flat,... should be always head-initial
                 self._fixchain_block,      # and form a flat structure, not a chain.
