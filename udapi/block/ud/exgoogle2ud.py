@@ -71,6 +71,14 @@ class ExGoogle2ud(Block):
         if node.upos == 'CCONJ' and node.deprel == 'mark':
             node.upos = 'SCONJ'
 
+        if self.lang == 'es':
+            if node.deprel == 'compound':
+                # most of the uppercase compounds are upos=PROPN, but not all, e.g. Hack Forums
+                if node.form[0].isupper():
+                    node.deprel = 'flat:name'
+                else:
+                    node.deprel = 'nmod'
+
     @staticmethod
     def is_nominal(node):
         """Returns 'no' (for predicates), 'yes' (sure nominals) or 'maybe'.
