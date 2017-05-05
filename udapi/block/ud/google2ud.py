@@ -16,7 +16,7 @@ from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
 DEPREL_CHANGE = {
     "ROOT": "root",
     "prep": "case",
-    "ncomp": "case",  # TODO ?
+    "ncomp": "case:loc",  # only in Chinese; Herman proposes case:loc
     "p": "punct",
     "poss": "nmod:poss",
     "ps": "case",
@@ -32,9 +32,9 @@ DEPREL_CHANGE = {
     "gobj": "obj",
     "postneg": "neg",  # will be changed to advmod + Polarity=Neg in ud.Convert1to2
     "pronl": "obj",  # TODO: or expl? UD_French seems to use a mix of both
-    "redup": "compound:plur",
+    "redup": "compound:plur",  # TODO: compound:plur in Indonesian; compound:redup elsewhere
     "oblcomp": "obl",
-    "mes": "dep",  # TODO ?
+    "mes": "clf",  # TODO: structural transformation needed
     "mwn": "compound:n",  # nominal multi-word
     "mwa": "compound:a",  # adjectival multi-word
     "mwv": "compound:v",  # verbal multi-word
