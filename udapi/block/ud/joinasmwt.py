@@ -20,3 +20,5 @@ class JoinAsMwt(Block):
         if len(mwt_nodes) > 1:
             mwt_form = ''.join([n.form for n in mwt_nodes])
             node.root.create_multiword_token(mwt_nodes, mwt_form, node.misc)
+            for mwt_node in mwt_nodes:
+                del mwt_node.misc['SpaceAfter']
