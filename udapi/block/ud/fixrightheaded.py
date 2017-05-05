@@ -21,11 +21,12 @@ class FixRightheaded(Block):
 
     def process_node(self, node):
         for deprel in self.deprels:
-            if node.deprel == deprel and node.precedes(node.parent):
+            if node.udeprel == deprel and node.precedes(node.parent):
                 orig_parent = node.parent
                 node.parent = orig_parent.parent
                 for child in orig_parent.children:
                     child.parent = node
                 orig_parent.parent = node
-                node.deprel = orig_parent.deprel
-                orig_parent.deprel = deprel
+                head_deprel = orig_parent.deprel
+                orig_parent.deprel = node.deprel
+                node.deprel = head_deprel

@@ -14,5 +14,5 @@ class FixChain(Block):
 
     def process_node(self, node):
         for deprel in self.deprels:
-            if node.deprel == deprel and node.parent.deprel == deprel:
+            if node.udeprel == deprel and node.parent.udeprel == deprel:
                 node.parent = node.parent.parent
