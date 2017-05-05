@@ -26,7 +26,6 @@ DEPREL_CHANGE = {
     "vmod": "acl",
     "rcmod": "acl:relcl",
     "npadvmod": "advmod",
-    "prt": "compound:prt",
     "preconj": "cc:preconj",
     "predet": "det:predet",
     "gobj": "obj",
@@ -472,5 +471,7 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'appos':
             if self.lang == 'fr' and node.parent.form in {'M.', 'Mme', 'Dr'}:
                 node.deprel = 'flat:name'
+        elif node.deprel == 'prt':
+            node.deprel = 'compound:prt' if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no'} else 'dep:prt'
         elif node.deprel == 'redup':
             node.deprel = 'compound:plur' if self.lang == 'id' else 'compound:redup'
