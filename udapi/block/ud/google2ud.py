@@ -495,6 +495,8 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'prt':
             if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no'}:
                 node.deprel = 'compound:prt'
+            elif self.lang == 'tr':
+                node.deprel = 'advmod:emph'
             else:
                 node.deprel = 'dep:prt'
         elif node.deprel == 'redup':
