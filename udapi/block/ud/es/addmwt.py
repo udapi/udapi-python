@@ -88,3 +88,17 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
 
         # TODO: multiple suffixes, e.g. compratelo = compra + te + lo
         return None
+
+    # Sometimes "del" has a shape which is neither "siblings" nor "subtree".
+    # E.g. in "a partir del NOUN"
+    # "del" = "de el", but
+    # "de" is attached to "a" (as fixed), while "el" is attached to the NOUN.
+    def postprocess_mwt(self, mwt):
+        if mwt.form.lower() in {'al', 'del'} and mwt.words[1].parent.precedes(mwt.words[1]):
+            head = mwt.words[1].next_node
+            while head.upos not in {'NOUN', 'PROPN'}:
+                if head.parent.precedes(head) or head.is_root():
+                    head = mwt.words[1].next_node
+                    break
+                head = head.parent
+            mwt.words[1].parent = head
