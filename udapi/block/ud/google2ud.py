@@ -12,6 +12,7 @@ from udapi.block.ud.de.addmwt import AddMwt as de_AddMwt
 from udapi.block.ud.es.addmwt import AddMwt as es_AddMwt
 from udapi.block.ud.fr.addmwt import AddMwt as fr_AddMwt
 from udapi.block.ud.pt.addmwt import AddMwt as pt_AddMwt
+from udapi.block.ud.joinasmwt import JoinAsMwt
 
 DEPREL_CHANGE = {
     "ROOT": "root",
@@ -129,6 +130,7 @@ class Google2ud(Convert1to2):
             self._addmwt_block = fr_AddMwt()
         elif lang == 'pt':
             self._addmwt_block = pt_AddMwt()
+        self._joinasmwt_block = JoinAsMwt() if lang in {'es', 'tr'} else None
 
         self._fixrigheaded_block = None
         if lang in {'ar', 'de', 'en', 'fr', 'hi', 'ru', 'th', 'zh'}:
@@ -215,6 +217,7 @@ class Google2ud(Convert1to2):
 
         for block in (
                 self._addmwt_block,        # e.g. "im" -> "in dem" in de. Must follow Convert1to2.
+                self._joinasmwt_block,     # no pair of alphabetical words with SpaceAfter=No
                 self._fixrigheaded_block,  # deprel=fixed,flat,... should be always head-initial
                 self._fixchain_block,      # and form a flat structure, not a chain.
                 self._fixpunct_block):     # commas should depend on the subord unit.
