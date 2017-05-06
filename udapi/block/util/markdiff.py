@@ -1,10 +1,12 @@
 """util.MarkDiff is a special block for marking differences between parallel trees."""
+import difflib
 from udapi.core.block import Block
+
 
 class MarkDiff(Block):
     """Mark differences between parallel trees."""
 
-    def __init__(self, gold_zone, attributes='form,p_ord,lemma,upos,xpos,deprel,feats,misc',
+    def __init__(self, gold_zone, attributes='form,lemma,upos,xpos,deprel,feats,misc',
                  mark=1, add=False, **kwargs):
         """Create the Mark block object."""
         super().__init__(**kwargs)
@@ -17,26 +19,36 @@ class MarkDiff(Block):
         gold_tree = tree.bundle.get_tree(self.gold_zone)
         if tree == gold_tree:
             return
-        nodes, gold_nodes = tree.descendants, gold_tree.descendants
-        if len(nodes) != len(gold_nodes):
-            # TODO use eval.F1.find_lcs to find the nodes responsible for the diff
+        if not self.add:
+            for node in tree.descendants + gold_tree.descendants:
+                del node.misc['Mark']
+                del node.misc['ToDo']
+                del node.misc['Bug']
+
+        pred_nodes, gold_nodes = tree.descendants, gold_tree.descendants
+        # Make sure both pred and gold trees are marked, even if one has just deleted nodes.
+        if len(pred_nodes) != len(gold_nodes):
             tree.add_comment('Mark = %s' % self.mark)
             gold_tree.add_comment('Mark = %s' % self.mark)
-        else:
-            for node, gold_node in zip(nodes, gold_nodes):
-                self.diff_nodes(node, gold_node)
+        pred_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in pred_nodes]
+        gold_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in gold_nodes]
+        matcher = difflib.SequenceMatcher(None, pred_tokens, gold_tokens, autojunk=False)
+        diffs = list(matcher.get_opcodes())
 
-    def diff_nodes(self, node, gold_node):
-        """Compare attributes of two nodes and mark if different."""
-        label = '_'.join(node.get_attrs(self.attrs))
-        gold_label = '_'.join(gold_node.get_attrs(self.attrs))
-        if not self.add:
-            del node.misc['Mark']
-            del node.misc['ToDo']
-            del node.misc['Bug']
-            del gold_node.misc['Mark']
-            del gold_node.misc['ToDo']
-            del gold_node.misc['Bug']
-        if label != gold_label:
-            node.misc['Mark'] = self.mark
-            gold_node.misc['Mark'] = self.mark
+        alignment = {-1: -1}
+        for diff in diffs:
+            edit, pred_lo, pred_hi, gold_lo, gold_hi = diff
+            if edit in {'equal', 'replace'}:
+                for i in range(pred_lo, pred_hi):
+                    alignment[i] = i - pred_lo + gold_lo
+
+        for diff in diffs:
+            edit, pred_lo, pred_hi, gold_lo, gold_hi = diff
+            if edit == 'equal':
+                for p_node, g_node in zip(pred_nodes[pred_lo:pred_hi], gold_nodes[gold_lo:gold_hi]):
+                    if alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
+                        p_node.misc['Mark'] = self.mark
+                        g_node.misc['Mark'] = self.mark
+            else:
+                for node in pred_nodes[pred_lo:pred_hi] + gold_nodes[gold_lo:gold_hi]:
+                    node.misc['Mark'] = self.mark
