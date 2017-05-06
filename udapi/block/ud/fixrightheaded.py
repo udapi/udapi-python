@@ -24,8 +24,9 @@ class FixRightheaded(Block):
             if node.udeprel == deprel and node.precedes(node.parent):
                 orig_parent = node.parent
                 node.parent = orig_parent.parent
-                for child in orig_parent.children:
-                    child.parent = node
+                if deprel != 'conj':
+                    for child in orig_parent.children:
+                        child.parent = node
                 orig_parent.parent = node
                 head_deprel = orig_parent.deprel
                 orig_parent.deprel = node.deprel

@@ -131,8 +131,10 @@ class Google2ud(Convert1to2):
             self._addmwt_block = pt_AddMwt()
 
         self._fixrigheaded_block = None
-        if lang in {'ar', 'de', 'en', 'fr', 'hi', 'ru', 'th', 'tr', 'zh'}:
+        if lang in {'ar', 'de', 'en', 'fr', 'hi', 'ru', 'th', 'zh'}:
             self._fixrigheaded_block = FixRightheaded()
+        elif lang == 'tr':
+            self._fixrigheaded_block = FixRightheaded(deprels='conj,flat,fixed,appos,goeswith,list')
 
         # Normalize the attachment of punctuation for all languages.
         self._fixpunct_block = FixPunct()
@@ -173,6 +175,17 @@ class Google2ud(Convert1to2):
                         node.parent = node.next_node
             for node in root.descendants:
                 self.fix_goeswith(node)
+
+        # Google Turkish annotation of coordination is very different from both UDv1 and UDv2.
+        if self.lang == 'tr':
+            for node in root.descendants:
+                conjs = [n for n in node.children if n.deprel == 'conj']
+                if conjs:
+                    conjs[0].parent = node.parent
+                    conjs[0].deprel = node.deprel
+                    node.deprel = 'conj'
+                    for nonfirst_conj in conjs[1:] + [node]:
+                        nonfirst_conj.parent = conjs[0]
 
         # Multi-word prepositions must be solved before fix_deprel() fixes pobj+pcomp.
         for node in root.descendants:
