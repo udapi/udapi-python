@@ -3,6 +3,7 @@
 Usage:
 udapy -s ud.Google2ud < google.conllu > ud2.conllu
 """
+import re
 from udapi.block.ud.convert1to2 import Convert1to2
 from udapi.block.ud.complywithtext import ComplyWithText
 from udapi.block.ud.fixchain import FixChain
@@ -167,7 +168,7 @@ class Google2ud(Convert1to2):
         # Unlike UDv2, Google style uses `goeswith` mostly to fix "wrong" tokenization,
         # e.g. "e-mail" written correctly without spaces, but tokenized into three words.
         # Moreover, the hyphen is not always marked with `goeswith`.
-        if self.lang in {'de', 'fr', 'it', 'pt', 'ru'}:
+        if self.lang in {'de', 'fr', 'it', 'pt', 'ru', 'tr'}:
             for node in root.descendants:
                 if node.form == '-' and node.no_space_after and node.prev_node.no_space_after:
                     if 'goeswith' in (node.prev_node.deprel, node.next_node.deprel):
@@ -179,6 +180,7 @@ class Google2ud(Convert1to2):
                 self.fix_goeswith(node)
 
         # Google Turkish annotation of coordination is very different from both UDv1 and UDv2.
+        # Also some of the deprel=ig nodes should be merged with their parents.
         if self.lang == 'tr':
             for node in root.descendants:
                 conjs = [n for n in node.children if n.deprel == 'conj']
@@ -188,6 +190,9 @@ class Google2ud(Convert1to2):
                     node.deprel = 'conj'
                     for nonfirst_conj in conjs[1:] + [node]:
                         nonfirst_conj.parent = conjs[0]
+            for node in root.descendants:
+                if node.deprel == 'ig' and re.match('leş|laş', node.parent.form.lower()):
+                    self._merge_with(node.parent, node)
 
         # Multi-word prepositions must be solved before fix_deprel() fixes pobj+pcomp.
         for node in root.descendants:
@@ -249,7 +254,7 @@ class Google2ud(Convert1to2):
 
         # Other languages use goeswith for marking Google-tokenization errors.
         # In Portuguese, there are in addition cases like "Primeira Dama".
-        elif self.lang in {'fr', 'it', 'pt', 'ru'}:
+        elif self.lang in {'fr', 'it', 'pt', 'ru', 'tr'}:
             if node.precedes(node.parent) and node.misc['SpaceAfter'] == 'No':
                 self._merge_with(node.next_node, node)
             elif node.parent.precedes(node) and node.prev_node.misc['SpaceAfter'] == 'No':
@@ -488,6 +493,29 @@ class Google2ud(Convert1to2):
             if self.lang == 'fr' and node.parent.form in {'M.', 'Mme', 'Dr'}:
                 node.deprel = 'flat:name'
         elif node.deprel == 'prt':
-            node.deprel = 'compound:prt' if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no'} else 'dep:prt'
+            if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no'}:
+                node.deprel = 'compound:prt'
+            else:
+                node.deprel = 'dep:prt'
         elif node.deprel == 'redup':
             node.deprel = 'compound:plur' if self.lang == 'id' else 'compound:redup'
+        elif node.deprel == 'ig':
+            if node.parent.form == 'ki':
+                ki = node.parent
+                node.deprel = ki.deprel
+                ki.upos = 'ADP'
+                ki.deprel = 'case'
+                node.parent = ki.parent
+                ki.parent = node
+            elif node.upos == 'AUX' or node.form == 'ler':  # dır, dir, ydi, dı, ydı, tu, değil,...
+                node.deprel = 'cop'
+            elif node.parent.upos == 'AUX':  # yaşlıyken, gençken,...
+                copula = node.parent
+                node.parent = copula.parent
+                copula.parent = node
+                node.deprel = copula.deprel
+                copula.deprel = 'cop'
+            elif node.upos == 'PUNCT':
+                node.deprel == 'punct'
+            else:
+                node.deprel = 'dep:ig'
