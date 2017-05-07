@@ -107,6 +107,14 @@ class Node(object):
         """
         return self.deprel.split(':')[0] if self.deprel is not None else None
 
+    @udeprel.setter
+    def udeprel(self, value):
+        sdeprel = self.sdeprel
+        if sdeprel is not None and sdeprel != '':
+            self.deprel = value + ':' + sdeprel
+        else:
+            self.deprel = value
+
     @property
     def sdeprel(self):
         """Return the language-specific part of dependency relation.
