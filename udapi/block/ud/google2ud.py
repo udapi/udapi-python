@@ -49,6 +49,7 @@ DEPREL_CHANGE = {
     "conjv": "compound:conjv",
     "advphmod": "advmod",
     "clas": "clf",
+    "narg": "nmod:arg",  # Turkish only
 }
 
 FEATS_CHANGE = {
@@ -99,8 +100,6 @@ FEATS_CHANGE = {
     "mood=psm": "Tense=Fut",  # TODO ?
     "form=fin": "VerbForm=Fin",
     "form=ger": "VerbForm=Ger",
-    # "form=irr": "VerbForm=?",
-    # "form=adn": "VerbForm=?",
     "formality=fml": "Polite=Form",
     "Evidentiality=Nfh": "Evident=Nfh",
     "Evidentiality=Fh": "Evident=Fh",
@@ -228,6 +227,12 @@ class Google2ud(Convert1to2):
                 self._fixpunct_block):     # commas should depend on the subord unit.
             if block:
                 block.process_tree(root)
+
+        if self.lang == 'tr':
+            root.children[0].deprel = 'root'
+            for node in root.descendants:
+                if node.deprel in {'obl:poss', 'obl:arg'}:
+                    node.udeprel = 'nmod'
 
     def fix_goeswith(self, node):
         """Solve deprel=goeswith which is almost always wrong in the Google annotation."""
@@ -502,7 +507,7 @@ class Google2ud(Convert1to2):
         elif node.deprel == 'redup':
             node.deprel = 'compound:plur' if self.lang == 'id' else 'compound:redup'
         elif node.deprel == 'ig':
-            if node.parent.form == 'ki':
+            if node.parent.form == 'ki' and node.parent.deprel not in {'prep', 'pobj'}:
                 ki = node.parent
                 node.deprel = ki.deprel
                 ki.upos = 'ADP'
@@ -518,6 +523,6 @@ class Google2ud(Convert1to2):
                 node.deprel = copula.deprel
                 copula.deprel = 'cop'
             elif node.upos == 'PUNCT':
-                node.deprel == 'punct'
+                node.deprel = 'punct'
             else:
                 node.deprel = 'dep:ig'
