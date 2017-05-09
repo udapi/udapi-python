@@ -67,7 +67,7 @@ class TextModeTreesHtml(TextModeTrees):
         """Return a string with color markup for a given comment."""
         if self.mark_re is None:
             return comment
-        return self.mark_re.sub(r'<mark>\g<0></mark>', comment)
+        return self.comment_mark_re.sub(r'<mark>\g<0></mark>', comment)
 
     @staticmethod
     def colorize_attr(attr, value, marked):
@@ -81,4 +81,4 @@ class TextModeTreesHtml(TextModeTrees):
             text = "# text = " + (root.get_sentence() if root.is_root() else root.compute_text())
             print(escape(text))
         if self.print_comments and root.comment:
-            print(escape('#' + self.colorize_comment(root.comment.rstrip().replace('\n', '\n#'))))
+            print('#' + self.colorize_comment(escape(root.comment)).rstrip().replace('\n', '\n#'))
