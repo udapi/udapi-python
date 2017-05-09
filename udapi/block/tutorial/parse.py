@@ -19,3 +19,4 @@ class Parse(Block):
         for node in root.descendants:
             if node.next_node:
                 node.parent = node.next_node
+                node.deprel = 'root'
