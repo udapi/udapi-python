@@ -85,8 +85,8 @@ class Eval(Block):
         if self.tree or self.node:
             trees = bundle.trees
             for tree in trees:
-                # TODO if not self._should_process_tree(tree): continue
-                self.process_tree(tree)
+                if self._should_process_tree(tree):
+                    self.process_tree(tree)
 
         if self.after_bundle:
             exec(self.expand_eval_code(self.after_bundle))
