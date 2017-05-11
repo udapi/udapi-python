@@ -9,7 +9,7 @@ class Parsing(BaseWriter):
         """Create the eval.Parsing block object."""
         super().__init__(**kwargs)
         self.gold_zone = gold_zone
-        self.correct_las, self.correct_uas, self.total = 0, 0, 0
+        self.correct_las, self.correct_ulas, self.correct_uas, self.total = 0, 0, 0, 0
 
     def process_tree(self, tree):
         gold_tree = tree.bundle.get_tree(self.gold_zone)
@@ -27,10 +27,14 @@ class Parsing(BaseWriter):
                 self.correct_uas += 1
                 if pred_node.deprel == gold_node.deprel:
                     self.correct_las += 1
+                if pred_node.udeprel == gold_node.udeprel:
+                    self.correct_ulas += 1
+
 
     def process_end(self):
         # Redirect the default filehandle to the file specified by self.files
         self.before_process_document(None)
         print('nodes = %d' % self.total)
-        print('UAS = %6.2f' % (100 * self.correct_uas / self.total))
-        print('LAS = %6.2f' % (100 * self.correct_las / self.total))
+        print('UAS           = %6.2f' % (100 * self.correct_uas / self.total))
+        print('LAS (deprel)  = %6.2f' % (100 * self.correct_las / self.total))
+        print('LAS (udeprel) = %6.2f' % (100 * self.correct_las / self.total))
