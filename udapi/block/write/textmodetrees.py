@@ -88,7 +88,7 @@ class TextModeTrees(BaseWriter):
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
-                 mark='ToDo|Bug|Mark', marked_only=False, **kwargs):
+                 mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -110,7 +110,7 @@ class TextModeTrees(BaseWriter):
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
         print_doc_meta: Print `document.meta` metadata before each document?
         print_comments: Print comments (other than sent_id and text)?
-        mark: a regex. If `re.search(mark, str(node.misc))` the node is highlighted.
+        mark: a regex. If `re.search(mark + '=', str(node.misc))` the node is highlighted.
             If `print_comments and re.search(r'^ (%s) = ' % mark, root.comment, re.M)`
             the comment is highlighted.
             Empty string means no highlighting. Default = 'ToDo|ToDoOrigText|Bug|Mark'.
@@ -143,7 +143,7 @@ class TextModeTrees(BaseWriter):
         self.attrs = attributes.split(',')
         self.mark_re, self.comment_mark_re = None, None
         if mark is not None and mark != '':
-            self.mark_re = re.compile(mark)
+            self.mark_re = re.compile(mark + '=')
             self.comment_mark_re = re.compile(r'^ (%s) = ' % mark, re.M)
         self._index_of = []
         self._gaps = []
