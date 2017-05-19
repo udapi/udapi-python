@@ -114,7 +114,7 @@ class FixPunct(Block):
         # If the candidates' descendants span across the punctuation, we also stop
         # because climbing higher would cause a non-projectivity (the punct would be the gap).
         l_path, r_path = [l_cand], [r_cand]
-        if l_cand.is_root():
+        if l_cand is None or l_cand.is_root():
             l_cand = None
         else:
             while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
