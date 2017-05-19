@@ -640,6 +640,28 @@ class Node(object):
         # For projective edges, span must include all the nodes between parent and self.
         return len(span) != distance - 1
 
+    def is_nonprojective_gap(self):
+        """Is the node causing a non-projective gap within another node's subtree?
+
+        Is there at least one node X such that
+        - this node is not a descendant of X, but
+        - this node is within span of X, i.e. it is between (word-order-wise)
+          X's leftmost descendant (or X itself) and X's rightmost descendant (or X itself).
+        """
+        ancestors = set()
+        node = self
+        while node.parent:
+            ancestors.add(node)
+            node = node.parent
+        all_nodes = node.descendants
+        for left_node in all_nodes[:self.ord - 1]:
+            if self.precedes(left_node.parent) and left_node.parent not in ancestors:
+                return True
+        for right_node in all_nodes[self.ord:]:
+            if right_node.parent.precedes(node) and right_node.parent not in ancestors:
+                return True
+        return False
+
     @property
     def no_space_after(self):
         """Boolean property as a shortcut for `node.misc["SpaceAfter"] == "No"`."""
