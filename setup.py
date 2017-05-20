@@ -10,14 +10,14 @@ if sys.version_info < (3, 3):
 
 setup(
     name='udapi-python',
-    version='0.1',
+    version='0.2',
     description='Python framework for processing Universal Dependencies data',
-    author='Vincent Kriz',
-    author_email='kriz@ufal.mff.cuni.cz',
+    author='Martin Popel',
+    author_email='popel@ufal.mff.cuni.cz',
     url='https://github.com/udapi/udapi-python',
     packages=find_packages(),
     scripts=['bin/udapy'],
     tests_require=['pytest'],
-    install_requires=['colorama', 'termcolor'],
-    python_requires='>=3.3'
+    install_requires=['colorama', 'termcolor', 'ufal.udpipe'],
+    python_requires='>=3.3',
 )
