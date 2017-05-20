@@ -37,4 +37,4 @@ class Parsing(BaseWriter):
         print('nodes = %d' % self.total)
         print('UAS           = %6.2f' % (100 * self.correct_uas / self.total))
         print('LAS (deprel)  = %6.2f' % (100 * self.correct_las / self.total))
-        print('LAS (udeprel) = %6.2f' % (100 * self.correct_las / self.total))
+        print('LAS (udeprel) = %6.2f' % (100 * self.correct_ulas / self.total))
