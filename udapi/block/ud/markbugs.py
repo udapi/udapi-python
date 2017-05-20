@@ -69,11 +69,11 @@ class MarkBugs(Block):
 
     # pylint: disable=too-many-branches, too-many-statements
     def process_node(self, node):
-        form, deprel, upos, feats = node.form, node.deprel, node.upos, node.feats
+        form, udeprel, upos, feats = node.form, node.udeprel, node.upos, node.feats
         parent = node.parent
 
         for dep in ('aux', 'fixed', 'goeswith', 'list'):
-            if deprel == dep and parent.deprel == dep:
+            if udeprel == dep and parent.udeprel == dep:
                 self.log(node, dep + '-chain', dep + ' dependencies should not form a chain.')
 
         # 'appos-chain' is more difficult to test because nested appositions are allowed.
@@ -86,24 +86,24 @@ class MarkBugs(Block):
         #         self.log(node, 'appos-chain', 'appos should not form a chain except when nested.')
 
         for dep in ('flat', 'fixed', 'conj', 'appos', 'goeswith', 'list'):
-            if deprel == dep and node.precedes(parent):
+            if udeprel == dep and node.precedes(parent):
                 self.log(node, dep + '-rightheaded',
                          dep + ' relations should be left-headed, not right.')
 
-        if deprel == 'cop' and upos not in ('AUX', 'PRON'):
+        if udeprel == 'cop' and upos not in ('AUX', 'PRON'):
             self.log(node, 'cop-upos', 'deprel=cop upos!=AUX|PRON (but %s)' % upos)
 
-        if deprel == 'mark' and upos == 'PRON':
+        if udeprel == 'mark' and upos == 'PRON':
             self.log(node, 'mark-upos', 'deprel=mark upos=PRON')
 
-        if deprel == 'det' and upos not in ('DET', 'PRON'):
+        if udeprel == 'det' and upos not in ('DET', 'PRON'):
             self.log(node, 'det-upos', 'deprel=det upos!=DET|PRON (but %s)' % upos)
 
-        if deprel == 'punct' and upos != 'PUNCT':
+        if udeprel == 'punct' and upos != 'PUNCT':
             self.log(node, 'punct-upos', 'deprel=punct upos!=PUNCT (but %s)' % upos)
 
         for i_upos, i_feat in REQUIRED_FEATURE_FOR_UPOS.items():
-            if upos == i_upos and not node.feats[i_feat]:
+            if upos == i_upos and not feats[i_feat]:
                 self.log(node, 'no-' + i_feat, 'upos=%s but %s feature is missing' % (upos, i_feat))
 
         if feats['VerbForm'] == 'Fin':
@@ -116,16 +116,16 @@ class MarkBugs(Block):
             self.log(node, 'degree-upos',
                      'Degree=%s upos!=ADJ|ADV (but %s)' % (feats['Degree'], upos))
 
-        subject_children = [n for n in node.children if 'subj' in n.deprel]
+        subject_children = [n for n in node.children if 'subj' in n.udeprel]
         if len(subject_children) > 1:
             self.log(node, 'multi-subj', 'More than one [nc]subj(:pass)? child')
 
-        object_children = [n for n in node.children if n.deprel in ('obj', 'ccomp')]
+        object_children = [n for n in node.children if n.udeprel in ('obj', 'ccomp')]
         if len(object_children) > 1:
             self.log(node, 'multi-obj', 'More than one obj|ccomp child')
 
         # In addition to http://universaldependencies.org/svalidation.html
-        if parent.deprel == 'punct':
+        if parent.udeprel == 'punct':
             self.log(node, 'punct-child', 'parent.deprel=punct')
 
         # See http://universaldependencies.org/u/overview/syntax.html#the-status-of-function-words
@@ -138,15 +138,15 @@ class MarkBugs(Block):
         #       It seems the documentation does not allow any other deprel than advmod,
         #       so there should be no false alarms. Some errors are not reported, i.e. the cases
         #       when advmod incorrectly depends on a function word ("right before midnight").
-        if parent.deprel in ('aux', 'cop', 'mark', 'clf', 'case'):
-            if deprel not in ('conj', 'cc', 'punct', 'fixed', 'goeswith', 'advmod'):
+        if parent.udeprel in ('aux', 'cop', 'mark', 'clf', 'case'):
+            if udeprel not in ('conj', 'cc', 'punct', 'fixed', 'goeswith', 'advmod'):
                 self.log(node, parent.deprel + '-child',
                          'parent.deprel=%s deprel!=conj|cc|punct|fixed|goeswith' % parent.deprel)
 
         # goeswith should be left-headed, but this is already checked, so let's skip right-headed.
-        if deprel == 'goeswith' and parent.precedes(node):
+        if udeprel == 'goeswith' and parent.precedes(node):
             span = node.root.descendants(add_self=1)[parent.ord:node.ord]
-            intruder = next((n for n in span[1:] if n.deprel != "goeswith"), None)
+            intruder = next((n for n in span[1:] if n.udeprel != "goeswith"), None)
             if intruder is not None:
                 self.log(intruder, 'goeswith-gap', "deprel!=goeswith but lies within goeswith span")
             else:
@@ -160,22 +160,21 @@ class MarkBugs(Block):
         if upos == 'PUNCT' and any(char.isalpha() for char in form):
             self.log(node, 'punct-alpha', "upos=PUNCT but form has alphabetical char(s): " + form)
 
-        if upos == 'PUNCT' and deprel not in ('punct', 'fixed', 'goeswith', 'root'):
+        if upos == 'PUNCT' and udeprel not in ('punct', 'fixed', 'goeswith', 'root'):
             self.log(node, 'punct-deprel', 'upos=PUNCT deprel!=punct|fixed|goeswith|root (but %s)'
-                     % deprel)
+                     % udeprel)
 
-        if upos == 'PUNCT':
-            if node.is_nonprojective():
-                self.log(node, 'punct-nonproj', 'upos=PUNCT and edge is non-projective')
-            if node.is_nonprojective_gap() and not node.parent.is_nonprojective_gap():
-                self.log(node, 'punct-nonproj-gap', 'upos=PUNCT and causing a non-projectivity')
+        if upos == 'PUNCT' and node.is_nonprojective():
+            self.log(node, 'punct-nonproj', 'upos=PUNCT and edge is non-projective')
+        if upos == 'PUNCT' and node.is_nonprojective_gap() and not parent.is_nonprojective_gap():
+            self.log(node, 'punct-nonproj-gap', 'upos=PUNCT and causing a non-projectivity')
 
         # http://universaldependencies.org/u/dep/cc.html says
         #   "cc is the relation between a conjunct and a preceding
         #   [coordinating conjunction](http://universaldependencies.org/u/pos/CCONJ)."
         # No other upos is allowed in the documentation, although e.g. PART is common in the data.
         # There are clear cases of adverbs in role of cc (e.g. "respektive" in Swedish and Czech).
-        if deprel == 'cc' and upos not in ('CCONJ', 'ADV'):
+        if udeprel == 'cc' and upos not in ('CCONJ', 'ADV'):
             self.log(node, 'cc-upos', "deprel=cc upos!=CCONJ (but %s): " % upos)
 
     def after_process_document(self, document):
