@@ -1,33 +1,24 @@
-'''Wrapper for UDPipe (more pythonic than ufal.udpipe).'''
+"""Wrapper for UDPipe (more pythonic than ufal.udpipe)."""
 import io
-import os
 
 from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence  # pylint: disable=no-name-in-module
+from udapi.core.resource import require_file
 from udapi.block.read.conllu import Conllu as ConlluReader
 
 
 class UDPipe:
-    '''Wrapper for UDPipe (more pythonic than ufal.udpipe).'''
+    """Wrapper for UDPipe (more pythonic than ufal.udpipe)."""
 
     def __init__(self, model):
         """Create the UDPipe tool object."""
         self.model = model
-        path = self.model_path()
+        path = require_file(model)
         self.tool = Model.load(path)
         if not self.tool:
             raise IOError("Cannot load model from file '%s'" % path)
         self.error = ProcessingError()
         self.conllu_reader = ConlluReader()
         self.tokenizer = self.tool.newTokenizer(Model.DEFAULT)
-
-    def model_path(self):
-        """Return absolute path to the model file to be loaded."""
-        if self.model.startswith('/') or self.model.startswith('.'):
-            return self.model
-        elif os.environ.get('UDAPI_DATA'):
-            return os.environ['UDAPI_DATA'] + '/' + self.model
-        else:
-            return os.environ.get('HOME') + '/' + self.model
 
     def tag_parse_tree(self, root):
         """Tag (+lemmatize, fill FEATS) and parse a tree (already tokenized)."""
