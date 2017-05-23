@@ -32,7 +32,7 @@ REQUIRED_FEATURE_FOR_UPOS = {
 class MarkBugs(Block):
     """Block for checking suspicious/wrong constructions in UD v2."""
 
-    def __init__(self, save_stats=True, tests=None, skip=None, **kwargs):
+    def __init__(self, save_stats=True, tests=None, skip=None, max_cop_lemmas=2, **kwargs):
         """Create the MarkBugs block object.
 
         Args:
@@ -46,12 +46,17 @@ class MarkBugs(Block):
             You can use e.g. `skip=no-(VerbForm|NumType|PronType)`.
             This has higher priority than the `tests` regex.
             Default = None (or empty string) which means no skipping.
+        max_cop_lemmas: how many different lemmas are allowed to have deprel=cop.
+            Default = 2, so all except for the two most frequent lemmas are reported as bugs.
         """
         super().__init__(**kwargs)
         self.save_stats = save_stats
         self.stats = collections.Counter()
         self.tests_re = re.compile(tests) if (tests is not None and tests != '') else None
         self.skip_re = re.compile(skip) if (skip is not None and skip != '') else None
+        self.max_cop_lemmas = max_cop_lemmas
+        self.cop_count = collections.Counter()
+        self.cop_nodes = collections.defaultdict(list)
 
     def log(self, node, short_msg, long_msg):
         """Log node.address() + long_msg and add ToDo=short_msg to node.misc."""
@@ -177,7 +182,18 @@ class MarkBugs(Block):
         if udeprel == 'cc' and upos not in ('CCONJ', 'ADV'):
             self.log(node, 'cc-upos', "deprel=cc upos!=CCONJ (but %s): " % upos)
 
+        if udeprel == 'cop':
+            lemma = node.lemma if node.lemma != '_' else form
+            self.cop_nodes[lemma].append(node)
+            self.cop_count[lemma] += 1
+
     def after_process_document(self, document):
+        for lemma, _count in self.cop_count.most_common()[self.max_cop_lemmas:]:
+            for node in self.cop_nodes[lemma]:
+                self.log(node, 'cop-many-lemmas', 'deprel=cop but lemma=%s not in top-%d'
+                         % (lemma, self.max_cop_lemmas))
+        self.cop_count.clear()
+        self.cop_nodes.clear()
         total = 0
         message = 'ud.MarkBugs Error Overview:'
         for bug, count in sorted(self.stats.items(), key=lambda pair: (pair[1], pair[0])):
