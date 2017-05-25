@@ -2,7 +2,7 @@
 from udapi.core.basereader import BaseReader
 
 # pylint: disable=abstract-method
-# read_tree() does not need to be installed here
+# read_tree() does not need to be implemented here
 
 
 class AddSentences(BaseReader):

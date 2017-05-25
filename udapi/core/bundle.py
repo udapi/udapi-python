@@ -43,12 +43,11 @@ class Bundle(object):
         return iter(self.trees)
 
     def document(self):
-        """returns the document in which the bundle is contained"""
+        """Returns the document in which the bundle is contained."""
         return self._document
 
     def get_tree(self, zone=''):
-        """returns the tree root whose zone is equal to zone"""
-
+        """Returns the tree root whose zone is equal to zone."""
         trees = [tree for tree in self.trees if tree.zone == zone]
         if len(trees) == 1:
             return trees[0]
@@ -57,6 +56,13 @@ class Bundle(object):
         else:
             raise Exception("More than one tree with zone=" +
                             zone + " in the bundle")
+
+    def has_tree(self, zone=''):
+        """Does this bundle contain a tree with a given zone?"""
+        for tree in self.trees:
+            if tree.zone == zone:
+                return True
+        return False
 
     def create_tree(self, zone=None):
         """Return the root of a newly added tree with a given zone."""
