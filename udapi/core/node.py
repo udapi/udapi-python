@@ -270,13 +270,23 @@ class Node(object):
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
-        if self.parent:
-            self.parent._children = [node for node in self.parent.children if node != self]
+        # In case of moving a subtree from one tree to another, update also the ordering.
+        if self._parent:
+            self._parent._children = [node for node in self.parent.children if node != self]
+            old_root, new_root = self._parent.root, climbing_node
+            if old_root != new_root:
+                old_root._update_ordering()
+                moving_nodes = self.descendants(add_self=True)
+                new_ord = new_root._descendants[-1].ord + 1 if new_root._descendants else 1
+                for moving_node in moving_nodes:
+                    moving_node.ord = new_ord
+                    new_ord += 1
+                new_root._descendants.extend(moving_nodes)
 
         # Set the new parent.
         self._parent = new_parent
 
-        # Append the current node the the new parent children.
+        # Append the current node to the new parent children.
         new_parent._children = sorted(new_parent.children + [self], key=lambda child: child.ord)
 
     @property

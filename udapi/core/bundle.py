@@ -92,8 +92,7 @@ class Bundle(object):
 
     def remove(self):
         """Remove a bundle from the document."""
-        self.document.bundles = [
-            bundle for bundle in self.document.bundles if not bundle == self]
+        self._document.bundles = [bundle for bundle in self._document.bundles if bundle != self]
 
     def address(self):
         """Return bundle_id or '?' if missing."""
