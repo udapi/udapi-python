@@ -233,3 +233,38 @@ class Root(Node):
             else:
                 result.append(node)
         return result
+
+    def steal_nodes(self, nodes):
+        """Move nodes from another tree to this tree (append)."""
+        old_root = nodes[0].root
+        for node in nodes[1:]:
+            if node.root != old_root:
+                raise ValueError("steal_nodes(nodes) was called with nodes from several trees")
+        nodes = sorted(nodes, key=lambda n: n.ord)
+        whole_tree = nodes == old_root.descendants
+        new_ord = len(self._descendants)
+        # pylint: disable=protected-access
+        for node in nodes:
+            new_ord += 1
+            node.ord = new_ord
+            if not whole_tree:
+                for child in [n for n in node.children if n not in nodes]:
+                    child.parent = old_root
+            if node.parent == old_root or (not whole_tree and node.parent not in nodes):
+                node.parent._children = [n for n in node.parent._children if n != node]
+                node._parent = self
+                self._children.append(node)
+        if whole_tree:
+            old_root._descendants = []
+            self._mwts += old_root.multiword_tokens
+            old_root.multiword_tokens = []
+        else:
+            old_root._descendants = [n for n in old_root._descendants if n not in nodes]
+            mwt = node.multiword_token
+            for node in nodes:
+                if mwt:
+                    words = [w for w in mwt.words if w in nodes]
+                    mwt.remove()
+                    self.create_multiword_token(words=words, form=mwt.form, misc=mwt.misc)
+        self._descendants += nodes
+        # pylint: enable=protected-access
