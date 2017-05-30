@@ -15,7 +15,7 @@ class Root(Node):
                  'empty_nodes', 'text', 'comment', 'newpar', 'newdoc']
 
     # pylint: disable=too-many-arguments
-    def __init__(self, sent_id=None, zone=None, comment='', text=None, newpar=None, newdoc=None):
+    def __init__(self, zone=None, comment='', text=None, newpar=None, newdoc=None):
         """Create new root node."""
         # Call constructor of the parent object.
         super().__init__()
@@ -31,7 +31,7 @@ class Root(Node):
         self.newpar = newpar
         self.newdoc = newdoc
 
-        self._sent_id = sent_id
+        self._sent_id = None
         self._zone = zone
         self._bundle = None
         self._descendants = []
