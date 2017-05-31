@@ -1,4 +1,5 @@
 """util.ResegmentGold is a block for sentence alignment and re-segmentation of two zones."""
+import logging
 from udapi.core.block import Block
 from udapi.core.mwt import MWT
 from udapi.core.root import Root
@@ -51,11 +52,21 @@ class ResegmentGold(Block):
             for index, token in enumerate(tokens):
                 p_chars += token.form.replace(' ', '')
                 if len(p_chars) > len(g_chars):
-                    # TODO
-                    g_tree.print_subtree()
-                    print('----------------------')
-                    p_tree.print_subtree()
-                    raise ValueError('Cannot solve token over sentence boundary')
+                    logging.warning('Pred token crossing gold sentences: %s', g_tree.sent_id)
+                    # E.g. gold cs ln95048-151-p2s8 contains SpaceAfter=No on the last word
+                    # of the sentence, resulting in "uklidnila.Komentář" in the raw text.
+                    # It is not obvious how to fix this "properly", i.e. without increasing
+                    # or decreasing the resulting LAS. The current solution is quite hacky.
+                    if index + 1 == len(tokens):
+                        next_p_tree = Root(zone=p_tree.zone)
+                        pred_trees.append(next_p_tree)
+                        next_p_tree.create_child(deprel='wrong', form=p_chars[len(g_chars):])
+                        bundle.add_tree(p_tree)
+                        break
+                    else:
+                        next_tok = tokens[index + 1]
+                        next_tok.form = p_chars[len(g_chars):] + next_tok.form
+                        p_chars = g_chars
                 if len(p_chars) == len(g_chars):
                     next_p_tree = Root(zone=p_tree.zone)
                     words = []
@@ -99,4 +110,4 @@ class ResegmentGold(Block):
             p_subroot = next((n for n in p_subroots if n.form == g_subroot_form), p_subroots[0])
             for false_subroot in (n for n in p_subroots if n != p_subroot):
                 false_subroot.parent = p_subroot
-                false_subroot.deprel = 'dep:wrong-' + false_subroot.deprel
+                false_subroot.deprel = 'wrong-' + false_subroot.deprel
