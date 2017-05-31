@@ -18,6 +18,8 @@ class ResegmentGold(Block):
         self.gold_zone = gold_zone
 
     def process_document(self, document):
+        if not document.bundles:
+            return
         pred_trees = self.extract_pred_trees(document)
 
         for bundle_no, bundle in enumerate(document.bundles):
@@ -56,7 +58,12 @@ class ResegmentGold(Block):
                     raise ValueError('Cannot solve token over sentence boundary')
                 if len(p_chars) == len(g_chars):
                     next_p_tree = Root(zone=p_tree.zone)
-                    words = [t.words if isinstance(t, MWT) else t for t in tokens[index + 1:]]
+                    words = []
+                    for token in tokens[index + 1:]:
+                        if isinstance(token, MWT):
+                            words.extend(token.words)
+                        else:
+                            words.append(token)
                     next_p_tree.steal_nodes(words)
                     self.choose_root(p_tree, g_tree)
                     self.choose_root(next_p_tree, document.bundles[bundle_no + 1].trees[0])
