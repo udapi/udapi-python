@@ -41,7 +41,8 @@ class ResegmentGold(Block):
                 p_tree.steal_nodes(new_p_tree.descendants)
             self.choose_root(p_tree, g_tree)
             if not p_chars.startswith(g_chars):
-                raise ValueError('p_chars do not start with g_chars:\n%s\n%s' % (p_chars, g_chars))
+                raise ValueError('sent_id=%s: !p_chars.startswith(g_chars):\np_chars=%s\ng_chars=%s'
+                                 % (g_tree.sent_id, p_chars, g_chars))
             if g_chars == p_chars:
                 bundle.add_tree(p_tree)
                 continue
