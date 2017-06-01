@@ -270,19 +270,14 @@ class Node(object):
             climbing_node = climbing_node.parent
 
         # Remove the current Node from the children of the old parent.
-        # In case of moving a subtree from one tree to another, update also the ordering.
+        # Forbid moving nodes from one tree to another using parent setter.
         if self._parent:
             self._parent._children = [node for node in self.parent.children if node != self]
+            # TODO: .root is currently computed, so it is quite slow
             old_root, new_root = self._parent.root, climbing_node
             if old_root != new_root:
-                old_root._update_ordering()
-                moving_nodes = self.descendants(add_self=True)
-                new_ord = new_root._descendants[-1].ord + 1 if new_root._descendants else 1
-                for moving_node in moving_nodes:
-                    moving_node.ord = new_ord
-                    new_ord += 1
-                new_root._descendants.extend(moving_nodes)
-
+                raise ValueError('Cannot move nodes between trees with parent setter, '
+                                 'use new_root.steal_nodes(nodes_to_be_moved) instead')
         # Set the new parent.
         self._parent = new_parent
 

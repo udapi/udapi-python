@@ -249,7 +249,9 @@ class Root(Node):
             node.ord = new_ord
             if not whole_tree:
                 for child in [n for n in node.children if n not in nodes]:
-                    child.parent = old_root
+                    child._parent = old_root
+                    old_root._children = sorted(old_root.children + [child], key=lambda n: n.ord)
+                node._children = [n for n in node.children if n in nodes]
             if node.parent == old_root or (not whole_tree and node.parent not in nodes):
                 node.parent._children = [n for n in node.parent._children if n != node]
                 node._parent = self
