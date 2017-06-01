@@ -13,7 +13,7 @@ class BaseReader(Block):
 
     # pylint: disable=too-many-arguments
     def __init__(self, files='-', zone='keep', bundles_per_doc=0, encoding='utf-8',
-                 sent_id_filter=None, split_docs=False, **kwargs):
+                 sent_id_filter=None, split_docs=False, ignore_sent_id=False, **kwargs):
         super().__init__(**kwargs)
         self.files = Files(filenames=files)
         self.zone = zone
@@ -26,6 +26,7 @@ class BaseReader(Block):
             self.sent_id_filter = re.compile(str(sent_id_filter))
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
         self.split_docs = split_docs
+        self.ignore_sent_id = ignore_sent_id
 
     @staticmethod
     def is_multizone_reader():
@@ -121,9 +122,10 @@ class BaseReader(Block):
             add_to_the_last_bundle = 0
             trees_loaded += 1
 
-            tree_id = root.sent_id
-            if tree_id is not None:
-                parts = tree_id.split('/', 1)
+            if self.ignore_sent_id:
+                root.sent_id = None
+            if root.sent_id is not None:
+                parts = root.sent_id.split('/', 1)
                 bundle_id = parts[0]
                 if len(parts) == 2:
                     root.zone = parts[1]
