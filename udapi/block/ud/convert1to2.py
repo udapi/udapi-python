@@ -188,10 +188,7 @@ class Convert1to2(Block):
         if node.udeprel == 'nmod':
             parent_is_nominal = self.is_nominal(node.parent)
             if parent_is_nominal == 'no':
-                if node.sdeprel:
-                    node.deprel = 'obl' + ':' + node.sdeprel
-                else:
-                    node.deprel = 'obl'
+                node.udeprel = 'obl'
             elif node.deprel == 'nmod:tmod':
                 node.deprel = 'obl:tmod'
             elif node.deprel == 'nmod:poss':
