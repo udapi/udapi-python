@@ -1,4 +1,4 @@
-"""Block&script eval.Conll17 for evaluating LAS,UAS,etc as in CoNLL2017 UD shared task.
+r"""Block&script eval.Conll17 for evaluating LAS,UAS,etc as in CoNLL2017 UD shared task.
 
 This is a reimplementation of the CoNLL2017 shared task official evaluation script,
 http://universaldependencies.org/conll17/evaluation.html
@@ -7,7 +7,25 @@ The gold trees and predicted (system-output) trees need to be sentence-aligned
 e.g. using `util.ResegmentGold`.
 Unlike in `eval.Parsing`, the gold and predicted trees can have different tokenization.
 
-Example execution::
+An example usage and output::
+
+    $ udapy read.Conllu zone=gold files=gold.conllu \
+            read.Conllu zone=pred files=pred.conllu ignore_sent_id=1 \
+            eval.Conll17
+    Metric     | Precision |    Recall |  F1 Score | AligndAcc
+    -----------+-----------+-----------+-----------+-----------
+    Words      |     27.91 |     52.17 |     36.36 |    100.00
+    UPOS       |     27.91 |     52.17 |     36.36 |    100.00
+    XPOS       |     27.91 |     52.17 |     36.36 |    100.00
+    Feats      |     27.91 |     52.17 |     36.36 |    100.00
+    Lemma      |     27.91 |     52.17 |     36.36 |    100.00
+    UAS        |     16.28 |     30.43 |     21.21 |     58.33
+    LAS        |     16.28 |     30.43 |     21.21 |     58.33
+    CLAS       |     10.34 |     16.67 |     12.77 |     37.50
+
+
+For evaluating multiple systems and testsets (as in CoNLL2017)
+stored in `systems/testset_name/system_name.conllu` you can use::
 
     #!/bin/bash
     SYSTEMS=`ls systems`
@@ -32,6 +50,40 @@ This prints the ranking and confidence intervals (95% by default) and also p-val
 pair of systems with neighboring ranks. If the difference in LAS is significant
 (according to a paired bootstrap test, by default if p < 0.05),
 a line is printed between the two systems.
+
+The output looks like::
+
+     1.          Stanford 76.17 ± 0.12 (76.06 .. 76.30) p=0.001
+    ------------------------------------------------------------
+     2.              C2L2 74.88 ± 0.12 (74.77 .. 75.01) p=0.001
+    ------------------------------------------------------------
+     3.               IMS 74.29 ± 0.13 (74.16 .. 74.43) p=0.001
+    ------------------------------------------------------------
+     4.          HIT-SCIR 71.99 ± 0.14 (71.84 .. 72.12) p=0.001
+    ------------------------------------------------------------
+     5.           LATTICE 70.81 ± 0.13 (70.67 .. 70.94) p=0.001
+    ------------------------------------------------------------
+     6.        NAIST-SATO 70.02 ± 0.13 (69.89 .. 70.16) p=0.001
+    ------------------------------------------------------------
+     7.    Koc-University 69.66 ± 0.13 (69.52 .. 69.79) p=0.002
+    ------------------------------------------------------------
+     8.   UFAL-UDPipe-1-2 69.36 ± 0.13 (69.22 .. 69.49) p=0.001
+    ------------------------------------------------------------
+     9.            UParse 68.75 ± 0.14 (68.62 .. 68.89) p=0.003
+    ------------------------------------------------------------
+    10.     Orange-Deskin 68.50 ± 0.13 (68.37 .. 68.62) p=0.448
+    11.          TurkuNLP 68.48 ± 0.14 (68.34 .. 68.62) p=0.029
+    ------------------------------------------------------------
+    12.              darc 68.29 ± 0.13 (68.16 .. 68.42) p=0.334
+    13.  conll17-baseline 68.25 ± 0.14 (68.11 .. 68.38) p=0.003
+    ------------------------------------------------------------
+    14.             MQuni 67.93 ± 0.13 (67.80 .. 68.06) p=0.062
+    15.             fbaml 67.78 ± 0.13 (67.65 .. 67.91) p=0.283
+    16.     LyS-FASTPARSE 67.73 ± 0.13 (67.59 .. 67.85) p=0.121
+    17.        LIMSI-LIPN 67.61 ± 0.14 (67.47 .. 67.75) p=0.445
+    18.             RACAI 67.60 ± 0.13 (67.46 .. 67.72) p=0.166
+    19.     IIT-Kharagpur 67.50 ± 0.14 (67.36 .. 67.64) p=0.447
+    20.           naistCL 67.49 ± 0.15 (67.34 .. 67.63)
 
 TODO: Bootstrap currently reports only LAS, but all the other measures could be added as well.
 """
