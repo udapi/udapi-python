@@ -88,7 +88,7 @@ class TextModeTrees(BaseWriter):
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
-                 mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, **kwargs):
+                 mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, hints=True, **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -115,6 +115,8 @@ class TextModeTrees(BaseWriter):
             the comment is highlighted.
             Empty string means no highlighting. Default = 'ToDo|ToDoOrigText|Bug|Mark'.
         marked_only: print only trees containing one or more marked nodes/comments. Default=False.
+        hints: use thick-marked segments (┡ and ┢) to distinguish whether a given node precedes
+            or follows its parent. Default=True. If False, plain ├ is used in both cases.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -137,7 +139,10 @@ class TextModeTrees(BaseWriter):
         # _space[precedes_parent][is_topmost_or_bottommost]
         # _vert[is_crossing]
         space = ' ' * indent
-        self._space = [[space + '┡', space + '╰'], [space + '┢', space + '╭']]
+        if hints:
+            self._space = [[space + '┡', space + '╰'], [space + '┢', space + '╭']]
+        else:
+            self._space = [[space + '├', space + '╰'], [space + '├', space + '╭']]
         self._vert = [space + '│', line + '╪']
 
         self.attrs = attributes.split(',')
