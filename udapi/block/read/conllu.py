@@ -16,7 +16,7 @@ RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
-    def __init__(self, strict=False, separator='tab',
+    def __init__(self, strict=False, separator='tab', empty_parent='warn',
                  attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
         """Create the Conllu reader object.
 
@@ -26,6 +26,8 @@ class Conllu(BaseReader):
             Default='tab' is the only possibility in valid CoNLL-U files.
             'space' means one or more whitespaces (this does not allow forms with space).
             'doublespace' means two or more spaces.
+        empty_parent: What to do if HEAD is _? Default=warn - issue a warning and attach to the root
+            or if strict=1 issue an exception. With `empty_parent=ignore` no warning is issued.
         attributes: comma-separated list of column names in the input files
             (default='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc')
             Changing the default can be used for loading CoNLL-like formats (not valid CoNLL-U).
@@ -49,6 +51,7 @@ class Conllu(BaseReader):
         self.node_attributes = attributes.split(',')
         self.strict = strict
         self.separator = separator
+        self.empty_parent = empty_parent
 
     @staticmethod
     def parse_comment_line(line, root):
@@ -124,7 +127,9 @@ class Conllu(BaseReader):
                             parents.append(int(fields[n_attribute]))
                         except ValueError as exception:
                             if not self.strict and fields[n_attribute] == '_':
-                                logging.warning("Empty parent/head index in '%s'", line)
+                                if self.empty_parent == 'warn':
+                                    logging.warning("Empty parent/head index in '%s'", line)
+                                parents.append(0)
                             else:
                                 raise exception
                     elif attribute_name == 'ord':
