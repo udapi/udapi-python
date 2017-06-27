@@ -1,0 +1,20 @@
+# json_doc_entities = [{"id": "E1", "labels": ["Jaroslav Vomáčka", "Jarda"], "mentions": ["s1#m1", "s2#m1"]}, {"id": "E2", "labels": ["Babinský"], "mentions": ["s2#m2"]}]
+# json_doc_relations = [{"from": "E1", "id": "R1", "to": "E2", "type": "call"}]
+# sent_id = 1
+# text = Vyšetřování Jaroslava Vomáčky.
+# json_mentions = [{"id": "s1#m1", "label": "Jaroslav Vomáčka", "span": [2, 3]}]
+1	Vyšetřování	vyšetřování	NOUN	NNNS1-----A----	Case=Nom|Gender=Neut|Number=Sing|Polarity=Pos	0	root	_	_
+2	Jaroslava	Jaroslav	PROPN	NNMS2-----A----	Animacy=Anim|Case=Gen|Gender=Masc|NameType=Giv|Number=Sing|Polarity=Pos	1	nmod	_	_
+3	Vomáčky	Vomáčka	PROPN	NNMS2-----A----	Animacy=Anim|Case=Gen|Gender=Masc|NameType=Sur|Number=Sing|Polarity=Pos	2	flat	_	SpaceAfter=No
+4	.	.	PUNCT	Z:-------------	_	1	punct	_	SpaceAfter=No
+
+# sent_id = 2
+# text = Jarda telefonoval loupežníkovi Babinskému.
+# json_mention_relations = [{"from": "s2#m1", "id": "r1", "to": "s2#m2", "type": "call"}]
+# json_mentions = [{"id": "s2#m1", "label": "Jaroslav", "span": [1]}, {"id": "s2#m2", "label": "Babinský", "span": [4]}]
+1	Jarda	Jarda	PROPN	NNMS1-----A----	Animacy=Anim|Case=Nom|Gender=Masc|NameType=Giv|Number=Sing|Polarity=Pos	2	nsubj	_	_
+2	telefonoval	telefonovat	VERB	VpYS---XR-AA---	Aspect=Imp|Gender=Masc|Number=Sing|Polarity=Pos|Tense=Past|VerbForm=Part|Voice=Act	0	root	_	_
+3	loupežníkovi	loupežník	NOUN	NNMS3-----A----	Animacy=Anim|Case=Dat|Gender=Masc|Number=Sing|Polarity=Pos	4	nmod	_	_
+4	Babinskému	Babinský	PROPN	NNMS3-----A----	Animacy=Anim|Case=Dat|Gender=Masc|NameType=Sur|Number=Sing|Polarity=Pos	2	obj	_	SpaceAfter=No
+5	.	.	PUNCT	Z:-------------	_	2	punct	_	SpaceAfter=No
+

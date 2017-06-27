@@ -1,4 +1,5 @@
 """Conllu class is a a writer of files in the CoNLL-U format."""
+import json
 from udapi.core.basewriter import BaseWriter
 
 
@@ -34,6 +35,11 @@ class Conllu(BaseWriter):
 
         if self.print_text:
             print("# text = " + tree.get_sentence())
+
+        if tree.json:
+            for key, value in sorted(tree.json.items()):
+                print("# json_%s = %s"
+                      % (key, json.dumps(value, ensure_ascii=False, sort_keys=True)))
 
         comment = tree.comment
         if comment:
@@ -73,3 +79,11 @@ class Conllu(BaseWriter):
 
         # Empty line separates trees in CoNLL-U (and is required after the last tree as well)
         print("")
+
+    def before_process_document(self, document):
+        """Print json_doc_* headers."""
+        super().before_process_document(document)
+        if document.json:
+            for key, value in sorted(document.json.items()):
+                print("# json_doc_%s = %s"
+                      % (key, json.dumps(value, ensure_ascii=False, sort_keys=True)))

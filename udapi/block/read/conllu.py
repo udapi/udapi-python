@@ -1,4 +1,5 @@
 """"Conllu is a reader block for the CoNLL-U files."""
+import json
 import logging
 import re
 
@@ -11,6 +12,7 @@ from udapi.core.root import Root
 RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
 RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
+RE_JSON = re.compile(r'^# json_(doc_)?([^ =]+)\s*=\s*(.+)')
 
 
 class Conllu(BaseReader):
@@ -54,7 +56,7 @@ class Conllu(BaseReader):
         self.empty_parent = empty_parent
 
     @staticmethod
-    def parse_comment_line(line, root):
+    def parse_comment_line(line, root, document):
         """Parse one line of CoNLL-U and fill sent_id, text, newpar, newdoc in root."""
         sent_id_match = RE_SENT_ID.match(line)
         if sent_id_match is not None:
@@ -75,6 +77,12 @@ class Conllu(BaseReader):
                 root.newdoc = value
             return
 
+        json_match = RE_JSON.match(line)
+        if json_match is not None:
+            container = document if json_match.group(1) == 'doc_' else root
+            container.json[json_match.group(2)] = json.loads(json_match.group(3))
+            return
+
         root.comment += line[1:] + "\n"
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
@@ -93,7 +101,7 @@ class Conllu(BaseReader):
             if line == '':
                 break
             if line[0] == '#':
-                self.parse_comment_line(line, root)
+                self.parse_comment_line(line, root, document)
             else:
                 if self.separator == 'tab':
                     fields = line.split('\t')
