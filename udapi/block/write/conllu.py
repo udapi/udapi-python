@@ -81,9 +81,9 @@ class Conllu(BaseWriter):
         print("")
 
     def before_process_document(self, document):
-        """Print json_doc_* headers."""
+        """Print doc_json_* headers."""
         super().before_process_document(document)
         if document.json:
             for key, value in sorted(document.json.items()):
-                print("# json_doc_%s = %s"
+                print("# doc_json_%s = %s"
                       % (key, json.dumps(value, ensure_ascii=False, sort_keys=True)))

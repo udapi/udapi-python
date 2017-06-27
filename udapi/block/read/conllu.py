@@ -12,7 +12,7 @@ from udapi.core.root import Root
 RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
 RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc) (?:\s*id\s*=\s*(.+))?')
-RE_JSON = re.compile(r'^# json_(doc_)?([^ =]+)\s*=\s*(.+)')
+RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
 
 
 class Conllu(BaseReader):

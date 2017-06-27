@@ -1,5 +1,5 @@
-# json_doc_entities = [{"id": "E1", "labels": ["Jaroslav Vomáčka", "Jarda"], "mentions": ["s1#m1", "s2#m1"]}, {"id": "E2", "labels": ["Babinský"], "mentions": ["s2#m2"]}]
-# json_doc_relations = [{"from": "E1", "id": "R1", "to": "E2", "type": "call"}]
+# doc_json_entities = [{"id": "E1", "labels": ["Jaroslav Vomáčka", "Jarda"], "mentions": ["s1#m1", "s2#m1"]}, {"id": "E2", "labels": ["Babinský"], "mentions": ["s2#m2"]}]
+# doc_json_relations = [{"from": "E1", "id": "R1", "to": "E2", "type": "call"}]
 # sent_id = 1
 # text = Vyšetřování Jaroslava Vomáčky.
 # json_mentions = [{"id": "s1#m1", "label": "Jaroslav Vomáčka", "span": [2, 3]}]
