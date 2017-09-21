@@ -37,7 +37,7 @@ class Configurations(Block):
         if verbose is not None and verbose == 1:
             self.verbose = True
 
-    def apply_query(self, query_id, node):
+    def apply_query(self, query_id, node, dictionary_param_1,dictionary_param_2, der_halucinate_param):
         """
         A generic method for applying a specified query on a specified node.
 
@@ -57,7 +57,7 @@ class Configurations(Block):
 
         triples = []
         try:
-            triples = method(node)
+            triples = method(node, dictionary_param_1,dictionary_param_2, der_halucinate_param)
         except ValueError as exception:
             if self.verbose:
                 logging.info(' - no configurations: %s', exception)

@@ -2,8 +2,8 @@
 import re
 import sys
 
-import colorama
-from termcolor import colored
+# import colorama
+# from termcolor import colored
 from udapi.core.basewriter import BaseWriter
 
 COLOR_OF = {
@@ -238,8 +238,8 @@ class TextModeTrees(BaseWriter):
         super().before_process_document(document)
         if self.color == 'auto':
             self.color = sys.stdout.isatty()
-            if self.color:
-                colorama.init()
+           # if self.color:
+                # colorama.init()
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
@@ -263,14 +263,14 @@ class TextModeTrees(BaseWriter):
         """Should a given node be highlighted?"""
         return self.mark_re.search(str(node.misc)) if self.mark_re is not None else False
 
-    def colorize_comment(self, comment):
+    # def colorize_comment(self, comment):
         """Return a string with color markup for a given comment."""
-        if self.mark_re is None:
-            return comment
-        return self.mark_re.sub(colored(r'\g<0>', None, None, ['reverse', 'bold']), comment)
+       # if self.mark_re is None:
+        #    return comment
+        #return self.mark_re.sub(colored(r'\g<0>', None, None, ['reverse', 'bold']), comment)
 
-    @staticmethod
-    def colorize_attr(attr, value, marked):
-        """Return a string with color markup for a given attr and its value."""
-        color = COLOR_OF.get(attr, None)
-        return colored(value, color, None, ['reverse', 'bold'] if marked else None)
+    # @staticmethod
+    #def colorize_attr(attr, value, marked):
+     #   """Return a string with color markup for a given attr and its value."""
+      #  color = COLOR_OF.get(attr, None)
+       # return colored(value, color, None, ['reverse', 'bold'] if marked else None)
