@@ -99,6 +99,10 @@ def _import_blocks(block_names, block_args):
     return blocks
 
 
+def derinet():
+    pass
+
+
 class Run(object):
     """Processing unit that processes UD data; typically a sequence of blocks."""
 
@@ -124,6 +128,8 @@ class Run(object):
 
         # Import blocks (classes) and construct block instances.
         blocks = _import_blocks(block_names, block_args)
+
+
 
         # Initialize blocks (process_start).
         for block in blocks:
