@@ -13,6 +13,7 @@ class Document(object):
         self.bundles = []
         self._highest_bundle_id = 0
         self.meta = {}
+        self.json = {}
 
     def __iter__(self):
         return iter(self.bundles)

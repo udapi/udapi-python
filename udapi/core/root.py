@@ -12,7 +12,7 @@ from udapi.core.mwt import MWT
 class Root(Node):
     """Class for representing root nodes (technical roots) in UD trees."""
     __slots__ = ['_sent_id', '_zone', '_bundle', '_descendants', '_mwts',
-                 'empty_nodes', 'text', 'comment', 'newpar', 'newdoc']
+                 'empty_nodes', 'text', 'comment', 'newpar', 'newdoc', 'json']
 
     # pylint: disable=too-many-arguments
     def __init__(self, zone=None, comment='', text=None, newpar=None, newdoc=None):
@@ -30,6 +30,7 @@ class Root(Node):
         self.text = text
         self.newpar = newpar
         self.newdoc = newdoc
+        self.json = {}  # TODO: or None and mask as {} in property reader&writer to save memory?
 
         self._sent_id = None
         self._zone = zone
