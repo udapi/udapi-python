@@ -7,7 +7,14 @@ from udapi.core.run import Run
 
 # Parse command line arguments.
 argparser = argparse.ArgumentParser(
-    description='udapy - Python interface to Udapi - API for Universal Dependencies')
+    formatter_class=argparse.RawTextHelpFormatter,
+    usage="udapy [optional_arguments] scenario",
+    epilog="See http://udapi.github.io",
+    description="udapy - Python interface to Udapi - API for Universal Dependencies\n\n"
+                "Examples of usage:\n"
+                "  udapy -s read.Sentences udpipe.En < in.txt > out.conllu\n"
+                "  udapy -T < sample.conllu | less -R\n"
+                "  udapy -HAM ud.MarkBugs < sample.conllu > bugs.html\n")
 argparser.add_argument(
     "-q", "--quiet", action="store_true",
     help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
