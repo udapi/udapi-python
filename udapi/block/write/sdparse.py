@@ -29,7 +29,7 @@ class Sdparse(BaseWriter):
 
     Notes:
     The original `Stanford dependencies format
-    <http://nlp.stanford.edu/software/dependencies_manual.pdf>`_
+    <https://nlp.stanford.edu/software/dependencies_manual.pdf>`_
     allows explicit specification of the root dependency, e.g. `root(ROOT-0, makes-8)`.
     However, this is not allowed by Brat, so this writer does not print it.
 

@@ -34,7 +34,7 @@ class Html(BaseWriter):
 
     This block is based on `Treex::View <https://metacpan.org/release/Treex-View>`_
     but takes a different approach. `Treex::View` depends on (older version of)
-    `Valence` (Perl interface to `Electron <http://electron.atom.io/>`_)
+    `Valence` (Perl interface to `Electron <https://electron.atom.io/>`_)
     and comes with a script `view-treex`, which takes a treex file,
     converts it to json behind the scenes (which is quite slow)
     and displays the json in a Valence window.
