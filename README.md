@@ -7,7 +7,9 @@ Python framework for processing Universal Dependencies data
 
 ## Requirements
 - You need Python 3.3 or higher.
-- If the [ufal.udpipe](https://pypi.python.org/pypi/ufal.udpipe/) parser is needed, make sure you have a C++11 compiler (e.g. [g++ 4.7 or newer](.travis.yml#L9)).
+- If the [ufal.udpipe](https://pypi.python.org/pypi/ufal.udpipe/) parser is needed,
+  make sure you have a C++11 compiler (e.g. [g++ 4.7 or newer](.travis.yml#L9))
+  and install UDPipe with `pip3 install --user --upgrade ufal.udpipe`.
 
 ## Install Udapi for developers
 Let's clone the git repo to `~/udapi-python/`, install dependencies
@@ -23,9 +25,9 @@ source ~/.bashrc # or open new bash
 ```
 
 ## Install Udapi for users
-This is similar to the above, but installs Udapi to the standard (user) Python paths.
+This is similar to the above, but installs Udapi from PyPI to the standard (user) Python paths.
 ```
-pip3 install --user --upgrade git+https://github.com/udapi/udapi-python.git
+pip3 install --user --upgrade udapi
 ```
 Try `udapy -h` to check it is installed correctly.
 If it fails, make sure your `PATH` includes the directory where `pip3` installed the `udapy` script.
