@@ -3,10 +3,9 @@
 Punctuation in Universal Dependencies has the tag PUNCT, dependency relation punct,
 and is always attached projectively, usually to the head of a neighboring subtree
 to its left or right.
-Punctuation normally does not have children. If it does, we will skip it.
-It is unclear what to do anyway, and we won't have to check for cycles.
+Punctuation normally does not have children. If it does, we will fix it first.
 
-Tries to re-attach punctuation projectively.
+This block tries to re-attach punctuation projectively and according to the guidelines.
 It should help in cases where punctuation is attached randomly, always to the root
 or always to the neighboring word. However, there are limits to what it can do;
 for example it cannot always recognize whether a comma is introduced to separate
@@ -14,7 +13,7 @@ the block to its left or to its right. Hence if the punctuation before running
 this block is almost good, the block may actually do more harm than good.
 
 Since the punctuation should not have children, we should not create a non-projectivity
-if we check the roof edges going to the right.
+if we check the root edges going to the right.
 However, it is still possible that we will attach the punctuation non-projectively
 by joining a non-projectivity that already exists.
 For example, the left neighbor (node i-1) may have its parent at i-3,
@@ -47,7 +46,7 @@ FINAL_PUNCT = '.?!'
 
 
 class FixPunct(Block):
-    """Make sure punct nodes are attached punctuation is attached projectively."""
+    """Make sure punctuation nodes are attached projectively."""
 
     def __init__(self, **kwargs):
         """Create the ud.FixPunct block instance."""
@@ -77,6 +76,15 @@ class FixPunct(Block):
         for node in root.descendants:
             if node.upos == "PUNCT" and not self._punct_type[node.ord]:
                 self._fix_subord_punct(node)
+
+        # Finally, check if root is still marked with deprel=root.
+        # This may not hold if the original root was a paired punctuation, which was rehanged.
+        for node in root.children:
+            if node.udeprel != 'root':
+                node.udeprel = 'root'
+                for another_node in root.descendants:
+                    if another_node.parent != root and another_node.udeprel == 'root':
+                        another_node.udeprel = 'punct'
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
@@ -168,10 +176,17 @@ class FixPunct(Block):
 
     def _fix_pair(self, root, opening_node, closing_node):
         heads = []
+        punct_heads = []
         for node in root.descendants[opening_node.ord: closing_node.ord - 1]:
             if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
-                if node.upos != 'PUNCT':
+                if node.upos == 'PUNCT':
+                    punct_heads.append(node)
+                else:
                     heads.append(node)
+        # Punctuation should not have children, but if there is no other head candidate,
+        # let's break this rule.
+        if len(heads) == 0:
+            heads = punct_heads
         if len(heads) == 1:
             opening_node.parent = heads[0]
             closing_node.parent = heads[0]
