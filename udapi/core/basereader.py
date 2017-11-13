@@ -59,7 +59,7 @@ class BaseReader(Block):
         """Go to the next file and retrun its filehandle."""
         return self.files.next_filehandle()
 
-    def read_tree(self, document=None):
+    def read_tree(self):
         """Load one (more) tree from self.files and return its root.
 
         This method must be overriden in all readers.
@@ -68,13 +68,13 @@ class BaseReader(Block):
         """
         raise NotImplementedError("Class %s doesn't implement read_tree" % self.__class__.__name__)
 
-    def filtered_read_tree(self, document=None):
+    def filtered_read_tree(self):
         """Load and return one more tree matching the `sent_id_filter`.
 
         This method uses `read_tree()` internally.
         This is the method called by `process_document`.
         """
-        tree = self.read_tree(document)
+        tree = self.read_tree()
         if self.sent_id_filter is None:
             return tree
         while True:
@@ -84,7 +84,7 @@ class BaseReader(Block):
                 return tree
             logging.debug('Skipping sentence %s as it does not match the sent_id_filter %s.',
                           tree.sent_id, self.sent_id_filter)
-            tree = self.read_tree(document)
+            tree = self.read_tree()
 
     # pylint: disable=too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
@@ -118,7 +118,7 @@ class BaseReader(Block):
 
         trees_loaded = 0
         while True:
-            root = self.filtered_read_tree(document)
+            root = self.filtered_read_tree()
             if root is None:
                 if trees_loaded == 0 and self.files.has_next_file():
                     filehandle = self.next_filehandle()

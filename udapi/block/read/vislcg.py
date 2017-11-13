@@ -8,7 +8,7 @@ class Vislcg(BaseReader):
 
     # TODO check validity and raise helpful exceptions if not valid
     # pylint: disable=too-many-branches
-    def read_tree(self, document=None):
+    def read_tree(self):
         if self.filehandle is None:
             return None
 

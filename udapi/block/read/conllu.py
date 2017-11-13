@@ -56,7 +56,7 @@ class Conllu(BaseReader):
         self.empty_parent = empty_parent
 
     @staticmethod
-    def parse_comment_line(line, root, document):
+    def parse_comment_line(line, root):
         """Parse one line of CoNLL-U and fill sent_id, text, newpar, newdoc in root."""
         sent_id_match = RE_SENT_ID.match(line)
         if sent_id_match is not None:
@@ -92,7 +92,7 @@ class Conllu(BaseReader):
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
-    def read_tree(self, document=None):
+    def read_tree(self):
         if self.filehandle is None:
             return None
 
@@ -105,7 +105,7 @@ class Conllu(BaseReader):
             if line == '':
                 break
             if line[0] == '#':
-                self.parse_comment_line(line, root, document)
+                self.parse_comment_line(line, root)
             else:
                 if self.separator == 'tab':
                     fields = line.split('\t')
