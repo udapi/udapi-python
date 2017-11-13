@@ -96,12 +96,18 @@ class BaseReader(Block):
 
         # There may be a tree left in the buffer when reading the last doc.
         if self._buffer:
-            # TODO list.pop(0) is inefficient, use collections.deque.popleft()
-            bundle = orig_bundles.pop(0) if orig_bundles else document.create_bundle()
-            bundle.add_tree(self._buffer)
-            if self._buffer.newdoc and self._buffer.newdoc is not True:
-                document.meta["docname"] = self._buffer.newdoc
+            root = self._buffer
             self._buffer = None
+            if orig_bundles:
+                # TODO list.pop(0) is inefficient, use collections.deque.popleft()
+                bundle = orig_bundles.pop(0)
+            else:
+                bundle = document.create_bundle()
+                if root._sent_id is not None:
+                    bundle.bundle_id = root._sent_id.split('/', 1)[0]
+            bundle.add_tree(root)
+            if root.newdoc and root.newdoc is not True:
+                document.meta["docname"] = root.newdoc
 
         filehandle = self.filehandle
         if filehandle is None:
@@ -123,9 +129,9 @@ class BaseReader(Block):
             trees_loaded += 1
 
             if self.ignore_sent_id:
-                root.sent_id = None
-            if root.sent_id is not None:
-                parts = root.sent_id.split('/', 1)
+                root._sent_id = None
+            if root._sent_id is not None:
+                parts = root._sent_id.split('/', 1)
                 bundle_id = parts[0]
                 if len(parts) == 2:
                     root.zone = parts[1]

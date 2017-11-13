@@ -42,6 +42,13 @@ class Root(Node):
     @property
     def sent_id(self):
         """ID of this tree, stored in the sent_id comment in CoNLL-U."""
+        if self._sent_id is not None:
+            return self._sent_id
+        zone = '/' + self.zone if self.zone else ''
+        if self._bundle is not None:
+            self._sent_id = self._bundle.address() + zone
+        else:
+            self._sent_id = '?' + zone
         return self._sent_id
 
     @sent_id.setter
@@ -52,6 +59,17 @@ class Root(Node):
             if len(parts) == 2:
                 self.zone = parts[1]
         self._sent_id = sent_id
+
+    def address(self):
+        """Full (document-wide) id of the root.
+
+        The general format of root nodes is:
+        root.bundle.bundle_id + '/' + root.zone, e.g. s123/en_udpipe.
+        If zone is empty, the slash is excluded as well, e.g. s123.
+        If bundle is missing (could occur during loading), '?' is used instead.
+        Root's address is stored in CoNLL-U files as sent_id (in a special comment).
+        """
+        return self.sent_id
 
     @property
     def bundle(self):
@@ -123,24 +141,6 @@ class Root(Node):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Attempts at changing the word order of root result in Exception."""
         raise Exception('Technical root cannot be shifted as it is always the first node')
-
-    def address(self):
-        """Full (document-wide) id of the root.
-
-        The general format of root nodes is:
-        root.bundle.bundle_id + '/' + root.zone, e.g. s123/en_udpipe.
-        If zone is empty, the slash is excluded as well, e.g. s123.
-        If bundle is missing (could occur during loading), '?' is used instead.
-        Root's address is stored in CoNLL-U files as sent_id (in a special comment).
-        TODO: Make sure root.sent_id returns always the same string as root.address.
-        """
-        zone = '/' + self.zone if self.zone else ''
-        if self._bundle is not None:
-            return self._bundle.address() + zone
-        elif self.sent_id is not None:
-            return self.sent_id + zone
-        else:
-            return '?' + zone
 
     # TODO document whether misc is a string or dict or it can be both
     def create_multiword_token(self, words=None, form=None, misc=None):
