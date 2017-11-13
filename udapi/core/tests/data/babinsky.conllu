@@ -18,3 +18,13 @@
 4	Babinskému	Babinský	PROPN	NNMS3-----A----	Animacy=Anim|Case=Dat|Gender=Masc|NameType=Sur|Number=Sing|Polarity=Pos	2	obj	_	SpaceAfter=No
 5	.	.	PUNCT	Z:-------------	_	2	punct	_	SpaceAfter=No
 
+# doc_json_entities = [{"id": "E3", "labels": ["Rumcajs"], "mentions": ["s3#m1"]}]
+# newdoc
+# sent_id = 3
+# text = Rumcajs je loupežník.
+# json_mentions = [{"id": "s3#m1", "label": "Rumcajs", "span": [1]}]
+1	Rumcajs	Rumcajs	PROPN	NNMS1-----A----	Animacy=Anim|Case=Nom|Gender=Masc|NameType=Sur|Number=Sing|Polarity=Pos	3	nsubj	_	_
+2	je	být	AUX	VB-S---3P-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act	3	cop	_	_
+3	loupežník	loupežník	NOUN	NNMS1-----A----	Animacy=Anim|Case=Nom|Gender=Masc|Number=Sing|Polarity=Pos	0	root	_	SpaceAfter=No
+4	.	.	PUNCT	Z:-------------	_	3	punct	_	SpaceAfter=No
+

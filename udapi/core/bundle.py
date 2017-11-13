@@ -88,6 +88,10 @@ class Bundle(object):
         self.check_zone(root.zone)
         root.bundle = self
         self.trees.append(root)
+        doc_json = root.json.get('__doc__')
+        if doc_json:
+            self._document.json.update(doc_json)
+            del root.json['__doc__']
         return root
 
     def remove(self):

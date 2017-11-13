@@ -79,8 +79,12 @@ class Conllu(BaseReader):
 
         json_match = RE_JSON.match(line)
         if json_match is not None:
-            container = document if json_match.group(1) == 'doc_' else root
-            container.json[json_match.group(2)] = json.loads(json_match.group(3))
+            container = root.json
+            if json_match.group(1) == 'doc_':
+                if '__doc__' not in root.json:
+                    root.json['__doc__'] = {}
+                container = root.json['__doc__']
+            container[json_match.group(2)] = json.loads(json_match.group(3))
             return
 
         root.comment += line[1:] + "\n"
