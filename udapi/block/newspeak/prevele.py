@@ -21,12 +21,22 @@ ANTONYMS = {
 class PreVele(Block):
     """Change all comparatives to vele-x and superlatives to převele-x."""
 
-    def __init__(self, morphodita_path='models/morphodita/cs/',
+    def __init__(self, synonyms, antonyms, morphodita_path='models/morphodita/cs/',
                  morphodita_model='czech-morfflex-131112.dict',
                  **kwargs):
         """Create the PreVele block object."""
         super().__init__(**kwargs)
+        self.antonyms = self.load_vocab(antonyms)
+        self.synonyms = self.load_vocab(synonyms)
         self.morphodita = MorphoDiTa(model=morphodita_path + morphodita_model)
+
+    def load_vocab(self, filename):
+        vocab = {}
+        with open(filename) as f:
+            for line in f:
+                (key, val) = line.strip().split('\t')
+                vocab[key] = val
+        return vocab
 
     def process_tree(self, tree):
 
@@ -42,7 +52,7 @@ class PreVele(Block):
         tree.text = tree.compute_text()
 
     def process_node(self, node):
-        antonym = ANTONYMS.get(node.lemma)
+        antonym = self.antonyms.get(node.lemma)
         if antonym is not None:
             if node.xpos[11] == 'N':
                 if node.form.lower().startswith('ne'):
@@ -55,6 +65,14 @@ class PreVele(Block):
                     node.lemma = antonym
                     node.xpos = node.xpos[:10] + 'N' + node.xpos[11:]
                     node.form = 'ne' + forms[0].form
+
+        synonym = self.synonyms.get(node.lemma)
+        if synonym is not None:
+            forms = self.morphodita.forms_of_lemma(synonym, node.xpos)
+            if forms:
+                node.lemma = synonym
+                node.form = forms[0].form
+  
 
         degree = node.feats["Degree"]
         if degree in ("Sup", "Cmp"):
