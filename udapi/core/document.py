@@ -29,9 +29,13 @@ class Document(object):
     def load_conllu(self, filename):
         """Load a document from a conllu-formatted file."""
         reader = ConlluReader(files=filename)
+        reader.before_process_document(self)
         reader.process_document(self)
+        reader.after_process_document(self)
 
     def store_conllu(self, filename):
         """Store a document into a conllu-formatted file."""
         writer = ConlluWriter(files=filename)
+        writer.before_process_document(self)
         writer.process_document(self)
+        writer.after_process_document(self)
