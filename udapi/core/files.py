@@ -29,16 +29,21 @@ class Files(object):
     >>> filehandle = files.next_filehandle()
     """
 
-    def __init__(self, filenames, encoding='utf-8'):
-        if isinstance(filenames, list):
+    def __init__(self, filenames=None, filehandle=None, encoding='utf-8'):
+        self.filehandle = None
+        self.file_number = 0
+        self.encoding = encoding
+        if filehandle is not None:
+            self.filehandle = filehandle
+            if filenames is not None:
+                raise ValueError('Cannot specify both "filenames" and "filehandle"')
+            self.filenames = ['<filehandle_input>']
+        elif isinstance(filenames, list):
             self.filenames = filenames
         elif isinstance(filenames, str):
             self.filenames = self.string_to_filenames(filenames)
         else:
             raise ValueError('Parameter "filenames" must be a list or str')
-        self.filehandle = None
-        self.encoding = encoding
-        self.file_number = 0
 
     def string_to_filenames(self, string):
         """Parse a pattern string (e.g. '!dir??/file*.txt') and return a list of matching filenames.
@@ -105,6 +110,8 @@ class Files(object):
             fhandle = None
         elif filename == '-':
             fhandle = sys.stdin
+        elif filename == '<filehandle_input>':
+            fhandle = self.filehandle
         else:
             filename_extension = filename.split('.')[-1]
             if filename_extension == 'gz':

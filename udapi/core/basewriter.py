@@ -9,10 +9,14 @@ from udapi.core.files import Files
 class BaseWriter(Block):
     """Base class for all reader blocks."""
 
-    def __init__(self, files='-', docname_as_file=False, encoding='utf-8', newline='\n', **kwargs):
+    def __init__(self, files='-', filehandle=None, docname_as_file=False, encoding='utf-8',
+                 newline='\n', **kwargs):
         super().__init__(**kwargs)
         self.orig_files = files
-        self.files = Files(filenames=files)
+        if filehandle is not None:
+            files = None
+            self.orig_files = '<filehandle>'
+        self.files = Files(filenames=files, filehandle=filehandle)
         self.encoding = encoding
         self.newline = newline
         self.docname_as_file = docname_as_file
@@ -34,6 +38,10 @@ class BaseWriter(Block):
         return self.files.next_filename()
 
     def before_process_document(self, document):
+        if self.orig_files == '<filehandle>':
+            logging.info('Writing to filehandle.')
+            sys.stdout = self.files.filehandle
+            return
         if self.orig_files == '-':
             if self.docname_as_file:
                 docname = document.meta.get('docname', None)
@@ -60,3 +68,7 @@ class BaseWriter(Block):
         else:
             logging.info('Writing to file %s.', filename)
             sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)
+
+    def after_process_document(self, document):
+        if self.orig_files == '<filehandle>':
+            sys.stdout = sys.__stdout__

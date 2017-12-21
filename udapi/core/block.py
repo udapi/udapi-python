@@ -31,6 +31,11 @@ class Block(object):
             if self._should_process_tree(tree):
                 self.process_tree(tree)
 
+    def apply_on_document(self, document):
+        self.before_process_document(document)
+        self.process_document(document)
+        self.after_process_document(document)
+
     def process_document(self, document):
         """Process a UD document"""
         for bundle_no, bundle in enumerate(document.bundles, 1):

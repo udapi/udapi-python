@@ -12,13 +12,14 @@ class BaseReader(Block):
     """Base class for all reader blocks."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, files='-', zone='keep', bundles_per_doc=0, encoding='utf-8',
+    def __init__(self, files='-', filehandle=None, zone='keep', bundles_per_doc=0, encoding='utf-8',
                  sent_id_filter=None, split_docs=False, ignore_sent_id=False, **kwargs):
         super().__init__(**kwargs)
-        self.files = Files(filenames=files)
+        if filehandle is not None:
+            files = None
+        self.files = Files(filenames=files, filehandle=filehandle, encoding=encoding)
         self.zone = zone
         self.bundles_per_doc = bundles_per_doc
-        self.encoding = encoding
         self._buffer = None
         self.finished = False
         self.sent_id_filter = None

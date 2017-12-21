@@ -82,11 +82,11 @@ def _import_blocks(block_names, block_args):
     for (block_id, block_name) in enumerate(block_names):
         # Importing module dynamically.
         sub_path, class_name = _parse_block_name(block_name)
-        
+
         if block_name.startswith('.'):
             # Private modules are recognized by a dot at the beginning
             module = block_name.lower()[1:]
-        else:            
+        else:
             module = "udapi.block." + sub_path + "." + class_name.lower()
         try:
             command = "from " + module + " import " + class_name + " as b" + str(block_id)
@@ -156,9 +156,7 @@ class Run(object):
             logging.info(" ---- ROUND ----")
             for block in blocks:
                 logging.info("Executing block " + block.__class__.__name__)
-                block.before_process_document(document)
-                block.process_document(document)
-                block.after_process_document(document)
+                block.apply_on_document(document)
 
             finished = True
 

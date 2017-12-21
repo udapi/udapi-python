@@ -1,7 +1,7 @@
 """Document class is a container for UD trees."""
 
+import io
 from udapi.core.bundle import Bundle
-
 from udapi.block.read.conllu import Conllu as ConlluReader
 from udapi.block.write.conllu import Conllu as ConlluWriter
 
@@ -26,16 +26,24 @@ class Document(object):
         bundle.number = len(self.bundles)
         return bundle
 
-    def load_conllu(self, filename):
+    def load_conllu(self, filename=None):
         """Load a document from a conllu-formatted file."""
         reader = ConlluReader(files=filename)
-        reader.before_process_document(self)
-        reader.process_document(self)
-        reader.after_process_document(self)
+        reader.apply_on_document(self)
 
     def store_conllu(self, filename):
         """Store a document into a conllu-formatted file."""
         writer = ConlluWriter(files=filename)
-        writer.before_process_document(self)
-        writer.process_document(self)
-        writer.after_process_document(self)
+        writer.apply_on_document(self)
+
+    def from_conllu_string(self, string):
+        """Load a document from a conllu-formatted string."""
+        reader = ConlluReader(filehandle=io.StringIO(string))
+        reader.apply_on_document(self)
+
+    def to_conllu_string(self):
+        """Return the document as a conllu-formatted string."""
+        fh = io.StringIO()
+        writer = ConlluWriter(filehandle=fh)
+        writer.apply_on_document(self)
+        return fh.getvalue()
