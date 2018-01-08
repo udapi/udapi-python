@@ -10,7 +10,7 @@ if sys.version_info < (3, 3):
 
 setup(
     name='udapi',
-    version='0.2.1',
+    version='0.2.2',
     description='Python framework for processing Universal Dependencies data',
     long_description=(
       'Udapi is an open-source framework providing API for processing '

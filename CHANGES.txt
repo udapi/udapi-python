@@ -1,0 +1,11 @@
+Udapi Change Log
+----------------
+See https://github.com/udapi/udapi-python/commits/master for details.
+
+0.2.2 2018-01-08
+ - support for loading/storing documents from/to strings
+ - allow private modules (starting with dot instead of udapi.block)
+ - MorphoDiTa wrapper udapi/tool/morphodita.py
+ - root.sent_id returns always the same as root.address()
+
+0.2.1 2017-10-23 the first PyPI release
