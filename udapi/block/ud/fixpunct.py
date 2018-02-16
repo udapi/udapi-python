@@ -48,10 +48,11 @@ FINAL_PUNCT = '.?!'
 class FixPunct(Block):
     """Make sure punctuation nodes are attached projectively."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, check_paired_punct_upos=False, **kwargs):
         """Create the ud.FixPunct block instance."""
         super().__init__(**kwargs)
         self._punct_type = None
+        self.check_paired_punct_upos = check_paired_punct_upos
 
     def process_tree(self, root):
         # First, make sure no PUNCT has children
@@ -163,6 +164,9 @@ class FixPunct(Block):
         node.deprel = "punct"
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
+        if self.check_paired_punct_upos and opening_node.upos != 'PUNCT':
+            return
+
         nested_level = 0
         for node in root.descendants[opening_node.ord:]:
             if node.form == closing_punct:
