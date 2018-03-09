@@ -48,11 +48,12 @@ FINAL_PUNCT = '.?!'
 class FixPunct(Block):
     """Make sure punctuation nodes are attached projectively."""
 
-    def __init__(self, check_paired_punct_upos=False, **kwargs):
+    def __init__(self, check_paired_punct_upos=False, copy_to_enhanced=False, **kwargs):
         """Create the ud.FixPunct block instance."""
         super().__init__(**kwargs)
         self._punct_type = None
         self.check_paired_punct_upos = check_paired_punct_upos
+        self.copy_to_enhanced = copy_to_enhanced
 
     def process_tree(self, root):
         # First, make sure no PUNCT has children
@@ -86,6 +87,11 @@ class FixPunct(Block):
                 for another_node in root.descendants:
                     if another_node.parent != root and another_node.udeprel == 'root':
                         another_node.udeprel = 'punct'
+
+        if self.copy_to_enhanced:
+            for node in root.descendants:
+                if node.upos == "PUNCT":
+                    node.deps = [{'parent': node.parent, 'deprel': 'punct'}]
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
