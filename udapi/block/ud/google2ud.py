@@ -498,7 +498,7 @@ class Google2ud(Convert1to2):
             if self.lang == 'fr' and node.parent.form in {'M.', 'Mme', 'Dr'}:
                 node.deprel = 'flat:name'
         elif node.deprel == 'prt':
-            if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no'}:
+            if self.lang in {'en', 'de', 'nl', 'sv', 'da', 'no', 'th'}:
                 node.deprel = 'compound:prt'
             elif self.lang == 'tr':
                 node.deprel = 'advmod:emph'
