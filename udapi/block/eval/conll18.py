@@ -106,7 +106,8 @@ UNIV_FEATS = {'PronType', 'NumType', 'Poss', 'Reflex', 'Foreign', 'Abbr', 'Gende
 class Conll18(BaseWriter):
     """Evaluate LAS, UAS, MLAS and BLEX."""
 
-    def __init__(self, gold_zone='gold', print_raw=False, print_results=True, **kwargs):
+    def __init__(self, gold_zone='gold', print_raw=False, print_results=True, print_counts=False,
+                 **kwargs):
         """Args:
         gold_zone - Which zone contains the gold-standard trees (the other zone contains "pred")?
         print_raw - Print raw counts (pred, gold, aligned, correct) for each sentence.
@@ -114,12 +115,17 @@ class Conll18(BaseWriter):
             The parameter print_raw specifies a given metric
             (UAS, LAS, MLAS, BLEX, UPOS, XPOS, Feats, Lemma) or is 0 (or False) by default.
         print_results - Print a table with overall results after all document are processed.
+        print_counts - Print counts of correct/gold/system instead of prec/rec/f1 for all metrics.
         """
         super().__init__(**kwargs)
         self.gold_zone = gold_zone
         self.total_count = Counter()
         self.print_raw = print_raw
         self.print_results = print_results
+        self.print_counts = print_counts
+
+    def _ufeats(self, feats):
+        return '|'.join(sorted(x for x in feats.split('|') if x.split('=', 1)[0] in UNIV_FEATS))
 
     def process_tree(self, tree):
         gold_tree = tree.bundle.get_tree(self.gold_zone)
@@ -135,9 +141,10 @@ class Conll18(BaseWriter):
             edit, pred_lo, pred_hi, gold_lo, gold_hi = diff
             if edit == 'equal':
                 aligned.extend(zip(pred_nodes[pred_lo:pred_hi], gold_nodes[gold_lo:gold_hi]))
-        align_map = {tree: gold_tree}
+        align_map, feats_match = {tree: gold_tree}, {}
         for p_node, g_node in aligned:
             align_map[p_node] = g_node
+            feats_match[p_node] = self._ufeats(str(p_node.feats)) == self._ufeats(str(g_node.feats))
 
         count = Counter()
         count['pred'] = len(pred_nodes)
@@ -148,9 +155,10 @@ class Conll18(BaseWriter):
         count['alig_cont'] = len([n for _, n in aligned if n.udeprel in CONTENT])
 
         for p_node, g_node in aligned:
-            for attr in ('UPOS', 'XPOS', 'Feats', 'Lemma'):
-                if p_node.get_attrs([attr.lower()]) == g_node.get_attrs([attr.lower()]):
-                    count[attr] += 1
+            count['UPOS'] += 1 if p_node.upos == g_node.upos else 0
+            count['XPOS'] += 1 if p_node.xpos == g_node.xpos else 0
+            count['Lemmas'] += 1 if g_node.lemma == '_' or p_node.lemma == g_node.lemma else 0
+            count['UFeats'] += 1 if feats_match[p_node] else 0
             if align_map.get(p_node.parent) == g_node.parent:
                 count['UAS'] += 1
                 if p_node.udeprel == g_node.udeprel:
@@ -159,7 +167,7 @@ class Conll18(BaseWriter):
                         count['CLAS'] += 1
                         if g_node.lemma == '_' or g_node.lemma == p_node.lemma:
                             count['BLEX'] += 1
-                        if self._morpho_match(p_node, g_node, align_map):
+                        if self._morpho_match(p_node, g_node, align_map, feats_match):
                             count['MLAS'] += 1
         self.total_count.update(count)
 
@@ -171,24 +179,20 @@ class Conll18(BaseWriter):
                 scores = [str(count[s]) for s in ('pred', 'gold', 'Words', self.print_raw)]
             print(' '.join(scores))
 
-    def _morpho_match(self, p_node, g_node, align_map, check_children=True):
-        if p_node.upos != g_node.upos:
+    def _morpho_match(self, p_node, g_node, align_map, feats_match):
+        if p_node.upos != g_node.upos or not feats_match[p_node]:
             return False
-        for feat in UNIV_FEATS:
-            if p_node.feats[feat] != g_node.feats[feat]:
+        p_children = [c for c in p_node.children if c.udeprel in FUNCTIONAL]
+        g_children = [c for c in g_node.children if c.udeprel in FUNCTIONAL]
+        if len(p_children) != len(g_children):
+            return False
+        for p_child, g_child in zip(p_children, g_children):
+            if align_map.get(p_child) != g_child:
                 return False
-        if check_children:
-            p_children = [c for c in p_node.children if c.udeprel in FUNCTIONAL]
-            g_children = [c for c in g_node.children if c.udeprel in FUNCTIONAL]
-            if len(p_children) != len(g_children):
+            if p_child.udeprel != g_child.udeprel:
                 return False
-            for p_child, g_child in zip(p_children, g_children):
-                if align_map.get(p_child) != g_child:
-                    return False
-                if p_child.udeprel != g_child.udeprel:
-                    return False
-                if not self._morpho_match(p_child, g_child, None, check_children=False):
-                    return False
+            if p_child.upos != g_child.upos or not feats_match[p_child]:
+                return False
         return True
 
     def process_end(self):
@@ -198,20 +202,28 @@ class Conll18(BaseWriter):
         # Redirect the default filehandle to the file specified by self.files
         self.before_process_document(None)
 
-        metrics = ('Words', 'UPOS', 'XPOS', 'Feats', 'Lemma', 'UAS', 'LAS', 'CLAS', 'BLEX', 'MLAS')
-        print("Metric     | Precision |    Recall |  F1 Score | AligndAcc")
+        metrics = ('Words', 'UPOS', 'XPOS', 'UFeats', 'Lemmas', 'UAS', 'LAS', 'CLAS', 'MLAS', 'BLEX')
+        if self.print_counts:
+            print("Metric     | Correct   |      Gold | Predicted | Aligned")
+        else:
+            print("Metric     | Precision |    Recall |  F1 Score | AligndAcc")
         print("-----------+-----------+-----------+-----------+-----------")
         for metric in metrics:
+            correct = self.total_count[metric]
             if metric in {'CLAS', 'BLEX', 'MLAS'}:
                 pred, gold = self.total_count['pred_cont'], self.total_count['gold_cont']
                 alig = self.total_count['alig_cont']
             else:
                 pred, gold = self.total_count['pred'], self.total_count['gold']
                 alig = self.total_count['Words']
-            correct = self.total_count[metric]
-            precision, recall, fscore, alignacc = prec_rec_f1(correct, pred, gold, alig)
-            print("{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{:10.2f}".format(
-                metric, 100 * precision, 100 * recall, 100 * fscore, 100 * alignacc))
+            if self.print_counts:
+                print("{:11}|{:10} |{:10} |{:10} |{:10}".format(
+                    metric, correct, gold, pred, alig))
+            else:
+                precision, recall, fscore, alignacc = prec_rec_f1(correct, pred, gold, alig)
+                alignacc = "{:10.2f}".format(100 * alignacc) if metric != 'Words' else ""
+                print("{:11}|{:10.2f} |{:10.2f} |{:10.2f} |{}".format(
+                    metric, 100 * precision, 100 * recall, 100 * fscore, alignacc))
 
 
 def prec_rec_f1(correct, pred, gold, alig=0):

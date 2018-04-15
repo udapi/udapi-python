@@ -76,9 +76,22 @@ class ResegmentGold(Block):
                             words.extend(token.words)
                         else:
                             words.append(token)
+                    next_p_subroot = None
+                    for word in words:
+                        if word.parent == word.root:
+                            next_p_subroot = word
+                        if word.deprel.startswith('wrong-'):
+                            word.deprel = word.deprel[6:]
                     next_p_tree.steal_nodes(words)
                     self.choose_root(p_tree, g_tree)
-                    self.choose_root(next_p_tree, document.bundles[bundle_no + 1].trees[0])
+                    next_p_subroots = next_p_tree.children
+                    if len(next_p_subroots) > 1:
+                        if next_p_subroot:
+                            for false_subroot in (n for n in next_p_subroots if n != next_p_subroot):
+                                false_subroot.parent = next_p_subroot
+                                false_subroot.deprel = 'wrong-' + false_subroot.deprel
+                        else:
+                            self.choose_root(next_p_tree, document.bundles[bundle_no + 1].trees[0])
                     pred_trees.append(next_p_tree)
                     bundle.add_tree(p_tree)
                     break
@@ -107,7 +120,7 @@ class ResegmentGold(Block):
         """Prevent multiple roots, which are forbidden in the evaluation script."""
         p_subroots = p_tree.children
         if len(p_subroots) > 1:
-            g_subroot_form = g_tree.children[0]
+            g_subroot_form = g_tree.children[0].form
             p_subroot = next((n for n in p_subroots if n.form == g_subroot_form), p_subroots[0])
             for false_subroot in (n for n in p_subroots if n != p_subroot):
                 false_subroot.parent = p_subroot
