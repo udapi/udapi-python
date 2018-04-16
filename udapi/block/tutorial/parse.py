@@ -9,10 +9,18 @@ udapy read.Conllu zone=gold files=sample.conllu \
       util.MarkDiff gold_zone=gold \
       write.TextModeTreesHtml marked_only=1 files=parse-diff.html
 """
+# nickname = xy123
+# TODO: make up a unique nickname and edit the previous line
+# if you want your results to be listed on the NPFL070 web (under that nickname).
+# Delete the line if you don't want to listed on the web.
 from udapi.core.block import Block
 
 class Parse(Block):
     """Dependency parsing."""
+
+    def __init__(self, language='en', **kwargs):
+        super().__init__(**kwargs)
+        self.language = language
 
     def process_tree(self, root):
         # TODO: Your task: implement a better heuristics than "right chain"
