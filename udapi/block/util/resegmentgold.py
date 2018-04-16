@@ -22,6 +22,10 @@ class ResegmentGold(Block):
         if not document.bundles:
             return
         pred_trees = self.extract_pred_trees(document)
+        was_subroot = set()
+        for pred_tree in pred_trees:
+            for n in pred_tree.children:
+                was_subroot.add(n)
 
         for bundle_no, bundle in enumerate(document.bundles):
             g_tree = bundle.trees[0]
@@ -33,13 +37,16 @@ class ResegmentGold(Block):
                 continue
 
             # Make sure that p_tree contains enough nodes.
+            moved_roots = []
             while len(p_chars) < len(g_chars):
                 if not pred_trees:
                     raise ValueError('no pred_trees:\n%s\n%s' % (p_chars, g_chars))
                 new_p_tree = pred_trees.pop()
                 p_chars += ''.join(t.form for t in new_p_tree.token_descendants).replace(' ', '')
+                moved_roots.extend(new_p_tree.children)
                 p_tree.steal_nodes(new_p_tree.descendants)
-            self.choose_root(p_tree, g_tree)
+            self.choose_root(p_tree, was_subroot, g_tree)
+
             if not p_chars.startswith(g_chars):
                 raise ValueError('sent_id=%s: !p_chars.startswith(g_chars):\np_chars=%s\ng_chars=%s'
                                  % (g_tree.sent_id, p_chars, g_chars))
@@ -61,7 +68,8 @@ class ResegmentGold(Block):
                     if index + 1 == len(tokens):
                         next_p_tree = Root(zone=p_tree.zone)
                         pred_trees.append(next_p_tree)
-                        next_p_tree.create_child(deprel='wrong', form=p_chars[len(g_chars):])
+                        next_p_tree.create_child(deprel='wrong', form=p_chars[len(g_chars):],
+                                                 misc='Rehanged=Yes')
                         bundle.add_tree(p_tree)
                         break
                     else:
@@ -76,22 +84,12 @@ class ResegmentGold(Block):
                             words.extend(token.words)
                         else:
                             words.append(token)
-                    next_p_subroot = None
                     for word in words:
-                        if word.parent == word.root:
-                            next_p_subroot = word
-                        if word.deprel.startswith('wrong-'):
-                            word.deprel = word.deprel[6:]
+                        if word in was_subroot:
+                            del word.misc['Rehanged']
                     next_p_tree.steal_nodes(words)
-                    self.choose_root(p_tree, g_tree)
-                    next_p_subroots = next_p_tree.children
-                    if len(next_p_subroots) > 1:
-                        if next_p_subroot:
-                            for false_subroot in (n for n in next_p_subroots if n != next_p_subroot):
-                                false_subroot.parent = next_p_subroot
-                                false_subroot.deprel = 'wrong-' + false_subroot.deprel
-                        else:
-                            self.choose_root(next_p_tree, document.bundles[bundle_no + 1].trees[0])
+                    self.choose_root(p_tree, was_subroot, g_tree)
+                    self.choose_root(next_p_tree, was_subroot, document.bundles[bundle_no + 1].trees[0])
                     pred_trees.append(next_p_tree)
                     bundle.add_tree(p_tree)
                     break
@@ -116,12 +114,16 @@ class ResegmentGold(Block):
         return pred_trees
 
     @staticmethod
-    def choose_root(p_tree, g_tree):
+    def choose_root(p_tree, was_subroot, g_tree):
         """Prevent multiple roots, which are forbidden in the evaluation script."""
-        p_subroots = p_tree.children
-        if len(p_subroots) > 1:
+        possible_subroots = [n for n in p_tree.children if n in was_subroot]
+        if possible_subroots:
             g_subroot_form = g_tree.children[0].form
-            p_subroot = next((n for n in p_subroots if n.form == g_subroot_form), p_subroots[0])
-            for false_subroot in (n for n in p_subroots if n != p_subroot):
-                false_subroot.parent = p_subroot
-                false_subroot.deprel = 'wrong-' + false_subroot.deprel
+            the_subroot = next((n for n in possible_subroots if n.form == g_subroot_form), possible_subroots[0])
+        else:
+            the_subroot = p_tree.children[0]
+            the_subroot.misc['Rehanged'] = 'Yes'
+        for subroot in p_tree.children:
+            if subroot is not the_subroot:
+                subroot.parent = the_subroot
+                subroot.misc['Rehanged'] = 'Yes'

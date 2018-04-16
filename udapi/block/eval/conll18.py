@@ -159,7 +159,7 @@ class Conll18(BaseWriter):
             count['XPOS'] += 1 if p_node.xpos == g_node.xpos else 0
             count['Lemmas'] += 1 if g_node.lemma == '_' or p_node.lemma == g_node.lemma else 0
             count['UFeats'] += 1 if feats_match[p_node] else 0
-            if align_map.get(p_node.parent) == g_node.parent:
+            if align_map.get(p_node.parent) == g_node.parent and not p_node.misc['Rehanged']:
                 count['UAS'] += 1
                 if p_node.udeprel == g_node.udeprel:
                     count['LAS'] += 1
@@ -182,7 +182,7 @@ class Conll18(BaseWriter):
     def _morpho_match(self, p_node, g_node, align_map, feats_match):
         if p_node.upos != g_node.upos or not feats_match[p_node]:
             return False
-        p_children = [c for c in p_node.children if c.udeprel in FUNCTIONAL]
+        p_children = [c for c in p_node.children if c.udeprel in FUNCTIONAL and not c.misc['Rehanged']]
         g_children = [c for c in g_node.children if c.udeprel in FUNCTIONAL]
         if len(p_children) != len(g_children):
             return False
