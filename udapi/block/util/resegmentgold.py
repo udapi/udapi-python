@@ -118,8 +118,11 @@ class ResegmentGold(Block):
         """Prevent multiple roots, which are forbidden in the evaluation script."""
         possible_subroots = [n for n in p_tree.children if n in was_subroot]
         if possible_subroots:
-            g_subroot_form = g_tree.children[0].form
-            the_subroot = next((n for n in possible_subroots if n.form == g_subroot_form), possible_subroots[0])
+            the_subroot = possible_subroots[0]
+            g_subroot = g_tree.children[0]
+            possible_subroots = sorted([n for n in possible_subroots if n.form == g_subroot.form],
+                                       key=lambda n: abs(n.ord - g_subroot.ord))
+            the_subroot = possible_subroots[0] if possible_subroots else the_subroot
         else:
             the_subroot = p_tree.children[0]
             the_subroot.misc['Rehanged'] = 'Yes'
