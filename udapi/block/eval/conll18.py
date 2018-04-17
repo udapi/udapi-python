@@ -11,6 +11,7 @@ An example usage and output::
 
     $ udapy read.Conllu zone=gold files=gold.conllu \
             read.Conllu zone=pred files=pred.conllu ignore_sent_id=1 \
+            util.ResegmentGold \
             eval.Conll18
     Metric     | Precision |    Recall |  F1 Score | AligndAcc
     -----------+-----------+-----------+-----------+-----------
@@ -159,6 +160,8 @@ class Conll18(BaseWriter):
             count['XPOS'] += 1 if p_node.xpos == g_node.xpos else 0
             count['Lemmas'] += 1 if g_node.lemma == '_' or p_node.lemma == g_node.lemma else 0
             count['UFeats'] += 1 if feats_match[p_node] else 0
+            if feats_match[p_node] and p_node.upos == g_node.upos and p_node.xpos == g_node.xpos:
+                count['AllTags'] += 1
             if align_map.get(p_node.parent) == g_node.parent and not p_node.misc['Rehanged']:
                 count['UAS'] += 1
                 if p_node.udeprel == g_node.udeprel:
@@ -168,7 +171,8 @@ class Conll18(BaseWriter):
                         if g_node.lemma == '_' or g_node.lemma == p_node.lemma:
                             count['BLEX'] += 1
                         if self._morpho_match(p_node, g_node, align_map, feats_match):
-                            count['MLAS'] += 1
+                            if not p_node.misc['FuncChildMissing']:
+                                count['MLAS'] += 1
         self.total_count.update(count)
 
         if self.print_raw:
@@ -202,7 +206,8 @@ class Conll18(BaseWriter):
         # Redirect the default filehandle to the file specified by self.files
         self.before_process_document(None)
 
-        metrics = ('Words', 'UPOS', 'XPOS', 'UFeats', 'Lemmas', 'UAS', 'LAS', 'CLAS', 'MLAS', 'BLEX')
+        metrics = ('Words', 'UPOS', 'XPOS', 'UFeats', 'AllTags',
+                   'Lemmas', 'UAS', 'LAS', 'CLAS', 'MLAS', 'BLEX')
         if self.print_counts:
             print("Metric     | Correct   |      Gold | Predicted | Aligned")
         else:

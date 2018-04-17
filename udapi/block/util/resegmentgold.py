@@ -4,6 +4,7 @@ from udapi.core.block import Block
 from udapi.core.mwt import MWT
 from udapi.core.root import Root
 
+FUNCTIONAL = {'aux', 'cop', 'mark', 'det', 'clf', 'case', 'cc'}
 
 class ResegmentGold(Block):
     """Sentence-align two zones (gold and pred) and resegment the pred zone.
@@ -87,6 +88,12 @@ class ResegmentGold(Block):
                     for word in words:
                         if word in was_subroot:
                             del word.misc['Rehanged']
+                        if word.parent is not p_tree and word.parent not in words:
+                            if word.udeprel in FUNCTIONAL:
+                                word.parent.misc['FuncChildMissing'] = 'Yes'
+                        for child in word.children:
+                            if child not in words and child.udeprel in FUNCTIONAL:
+                                word.misc['FuncChildMissing'] = 'Yes'
                     next_p_tree.steal_nodes(words)
                     self.choose_root(p_tree, was_subroot, g_tree)
                     self.choose_root(next_p_tree, was_subroot, document.bundles[bundle_no + 1].trees[0])
