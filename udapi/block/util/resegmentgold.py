@@ -122,7 +122,7 @@ class ResegmentGold(Block):
 
     @staticmethod
     def choose_root(p_tree, was_subroot, g_tree):
-        """Prevent multiple roots, which are forbidden in the evaluation script."""
+        """Prevent multiple roots, which are forbidden in CoNLL-U."""
         possible_subroots = [n for n in p_tree.children if n in was_subroot]
         if possible_subroots:
             the_subroot = possible_subroots[0]
