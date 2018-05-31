@@ -48,7 +48,7 @@ class Root(Node):
         if self._bundle is not None:
             self._sent_id = self._bundle.address() + zone
         else:
-            self._sent_id = '?' + zone
+            return '?' + zone
         return self._sent_id
 
     @sent_id.setter
