@@ -1,6 +1,7 @@
 """Files is a helper class for iterating over filenames."""
 
 import glob
+import io
 import sys
 import os.path
 import bz2
@@ -109,7 +110,7 @@ class Files(object):
         if filename is None:
             fhandle = None
         elif filename == '-':
-            fhandle = sys.stdin
+            fhandle = io.TextIOWrapper(sys.stdin.buffer, encoding=self.encoding)
         elif filename == '<filehandle_input>':
             fhandle = self.filehandle
         else:
