@@ -18,7 +18,7 @@ RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
-    def __init__(self, strict=False, separator='tab', empty_parent='warn',
+    def __init__(self, strict=False, separator='tab', empty_parent='warn', fix_cycles=False,
                  attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
         """Create the Conllu reader object.
 
@@ -54,6 +54,7 @@ class Conllu(BaseReader):
         self.strict = strict
         self.separator = separator
         self.empty_parent = empty_parent
+        self.fix_cycles = fix_cycles
 
     @staticmethod
     def parse_comment_line(line, root):
@@ -174,6 +175,13 @@ class Conllu(BaseReader):
         for node_ord, node in enumerate(nodes[1:], 1):
             try:
                 node.parent = nodes[parents[node_ord]]
+            # TODO add a special Exception class for cycles
+            except ValueError as e:
+                if self.fix_cycles:
+                    logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", e)
+                    node.parent = root
+                else:
+                    raise
             except IndexError:
                 raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
 
