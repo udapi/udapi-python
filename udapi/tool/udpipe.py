@@ -22,14 +22,17 @@ class UDPipe:
 
     def tag_parse_tree(self, root):
         """Tag (+lemmatize, fill FEATS) and parse a tree (already tokenized)."""
+        descendants = root.descendants
+        if not descendants:
+            return
         pipeline = Pipeline(self.tool, 'horizontal', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
-        in_data = " ".join([n.form for n in root.descendants])
+        in_data = " ".join([n.form for n in descendants])
         out_data = pipeline.process(in_data, self.error)
         if self.error.occurred():
             raise IOError("UDPipe error " + self.error.message)
         self.conllu_reader.files.filehandle = io.StringIO(out_data)
         parsed_root = self.conllu_reader.read_tree()
-        nodes = [root] + root.descendants
+        nodes = [root] + descendants
         for parsed_node in parsed_root.descendants:
             node = nodes[parsed_node.ord]
             node.parent = nodes[parsed_node.parent.ord]
