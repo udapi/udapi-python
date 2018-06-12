@@ -3,10 +3,17 @@ import logging
 
 
 class Block(object):
-    """The smallest processing unit for processing Universal Dependencies data."""
+    """The smallest processing unit for processing Universal Dependencies data.
 
-    def __init__(self, zones='all'):
+    Parameters:
+    zones: which zone to process (default="all")
+    if_empty_tree: what to do when encountering a tree with no nodes.
+        Possible values are: process (default), skip, skip_warn, fail, delete.
+    """
+
+    def __init__(self, zones='all', if_empty_tree='process'):
         self.zones = zones
+        self.if_empty_tree = if_empty_tree
 
     def process_start(self):
         """A hook method that is executed before processing UD data"""
@@ -52,6 +59,20 @@ class Block(object):
         pass
 
     def _should_process_tree(self, tree):
+        if self.if_empty_tree != 'process' and not tree.descendants:
+            if self.if_empty_tree == 'skip':
+                return False
+            elif self.if_empty_tree == 'delete':
+                tree.remove()
+                return False
+            elif self.if_empty_tree == 'skip_warn':
+                logging.warning("Tree %s is empty", tree)
+                return False
+            elif self.if_empty_tree == 'fail':
+                raise Exception("Tree %s is empty" % tree)
+            else:
+                raise ValueError("Unknown value for if_empty_tree: "
+                                 + self.if_empty_tree)
         if self.zones == 'all':
             return True
         if self.zones == '' and tree.zone == '':
