@@ -14,7 +14,7 @@ class Html(BaseWriter):
     For offline use, we need to download first three JavaScript libraries::
 
       wget https://code.jquery.com/jquery-2.1.4.min.js
-      wget https://cdn.rawgit.com/eligrey/FileSaver.js/master/FileSaver.min.js
+      wget https://cdn.rawgit.com/eligrey/FileSaver.js/1.3.4r/FileSaver.min.js
       wget https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js
       udapy write.Html path_to_js=. < file.conllu > file.html
       firefox file.html
@@ -65,7 +65,7 @@ class Html(BaseWriter):
     def process_document(self, doc):
         if self.path_to_js == 'web':
             jquery = 'https://code.jquery.com/jquery-2.1.4.min.js'
-            fsaver = 'https://cdn.rawgit.com/eligrey/FileSaver.js/master/FileSaver.min.js'
+            fsaver = 'https://cdn.rawgit.com/eligrey/FileSaver.js/1.3.4/FileSaver.min.js'
             js_t_v = 'https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js'
         else:
             jquery = self.path_to_js + '/jquery-2.1.4.min.js'
