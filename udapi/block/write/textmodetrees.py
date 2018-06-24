@@ -29,7 +29,7 @@ class TextModeTrees(BaseWriter):
 
     In scenario (examples of other parameters)::
 
-      write.TextModeTrees indent=1 print_sent_id=1 print_sentence=1
+      write.TextModeTrees indent=2 print_sent_id=0 print_sentence=1 layout=align
       write.TextModeTrees zones=en,cs attributes=form,lemma,upos minimize_cross=0
 
     This block prints dependency trees in plain-text format.
@@ -47,7 +47,7 @@ class TextModeTrees(BaseWriter):
       10 boxer boxer NOUN  NN  Number=Sing          4  acl:relcl _ SpaceAfter=No
       11 .     .     PUNCT .   _                    2  punct     _ _
 
-    will be printed (with the default parameters) as::
+    will be printed (with the default parameters plus hints=0) as::
 
       ─┮
        │ ╭─╼ I PRON nsubj
@@ -62,6 +62,51 @@ class TextModeTrees(BaseWriter):
          │                        ╰─┶ boxer NOUN acl:relcl
          ╰─╼ . PUNCT punct
 
+    With ``layout=compact``, the output will be (note the nodes "today" and ",")::
+
+      ─┮
+       │ ╭─╼ I PRON nsubj
+       ╰─┾ saw VERB root
+         │   ╭─╼ a DET det
+         ┡───┾ dog NOUN dobj
+         ┡─╼ │ today NOUN nmod:tmod
+         ┡─╼ │ , PUNCT punct
+         │   │ ╭─╼ which DET nsubj
+         │   │ ┢─╼ was VERB cop
+         │   │ ┢─╼ a DET det
+         │   ╰─┶ boxer NOUN acl:relcl
+         ╰─╼ . PUNCT punct
+
+    With ``layout=align-words``, the output will be::
+
+      ─┮
+       │ ╭─╼       I PRON nsubj
+       ╰─┾         saw VERB root
+         │   ╭─╼   a DET det
+         ┡───┾     dog NOUN dobj
+         ┡─╼ │     today NOUN nmod:tmod
+         ┡─╼ │     , PUNCT punct
+         │   │ ╭─╼ which DET nsubj
+         │   │ ┢─╼ was VERB cop
+         │   │ ┢─╼ a DET det
+         │   ╰─┶   boxer NOUN acl:relcl
+         ╰─╼       . PUNCT punct
+
+    And finally with ``layout=align``::
+
+      ─┮
+       │ ╭─╼       I     PRON  nsubj
+       ╰─┾         saw   VERB  root
+         │   ╭─╼   a     DET   det
+         ┡───┾     dog   NOUN  dobj
+         ┡─╼ │     today NOUN  nmod:tmod
+         ┡─╼ │     ,     PUNCT punct
+         │   │ ╭─╼ which DET   nsubj
+         │   │ ┢─╼ was   VERB  cop
+         │   │ ┢─╼ a     DET   det
+         │   ╰─┶   boxer NOUN  acl:relcl
+         ╰─╼       .     PUNCT punct
+
     Some non-projective trees cannot be printed witout crossing edges.
     TextModeTrees uses a special "bridge" symbol ─╪─ to mark this::
 
@@ -71,7 +116,7 @@ class TextModeTrees(BaseWriter):
        ╰─┶ 3 │
              ╰─╼ 4
 
-    By default parameter ``color=auto``, so if the output is printed to the console
+    With ``color=auto`` (which is the default), if the output is printed to the console
     (not file or pipe), each node attribute is printed in different color.
     If a given node's MISC contains any of `ToDo`, `Bug` or `Mark` attributes
     (or any other specified in the parameter `mark`), the node will be highlighted
@@ -88,7 +133,8 @@ class TextModeTrees(BaseWriter):
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
-                 mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, hints=True, **kwargs):
+                 mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, hints=True,
+                 layout='classic', **kwargs):
         """Create new TextModeTrees block object.
 
         Args:
@@ -117,6 +163,10 @@ class TextModeTrees(BaseWriter):
         marked_only: print only trees containing one or more marked nodes/comments. Default=False.
         hints: use thick-marked segments (┡ and ┢) to distinguish whether a given node precedes
             or follows its parent. Default=True. If False, plain ├ is used in both cases.
+        layout: 'classic' (default) shows word attributes immediately next to each node,
+            'compact' never print edges after (right to) words even in non-projectivities,
+            'align-words' as 'compact' but all first attributes (forms by default) are aligned,
+            'align' as 'align-words' but all attributes are aligned in columns.
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -130,6 +180,7 @@ class TextModeTrees(BaseWriter):
         self.print_comments = print_comments
         self.mark = mark
         self.marked_only = marked_only
+        self.layout = layout
 
         # _draw[is_bottommost][is_topmost]
         line = '─' * indent
@@ -211,7 +262,8 @@ class TextModeTrees(BaseWriter):
                 botmost = idx == max_idx
                 if idx_node is node:
                     self._add(idx, self._draw[botmost][topmost])
-                    self.add_node(idx, node)
+                    if self.layout == 'classic':
+                        self.add_node(idx, node)
                 else:
                     if idx_node.parent is not node:
                         self._add(idx, self._vert[self._ends(idx, '─╭╰╪┡┢')])
@@ -219,13 +271,25 @@ class TextModeTrees(BaseWriter):
                         self._add(idx, self._space[idx < node.ord][topmost or botmost])
                         if idx_node.is_leaf():
                             self._add(idx, self._horiz)
-                            self.add_node(idx, idx_node)
+                            if self.layout == 'classic':
+                                self.add_node(idx, idx_node)
                         else:
                             stack.append(idx_node)
 
             # sorting the stack to minimize crossings of edges
             if self.minimize_cross:
                 stack = sorted(stack, key=lambda x: -self._gaps[x.ord])
+
+        if self.layout != 'classic':
+            columns_attrs = [[a] for a in self.attrs] if self.layout == 'align' else [self.attrs]
+            for col_attrs in columns_attrs:
+                self.attrs = col_attrs
+                max_length = max(self.lengths)
+                for idx, node in enumerate(allnodes):
+                    if self.layout.startswith('align'):
+                        self._add(idx, ' ' * (max_length - self.lengths[idx]))
+                    self.add_node(idx, node)
+            self.attrs = [a for sublist in columns_attrs for a in sublist]
 
         # Print headers (if required) and the tree itself
         self.print_headers(root)
