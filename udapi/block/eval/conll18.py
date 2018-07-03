@@ -26,7 +26,7 @@ An example usage and output::
 
 
 For evaluating multiple systems and testsets (as in CoNLL2018)
-stored in `systems/testset_name/system_name.conllu` you can use::
+stored in `systems/system_name/testset_name.conllu` you can use::
 
     #!/bin/bash
     SYSTEMS=`ls systems`
