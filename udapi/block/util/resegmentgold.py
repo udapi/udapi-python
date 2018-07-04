@@ -1,5 +1,6 @@
 """util.ResegmentGold is a block for sentence alignment and re-segmentation of two zones."""
 import logging
+import unicodedata
 from udapi.core.block import Block
 from udapi.core.mwt import MWT
 from udapi.core.root import Root
@@ -31,8 +32,10 @@ class ResegmentGold(Block):
         for bundle_no, bundle in enumerate(document.bundles):
             g_tree = bundle.trees[0]
             p_tree = pred_trees.pop()
-            g_chars = ''.join(t.form for t in g_tree.token_descendants).replace(' ', '')
-            p_chars = ''.join(t.form for t in p_tree.token_descendants).replace(' ', '')
+            g_chars = ''.join(t.form for t in g_tree.token_descendants)
+            p_chars = ''.join(t.form for t in p_tree.token_descendants)
+            g_chars = ''.join(filter(lambda c: unicodedata.category(c) != "Zs", g_chars))
+            p_chars = ''.join(filter(lambda c: unicodedata.category(c) != "Zs", p_chars))
             if g_chars == p_chars:
                 bundle.add_tree(p_tree)
                 continue
