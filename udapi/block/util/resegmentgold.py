@@ -20,6 +20,10 @@ class ResegmentGold(Block):
         super().__init__(**kwargs)
         self.gold_zone = gold_zone
 
+    @staticmethod
+    def _strip_spaces(string):
+        return ''.join(filter(lambda c: unicodedata.category(c) != "Zs", string))
+
     def process_document(self, document):
         if not document.bundles:
             return
@@ -32,8 +36,8 @@ class ResegmentGold(Block):
         for bundle_no, bundle in enumerate(document.bundles):
             g_tree = bundle.trees[0]
             p_tree = pred_trees.pop()
-            g_chars = ''.join(t.form for t in g_tree.token_descendants)
-            p_chars = ''.join(t.form for t in p_tree.token_descendants)
+            g_chars = self._strip_spaces(''.join(t.form for t in g_tree.token_descendants))
+            p_chars = self._strip_spaces(''.join(t.form for t in p_tree.token_descendants))
             g_chars = ''.join(filter(lambda c: unicodedata.category(c) != "Zs", g_chars))
             p_chars = ''.join(filter(lambda c: unicodedata.category(c) != "Zs", p_chars))
             if g_chars == p_chars:
@@ -46,7 +50,7 @@ class ResegmentGold(Block):
                 if not pred_trees:
                     raise ValueError('no pred_trees:\n%s\n%s' % (p_chars, g_chars))
                 new_p_tree = pred_trees.pop()
-                p_chars += ''.join(t.form for t in new_p_tree.token_descendants).replace(' ', '')
+                p_chars += self._strip_spaces(''.join(t.form for t in new_p_tree.token_descendants))
                 moved_roots.extend(new_p_tree.children)
                 p_tree.steal_nodes(new_p_tree.descendants)
             self.choose_root(p_tree, was_subroot, g_tree)
@@ -62,7 +66,7 @@ class ResegmentGold(Block):
             p_chars = ''
             tokens = p_tree.token_descendants
             for index, token in enumerate(tokens):
-                p_chars += token.form.replace(' ', '')
+                p_chars += self._strip_spaces(token.form)
                 if len(p_chars) > len(g_chars):
                     logging.warning('Pred token crossing gold sentences: %s', g_tree.sent_id)
                     # E.g. gold cs ln95048-151-p2s8 contains SpaceAfter=No on the last word
