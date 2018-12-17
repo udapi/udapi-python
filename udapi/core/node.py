@@ -501,6 +501,10 @@ class Node(object):
             return value
         if name == 'feats_split':
             return str(self.feats).split('|')
+        if name.startswith('feats['):
+            return self.feats[name[6:-1]]
+        if name.startswith('misc['):
+            return self.misc[name[5:-1]]
         return getattr(self, name)
 
     def get_attrs(self, attrs, undefs=None, stringify=True):
