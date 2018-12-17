@@ -39,7 +39,7 @@ class Tikz(BaseWriter):
     """
 
     def __init__(self, print_sent_id=True, print_text=True, print_preambule=True,
-                 attributes=None, as_tree=False, **kwargs):
+                 attributes=None, as_tree=False, comment_attribute=None, **kwargs):
         """Create the Tikz block object.
 
         Args:
@@ -48,6 +48,8 @@ class Tikz(BaseWriter):
         print_preambule: surround each document with LaTeX preambule (`documentclass` etc)
             and `end{document}` (default=True)
         attributes: comma-separated list of node attributes to print (each on a separate line).
+        as_tree: boolean - should print it as a 2D tree?
+        comment_attribute: which attribute to print as a string under each graph (e.g. text_en)
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -60,6 +62,7 @@ class Tikz(BaseWriter):
         else:
             self.node_attributes = 'form,upos'.split(',')
         self.as_tree = as_tree
+        self.comment_attribute = comment_attribute
 
     def before_process_document(self, doc):
         super().before_process_document(doc)
@@ -78,6 +81,8 @@ class Tikz(BaseWriter):
                 print(r'}')
                 print(r'\newlength{\deplevel}\setlength{\deplevel}{8mm}')
                 print(r'\newlength{\depskip}\setlength{\depskip}{4mm}')
+            print(r'\newcommand{\deptrans}[1]{\node (t) at (\matrixref.south)[yshift=-1mm]'
+                  " {``#1''}};}")
             print(r'\begin{document}')
 
     def after_process_document(self, doc):
@@ -132,5 +137,12 @@ class Tikz(BaseWriter):
                     print(r'\deproot{%d}{root}' % node.ord)
                 else:
                     print(r'\depedge{%d}{%d}{%s}' % (node.parent.ord, node.ord, node.deprel))
+        if self.comment_attribute and tree.comment:
+            start_pos = tree.comment.find(self.comment_attribute + ' = ')
+            if start_pos != -1:
+                start_pos += len(self.comment_attribute) + 3
+                end_pos = tree.comment.find('\n', start_pos)
+                print(r'\deptrans{' + tree.comment[start_pos:end_pos])
+
         print(r'\end{dependency}')
         print('')  # empty line marks a new paragraph in LaTeX, but multi=dependency causes newpage
