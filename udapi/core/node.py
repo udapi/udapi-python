@@ -501,6 +501,10 @@ class Node(object):
             return value
         if name == 'feats_split':
             return str(self.feats).split('|')
+        if name.startswith('feats['):
+            return self.feats[name[6:-1]]
+        if name.startswith('misc['):
+            return self.misc[name[5:-1]]
         return getattr(self, name)
 
     def get_attrs(self, attrs, undefs=None, stringify=True):
@@ -672,6 +676,14 @@ class Node(object):
         """Boolean property as a shortcut for `node.misc["SpaceAfter"] == "No"`."""
         return self.misc["SpaceAfter"] == "No"
 
+    @property
+    def gloss(self):
+        """String property as a shortcut for `node.misc["Gloss"]`."""
+        return self.misc["Gloss"]
+
+    @gloss.setter
+    def gloss(self, new_gloss):
+        self.misc["Gloss"] = new_gloss
 
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.
