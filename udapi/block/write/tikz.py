@@ -82,7 +82,7 @@ class Tikz(BaseWriter):
                 print(r'\newlength{\deplevel}\setlength{\deplevel}{8mm}')
                 print(r'\newlength{\depskip}\setlength{\depskip}{4mm}')
             print(r'\newcommand{\deptrans}[1]{\node (t) at (\matrixref.south)[yshift=-1mm]'
-                  " {``#1''}};}")
+                  " {``#1''};}")
             print(r'\begin{document}')
 
     def after_process_document(self, doc):
