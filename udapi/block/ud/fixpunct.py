@@ -14,10 +14,6 @@ this block is almost good, the block may actually do more harm than good.
 
 Since the punctuation should not have children, we should not create a non-projectivity
 if we check the root edges going to the right.
-However, it is still possible that we will attach the punctuation non-projectively
-by joining a non-projectivity that already exists.
-For example, the left neighbor (node i-1) may have its parent at i-3,
-and the node i-2 forms a gap (does not depend on i-3).
 """
 from udapi.core.block import Block
 # pylint: disable=no-self-use
@@ -128,17 +124,24 @@ class FixPunct(Block):
         # Climb up from the candidates, until we would reach the root or "cross" the punctuation.
         # If the candidates' descendants span across the punctuation, we also stop
         # because climbing higher would cause a non-projectivity (the punct would be the gap).
+        # We also stop if the candidate is attached non-projectively to its parent,
+        # because climbing higher would make the edge from the punctuation non-projective as well.
+        # For example, the left neighbor (node i-1) may have its parent at i-3,
+        # and the node i-2 forms a gap (does not depend on i-3)
+        # - in this case, the punctuation must be attached to the node i-1 (not i-3).
         l_path, r_path = [l_cand], [r_cand]
         if l_cand is None or l_cand.is_root():
             l_cand = None
         else:
             while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
-                   and not node.precedes(l_cand.descendants(add_self=1)[-1])):
+                   and not node.precedes(l_cand.descendants(add_self=1)[-1])
+                   and not l_cand.is_nonprojective()):
                 l_cand = l_cand.parent
                 l_path.append(l_cand)
         if r_cand is not None:
             while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
-                   and not r_cand.descendants(add_self=1)[0].precedes(node)):
+                   and not r_cand.descendants(add_self=1)[0].precedes(node)
+                   and not r_cand.is_nonprojective()):
                 r_cand = r_cand.parent
                 r_path.append(r_cand)
 
