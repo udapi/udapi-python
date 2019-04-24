@@ -667,7 +667,7 @@ class Node(object):
             if self.precedes(left_node.parent) and left_node.parent not in ancestors:
                 return True
         for right_node in all_nodes[self.ord:]:
-            if right_node.parent.precedes(node) and right_node.parent not in ancestors:
+            if right_node.parent.precedes(self) and right_node.parent not in ancestors:
                 return True
         return False
 
