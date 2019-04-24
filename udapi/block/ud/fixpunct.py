@@ -124,26 +124,27 @@ class FixPunct(Block):
         # Climb up from the candidates, until we would reach the root or "cross" the punctuation.
         # If the candidates' descendants span across the punctuation, we also stop
         # because climbing higher would cause a non-projectivity (the punct would be the gap).
-        # We also stop if the candidate is attached non-projectively to its parent,
-        # because climbing higher would make the edge from the punctuation non-projective as well.
-        # For example, the left neighbor (node i-1) may have its parent at i-3,
-        # and the node i-2 forms a gap (does not depend on i-3)
-        # - in this case, the punctuation must be attached to the node i-1 (not i-3).
         l_path, r_path = [l_cand], [r_cand]
         if l_cand is None or l_cand.is_root():
             l_cand = None
         else:
             while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
-                   and not node.precedes(l_cand.descendants(add_self=1)[-1])
-                   and not l_cand.is_nonprojective()):
+                   and not node.precedes(l_cand.descendants(add_self=1)[-1])):
                 l_cand = l_cand.parent
                 l_path.append(l_cand)
         if r_cand is not None:
             while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
-                   and not r_cand.descendants(add_self=1)[0].precedes(node)
-                   and not r_cand.is_nonprojective()):
+                   and not r_cand.descendants(add_self=1)[0].precedes(node)):
                 r_cand = r_cand.parent
                 r_path.append(r_cand)
+
+        # Filter out candidates which would lead to non-projectivities.
+        orig_parent = node.parent
+        l_path = [n for n in l_path if n and self._will_be_projective(node, n)]
+        r_path = [n for n in r_path if n and self._will_be_projective(node, n)]
+        l_cand = l_path[-1] if l_path else None
+        r_cand = r_path[-1] if r_path else None
+        node.parent = orig_parent
 
         # Now select between l_cand and r_cand -- which will be the new parent?
         # The lower one. Note that if neither is descendant of the other and neither is None
@@ -171,6 +172,10 @@ class FixPunct(Block):
         if node.parent not in path:
             node.parent = cand
         node.deprel = "punct"
+
+    def _will_be_projective(self, node, cand):
+        node.parent = cand
+        return not node.is_nonprojective()
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
         if self.check_paired_punct_upos and opening_node.upos != 'PUNCT':
