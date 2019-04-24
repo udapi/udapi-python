@@ -47,9 +47,20 @@ class Conllu(BaseWriter):
             print('#' + comment.replace('\n', '\n#'))
 
         last_mwt_id = 0
+        last_ord = 0
         empty_nodes = list(tree.empty_nodes)
-        next_empty_ord = int(float(empty_nodes[0].ord)) if empty_nodes else -1
         for node in nodes:
+            # print all empty nodes which should go here
+            while empty_nodes:
+                next_empty_ord = int(float(empty_nodes[0].ord))
+                if next_empty_ord > last_ord:
+                    break
+                empty = empty_nodes.pop(0)
+                values = [str(getattr(empty, a)) for a in self.node_attributes]
+                values[6] = '_'
+                values[7] = '_'
+                print('\t'.join(values))
+
             mwt = node.multiword_token
             if mwt and node.ord > last_mwt_id:
                 last_mwt_id = mwt.words[-1].ord
@@ -63,13 +74,7 @@ class Conllu(BaseWriter):
             except AttributeError:
                 values[6] = '0'
             print('\t'.join(values))
-            if node.ord == next_empty_ord:
-                empty = empty_nodes.pop(0)
-                values = [str(getattr(empty, a)) for a in self.node_attributes]
-                values[6] = '_'
-                values[7] = '_'
-                print('\t'.join(values))
-                next_empty_ord = int(float(empty_nodes[0].ord)) if empty_nodes else -1
+            last_ord = node.ord
 
         # Empty sentences are not allowed in CoNLL-U,
         # but with print_empty_trees==1 (which is the default),
