@@ -30,7 +30,7 @@ class Filter(Block):
     def __init__(self,  # pylint: disable=too-many-arguments
                  delete_tree=None, delete_tree_if_node=None, delete_subtree=None,
                  keep_tree=None, keep_tree_if_node=None, keep_subtree=None,
-                 mark=None, **kwargs):
+                 keep_node=None, mark=None, **kwargs):
         """Create the Filter block object.
 
         Args:
@@ -56,6 +56,10 @@ class Filter(Block):
             If no node in the tree was marked (i.e. only the root without any children remained),
             the whole tree will be deleted.
 
+        `keep_node`: Python expression to be evaluated for each node and if False,
+            the node will be deleted and its children rehanged to its parent.
+            Multiple nodes can be deleted (or kept) this way.
+
         `mark`: a string or None. This makes sense only with `keep_tree_if_node`, where the
             matched nodes are marked with `Mark=<mark>` in `node.misc`, so they will be highlighted
             if printed with `write.TextModeTrees`. Default=None.
@@ -71,6 +75,7 @@ class Filter(Block):
         self.keep_tree = keep_tree
         self.keep_tree_if_node = keep_tree_if_node
         self.keep_subtree = keep_subtree
+        self.keep_node = keep_node
         self.mark = mark
 
     def process_tree(self, tree):  # pylint: disable=too-many-branches
@@ -118,8 +123,17 @@ class Filter(Block):
                     kept_subtrees.append(node)
             if not kept_subtrees:
                 tree.remove()
+                return
             else:
                 for node in kept_subtrees:
                     node.parent = root
                 for orig_subroot in [n for n in root.children if n not in kept_subtrees]:
                     orig_subroot.remove()
+
+        if self.keep_node is not None:
+            nodes_to_delete = [node for node in tree.descendants if not eval(self.keep_node)]
+            if nodes_to_delete == tree.descendants:
+                tree.remove()
+                return
+            for node in nodes_to_delete:
+                node.remove(children='rehang')
