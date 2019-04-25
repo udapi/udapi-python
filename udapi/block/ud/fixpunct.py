@@ -45,7 +45,16 @@ class FixPunct(Block):
     """Make sure punctuation nodes are attached projectively."""
 
     def __init__(self, check_paired_punct_upos=False, copy_to_enhanced=False, **kwargs):
-        """Create the ud.FixPunct block instance."""
+        """Create the ud.FixPunct block instance.
+
+        Args:
+        check_paired_punct_upos: fix paired punctuation tokens only if their UPOS=PUNCT.
+            The default is false, which means that fixed punctuation is detected only
+            based on the form with the exception of single quote / apostrophe character,
+            which is frequently ambiguous, so UPOS=PUNCT is checked always.
+        copy_to_enhanced: for all PUNCT nodes, let the enhanced depencies be the same
+            as the basic dependencies.
+        """
         super().__init__(**kwargs)
         self._punct_type = None
         self.check_paired_punct_upos = check_paired_punct_upos
@@ -178,7 +187,8 @@ class FixPunct(Block):
         return not node.is_nonprojective()
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
-        if self.check_paired_punct_upos and opening_node.upos != 'PUNCT':
+        if (self.check_paired_punct_upos
+            or opening_node.form == "'") and opening_node.upos != 'PUNCT':
             return
 
         nested_level = 0
