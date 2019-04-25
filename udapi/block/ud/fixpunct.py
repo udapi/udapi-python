@@ -111,12 +111,12 @@ class FixPunct(Block):
         if node.form in FINAL_PUNCT:
             r_cand = None
         while l_cand.ord > 0 and l_cand.upos == "PUNCT":
-            if self._punct_type[l_cand.ord] == 'opening':
+            if self._punct_type[l_cand.ord] == 'opening' and l_cand.parent != node:
                 l_cand = None
                 break
             l_cand = l_cand.prev_node
         while r_cand is not None and r_cand.upos == "PUNCT":
-            if self._punct_type[r_cand.ord] == 'closing':
+            if self._punct_type[r_cand.ord] == 'closing' and r_cand.parent != node:
                 r_cand = None
                 break
             r_cand = r_cand.next_node
