@@ -215,3 +215,13 @@ class FixPunct(Block):
             closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
             self._punct_type[opening_node.ord] = 'opening'
             self._punct_type[closing_node.ord] = 'closing'
+
+        # In rare cases, non-projective gaps may remain. Let's dirty fix these!
+        # E.g. in "the (lack of) reproducibility", the closing parenthesis
+        # should be attached to "of" rather than to "lack"
+        # -- breaking the paired-marks-have-same-parent rule
+        # in order to prevent the punct-nonproj-gap bug (recently checked by validator.py).
+        if opening_node.is_nonprojective_gap():
+            opening_node.parent = opening_node.next_node
+        if closing_node.is_nonprojective_gap():
+            closing_node.parent = closing_node.prev_node
