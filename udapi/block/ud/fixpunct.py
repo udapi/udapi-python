@@ -211,6 +211,7 @@ class FixPunct(Block):
                     punct_heads.append(node)
                 else:
                     heads.append(node)
+
         # Punctuation should not have children, but if there is no other head candidate,
         # let's break this rule.
         if len(heads) == 0:
@@ -233,5 +234,13 @@ class FixPunct(Block):
         # in order to prevent the punct-nonproj-gap bug (recently checked by validator.py).
         if opening_node.is_nonprojective_gap():
             opening_node.parent = opening_node.next_node
+            while (opening_node.parent.ord < closing_node.ord - 1
+                and (opening_node.parent.upos == 'PUNCT' or opening_node.is_nonprojective()
+                or opening_node.is_nonprojective_gap())):
+                    opening_node.parent = opening_node.parent.next_node
         if closing_node.is_nonprojective_gap():
             closing_node.parent = closing_node.prev_node
+            while (closing_node.parent.ord > opening_node.ord + 1
+                and (closing_node.parent.upos == 'PUNCT' or closing_node.is_nonprojective()
+                or closing_node.is_nonprojective_gap())):
+                    closing_node.parent = closing_node.parent.prev_node
