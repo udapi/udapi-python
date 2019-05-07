@@ -186,6 +186,9 @@ class FixPunct(Block):
         node.parent = cand
         return not node.is_nonprojective()
 
+    def _causes_gap(self, node):
+        return node.is_nonprojective_gap() and not node.parent.is_nonprojective_gap()
+
     def _fix_paired_punct(self, root, opening_node, closing_punct):
         if (self.check_paired_punct_upos
             or opening_node.form == "'") and opening_node.upos != 'PUNCT':
@@ -232,15 +235,15 @@ class FixPunct(Block):
         # should be attached to "of" rather than to "lack"
         # -- breaking the paired-marks-have-same-parent rule
         # in order to prevent the punct-nonproj-gap bug (recently checked by validator.py).
-        if opening_node.is_nonprojective_gap():
+        if self._causes_gap(opening_node):
             opening_node.parent = opening_node.next_node
             while (opening_node.parent.ord < closing_node.ord - 1
                 and (opening_node.parent.upos == 'PUNCT' or opening_node.is_nonprojective()
-                or opening_node.is_nonprojective_gap())):
+                or self._causes_gap(opening_node))):
                     opening_node.parent = opening_node.parent.next_node
-        if closing_node.is_nonprojective_gap():
+        if self._causes_gap(closing_node):
             closing_node.parent = closing_node.prev_node
             while (closing_node.parent.ord > opening_node.ord + 1
                 and (closing_node.parent.upos == 'PUNCT' or closing_node.is_nonprojective()
-                or closing_node.is_nonprojective_gap())):
+                or self._causes_gap(closing_node))):
                     closing_node.parent = closing_node.parent.prev_node
