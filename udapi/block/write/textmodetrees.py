@@ -268,7 +268,8 @@ class TextModeTrees(BaseWriter):
                     if idx_node.parent is not node:
                         self._add(idx, self._vert[self._ends(idx, '─╭╰╪┡┢')])
                     else:
-                        self._add(idx, self._space[idx < node.ord][topmost or botmost])
+                        precedes_parent = idx < self._index_of[node.ord]
+                        self._add(idx, self._space[precedes_parent][topmost or botmost])
                         if idx_node.is_leaf():
                             self._add(idx, self._horiz)
                             if self.layout == 'classic':
