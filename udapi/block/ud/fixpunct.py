@@ -198,7 +198,7 @@ class FixPunct(Block):
         for node in root.descendants[opening_node.ord:]:
             if node.form == closing_punct:
                 if nested_level > 0:
-                    nested_level -= 0
+                    nested_level -= 1
                 else:
                     self._fix_pair(root, opening_node, node)
                     return
