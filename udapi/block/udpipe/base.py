@@ -1,6 +1,7 @@
 """Block udpipe.Base for tagging and parsing using UDPipe."""
 from udapi.core.block import Block
 from udapi.tool.udpipe import UDPipe
+from udapi.core.bundle import Bundle
 
 KNOWN_MODELS = {
     'af': 'models/udpipe/2.4/afrikaans-afribooms-ud-2.4-190531.udpipe',
@@ -118,12 +119,12 @@ class Base(Block):
 
     # pylint: disable=too-many-arguments
     def __init__(self, model=None, model_alias=None,
-                 tokenize=True, tag=True, parse=True, **kwargs):
+                 tokenize=True, tag=True, parse=True, resegment=False, **kwargs):
         """Create the udpipe.En block object."""
         super().__init__(**kwargs)
         self.model, self.model_alias = model, model_alias
         self._tool = None
-        self.tokenize, self.tag, self.parse = tokenize, tag, parse
+        self.tokenize, self.tag, self.parse, self.resegment = tokenize, tag, parse, resegment
 
     @property
     def tool(self):
@@ -137,20 +138,30 @@ class Base(Block):
         self._tool = UDPipe(model=self.model)
         return self._tool
 
-    def process_tree(self, root):
+    def process_document(self, doc):
         tok, tag, par = self.tokenize, self.tag, self.parse
-        if tok and tag and par:
-            return self.tool.tokenize_tag_parse_tree(root)
-        if not tok and tag and par:
-            return self.tool.tag_parse_tree(root)
-        # TODO
-        # return $self->tool->tokenize_tag_parse_tree($root) if  $tok &&  $tag &&  $par;
-        # return $self->tool->tokenize_tag_tree($root)       if  $tok &&  $tag && !$par;
-        # return $self->tool->tokenize_tree($root)           if  $tok && !$tag && !$par;
-        # return $self->tool->tag_parse_tree($root)          if !$tok &&  $tag &&  $par;
-        # return $self->tool->tag_tree($root)                if !$tok &&  $tag && !$par;
-        # return $self->tool->parse_tree($root)              if !$tok && !$tag &&  $par;
-        raise ValueError("Unimplemented tokenize=%s tag=%s parse=%s" % (tok, tag, par))
+        old_bundles = doc.bundles
+        new_bundles = []
+        for bundle in old_bundles:
+            for tree in bundle:
+                new_bundles.append(bundle)
+                if self._should_process_tree(tree):
+                    if tok and tag and par:
+                        new_trees = self.tool.tokenize_tag_parse_tree(tree, resegment=self.resegment)
+                        if self.resegment and len(new_trees) > 1:
+                            orig_bundle_id = bundle.bundle_id
+                            bundle.bundle_id = orig_bundle_id + '-1'
+                            tree.text = None
+                            for i, new_tree in enumerate(new_trees[1:], 2):
+                                new_bundle = Bundle(document=doc, bundle_id=orig_bundle_id + '-' + str(i))
+                                new_tree.zone = tree.zone
+                                new_bundle.add_tree(new_tree)
+                                new_bundles.append(new_bundle)
+                    elif not tok and tag and par:
+                        self.tool.tag_parse_tree(tree)
+                    else:
+                        raise ValueError("Unimplemented tokenize=%s tag=%s parse=%s" % (tok, tag, par))
+        doc.bundles = new_bundles
 
 '''
 Udapi::Block::UDPipe::Base - tokenize, tag and parse into UD

@@ -4,6 +4,7 @@ import io
 from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence  # pylint: disable=no-name-in-module
 from udapi.core.resource import require_file
 from udapi.block.read.conllu import Conllu as ConlluReader
+from udapi.core.root import Root
 
 
 class UDPipe:
@@ -45,42 +46,62 @@ class UDPipe:
         # pylint: disable=protected-access
         #root._children, root._descendants = parsed_root._children, parsed_root._descendants
 
-    def tokenize_tag_parse_tree(self, root):
-        """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`."""
+    def tokenize_tag_parse_tree(self, root, resegment=False):
+        """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`.
+
+        If resegment=True, the returned list of Udapi trees may contain multiple trees.
+        """
         if root.children:
             raise ValueError('Tree already contained nodes before tokenization')
 
-        # tokenization (I cannot turn off segmenter, so I need to join the segments)
+        # Tokenize and segment the text (segmentation cannot be turned off in older UDPipe versions).
         self.tokenizer.setText(root.text)
-        u_sentence = Sentence()
-        is_another = self.tokenizer.nextSentence(u_sentence)
-        u_words = u_sentence.words
-        n_words = u_words.size() - 1
-        if is_another:
-            u_sent_cont = Sentence()
-            while self.tokenizer.nextSentence(u_sent_cont):
-                n_cont = u_sent_cont.words.size() - 1
-                for i in range(1, n_cont + 1):
-                    u_w = u_sent_cont.words[i]
+        is_another = True
+        u_sentences = []
+        while is_another:
+            u_sentence = Sentence()
+            is_another = self.tokenizer.nextSentence(u_sentence)
+            if is_another:
+                u_sentences.append(u_sentence)
+
+        # If resegmentation was not required, we need to join the segments.
+        if not resegment and len(u_sentences) > 1:
+            first_sent = u_sentences[0]
+            n_words = first_sent.words.size() - 1
+            for other_sent in u_sentences[1:]:
+                other_words = other_sent.words.size() - 1
+                for i in range(1, other_words + 1):
+                    u_w = other_sent.words[i]
                     n_words += 1
                     u_w.id = n_words
-                    u_words.append(u_w)
+                    first_sent.words.append(u_w)
+            u_sentences = [first_sent]
 
         # tagging and parsing
-        self.tool.tag(u_sentence, Model.DEFAULT)
-        self.tool.parse(u_sentence, Model.DEFAULT)
+        for u_sentence in u_sentences:
+            self.tool.tag(u_sentence, Model.DEFAULT)
+            self.tool.parse(u_sentence, Model.DEFAULT)
 
         # converting UDPipe nodes to Udapi nodes
-        heads, nodes = [], [root]
-        for i in range(1, u_words.size()):
-            u_w = u_words[i]
-            node = root.create_child(
-                form=u_w.form, lemma=u_w.lemma, upos=u_w.upostag,
-                xpos=u_w.xpostag, feats=u_w.feats, deprel=u_w.deprel,
-            )
-            node.misc = u_w.misc
-            heads.append(u_w.head)
-            nodes.append(node)
-        for node in nodes[1:]:
-            head = heads.pop(0)
-            node.parent = nodes[head]
+        new_root = root
+        trees = []
+        for u_sentence in u_sentences:
+            if not new_root:
+                new_root = Root()
+            heads, nodes = [], [new_root]
+            u_words = u_sentence.words
+            for i in range(1, u_words.size()):
+                u_w = u_words[i]
+                node = new_root.create_child(
+                    form=u_w.form, lemma=u_w.lemma, upos=u_w.upostag,
+                    xpos=u_w.xpostag, feats=u_w.feats, deprel=u_w.deprel,
+                )
+                node.misc = u_w.misc
+                heads.append(u_w.head)
+                nodes.append(node)
+            for node in nodes[1:]:
+                head = heads.pop(0)
+                node.parent = nodes[head]
+            trees.append(new_root)
+            new_root = None
+        return trees
