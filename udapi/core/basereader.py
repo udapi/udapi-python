@@ -126,6 +126,8 @@ class BaseReader(Block):
                     continue
                 self.finished = not self.files.has_next_file()
                 break
+            if trees_loaded == 0:
+                document.meta['loaded_from'] = self.filename
             add_to_the_last_bundle = 0
             trees_loaded += 1
 
