@@ -7,6 +7,7 @@ import os.path
 import bz2
 import gzip
 import lzma
+import itertools
 
 
 class Files(object):
@@ -63,7 +64,8 @@ class Files(object):
             if not filenames:
                 raise RuntimeError('No filenames matched "%s" pattern' % pattern)
             return filenames
-        return [self._token_to_filenames(tok) for tok in string.replace(',', ' ').split()]
+        return list(itertools.chain.from_iterable(self._token_to_filenames(tok)
+                                                  for tok in string.replace(',', ' ').split()))
 
     @staticmethod
     def _token_to_filenames(token):
@@ -80,7 +82,7 @@ class Files(object):
             if directory != '.':
                 filenames = [f if f[0] != '/' else directory + '/' + f for f in filenames]
         else:
-            filenames = token
+            filenames = [token]
         return filenames
 
     @property
