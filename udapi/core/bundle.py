@@ -31,8 +31,11 @@ class Bundle(object):
     @bundle_id.setter
     def bundle_id(self, bundle_id):
         self._bundle_id = bundle_id
-        for tree in self.trees:
-            tree._sent_id = bundle_id + '/' + tree.zone  # pylint: disable=protected-access
+        if len(self.trees) == 1 and self.trees[0].zone == '':
+            self.trees[0]._sent_id = bundle_id
+        else:
+            for tree in self.trees:
+                tree._sent_id = bundle_id + '/' + tree.zone  # pylint: disable=protected-access
 
     def __str__(self):
         if self.bundle_id is None:
