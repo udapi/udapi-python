@@ -3,27 +3,55 @@ from udapi.core.block import Block
 from udapi.core.bundle import Bundle
 import re
 
-# We don't want to introduce the extra "regex" dependency for \p{Lu} support.
-# import sys
-# pLu = '[{}]'.format("".join([chr(i) for i in range(sys.maxunicode) if chr(i).isupper()]))
-# p = re.compile(pLu)
-
-
 class Simple(Block):
-    """"Base segmenter, splits on sentence-final segmentation followed by uppercase."""
+    """"Heuristic segmenter, splits on sentence-final segmentation followed by uppercase."""
 
     @staticmethod
-    def segment_string(string):
-        """A method to be overriden in subclasses."""
-        return re.sub(r'([.!?])(["“»›]?) (["„«¿¡‹(]?)(\d|[ČĎŇÓŘŠŤÚŽA-Z])', r'\1\2\n\3\4', string).split('\n')
+    def is_nonfinal_abbrev(token):
+        """Is a given token an abbreviation (without the final period) which cannot end a sentence?"""
+        if re.search('(např|e.g.)$', token):
+            return True
+        return False
+
+
+    def is_boundary(self, first, second):
+        """Is there a sentence boundary between the first and second token?"""
+        if first[-1] in '"“»›)':
+            first = first[:-1]
+        if second[0] in '"„«¿¡‹(':
+            second = second[1:]
+        if not second[0].isupper() or second[0].isdigit():
+            return False
+        if not first[-1] in '.!?':
+            return False
+        if first[-1] == '.':
+            if len(first) == 2 and first[0].isupper():
+                return False
+            if self.is_nonfinal_abbrev(first[:-1]):
+                return False
+        return True
+
+
+    def segment_string(self, string):
+        """Return a list of sentences in a given string."""
+        tokens = string.split(' ')
+        previous = tokens[0]
+        segments = [previous]
+        for token in tokens[1:]:
+            if self.is_boundary(previous, token):
+                segments.append(token)
+            else:
+                segments[-1] += ' ' + token
+            previous = token
+        return segments
 
 
     def process_document(self, doc):
         old_bundles = doc.bundles
         new_bundles = []
         for bundle in old_bundles:
+            new_bundles.append(bundle)
             for tree in bundle:
-                new_bundles.append(bundle)
                 if self._should_process_tree(tree):
                     if tree.children:
                         raise ValueError("Segmenting already tokenized text is not supported.")
