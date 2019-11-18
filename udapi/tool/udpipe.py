@@ -37,7 +37,7 @@ class UDPipe:
         for parsed_node in parsed_root.descendants:
             node = nodes[parsed_node.ord]
             node.parent = nodes[parsed_node.parent.ord]
-            for attr in 'upos xpos lemma feats'.split():
+            for attr in 'upos xpos lemma feats deprel'.split():
                 setattr(node, attr, getattr(parsed_node, attr))
 
         # TODO: benchmark which solution is the fastest one. E.g. we could also do
@@ -46,7 +46,7 @@ class UDPipe:
         # pylint: disable=protected-access
         #root._children, root._descendants = parsed_root._children, parsed_root._descendants
 
-    def tokenize_tag_parse_tree(self, root, resegment=False):
+    def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True):
         """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`.
 
         If resegment=True, the returned list of Udapi trees may contain multiple trees.
@@ -78,9 +78,13 @@ class UDPipe:
             u_sentences = [first_sent]
 
         # tagging and parsing
-        for u_sentence in u_sentences:
-            self.tool.tag(u_sentence, Model.DEFAULT)
-            self.tool.parse(u_sentence, Model.DEFAULT)
+        if tag:
+            for u_sentence in u_sentences:
+                self.tool.tag(u_sentence, Model.DEFAULT)
+                if parse:
+                    self.tool.parse(u_sentence, Model.DEFAULT)
+        elif parse:
+            raise ValueError('Combination parse=True tag=False is not allowed.')
 
         # converting UDPipe nodes to Udapi nodes
         new_root = root
@@ -94,14 +98,15 @@ class UDPipe:
                 u_w = u_words[i]
                 node = new_root.create_child(
                     form=u_w.form, lemma=u_w.lemma, upos=u_w.upostag,
-                    xpos=u_w.xpostag, feats=u_w.feats, deprel=u_w.deprel,
+                    xpos=u_w.xpostag, feats=u_w.feats, deprel=u_w.deprel, misc=u_w.misc,
                 )
-                node.misc = u_w.misc
-                heads.append(u_w.head)
-                nodes.append(node)
-            for node in nodes[1:]:
-                head = heads.pop(0)
-                node.parent = nodes[head]
+                if parse:
+                    heads.append(u_w.head)
+                    nodes.append(node)
+            if parse:
+                for node in nodes[1:]:
+                    head = heads.pop(0)
+                    node.parent = nodes[head]
             trees.append(new_root)
             new_root = None
         return trees

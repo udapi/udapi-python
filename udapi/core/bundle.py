@@ -100,6 +100,8 @@ class Bundle(object):
     def remove(self):
         """Remove a bundle from the document."""
         self._document.bundles = [bundle for bundle in self._document.bundles if bundle != self]
+        for i, bundle in enumerate(self._document.bundles):
+            bundle.number = i
 
     def address(self):
         """Return bundle_id or '?' if missing."""

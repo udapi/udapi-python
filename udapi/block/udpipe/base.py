@@ -146,8 +146,9 @@ class Base(Block):
             for tree in bundle:
                 new_bundles.append(bundle)
                 if self._should_process_tree(tree):
-                    if tok and tag and par:
-                        new_trees = self.tool.tokenize_tag_parse_tree(tree, resegment=self.resegment)
+                    if tok:
+                        new_trees = self.tool.tokenize_tag_parse_tree(tree, resegment=self.resegment,
+                                                                      tag=self.tag, parse=self.parse)
                         if self.resegment and len(new_trees) > 1:
                             orig_bundle_id = bundle.bundle_id
                             bundle.bundle_id = orig_bundle_id + '-1'
