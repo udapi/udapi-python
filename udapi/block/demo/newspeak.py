@@ -1,10 +1,10 @@
-"""newspeak.PreVele block for 1984-like newspeak-ization.
+"""demo.Newspeak block for 1984-like newspeak-ization of Czech.
 
 This is just a demo/draft.
 
 Usage:
   $ echo 'Nejhorší žena je lepší než nejlepší muž.' | \
-         udapy -q read.Sentences udpipe.Cs newspeak.PreVele write.Sentences
+         udapy -q read.Sentences udpipe.Cs demo.Newspeak write.Sentences
   Převelenedobrá žena je veledobrá než převeledobrý muž.
 """
 from udapi.core.block import Block
@@ -18,7 +18,7 @@ ANTONYMS = {
 }
 
 
-class PreVele(Block):
+class Newspeak(Block):
     """Change all comparatives to vele-x and superlatives to převele-x."""
 
     def __init__(self, morphodita_path='models/morphodita/cs/',
