@@ -164,8 +164,10 @@ class Conllu(BaseReader):
         # they need to create one artificial node and mark it with Empty=Yes.
         # In that case, we will delete this node, so the tree will have just the (technical) root.
         # See also udapi.block.write.Conllu, which is compatible with this trick.
-        if len(nodes) == 2 and nodes[1].misc == 'Empty=Yes':
+        if len(nodes) == 2 and str(nodes[1].misc) == 'Empty=Yes':
             nodes.pop()
+            root._children = []
+            root._descendants = []
 
         # Set dependency parents (now, all nodes of the tree are created).
         # TODO: parent setter checks for cycles, but this is something like O(n*log n)
