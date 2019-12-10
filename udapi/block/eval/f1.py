@@ -112,9 +112,32 @@ class F1(BaseWriter):
 
         pred_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in tree.descendants]
         gold_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in gold_tree.descendants]
-        common = find_lcs(pred_tokens, gold_tokens)
 
-        if self.focus is not None:
+        # lcs("abc", "acb") can be either "ab" or "ac".
+        # We want to prefer the LCS with the highest number of non-focused tokens.
+        # E.g. if focus="," then lcs("a,c", "ac,") should be "ac" and the comma should be evaluated
+        # as non-aligned, i.e. eval.F1 should return precision=recall=f1=0 for this sentence.
+        if self.focus is None:
+            common = find_lcs(pred_tokens, gold_tokens)
+        else:
+            nf_pred_tokens = [x for x in pred_tokens if not self.focus.fullmatch(x)]
+            nf_gold_tokens = [x for x in gold_tokens if not self.focus.fullmatch(x)]
+            nf_common = find_lcs(nf_pred_tokens, nf_gold_tokens)
+            i, j, c, un_pred, un_gold, common  = 0, 0, 0, [], [], []
+            while i < len(pred_tokens) and j < len(gold_tokens):
+                while nf_common[c] != pred_tokens[i]:
+                    un_pred.append(pred_tokens[i])
+                    i += 1
+                while nf_common[c] != gold_tokens[j]:
+                    un_gold.append(gold_tokens[j])
+                    j += 1
+                common += find_lcs(un_pred, un_gold)
+                un_pred, un_gold  = [], []
+                while c < len(nf_common) and nf_common[c] == pred_tokens[i] and nf_common[c] == gold_tokens[j]:
+                    i, j, c = i+1, j+1, c+1
+                if c == len(nf_common):
+                    common += find_lcs(pred_tokens[i+1:], gold_tokens[j+1:])
+                    break
             common = [x for x in common if self.focus.fullmatch(x)]
             pred_tokens = [x for x in pred_tokens if self.focus.fullmatch(x)]
             gold_tokens = [x for x in gold_tokens if self.focus.fullmatch(x)]
@@ -172,22 +195,29 @@ class F1(BaseWriter):
 
 
 # difflib.SequenceMatcher does not compute LCS, so let's implement it here
-# TODO: make faster by trimming common prefix and sufix
 def find_lcs(x, y):
     """Find longest common subsequence."""
     m, n = len(x), len(y)
-    C = [[0] * (n + 1) for _ in range(m + 1)]
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            C[i][j] = C[i - 1][j - 1] + 1 if x[i - 1] == y[j - 1] else max(C[i][j - 1], C[i - 1][j])
-    index = C[m][n]
-    lcs = [None] * index
-    while m > 0 and n > 0:
-        if x[m - 1] == y[n - 1]:
-            lcs[index - 1] = x[m - 1]
-            m, n, index = m - 1, n - 1, index - 1
-        elif C[m - 1][n] > C[m][n - 1]:
-            m -= 1
-        else:
-            n -= 1
-    return lcs
+    if m == 0 or n == 0:
+        return []
+    elif x[0] == y[0]:
+        i = 1
+        while i < min(m, n) and x[i] == y[i]:
+            i += 1
+        return x[:i] + (find_lcs(x[i:], y[i:]) if i < min(m, n) else [])
+    else:
+        C = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                C[i][j] = C[i - 1][j - 1] + 1 if x[i - 1] == y[j - 1] else max(C[i][j - 1], C[i - 1][j])
+        index = C[m][n]
+        lcs = [None] * index
+        while m > 0 and n > 0:
+            if x[m - 1] == y[n - 1]:
+                lcs[index - 1] = x[m - 1]
+                m, n, index = m - 1, n - 1, index - 1
+            elif C[m - 1][n] > C[m][n - 1]:
+                m -= 1
+            else:
+                n -= 1
+        return lcs
