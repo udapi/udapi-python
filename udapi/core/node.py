@@ -257,9 +257,11 @@ class Node(object):
         if self.parent is new_parent:
             return
 
-        # The node itself couldn't be assigned as a parent.
+        # The node itself couldn't be assigned as a parent. None cannot be used as parent.
         if self is new_parent:
             raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s' % self)
+        if new_parent is None:
+            raise ValueError('Cannot set None as parent: %s' % self)
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
