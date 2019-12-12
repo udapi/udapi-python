@@ -254,17 +254,17 @@ class Node(object):
         (from the list of original parent's children).
         """
         # If the parent is already assigned, return.
-        if self.parent == new_parent:
+        if self.parent is new_parent:
             return
 
         # The node itself couldn't be assigned as a parent.
-        if self == new_parent:
+        if self is new_parent:
             raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s' % self)
 
         # Check if the current Node is not an antecedent of the new parent.
         climbing_node = new_parent
         while not climbing_node.is_root():
-            if climbing_node == self:
+            if climbing_node is self:
                 raise ValueError('Setting the parent of %s to %s would lead to a cycle.'
                                  % (self, new_parent))
             climbing_node = climbing_node.parent
@@ -272,10 +272,10 @@ class Node(object):
         # Remove the current Node from the children of the old parent.
         # Forbid moving nodes from one tree to another using parent setter.
         if self._parent:
-            self._parent._children = [node for node in self.parent.children if node != self]
+            self._parent._children = [node for node in self.parent.children if node is not self]
             # TODO: .root is currently computed, so it is quite slow
             old_root, new_root = self._parent.root, climbing_node
-            if old_root != new_root:
+            if old_root is not new_root:
                 raise ValueError('Cannot move nodes between trees with parent setter, '
                                  'use new_root.steal_nodes(nodes_to_be_moved) instead')
         # Set the new parent.
@@ -342,7 +342,7 @@ class Node(object):
         """Is the current node a descendant of the node given as argument?"""
         climber = self.parent
         while climber:
-            if climber == node:
+            if climber is node:
                 return True
             climber = climber.parent
         return False
@@ -392,7 +392,7 @@ class Node(object):
             `warn` means to issue a warning if any children are present and delete them.
             `rehang_warn` means to rehang and warn:-).
         """
-        self.parent._children = [child for child in self.parent.children if child != self]
+        self.parent._children = [child for child in self.parent.children if child is not self]
         if children is not None and self.children:
             if children.startswith('rehang'):
                 for child in self.children:
@@ -413,7 +413,7 @@ class Node(object):
         reference_ord = reference_node.ord
 
         if reference_subtree:
-            for node in [n for n in reference_node.descendants() if n != self]:
+            for node in [n for n in reference_node.descendants() if n is not self]:
                 if (after and node.ord > reference_ord) or (not after and node.ord < reference_ord):
                     reference_ord = node.ord
 
