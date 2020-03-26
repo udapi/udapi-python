@@ -42,6 +42,7 @@ class BaseWriter(Block):
             logging.info('Writing to filehandle.')
             sys.stdout = self.files.filehandle
             return
+        old_filehandle = sys.stdout
         if self.orig_files == '-':
             if self.docname_as_file:
                 docname = document.meta.get('docname', None)
@@ -52,23 +53,23 @@ class BaseWriter(Block):
                     logging.warning('docname_as_file=1 but the document contains no docname')
             else:
                 sys.stdout = sys.__stdout__
-            return
-
-        old_filehandle = sys.stdout
-        if old_filehandle.fileno != sys.stdout.fileno:
+        else:
+            filename = self.next_filename()
+            if filename is None:
+                raise RuntimeError('There are more documents to save than filenames given (%s)'
+                                % self.orig_files)
+            elif filename == '-':
+                logging.info('Writing to stdout.')
+                sys.stdout = sys.__stdout__
+            else:
+                logging.info('Writing to file %s.', filename)
+                sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)
+        if old_filehandle.fileno() not in (sys.stdout.fileno(), sys.__stdout__.fileno()):
             old_filehandle.close()
 
-        filename = self.next_filename()
-        if filename is None:
-            raise RuntimeError('There are more documents to save than filenames given (%s)'
-                               % self.orig_files)
-        elif filename == '-':
-            logging.info('Writing to stdout.')
-            sys.stdout = sys.__stdout__
-        else:
-            logging.info('Writing to file %s.', filename)
-            sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)
 
     def after_process_document(self, document):
-        if self.orig_files == '<filehandle>':
+        sys.stdout.flush()
+        if sys.stdout.fileno() != sys.__stdout__.fileno():
+            sys.stdout.close()
             sys.stdout = sys.__stdout__
