@@ -13,6 +13,7 @@ class BaseWriter(Block):
                  newline='\n', **kwargs):
         super().__init__(**kwargs)
         self.orig_files = files
+        self.orig_stdout = sys.stdout
         if filehandle is not None:
             files = None
             self.orig_files = '<filehandle>'
@@ -52,7 +53,7 @@ class BaseWriter(Block):
                 else:
                     logging.warning('docname_as_file=1 but the document contains no docname')
             else:
-                sys.stdout = sys.__stdout__
+                sys.stdout = self.orig_stdout
         else:
             filename = self.next_filename()
             if filename is None:
@@ -60,16 +61,16 @@ class BaseWriter(Block):
                                 % self.orig_files)
             elif filename == '-':
                 logging.info('Writing to stdout.')
-                sys.stdout = sys.__stdout__
+                sys.stdout = self.orig_stdout
             else:
                 logging.info('Writing to file %s.', filename)
                 sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)
-        if old_filehandle.fileno() not in (sys.stdout.fileno(), sys.__stdout__.fileno()):
+        if old_filehandle not in (sys.stdout, self.orig_stdout):
             old_filehandle.close()
 
 
     def after_process_document(self, document):
         sys.stdout.flush()
-        if sys.stdout.fileno() != sys.__stdout__.fileno():
+        if sys.stdout != self.orig_stdout:
             sys.stdout.close()
-            sys.stdout = sys.__stdout__
+            sys.stdout = self.orig_stdout
