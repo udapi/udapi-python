@@ -228,7 +228,11 @@ class Node(object):
                 return self._deps
 
             for raw_dependency in self._raw_deps.split('|'):
-                head, deprel = raw_dependency.split(':')
+                # Deprel itself may contain one or more ':' (subtypes).
+                pieces = raw_dependency.split(':')
+                head = pieces[0]
+                deprel = ':'.join(pieces[1:])
+                ###!!! The following line will throw an exception if the head is an empty node, e.g., '7.1'.
                 parent = nodes[int(head)]
                 self._deps.append({'parent': parent, 'deprel': deprel})
 
