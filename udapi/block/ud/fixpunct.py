@@ -159,7 +159,8 @@ class FixPunct(Block):
                 r_cand = r_cand.parent
                 r_path.append(r_cand)
 
-        # Filter out candidates which would lead to non-projectivities.
+        # Filter out candidates which would lead to non-projectivities, i.e. bugs
+        # punct-nonproj and punct-nonproj-gap as checked by the UD validator and ud.MarkBugs.
         orig_parent = node.parent
         l_path = [n for n in l_path if n and self._will_be_projective(node, n)]
         r_path = [n for n in r_path if n and self._will_be_projective(node, n)]
@@ -196,7 +197,7 @@ class FixPunct(Block):
 
     def _will_be_projective(self, node, cand):
         node.parent = cand
-        return not node.is_nonprojective()
+        return not node.is_nonprojective() and not self._causes_gap(node)
 
     def _causes_gap(self, node):
         return node.is_nonprojective_gap() and not node.parent.is_nonprojective_gap()
