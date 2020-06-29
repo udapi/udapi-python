@@ -152,7 +152,6 @@ class Base(Block):
                         if self.resegment and len(new_trees) > 1:
                             orig_bundle_id = bundle.bundle_id
                             bundle.bundle_id = orig_bundle_id + '-1'
-                            tree.text = None
                             for i, new_tree in enumerate(new_trees[1:], 2):
                                 new_bundle = Bundle(document=doc, bundle_id=orig_bundle_id + '-' + str(i))
                                 new_tree.zone = tree.zone
@@ -160,6 +159,17 @@ class Base(Block):
                                 new_bundles.append(new_bundle)
                     elif not tok and tag and par:
                         self.tool.tag_parse_tree(tree)
+                    elif not tok and not tag and not par and self.resegment:
+                        sentences = self.tool.segment_text(tree.text)
+                        if len(sentences) > 1:
+                            orig_bundle_id = bundle.bundle_id
+                            bundle.bundle_id = orig_bundle_id + '-1'
+                            tree.text = sentences[0]
+                            for i, sentence in enumerate(sentences[1:], 2):
+                                new_bundle = Bundle(document=doc, bundle_id=orig_bundle_id + '-' + str(i))
+                                new_tree = new_bundle.create_tree(zone=tree.zone)
+                                new_tree.text = sentence
+                                new_bundles.append(new_bundle)
                     else:
                         raise ValueError("Unimplemented tokenize=%s tag=%s parse=%s" % (tok, tag, par))
         doc.bundles = new_bundles

@@ -92,6 +92,7 @@ class UDPipe:
         for u_sentence in u_sentences:
             if not new_root:
                 new_root = Root()
+            new_root.text = u_sentence.getText()
             heads, nodes = [], [new_root]
             u_words = u_sentence.words
             for i in range(1, u_words.size()):
@@ -110,3 +111,15 @@ class UDPipe:
             trees.append(new_root)
             new_root = None
         return trees
+
+    def segment_text(self, text):
+        """Segment the provided text into sentences."""
+        self.tokenizer.setText(text)
+        is_another = True
+        sentences = []
+        while is_another:
+            u_sentence = Sentence()
+            is_another = self.tokenizer.nextSentence(u_sentence)
+            if is_another:
+                sentences.append(u_sentence.getText())
+        return sentences
