@@ -195,7 +195,7 @@ class Node(object):
         if self._deps is not None:
             serialized_deps = []
             for secondary_dependence in self._deps:
-                serialized_deps.append('%d:%s' % (secondary_dependence[
+                serialized_deps.append('{}:{}'.format(secondary_dependence[
                     'parent'].ord, secondary_dependence['deprel']))
             self._raw_deps = '|'.join(serialized_deps)
         return self._raw_deps
