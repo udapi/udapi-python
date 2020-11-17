@@ -8,6 +8,13 @@ but by SETS-search-interface rules, which may give different results than this c
 Usage:
 udapy -s ud.MarkBugs < in.conllu > marked.conllu 2> log.txt
 
+Some tests may be customized for individual languages if the language code is
+available as the zone id. The zone id can be provided in the sentence id after
+the slash (e.g., "sent_id = s125/en" for English), or as a parameter of the
+reader:
+
+udapy -s read.Conllu zone=en ud.MarkBugs < in.conllu > marked.conllu 2> log.txt
+
 Errors are both logged to stderr and marked within the nodes' MISC field,
 e.g. `node.misc['Bug'] = 'aux-chain'`, so the output conllu file can be
 searched for "Bug=" occurences.
@@ -109,7 +116,10 @@ class MarkBugs(Block):
 
         for i_upos, i_feat in REQUIRED_FEATURE_FOR_UPOS.items():
             if upos == i_upos and not feats[i_feat]:
-                self.log(node, 'no-' + i_feat, 'upos=%s but %s feature is missing' % (upos, i_feat))
+                # Some languages do not distinguish finite and non-finite forms of verbs.
+                # The VerbForm feature is not obligatory in those languages.
+                if not node.root.zone.split("_")[0] in {"id", "tl", "hil", "ifb"}:
+                    self.log(node, 'no-' + i_feat, 'upos=%s but %s feature is missing' % (upos, i_feat))
 
         if feats['VerbForm'] == 'Fin':
             if upos not in ('VERB', 'AUX'):
