@@ -9,11 +9,14 @@ from udapi.block.write.conllu import Conllu as ConlluWriter
 class Document(object):
     """Document is a container for Universal Dependency trees."""
 
-    def __init__(self):
+    def __init__(self, filename=None):
+        """Create a new Udapi document. Optionally, load the CoNLL-U file specified in `filename`."""
         self.bundles = []
         self._highest_bundle_id = 0
         self.meta = {}
         self.json = {}
+        if filename is not None:
+            self.load_conllu(filename)
 
     def __iter__(self):
         return iter(self.bundles)
@@ -47,3 +50,18 @@ class Document(object):
         writer = ConlluWriter(filehandle=fh)
         writer.apply_on_document(self)
         return fh.getvalue()
+
+    @property
+    def trees(self):
+        """An iterator over all trees in the document."""
+        for bundle in self:
+            for tree in bundle:
+                yield tree
+
+    @property
+    def nodes(self):
+        """An iterator over all nodes in the document."""
+        for bundle in self:
+            for tree in bundle:
+                for node in tree.descendants:
+                    yield node
