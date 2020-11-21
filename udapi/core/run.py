@@ -171,3 +171,9 @@ class Run(object):
     def scenario_string(self):
         """Return the scenario string."""
         return "\n".join(self.args.scenario)
+
+
+def create_block(block, **kwargs):
+    """A factory function for creating new block instances (handy for IPython)."""
+    blocks = _import_blocks([block], [kwargs])
+    return blocks[0]
