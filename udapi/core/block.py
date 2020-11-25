@@ -38,6 +38,11 @@ class Block(object):
             if self._should_process_tree(tree):
                 self.process_tree(tree)
 
+    def run(self, document):
+        self.process_start()
+        self.apply_on_document(document)
+        self.process_end()
+
     def apply_on_document(self, document):
         self.before_process_document(document)
         self.process_document(document)
