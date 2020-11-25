@@ -228,8 +228,19 @@ class Node(object):
                 return self._deps
 
             for raw_dependency in self._raw_deps.split('|'):
-                head, deprel = raw_dependency.split(':')
-                parent = nodes[int(head)]
+                # Deprel itself may contain one or more ':' (subtypes).
+                pieces = raw_dependency.split(':')
+                head = pieces[0]
+                deprel = ':'.join(pieces[1:])
+                # Empty nodes have to be located differently than normal nodes.
+                if '.' in head:
+                    matching = [x for x in self.root.empty_nodes if x.ord == head]
+                    if len(matching) > 0:
+                        parent = matching[0]
+                    else:
+                        parent = None ###!!! what should we do here?
+                else:
+                    parent = nodes[int(head)]
                 self._deps.append({'parent': parent, 'deprel': deprel})
 
         return self._deps
