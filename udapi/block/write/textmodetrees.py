@@ -123,7 +123,7 @@ class TextModeTrees(BaseWriter):
     (by reveresing the background and foreground colors).
 
     This block's method `process_tree` can be called on any node (not only root),
-    which is useful for printing subtrees using ``node.print_subtree()``,
+    which is useful for printing subtrees using ``node.draw()``,
     which is internally implemented using this block.
 
     SEE ALSO
@@ -207,7 +207,7 @@ class TextModeTrees(BaseWriter):
         self.lengths = []
 
     # We want to be able to call process_tree not only on root node,
-    # so this block can be called from node.print_subtree(**kwargs)
+    # so this block can be called from node.print_draw(**kwargs)
     # on any node and print its subtree. Thus, we cannot assume that
     # allnodes[idx].ord == idx. Instead of node.ord, we'll use index_of[node.ord],
     # which is its index within the printed subtree.

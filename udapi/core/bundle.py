@@ -3,6 +3,7 @@
 import re
 
 from udapi.core.root import Root
+from udapi.block.write.textmodetrees import TextModeTrees
 
 VALID_ZONE_REGEX = re.compile("^[a-z-]*(_[A-Za-z0-9-]+)?$")
 
@@ -106,3 +107,7 @@ class Bundle(object):
     def address(self):
         """Return bundle_id or '?' if missing."""
         return self.bundle_id if self.bundle_id is not None else '?'
+
+    def draw(self, **kwargs):
+        """Pretty print the trees using TextModeTrees."""
+        TextModeTrees(**kwargs).process_bundle(self)

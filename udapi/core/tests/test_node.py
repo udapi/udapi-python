@@ -56,8 +56,8 @@ class TestDocument(unittest.TestCase):
         self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
 
-    def test_print_subtree(self):
-        """Test print_subtree() method, which uses udapi.block.write.textmodetrees."""
+    def test_draw(self):
+        """Test the draw() method, which uses udapi.block.write.textmodetrees."""
         doc = Document()
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'enh_deps.conllu')
         doc.load_conllu(data_filename)
@@ -98,16 +98,16 @@ class TestDocument(unittest.TestCase):
 
         try:
             sys.stdout = capture = io.StringIO()
-            root.print_subtree(color=False)
+            root.draw(color=False)
             self.assertEqual(capture.getvalue(), expected1)
             capture.seek(0)
             capture.truncate()
-            root.print_subtree(color=False, attributes='form,feats,misc',
-                               print_sent_id=False, print_text=False)
+            root.draw(color=False, attributes='form,feats,misc',
+                      print_sent_id=False, print_text=False)
             self.assertEqual(capture.getvalue(), expected2)
             capture.seek(0)
             capture.truncate()
-            root3.print_subtree(color=False, attributes='form', print_sent_id=0, print_text=0)
+            root3.draw(color=False, attributes='form', print_sent_id=0, print_text=0)
             self.assertEqual(capture.getvalue(), expected3)
         finally:
             sys.stdout = sys.__stdout__  # pylint: disable=redefined-variable-type

@@ -1,11 +1,12 @@
 """Document class is a container for UD trees."""
 
 import io
+import contextlib
 from udapi.core.bundle import Bundle
 from udapi.block.read.conllu import Conllu as ConlluReader
 from udapi.block.write.conllu import Conllu as ConlluWriter
 from udapi.block.read.sentences import Sentences as SentencesReader
-
+from udapi.block.write.textmodetrees import TextModeTrees
 
 class Document(object):
     """Document is a container for Universal Dependency trees."""
@@ -36,6 +37,16 @@ class Document(object):
     def __iter__(self):
         return iter(self.bundles)
 
+    def __getitem__(self, key):
+        return self.bundles[key]
+
+    def __str__(self):
+        """Pretty print the whole document using write.TextModeTrees."""
+        fh = io.StringIO()
+        with contextlib.redirect_stdout(fh):
+            TextModeTrees(color=True).run(self)
+        return fh.getvalue()
+
     def create_bundle(self):
         """Create a new bundle and add it at the end of the document."""
         self._highest_bundle_id += 1
@@ -62,8 +73,8 @@ class Document(object):
     def to_conllu_string(self):
         """Return the document as a conllu-formatted string."""
         fh = io.StringIO()
-        writer = ConlluWriter(filehandle=fh)
-        writer.apply_on_document(self)
+        with contextlib.redirect_stdout(fh):
+            ConlluWriter().apply_on_document(self)
         return fh.getvalue()
 
     @property
@@ -80,3 +91,7 @@ class Document(object):
             for tree in bundle:
                 for node in tree.descendants:
                     yield node
+
+    def draw(self, **kwargs):
+        """Pretty print the trees using TextModeTrees."""
+        TextModeTrees(**kwargs).run(self)

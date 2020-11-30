@@ -600,6 +600,11 @@ class Node(object):
         return string.rstrip()
 
     def print_subtree(self, **kwargs):
+        """deprecated name for draw()"""
+        logging.warning("node.print_subtree() is deprecated, use node.draw() instead.")
+        TextModeTrees(**kwargs).process_tree(self)
+
+    def draw(self, **kwargs):
         """Print ASCII visualization of the dependency structure of this subtree.
 
         This method is useful for debugging.

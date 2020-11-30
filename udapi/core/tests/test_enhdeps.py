@@ -42,7 +42,7 @@ class TestEnhDeps(unittest.TestCase):
     def test_create_empty(self):
         writer = ConlluWriter()
         writer.apply_on_document(self.doc)
-        # self.tree.print_subtree()
+        # self.tree.draw()
         self.assertGreater(len(self.tree.empty_nodes), 0)
 
     def test_regular_deps(self):
