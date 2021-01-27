@@ -514,6 +514,8 @@ class Node(object):
             return value
         if name == 'feats_split':
             return str(self.feats).split('|')
+        if name == 'misc_split':
+            return str(self.misc).split('|')
         if name.startswith('feats['):
             return self.feats[name[6:-1]]
         if name.startswith('misc['):
@@ -554,7 +556,7 @@ class Node(object):
             elif name.startswith('r_'):
                 nodes, name = [self.next_node], name[2:]
             for node in (n for n in nodes if n is not None):
-                if name == 'feats_split':
+                if name in {'feats_split', 'misc_split'}:
                     values.extend(node._get_attr(name))
                 else:
                     values.append(node._get_attr(name))
