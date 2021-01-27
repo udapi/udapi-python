@@ -5,7 +5,7 @@ import re
 class MiscStats(Block):
     """Block corefud.MiscStats prints 10 most frequent values of each attribute stored in the MISC field"""
 
-    def __init__(self, maxvalues=10):
+    def __init__(self, maxvalues=10, **kwargs):
         
         """Create the corefud.MiscStats
 
@@ -14,9 +14,9 @@ class MiscStats(Block):
                    to be printed for each attribute.
 
         """
+        super().__init__(**kwargs)
         self.maxvalues = maxvalues
         self.valuecounter = {}
-        self.zones = 'all'
 
     def process_node(self,node):
         for attrname in node.misc:
