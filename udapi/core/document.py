@@ -11,7 +11,7 @@ from udapi.block.write.textmodetrees import TextModeTrees
 class Document(object):
     """Document is a container for Universal Dependency trees."""
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, **kwargs):
         """Create a new Udapi document.
 
         Args:
@@ -20,6 +20,8 @@ class Document(object):
             and `*.txt` (using `udapi.block.read.sentences`) filenames are supported.
             No pre-processing is applied, so when loading the document from a *.txt file,
             `Document("a.txt").nodes` will be empty and you need to run tokenization first.
+            You can pass additional parameters for `udapi.block.read.sentences`
+            (`ignore_empty_lines` and `rstrip`).
         """
         self.bundles = []
         self._highest_bundle_id = 0
@@ -29,7 +31,7 @@ class Document(object):
             if filename.endswith(".conllu"):
                 self.load_conllu(filename)
             elif filename.endswith(".txt"):
-                reader = SentencesReader(files=filename)
+                reader = SentencesReader(files=filename, **kwargs)
                 reader.apply_on_document(self)
             else:
                 raise ValueError("Only *.conllu and *.txt are supported. Provided: " + filename)

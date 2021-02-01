@@ -4,10 +4,19 @@ from udapi.core.root import Root
 
 
 class Sentences(BaseReader):
-    """A reader for plain-text sentences (one sentence per line) files."""
+    r"""A reader for plain-text sentences (one sentence per line) files.
 
-    def __init__(self, ignore_empty_lines=False, **kwargs):
+    Args:
+    ignore_empty_lines: if True, delete empty lines from the input.
+        Default=False.
+    rstrip: a set of characters to be stripped from the end of each line.
+        Default='\r\n '. You can use rstrip='\n' if you want to preserve
+        any space or '\r' (Carriage Return) at end of line,
+        so that `udpipe.Base resegment=1` keeps these characters in `SpacesAfter`.
+    """
+    def __init__(self, ignore_empty_lines=False, rstrip='\r\n ', **kwargs):
         self.ignore_empty_lines = ignore_empty_lines
+        self.rstrip = rstrip
         super().__init__(**kwargs)
 
     @staticmethod
@@ -33,5 +42,5 @@ class Sentences(BaseReader):
                 if line == '':
                     return None
         root = Root()
-        root.text = line.rstrip()
+        root.text = line.rstrip(self.rstrip)
         return root
