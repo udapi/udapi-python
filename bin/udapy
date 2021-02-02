@@ -43,6 +43,10 @@ argparser.add_argument(
     "-N", "--no_color", action="store_true",
     help="Add color=0 to the end of the scenario, this overrides color=1 of -T and -H")
 argparser.add_argument(
+    "-X", "--extra", action="append",
+    help="Add a specified parameter (or a block name) to the end of the scenario\n"
+         "For example 'udapy -TNX attributes=form,misc -X layout=align < my.conllu'")
+argparser.add_argument(
     'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
 args = argparser.parse_args()
@@ -74,6 +78,8 @@ if __name__ == "__main__":
         args.scenario = args.scenario + ['marked_only=1']
     if args.no_color:
         args.scenario = args.scenario + ['color=0']
+    if args.extra:
+        args.scenario += args.extra
 
     runner = Run(args)
     # udapy is often piped to head etc., e.g.
