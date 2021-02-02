@@ -13,10 +13,11 @@ from udapi.core.block import Block
 class SetSpaceAfter(Block):
     """Block for heuristic setting of the SpaceAfter=No MISC attribute."""
 
-    def __init__(self, not_after='¡¿([{„', not_before='.,;:!?}])', fix_text=True, **kwargs):
+    def __init__(self, not_after='¡ ¿ ( [ { „ /', not_before='. , ; : ! ? } ] ) / ?? ??? !! !!! ... …',
+                 fix_text=True, extra_not_after='', extra_not_before='', **kwargs):
         super().__init__(**kwargs)
-        self.not_after = not_after
-        self.not_before = not_before
+        self.not_after = (not_after + ' ' + extra_not_after).split(' ')
+        self.not_before = (not_before + ' ' + extra_not_before).split(' ')
         self.fix_text = fix_text
         self.changed = False
 
@@ -26,7 +27,7 @@ class SetSpaceAfter(Block):
         self.changed = False
 
         # Undirected double quotes are ambiguous.
-        # If there is an even number of quotes in a sentence, supposed they are not nested
+        # If there is an even number of quotes in a sentence, suppose they are not nested
         # and treat odd-indexed ones as opening and even-indexed ones as closing.
         # Otherwise (odd number, e.g. when quoting multiple sentences), don't remove any space.
         matching_quotes = not bool(count_of_form['"'] % 2)
@@ -36,22 +37,25 @@ class SetSpaceAfter(Block):
         # Some languages use directed „quotes“ and some “quotes”,
         # so the symbol “ (U+201C) is ambiguous and we heuristically check for presence of „.
         if count_of_form['„']:
-            not_before += '“'
+            not_before += ['“']
         else:
-            not_after += '“'
+            not_after += ['“']
 
         for i, node in enumerate(nodes[:-1]):
             next_form = nodes[i + 1].form
             if node.form in self.not_after or next_form in not_before:
                 self.mark_no_space(node)
-            if matching_quotes and node.form == '"':
-                if odd_indexed_quote:
+            if node.form == '"':
+                if matching_quotes:
+                    if odd_indexed_quote:
+                        self.mark_no_space(node)
+                    elif i:
+                        self.mark_no_space(nodes[i - 1])
+                    odd_indexed_quote = not odd_indexed_quote
+                elif i==0:
                     self.mark_no_space(node)
-                elif i:
-                    self.mark_no_space(nodes[i - 1])
-                odd_indexed_quote = not odd_indexed_quote
 
-        if matching_quotes and nodes[-1].form == '"':
+        if nodes[-1].form == '"':
             self.mark_no_space(nodes[-2])
 
         if self.fix_text and self.changed:
