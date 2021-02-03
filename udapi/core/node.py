@@ -5,6 +5,7 @@ and function `find_minimal_common_treelet`.
 """
 import logging
 
+import udapi.core.coref
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
@@ -76,6 +77,7 @@ class Node(object):
         '_parent',    # Parent node.
         '_children',  # Ord-ordered list of child nodes.
         '_mwt',       # Multi-word token in which this word participates.
+        '_mentions',  # List of udapi.core.coref.CorefMention objects whose span includes this node
     ]
 
     def __init__(self, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
@@ -94,6 +96,7 @@ class Node(object):
         self._parent = None
         self._children = list()
         self._mwt = None
+        self._mentions = list()
 
     def __str__(self):
         """Pretty print of the Node object."""
@@ -704,6 +707,20 @@ class Node(object):
     @gloss.setter
     def gloss(self, new_gloss):
         self.misc["Gloss"] = new_gloss
+
+    @property
+    def coref_mentions(self):
+        self.root.bundle.document._load_coref()
+        return self._mentions
+
+    @property
+    def coref_clusters(self):
+        self.root.bundle.document._load_coref()
+        return [m.cluster for m in self._mentions if m.cluster is not None]
+
+    def create_coref_cluster(self, **kwargs):
+        return udapi.core.coref.create_coref_cluster(head=self, **kwargs)
+
 
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.

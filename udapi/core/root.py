@@ -235,6 +235,10 @@ class Root(Node):
                 result.append(node)
         return result
 
+    @property
+    def descendants_and_empty(self):
+        return sorted(self._descendants + self.empty_nodes, key=lambda n: float(n.ord))
+
     def steal_nodes(self, nodes):
         """Move nodes from another tree to this tree (append)."""
         old_root = nodes[0].root

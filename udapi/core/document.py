@@ -2,6 +2,7 @@
 
 import io
 import contextlib
+import udapi.core.coref
 from udapi.core.bundle import Bundle
 from udapi.block.read.conllu import Conllu as ConlluReader
 from udapi.block.write.conllu import Conllu as ConlluWriter
@@ -27,6 +28,7 @@ class Document(object):
         self._highest_bundle_id = 0
         self.meta = {}
         self.json = {}
+        self._coref_clusters = None
         if filename is not None:
             if filename.endswith(".conllu"):
                 self.load_conllu(filename)
@@ -97,3 +99,19 @@ class Document(object):
     def draw(self, **kwargs):
         """Pretty print the trees using TextModeTrees."""
         TextModeTrees(**kwargs).run(self)
+
+    def _load_coref(self):
+        """De-serialize coreference-related objects (CorefMention, CorefCluster).
+
+        This internal method will be called automatically whenever any coref-related method is called.
+        It iterates through all nodes in the document and creates the objects based on the info in MISC
+        (stored in attributes ClusterId, MentionSpan, ClusterType, Split, Bridging).
+        """
+        if self._coref_clusters is None:
+            udapi.core.coref.load_coref_from_misc(self)
+
+    @property
+    def coref_clusters(self):
+        """A dict mapping ClusterId to a CorefCluster object."""
+        self._load_coref()
+        return self._coref_clusters
