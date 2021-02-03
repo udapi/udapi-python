@@ -46,6 +46,7 @@ class Bundle(object):
     def __iter__(self):
         return iter(self.trees)
 
+    @property
     def document(self):
         """Returns the document in which the bundle is contained."""
         return self._document
