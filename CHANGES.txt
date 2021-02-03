@@ -2,6 +2,10 @@ Udapi Change Log
 ----------------
 See https://github.com/udapi/udapi-python/commits/master for details.
 
+0.2.3 2021-02-04
+ - support for enhanced dependencies and coreference
+ - requires Python 3.6+ due to f-strings
+
 0.2.2 2018-01-08
  - support for loading/storing documents from/to strings
  - allow private modules (starting with dot instead of udapi.block)
