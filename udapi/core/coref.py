@@ -51,25 +51,7 @@ class CorefMention(object):
 
     @property
     def span(self):
-        def _nums_to_ranges(nums):
-            lo, hi = nums[0], nums[0]
-            for num in nums[1:]:
-                if num == hi + 1:
-                    hi = num
-                else:
-                    yield (lo, hi)
-                    lo, hi = num, num
-            yield (lo, hi)
-
-        if not self._words:
-            return ''
-        ords = sorted(n.ord for n in self._words) # TODO vypustit sorted
-        if len(ords) == 1:
-            return str(ords[0])
-        first, last = ords[0], ords[-1]
-        if ords == list(range(first, last+1)):
-            return "%g-%g" % (first, last)
-        return ','.join( '%g' % r[0] if r[0]==r[1] else '%g-%g' % r for r in _nums_to_ranges(ords))
+        return nodes_to_span(self._words)
 
     @span.setter
     def span(self, new_span):
@@ -222,20 +204,26 @@ def span_to_nodes(root, span):
 
 
 def nodes_to_span(nodes):
-    def _nums_to_ranges(nums):
-        lo, hi = nums[0], nums[0]
-        for num in nums[1:]:
-            if num == hi + 1:
-                hi = num
-            else:
-                yield (lo, hi)
-                lo, hi = num, num
-        yield (lo, hi)
+    """Converts a list of nodes into a string specifying ranges of their ords.
 
-    ords = sorted(n.ord for n in nodes) # TODO vypustit sorted
-    if len(ords) == 1:
-        return str(ords[0])
-    first, last = ords[0], ords[-1]
-    if ords == list(range(first, last+1)):
-        return "%g-%g" % (first, last)
-    return ','.join( '%g' % r[0] if r[0]==r[1] else '%g-%g' % r for r in _nums_to_ranges(ords))
+    For example, nodes with ords 3, 4, 5 and 7 will be converted to "3-5,7".
+    The function handles also empty nodes, so e.g. 3.1, 3.2 and 3.3 will be converted to "3.1-3.3".
+    Note that empty nodes may form gaps in the span, so if a given tree contains
+    an empty node with ord 5.1, but only nodes with ords 3, 4, 5, 6, 7.1 and 7.2
+    are provided as `nodes`, the resulting string will be "3-5,6,7.1-7.2".
+    This means that the implementation needs to iterate of all nodes
+    in a given tree (root.descendants_and_empty) to check for such gaps.
+    """
+    if not nodes:
+        return ''
+    all_nodes = nodes[0].root.descendants_and_empty
+    i, found, ranges = -1, 0, []
+    while i + 1 < len(all_nodes) and found < len(nodes):
+        i += 1
+        if all_nodes[i] in nodes:
+            lo = all_nodes[i].ord
+            while i < len(all_nodes) and all_nodes[i] in nodes:
+                i, found = i + 1, found + 1
+            hi = all_nodes[i - 1].ord
+            ranges.append(f"{lo}-{hi}" if hi > lo else f"{lo}")
+    return ','.join(ranges)
