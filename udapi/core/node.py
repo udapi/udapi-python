@@ -1,9 +1,10 @@
 """Node class and related classes and functions.
 
-In addition to class `Node`, this module contains also classes `EmptyNode` and `ListOfNodes`
-and function `find_minimal_common_treelet`.
+In addition to class `Node`, this module contains also classes
+`EmptyNode`, `OrdTuple` and `ListOfNodes` and function `find_minimal_common_treelet`.
 """
 import logging
+import functools
 
 import udapi.core.coref
 from udapi.block.write.textmodetrees import TextModeTrees
@@ -403,12 +404,12 @@ class Node(object):
             if empty.ord > new_ord:
                 break
             if empty.ord == new_ord:
-                #if isinstance(new_ord, OrdTuple);
-                #    new_ord.increase()
-                #elif new_ord == base_ord + 0.9:
-                #    new_ord = OrdTuple(base_ord, 10)
-                #else:
-                new_ord = round(new_ord+0.1, 1)
+                if isinstance(new_ord, OrdTuple):
+                    new_ord.increase()
+                elif new_ord == base_ord + 0.9:
+                    new_ord = OrdTuple(base_ord, 10)
+                else:
+                    new_ord = round(new_ord+0.1, 1)
         new_node.ord = new_ord
         self.root.empty_nodes.append(new_node)
         return new_node
@@ -790,6 +791,55 @@ class EmptyNode(Node):
         else:
             raise ValueError('Only str and float are allowed for EmptyNode ord setter,'
                              f' but {type(new_ord)} was given.')
+
+
+@functools.total_ordering
+class OrdTuple:
+    """Class for the rare case of 9+ consecutive empty nodes, i.e. ords x.10, x.11 etc.
+
+    Ord 1.10 cannot be stored as float, which would result in 1.1.
+    We thus store it as a tuple (1,10) wrapped in OrdTuple, so that comparisons work,
+    e.g.: 1.9 < OrdTuple('1.10') < 2
+    """
+    __slots__ = ('_key')
+
+    def __init__(self, string):
+        m = re.match(r'(\d+)\.(\d+)$', string)
+        if not m:
+            raise ValueError(f"Ord {string} does not match \\d+.\\d+")
+        major, minor = int(m.group(1)), int(m.group(2))
+        if minor == 0:
+            raise ValueError(f"Ord {string} should be stored as int")
+        if minor < 10:
+            raise ValueError(f"Ord {string} should be stored as float")
+        self._key = (major, minor)
+
+    def __repr__(self):
+        return f"{self._key[0]}.{self._key[1]}"
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return False
+        elif isinstance(other, float):
+            return self._key == (int(other), int(10*other - 10*int(other)))
+        elif isinstance(other, OrdTuple):
+            return self._key == other._key
+        else:
+            raise ValueError(f"OrdTuple cannot be compared with {type(other)}")
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self._key < (other, 0)
+        elif isinstance(other, float):
+            return self._key < (int(other), int(10*other - 10*int(other)))
+        elif isinstance(other, OrdTuple):
+            return self._key < other._key
+        else:
+            raise ValueError(f"OrdTuple cannot be compared with {type(other)}")
+
+    def increase(self):
+        """Increment the decimal part of this ord."""
+        self._key = (self.key[0], self._key[1]+1)
 
 
 class ListOfNodes(list):
