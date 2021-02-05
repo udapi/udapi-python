@@ -162,9 +162,9 @@ def load_coref_from_misc(doc):
                 if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
                     logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
                 cluster.cluster_type = cluster_type
-            # TODO deserialize Bridging and Split
+            # TODO deserialize Bridging and SplitAnte
             mention._bridging = node.misc["Bridging"]
-            mention._split_ante = node.misc["Split"]
+            cluster._split_ante = node.misc["SplitAnte"]
     doc._coref_clusters = clusters
 
 
@@ -176,7 +176,7 @@ def store_coref_to_misc(doc):
         del node.misc["MentionSpan"]
         del node.misc["ClusterType"]
         del node.misc["Bridging"]
-        del node.misc["Split"]
+        del node.misc["SplitAnte"]
     for cluster in doc._coref_clusters.values():
         for mention in cluster.mentions:
             head = mention.head
@@ -184,7 +184,7 @@ def store_coref_to_misc(doc):
             head.misc["MentionSpan"] = mention.span
             head.misc["ClusterType"] = cluster.cluster_type
             head.misc["Bridging"] = mention.bridging
-            head.misc["Split"] = cluster.split_ante
+            head.misc["SplitAnte"] = cluster.split_ante
 
 
 def span_to_nodes(root, span):
