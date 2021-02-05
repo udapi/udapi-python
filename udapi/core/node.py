@@ -232,16 +232,13 @@ class Node(object):
 
             for raw_dependency in self._raw_deps.split('|'):
                 # Deprel itself may contain one or more ':' (subtypes).
-                pieces = raw_dependency.split(':')
-                head = pieces[0]
-                deprel = ':'.join(pieces[1:])
+                head, deprel = raw_dependency.split(':', maxsplit=1)
                 # Empty nodes have to be located differently than normal nodes.
                 if '.' in head:
-                    matching = [x for x in self.root.empty_nodes if x.ord == head]
-                    if len(matching) > 0:
-                        parent = matching[0]
-                    else:
-                        parent = None ###!!! what should we do here?
+                    try:
+                        parent = next(x for x in self.root.empty_nodes if x.ord == head)
+                    except StopIteration:
+                        raise ValueError(f'Empty node with ord={head} not found')
                 else:
                     parent = nodes[int(head)]
                 self._deps.append({'parent': parent, 'deprel': deprel})
