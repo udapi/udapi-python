@@ -28,9 +28,10 @@ class Node(object):
     Attributes `form`, `lemma`, `upos`, `xpos` and `deprel` are public attributes of type `str`,
     so you can use e.g. `node.lemma = node.form`.
 
-    `node.ord` is a int type public attribute for storing the node's word order index,
+    `node.ord` is a int type property for storing the node's word-order index,
     but assigning to it should be done with care, so the non-root nodes have `ord`s 1,2,3...
     It is recommended to use one of the `node.shift_*` methods for reordering nodes.
+    Note that `EmptyNode`s (subclass of `Node`) have decimal ords (and no `shift_*` methods).
 
     For changing dependency structure (topology) of the tree, there is the `parent` property,
     e.g. `node.parent = node.parent.parent` and `node.create_child()` method.
@@ -63,8 +64,10 @@ class Node(object):
     # TODO: Benchmark memory and speed of slots vs. classic dict.
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
+    # TODO: Benchmark using node._ord instead node.ord in this file
+    # TODO: Benchmark storing root in node._root (as it is done in EmptyNode)
     __slots__ = [
-        'ord',        # Word-order index of the node (root has 0).
+        '_ord',       # Word-order index of the node (root has 0).
         'form',       # Word form or punctuation symbol.
         'lemma',      # Lemma of word form.
         'upos',       # Universal PoS tag.
@@ -83,7 +86,7 @@ class Node(object):
     def __init__(self, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
                  xpos=None, feats=None, deprel=None, misc=None):
         """Create a new node and initialize its attributes using the keyword arguments."""
-        self.ord = None
+        self._ord = None
         self.form = form
         self.lemma = lemma
         self.upos = upos
@@ -101,6 +104,15 @@ class Node(object):
     def __str__(self):
         """Pretty print of the Node object."""
         return "node<%s, %s>" % (self.address(), self.form)
+
+    # ord is implemented as a property, so that it can be overriden in EmptyNode and Root
+    @property
+    def ord(self):
+        return self._ord
+
+    @ord.setter
+    def ord(self, new_ord):
+        self._ord = new_ord
 
     @property
     def udeprel(self):
@@ -754,6 +766,30 @@ class EmptyNode(Node):
     @property
     def root(self):
         return self._root
+
+    @property
+    def parent(self):
+        return None
+
+    @parent.setter
+    def parent(self, _):
+        """Attempts at setting parent of EmptyNode result in AttributeError exception."""
+        raise AttributeError('EmptyNode cannot have a (basic-UD) parent.')
+
+    @property
+    def ord(self):
+        return self._ord
+
+    @ord.setter
+    def ord(self, new_ord):
+        """Empty node's ord setter accepts float and str."""
+        if isinstance(new_ord, str):
+            self._ord = float(new_ord)
+        elif isinstance(new_ord, float):
+            self._ord = new_ord
+        else:
+            raise ValueError('Only str and float are allowed for EmptyNode ord setter,'
+                             f' but {type(new_ord)} was given.')
 
 
 class ListOfNodes(list):
