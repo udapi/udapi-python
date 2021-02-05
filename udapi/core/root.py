@@ -1,7 +1,7 @@
 """Root class represents the technical root node in each tree."""
 import logging
 
-from udapi.core.node import Node, ListOfNodes
+from udapi.core.node import Node, EmptyNode, ListOfNodes
 from udapi.core.mwt import MWT
 
 # 7 instance attributes is too low (CoNLL-U has 10 columns)
@@ -141,6 +141,19 @@ class Root(Node):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Attempts at changing the word order of root result in Exception."""
         raise Exception('Technical root cannot be shifted as it is always the first node')
+
+    def create_empty_child(self, **kwargs):
+        """Create and return a new empty node within this tree.
+
+        This root-specific implementation overrides `Node.create_empty_child()'.
+        It is faster because it does not set `deps` and `ord` of the newly created node.
+        It is up to the user to set up these attributes correctly.
+        It is used in `udapi.block.read.conllu` (where speed is important and thus,
+        only `raw_deps` are set up instead of `deps`).
+        """
+        new_node = EmptyNode(root=self, **kwargs)
+        self.empty_nodes.append(new_node)
+        return new_node
 
     # TODO document whether misc is a string or dict or it can be both
     def create_multiword_token(self, words=None, form=None, misc=None):

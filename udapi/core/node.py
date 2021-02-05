@@ -369,12 +369,36 @@ class Node(object):
         new_node.parent = self
         return new_node
 
-    def create_empty_child(self, **kwargs):
-        """Create and return a new empty node child of the current node."""
-        new_node = Node(**kwargs)
-        self.root.empty_nodes.append(new_node)
+    def create_empty_child(self, deprel, after=True, **kwargs):
+        """Create and return a new empty node child of the current node.
+
+        Args:
+            deprel: the enhanced dependency relation (required to be stored in DEPS)
+            form, lemma, upos, xpos, feats, misc: as in Node, the default is '_'
+            after: position the newly created empty node after this `node`?
+                If True (default), the `new_node.ord` will be `node.ord + 0.1`,
+                unless there is already an empty node with such ord,
+                in which case it will be `node.ord + 0.2` etc.
+                If False, the new node will be placed immediately before `node`.
+        """
+        new_node = EmptyNode(root=self.root, **kwargs)
+        new_node.deps = [{'parent': self, 'deprel': deprel}]
         # self.enh_children.append(new_node) TODO
         # new_node.enh_parents.append(self) TODO
+        base_ord = self.ord if after else self.ord - 1
+        new_ord = base_ord + 0.1
+        for empty in self.root.empty_nodes:
+            if empty.ord > new_ord:
+                break
+            if empty.ord == new_ord:
+                #if isinstance(new_ord, OrdTuple);
+                #    new_ord.increase()
+                #elif new_ord == base_ord + 0.9:
+                #    new_ord = OrdTuple(base_ord, 10)
+                #else:
+                new_ord = round(new_ord+0.1, 1)
+        new_node.ord = new_ord
+        self.root.empty_nodes.append(new_node)
         return new_node
 
     # TODO: make private: _unordered_descendants
@@ -717,6 +741,20 @@ class Node(object):
 
     def create_coref_cluster(self, **kwargs):
         return udapi.core.coref.create_coref_cluster(head=self, **kwargs)
+
+
+class EmptyNode(Node):
+    """Class for representing empty nodes (for ellipsis in enhanced UD)."""
+    __slots__ = ['_root']
+
+    def __init__(self, root, form='_', lemma='_', upos='_', xpos='_', feats='_', misc='_'):
+        super().__init__(form=form, lemma=lemma, upos=upos,
+                         xpos=xpos, feats=feats, deprel='_', misc=misc)
+        self._root = root
+
+    @property
+    def root(self):
+        return self._root
 
 
 class ListOfNodes(list):
