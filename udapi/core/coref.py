@@ -18,7 +18,7 @@ class CorefMention(object):
 
     @head.setter
     def head(self, new_head):
-        if new_head not in self._words:
+        if self._words and new_head not in self._words:
             raise ValueError(f"New head {new_head} not in mention words")
         self._head = new_head
 
@@ -45,7 +45,7 @@ class CorefMention(object):
 
     @words.setter
     def words(self, new_words):
-        if self.head not in new_words:
+        if new_words and self.head not in new_words:
             raise ValueError(f"Head {self.head} not in new_words")
         for old_word in self._words:
             old_word._mentions.remove(self)

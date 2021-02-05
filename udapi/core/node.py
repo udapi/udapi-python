@@ -22,7 +22,6 @@ from udapi.core.feats import Feats
 # The set of public attributes/properties and methods of Node was well-thought.
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
-
 class Node(object):
     """Class for representing nodes in Universal Dependency trees.
 
