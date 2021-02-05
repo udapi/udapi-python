@@ -22,6 +22,7 @@ from udapi.core.feats import Feats
 # The set of public attributes/properties and methods of Node was well-thought.
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
+@functools.total_ordering
 class Node(object):
     """Class for representing nodes in Universal Dependency trees.
 
@@ -113,6 +114,9 @@ class Node(object):
     @ord.setter
     def ord(self, new_ord):
         self._ord = new_ord
+
+    def __lt__(self, other):
+        return self.ord < other.ord
 
     @property
     def udeprel(self):
@@ -307,7 +311,7 @@ class Node(object):
         self._parent = new_parent
 
         # Append the current node to the new parent children.
-        new_parent._children = sorted(new_parent.children + [self], key=lambda child: child.ord)
+        new_parent._children = sorted(new_parent.children + [self])
 
     @property
     def children(self):
@@ -361,7 +365,7 @@ class Node(object):
          nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
-        return ListOfNodes(sorted(self.unordered_descendants(), key=lambda n: n.ord), origin=self)
+        return ListOfNodes(sorted(self.unordered_descendants()), origin=self)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
@@ -884,7 +888,7 @@ class ListOfNodes(list):
             result = [x for x in result if x.ord <= self.origin.ord]
         if following_only:
             result = [x for x in result if x.ord >= self.origin.ord]
-        return sorted(result, key=lambda node: node.ord)
+        return sorted(result)
 
 
 def find_minimal_common_treelet(*args):

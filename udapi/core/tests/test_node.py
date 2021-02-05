@@ -52,6 +52,10 @@ class TestDocument(unittest.TestCase):
 
         # ords and reorderings
         self.assertEqual([node.ord for node in nodes], [1, 2, 3, 4, 5, 6])
+        self.assertTrue(nodes[0].precedes(nodes[1]))
+        self.assertTrue(nodes[0] < nodes[1])
+        self.assertFalse(nodes[0] > nodes[1])
+        self.assertTrue(nodes[0] <= nodes[0])
         nodes[0].shift_after_node(nodes[1])
         self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])

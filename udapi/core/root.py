@@ -153,6 +153,7 @@ class Root(Node):
         """
         new_node = EmptyNode(root=self, **kwargs)
         self.empty_nodes.append(new_node)
+        self.empty_nodes.sort()
         return new_node
 
     # TODO document whether misc is a string or dict or it can be both
@@ -186,7 +187,7 @@ class Root(Node):
         Update also the list of all tree nodes stored in root._descendants.
         This method is automatically called after node removal or reordering.
         """
-        self._descendants = sorted(self.unordered_descendants(), key=lambda node: node.ord)
+        self._descendants = sorted(self.unordered_descendants())
         for (new_ord, node) in enumerate(self._descendants, 1):
             node.ord = new_ord
 
@@ -250,7 +251,7 @@ class Root(Node):
 
     @property
     def descendants_and_empty(self):
-        return sorted(self._descendants + self.empty_nodes, key=lambda n: float(n.ord))
+        return sorted(self._descendants + self.empty_nodes)
 
     def steal_nodes(self, nodes):
         """Move nodes from another tree to this tree (append)."""
@@ -258,7 +259,7 @@ class Root(Node):
         for node in nodes[1:]:
             if node.root != old_root:
                 raise ValueError("steal_nodes(nodes) was called with nodes from several trees")
-        nodes = sorted(nodes, key=lambda n: n.ord)
+        nodes = sorted(nodes)
         whole_tree = nodes == old_root.descendants
         new_ord = len(self._descendants)
         # pylint: disable=protected-access
@@ -268,7 +269,7 @@ class Root(Node):
             if not whole_tree:
                 for child in [n for n in node.children if n not in nodes]:
                     child._parent = old_root
-                    old_root._children = sorted(old_root.children + [child], key=lambda n: n.ord)
+                    old_root._children = sorted(old_root.children + [child])
                 node._children = [n for n in node.children if n in nodes]
             if node.parent == old_root or (not whole_tree and node.parent not in nodes):
                 node.parent._children = [n for n in node.parent._children if n != node]
