@@ -56,7 +56,8 @@ class Conllu(BaseWriter):
                 if next_empty_ord > last_ord:
                     break
                 empty = empty_nodes.pop(0)
-                values = [str(getattr(empty, a)) for a in self.node_attributes]
+                values = [getattr(empty, attr_name) for attr_name in self.node_attributes]
+                values = ['_' if v is None else str(v) for v in values]
                 values[6] = '_'
                 values[7] = '_'
                 print('\t'.join(values))

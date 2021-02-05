@@ -1,6 +1,6 @@
 """Node class and related classes and functions.
 
-In addition to class `Node`, this module contains class `ListOfNodes`
+In addition to class `Node`, this module contains also classes `EmptyNode` and `ListOfNodes`
 and function `find_minimal_common_treelet`.
 """
 import logging
@@ -747,9 +747,8 @@ class EmptyNode(Node):
     """Class for representing empty nodes (for ellipsis in enhanced UD)."""
     __slots__ = ['_root']
 
-    def __init__(self, root, form='_', lemma='_', upos='_', xpos='_', feats='_', misc='_'):
-        super().__init__(form=form, lemma=lemma, upos=upos,
-                         xpos=xpos, feats=feats, deprel='_', misc=misc)
+    def __init__(self, root, form=None, lemma=None, upos=None, xpos=None, feats=None, misc=None):
+        super().__init__(form=form, lemma=lemma, upos=upos, xpos=xpos, feats=feats, misc=misc)
         self._root = root
 
     @property
