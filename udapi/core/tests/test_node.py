@@ -118,7 +118,7 @@ class TestDocument(unittest.TestCase):
 
     def test_feats(self):
         """Test the morphological featrues."""
-        node = Node()
+        node = Node(root=None)
         self.assertEqual(str(node.feats), '_')
         node.feats = ''
         self.assertEqual(str(node.feats), '_')

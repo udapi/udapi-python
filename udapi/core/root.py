@@ -18,7 +18,7 @@ class Root(Node):
     def __init__(self, zone=None, comment='', text=None, newpar=None, newdoc=None):
         """Create new root node."""
         # Call constructor of the parent object.
-        super().__init__()
+        super().__init__(root=self)
 
         self.ord = 0
         self.form = '<ROOT>'
@@ -266,6 +266,7 @@ class Root(Node):
         for node in nodes:
             new_ord += 1
             node.ord = new_ord
+            node._root = self
             if not whole_tree:
                 for child in [n for n in node.children if n not in nodes]:
                     child._parent = old_root

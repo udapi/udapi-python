@@ -66,7 +66,6 @@ class Node(object):
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
     # TODO: Benchmark using node._ord instead node.ord in this file
-    # TODO: Benchmark storing root in node._root (as it is done in EmptyNode)
     __slots__ = [
         '_ord',       # Word-order index of the node (root has 0).
         'form',       # Word form or punctuation symbol.
@@ -80,13 +79,15 @@ class Node(object):
         '_feats',     # Morphological features as udapi.core.feats.Feats object.
         '_parent',    # Parent node.
         '_children',  # Ord-ordered list of child nodes.
+        '_root',      # Technical root of the tree
         '_mwt',       # Multi-word token in which this word participates.
         '_mentions',  # List of udapi.core.coref.CorefMention objects whose span includes this node
     ]
 
-    def __init__(self, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
+    def __init__(self, root, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
                  xpos=None, feats=None, deprel=None, misc=None):
         """Create a new node and initialize its attributes using the keyword arguments."""
+        self._root = root
         self._ord = None
         self.form = form
         self.lemma = lemma
@@ -105,6 +106,10 @@ class Node(object):
     def __str__(self):
         """Pretty print of the Node object."""
         return "node<%s, %s>" % (self.address(), self.form)
+
+    @property
+    def root(self):
+        return self._root
 
     # ord is implemented as a property, so that it can be overriden in EmptyNode and Root
     @property
@@ -337,14 +342,6 @@ class Node(object):
         return ListOfNodes(self._children, origin=self)
 
     @property
-    def root(self):
-        """Return the (technical) root node of the whole tree."""
-        node = self
-        while node.parent:
-            node = node.parent
-        return node
-
-    @property
     def descendants(self):
         """Return a list of all descendants of the current node.
 
@@ -378,7 +375,7 @@ class Node(object):
 
     def create_child(self, **kwargs):
         """Create and return a new child of the current node."""
-        new_node = Node(**kwargs)
+        new_node = Node(root=self._root, **kwargs)
         new_node.ord = len(self.root._descendants) + 1
         self.root._descendants.append(new_node)
         self.children.append(new_node)
@@ -761,15 +758,6 @@ class Node(object):
 
 class EmptyNode(Node):
     """Class for representing empty nodes (for ellipsis in enhanced UD)."""
-    __slots__ = ['_root']
-
-    def __init__(self, root, form=None, lemma=None, upos=None, xpos=None, feats=None, misc=None):
-        super().__init__(form=form, lemma=lemma, upos=upos, xpos=xpos, feats=feats, misc=misc)
-        self._root = root
-
-    @property
-    def root(self):
-        return self._root
 
     @property
     def parent(self):
@@ -795,6 +783,9 @@ class EmptyNode(Node):
             raise ValueError('Only str and float are allowed for EmptyNode ord setter,'
                              f' but {type(new_ord)} was given.')
 
+    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+        """Attempts at changing the word order of EmptyNode result in NotImplemented exception."""
+        raise NotImplemented('Empty nodes cannot be re-order using shift* methods yet.')
 
 @functools.total_ordering
 class OrdTuple:
