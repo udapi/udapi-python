@@ -49,7 +49,7 @@ class CorefMention(object):
             raise ValueError(f"Head {self.head} not in new_words")
         for old_word in self._words:
             old_word._mentions.remove(self)
-        self._words = new_words # TODO sorted
+        self._words = sorted(new_words)
         for new_word in new_words:
             new_word._mentions.append(self)
 
@@ -190,10 +190,13 @@ def store_coref_to_misc(doc):
 def span_to_nodes(root, span):
     ranges = []
     for span_str in span.split(','):
-        if '-' not in span_str:
-            lo = hi = float(span_str)
-        else:
-            lo, hi = (float(x) for x in span_str.split('-'))
+        try:
+            if '-' not in span_str:
+                lo = hi = float(span_str)
+            else:
+                lo, hi = (float(x) for x in span_str.split('-'))
+        except ValueError as e:
+            raise ValueError(f"Cannot parse '{span}': {e}")
         ranges.append((lo, hi))
 
     def _num_in_ranges(num):
