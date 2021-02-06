@@ -201,11 +201,11 @@ def span_to_nodes(root, span):
 
     def _num_in_ranges(num):
         for (lo, hi) in ranges:
-            if num > hi:
+            if num < lo:
                 return False
-            if num >= lo:
+            if num <= hi:
                 return True
-            return False
+        return False
 
     return [w for w in root.descendants_and_empty if _num_in_ranges(w.ord)]
 
