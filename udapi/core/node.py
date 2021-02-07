@@ -257,7 +257,7 @@ class Node(object):
                 # Empty nodes have to be located differently than normal nodes.
                 if '.' in head:
                     try:
-                        parent = next(x for x in self.root.empty_nodes if x.ord == head)
+                        parent = next(x for x in self.root.empty_nodes if str(x.ord) == head)
                     except StopIteration:
                         raise ValueError(f'Empty node with ord={head} not found')
                 else:
@@ -412,6 +412,7 @@ class Node(object):
                     new_ord = round(new_ord+0.1, 1)
         new_node.ord = new_ord
         self.root.empty_nodes.append(new_node)
+        self.root.empty_nodes.sort()
         return new_node
 
     # TODO: make private: _unordered_descendants

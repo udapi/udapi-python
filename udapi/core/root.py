@@ -153,7 +153,6 @@ class Root(Node):
         """
         new_node = EmptyNode(root=self, **kwargs)
         self.empty_nodes.append(new_node)
-        self.empty_nodes.sort()
         return new_node
 
     # TODO document whether misc is a string or dict or it can be both
