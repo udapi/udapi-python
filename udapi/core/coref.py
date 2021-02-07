@@ -1,6 +1,8 @@
 """Classes for handling coreference."""
 import re
+import functools
 
+@functools.total_ordering
 class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
     __slots__ = ['_head', '_cluster', '_bridging', '_words']
@@ -12,6 +14,25 @@ class CorefMention(object):
             cluster._mentions.append(self)
         self._bridging = None
         self._words = []
+
+    def __lt__(self, other):
+        """Does this mention precedes (word-order wise) the `other` mention?
+
+        This method defines a total ordering of all mentions
+        (within one cluster or across different clusters).
+        The position is primarily defined by the first word in each mention
+        (or by the head if mention.words are missing).
+        If two mentions start at the same word,
+        their order is defined by the last word in their span
+        -- the shorter mention precedes the longer one.
+        """
+        node1 = self._words[0] if self._words else self._head
+        node2 = other._words[0] if other._words else other._head
+        if node1 is node2:
+            node1 = self._words[-1] if self._words else self._head
+            node2 = other._words[-1] if other._words else other._head
+            return node1 > node2
+        return node1 < node2
 
     @property
     def head(self):
