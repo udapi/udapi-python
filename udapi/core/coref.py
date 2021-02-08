@@ -69,11 +69,23 @@ class CorefMention(object):
     def words(self, new_words):
         if new_words and self.head not in new_words:
             raise ValueError(f"Head {self.head} not in new_words")
+        kept_words = []
         for old_word in self._words:
-            old_word._mentions.remove(self)
-        self._words = sorted(new_words)
+            if old_word in new_words:
+                kept_words.append(old_word)
+            else:
+                old_word._mentions.remove(self)
+        #for old_word in self._words:
+        #    old_word._mentions.remove(self)
+        new_words.sort()
+        self._words = new_words
         for new_word in new_words:
-            new_word._mentions.append(self)
+            if new_word not in kept_words:
+                #new_word._mentions.append(self)
+                if new_word._mentions and self > new_word._mentions[-1]:
+                    new_word._mentions.append(self)
+                else:
+                    new_word._mentions = sorted(new_word._mentions + [self])
 
     @property
     def span(self):

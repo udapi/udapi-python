@@ -316,7 +316,11 @@ class Node(object):
         self._parent = new_parent
 
         # Append the current node to the new parent children.
-        new_parent._children = sorted(new_parent.children + [self])
+        if new_parent._children and self > new_parent._children[-1]:
+            new_parent._children.append(self)
+        else:
+            new_parent._children.append(self)
+            new_parent._children.sort()
 
     @property
     def children(self):
@@ -893,7 +897,8 @@ class ListOfNodes(list):
             result = [x for x in result if x.ord <= self.origin.ord]
         if following_only:
             result = [x for x in result if x.ord >= self.origin.ord]
-        return sorted(result)
+        result.sort()
+        return result
 
 
 def find_minimal_common_treelet(*args):
