@@ -433,6 +433,15 @@ class Node(object):
         """
         return False
 
+    @staticmethod
+    def is_empty():
+        """Is the current node an empty node?
+
+        Returns False for all Node instances.
+        True is returned only by instances of the EmptyNode subclass.
+        """
+        return False
+
     def remove(self, children=None):
         """Delete this node and all its descendants.
 
@@ -759,6 +768,10 @@ class Node(object):
 
 class EmptyNode(Node):
     """Class for representing empty nodes (for ellipsis in enhanced UD)."""
+
+    def is_empty(self):
+        """Return True for all EmptyNode instances."""
+        return True
 
     @property
     def parent(self):

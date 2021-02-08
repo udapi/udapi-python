@@ -132,7 +132,7 @@ class TextModeTrees(BaseWriter):
 
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
-                 print_undef_as='_', print_doc_meta=True, print_comments=False,
+                 print_undef_as='_', print_doc_meta=True, print_comments=False, print_empty=True,
                  mark='ToDo|ToDoOrigText|Bug|Mark', marked_only=False, hints=True,
                  layout='classic', **kwargs):
         """Create new TextModeTrees block object.
@@ -156,6 +156,7 @@ class TextModeTrees(BaseWriter):
         print_undef_as: What should be printed instead of undefined attribute values (if any)?
         print_doc_meta: Print `document.meta` metadata before each document?
         print_comments: Print comments (other than sent_id and text)?
+        print_empty: Print empty nodes?
         mark: a regex. If `re.search(mark + '=', str(node.misc))` the node is highlighted.
             If `print_comments and re.search(r'^ (%s) = ' % mark, root.comment, re.M)`
             the comment is highlighted.
@@ -178,6 +179,7 @@ class TextModeTrees(BaseWriter):
         self.print_undef_as = print_undef_as
         self.print_doc_meta = print_doc_meta
         self.print_comments = print_comments
+        self.print_empty = print_empty
         self.mark = mark
         self.marked_only = marked_only
         self.layout = layout
@@ -222,11 +224,11 @@ class TextModeTrees(BaseWriter):
         self._gaps[node.ord] = rmost - lmost - descs
         return lmost, rmost, descs + 1
 
-    def should_print_tree(self, root):
+    def should_print_tree(self, root, allnodes):
         """Should this tree be printed?"""
         if not self.marked_only:
             return True
-        if any(self.is_marked(n) for n in root.descendants(add_self=1)):
+        if any(self.is_marked(n) for n in allnodes):
             return True
         if not self.print_comments or root.comment is None or self.mark_re is None:
             return False
@@ -234,8 +236,11 @@ class TextModeTrees(BaseWriter):
 
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
-        allnodes = root.descendants(add_self=1)
-        if not self.should_print_tree(root):
+        if self.print_empty:
+            allnodes = [root] + root.descendants_and_empty
+        else:
+            allnodes = root.descendants(add_self=1)
+        if not self.should_print_tree(root, allnodes):
             return
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
@@ -281,7 +286,11 @@ class TextModeTrees(BaseWriter):
             if self.minimize_cross:
                 stack = sorted(stack, key=lambda x: -self._gaps[x.ord])
 
-        if self.layout != 'classic':
+        if self.layout == 'classic':
+            for idx, node in enumerate(allnodes):
+                if node.is_empty():
+                    self.add_node(idx, node)
+        else:
             columns_attrs = [[a] for a in self.attrs] if self.layout == 'align' else [self.attrs]
             for col_attrs in columns_attrs:
                 self.attrs = col_attrs
