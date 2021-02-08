@@ -1,5 +1,6 @@
 """Wrapper for UDPipe (more pythonic than ufal.udpipe)."""
 import io
+import sys
 
 from ufal.udpipe import Model, Pipeline, ProcessingError, Sentence  # pylint: disable=no-name-in-module
 from udapi.core.resource import require_file
@@ -92,7 +93,7 @@ class UDPipe:
         for u_sentence in u_sentences:
             if not new_root:
                 new_root = Root()
-            new_root.text = u_sentence.getText()
+            new_root.text = u_sentence.getText() if resegment else root.text
             heads, nodes = [], [new_root]
             u_words = u_sentence.words
             for i in range(1, u_words.size()):
