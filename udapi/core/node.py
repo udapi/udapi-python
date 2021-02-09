@@ -315,12 +315,11 @@ class Node(object):
         self._parent = new_parent
 
         # Append the current node to the new parent children.
-        new_parent._children.append(self)
-#         if not new_parent._children or self > new_parent._children[-1]:
-#             new_parent._children.append(self)
-#         else:
-#             new_parent._children.append(self)
-#             new_parent._children.sort()
+        if not new_parent._children or self > new_parent._children[-1]:
+            new_parent._children.append(self)
+        else:
+            new_parent._children.append(self)
+            new_parent._children.sort()
 
     @property
     def children(self):
@@ -343,7 +342,7 @@ class Node(object):
          nodes4 = [n for n in node.children if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
-        return ListOfNodes(self._children, origin=self)
+        return ListOfNodes(self._children, origin=self, skip_sort=True)
 
     @property
     def descendants(self):
@@ -862,6 +861,12 @@ class OrdTuple:
         self._key = (self.key[0], self._key[1]+1)
 
 
+# Implementation note on ListOfNodes
+# We could inherit from collections.abc.Sequence, store the list in self._data
+# and implement __getitem__ and __len__ by delegating it to self._data.
+# I thought it could be faster because we prevent copying of the list in super().__init__(iterable).
+# In practice, it is slower because of the delegation: native list's __getitem__ is C-optimized.
+# So let's just inherit from list.
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.
 
@@ -883,6 +888,7 @@ class ListOfNodes(list):
     nodes = node.children()
     nodes = node.children(add_self=True, following_only=True)
     """
+    __slots__ = ('origin',)
 
     def __init__(self, iterable, origin, skip_sort=False):
         """Create a new ListOfNodes.
@@ -890,6 +896,7 @@ class ListOfNodes(list):
         Args:
         iterable: a list of nodes
         origin: a node which is the parent/ancestor of these nodes
+        skip_sort: is the data already sorted?
         """
         super().__init__(iterable)
         if not skip_sort:
