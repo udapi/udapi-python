@@ -1,7 +1,7 @@
 """Root class represents the technical root node in each tree."""
 import logging
 
-from udapi.core.node import Node, ListOfNodes
+from udapi.core.node import Node, EmptyNode, ListOfNodes
 from udapi.core.mwt import MWT
 
 # 7 instance attributes is too low (CoNLL-U has 10 columns)
@@ -18,7 +18,7 @@ class Root(Node):
     def __init__(self, zone=None, comment='', text=None, newpar=None, newdoc=None):
         """Create new root node."""
         # Call constructor of the parent object.
-        super().__init__()
+        super().__init__(root=self)
 
         self.ord = 0
         self.form = '<ROOT>'
@@ -112,7 +112,7 @@ class Root(Node):
         The nodes are sorted by their ord.
         This root-specific implementation returns all the nodes in the tree except the root itself.
         """
-        return ListOfNodes(self._descendants, origin=self)
+        return ListOfNodes(self._descendants, origin=self, skip_sort=True)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?
@@ -141,6 +141,19 @@ class Root(Node):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Attempts at changing the word order of root result in Exception."""
         raise Exception('Technical root cannot be shifted as it is always the first node')
+
+    def create_empty_child(self, **kwargs):
+        """Create and return a new empty node within this tree.
+
+        This root-specific implementation overrides `Node.create_empty_child()'.
+        It is faster because it does not set `deps` and `ord` of the newly created node.
+        It is up to the user to set up these attributes correctly.
+        It is used in `udapi.block.read.conllu` (where speed is important and thus,
+        only `raw_deps` are set up instead of `deps`).
+        """
+        new_node = EmptyNode(root=self, **kwargs)
+        self.empty_nodes.append(new_node)
+        return new_node
 
     # TODO document whether misc is a string or dict or it can be both
     def create_multiword_token(self, words=None, form=None, misc=None):
@@ -173,7 +186,7 @@ class Root(Node):
         Update also the list of all tree nodes stored in root._descendants.
         This method is automatically called after node removal or reordering.
         """
-        self._descendants = sorted(self.unordered_descendants(), key=lambda node: node.ord)
+        self._descendants = sorted(self.unordered_descendants())
         for (new_ord, node) in enumerate(self._descendants, 1):
             node.ord = new_ord
 
@@ -235,23 +248,28 @@ class Root(Node):
                 result.append(node)
         return result
 
+    @property
+    def descendants_and_empty(self):
+        return sorted(self._descendants + self.empty_nodes)
+
     def steal_nodes(self, nodes):
         """Move nodes from another tree to this tree (append)."""
         old_root = nodes[0].root
         for node in nodes[1:]:
             if node.root != old_root:
                 raise ValueError("steal_nodes(nodes) was called with nodes from several trees")
-        nodes = sorted(nodes, key=lambda n: n.ord)
+        nodes = sorted(nodes)
         whole_tree = nodes == old_root.descendants
         new_ord = len(self._descendants)
         # pylint: disable=protected-access
         for node in nodes:
             new_ord += 1
             node.ord = new_ord
+            node._root = self
             if not whole_tree:
                 for child in [n for n in node.children if n not in nodes]:
                     child._parent = old_root
-                    old_root._children = sorted(old_root.children + [child], key=lambda n: n.ord)
+                    old_root._children = sorted(old_root.children + [child])
                 node._children = [n for n in node.children if n in nodes]
             if node.parent == old_root or (not whole_tree and node.parent not in nodes):
                 node.parent._children = [n for n in node.parent._children if n != node]

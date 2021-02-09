@@ -6,7 +6,7 @@ Python framework for processing Universal Dependencies data
 [![Documentation Status](https://readthedocs.org/projects/udapi/badge/)](http://udapi.readthedocs.io)
 
 ## Requirements
-- You need Python 3.3 or higher.
+- You need Python 3.6 or higher.
 - If the [ufal.udpipe](https://pypi.python.org/pypi/ufal.udpipe/) parser is needed,
   make sure you have a C++11 compiler (e.g. [g++ 4.7 or newer](.travis.yml#L9))
   and install UDPipe with `pip3 install --user --upgrade ufal.udpipe`.

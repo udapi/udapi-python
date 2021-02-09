@@ -144,7 +144,7 @@ class Complexity(BaseWriter):
             #for child in group.children:
                 #if child.udeprel != 'conj':
                     #result.extend(child.descendants(add_self=True))
-            #return = sorted(result, key=lambda n: n.ord)
+            #return = sorted(result)
         if expand_type == 'subtree_within_clause':
             stack = [n for n in nodes[0].children if n.udeprel != 'conj']
             while stack:
@@ -152,7 +152,7 @@ class Complexity(BaseWriter):
                 if not node.misc["ClauseHead"]:
                     nodes.append(node)
                     stack.extend(node.children())
-            return sorted(nodes, key=lambda n: n.ord)
+            return sorted(nodes)
         raise ValueError("unknown expand value " + expand_type)
 
 
@@ -182,7 +182,7 @@ class Complexity(BaseWriter):
                     for conj in conjuncts:
                         # TODO multiword conjunctions (udeprel=flat)?
                         conjunctions.extend([n for n in conj.children if n.udeprel == 'cc'])
-                    results.append(sorted([node] + conjuncts + conjunctions, key=lambda n: n.ord))
+                    results.append(sorted([node] + conjuncts + conjunctions))
         return results
 
     # TODO koordinace hlavních i vedlejších vět
@@ -199,7 +199,7 @@ class Complexity(BaseWriter):
                 else:
                     main_clause.append(node)
                     stack.extend(node.children)
-            main_clause = sorted(main_clause, key=lambda n: n.ord)
+            main_clause = sorted(main_clause)
 
             for dep_clause_head in dep_heads:
                 results.append(main_clause + self.expand_subtree([dep_clause_head], 'subtree'))

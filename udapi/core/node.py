@@ -1,10 +1,12 @@
 """Node class and related classes and functions.
 
-In addition to class `Node`, this module contains class `ListOfNodes`
-and function `find_minimal_common_treelet`.
+In addition to class `Node`, this module contains also classes
+`EmptyNode`, `OrdTuple` and `ListOfNodes` and function `find_minimal_common_treelet`.
 """
 import logging
+import functools
 
+import udapi.core.coref
 from udapi.block.write.textmodetrees import TextModeTrees
 from udapi.core.dualdict import DualDict
 from udapi.core.feats import Feats
@@ -20,16 +22,17 @@ from udapi.core.feats import Feats
 # The set of public attributes/properties and methods of Node was well-thought.
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 
-
+@functools.total_ordering
 class Node(object):
     """Class for representing nodes in Universal Dependency trees.
 
     Attributes `form`, `lemma`, `upos`, `xpos` and `deprel` are public attributes of type `str`,
     so you can use e.g. `node.lemma = node.form`.
 
-    `node.ord` is a int type public attribute for storing the node's word order index,
+    `node.ord` is a int type property for storing the node's word-order index,
     but assigning to it should be done with care, so the non-root nodes have `ord`s 1,2,3...
     It is recommended to use one of the `node.shift_*` methods for reordering nodes.
+    Note that `EmptyNode`s (subclass of `Node`) have decimal ords (and no `shift_*` methods).
 
     For changing dependency structure (topology) of the tree, there is the `parent` property,
     e.g. `node.parent = node.parent.parent` and `node.create_child()` method.
@@ -62,8 +65,9 @@ class Node(object):
     # TODO: Benchmark memory and speed of slots vs. classic dict.
     # With Python 3.5 split dict, slots may not be better.
     # TODO: Should not we include __weakref__ in slots?
+    # TODO: Benchmark using node._ord instead node.ord in this file
     __slots__ = [
-        'ord',        # Word-order index of the node (root has 0).
+        '_ord',       # Word-order index of the node (root has 0).
         'form',       # Word form or punctuation symbol.
         'lemma',      # Lemma of word form.
         'upos',       # Universal PoS tag.
@@ -75,13 +79,16 @@ class Node(object):
         '_feats',     # Morphological features as udapi.core.feats.Feats object.
         '_parent',    # Parent node.
         '_children',  # Ord-ordered list of child nodes.
+        '_root',      # Technical root of the tree
         '_mwt',       # Multi-word token in which this word participates.
+        '_mentions',  # List of udapi.core.coref.CorefMention objects whose span includes this node
     ]
 
-    def __init__(self, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
+    def __init__(self, root, form=None, lemma=None, upos=None,  # pylint: disable=too-many-arguments
                  xpos=None, feats=None, deprel=None, misc=None):
         """Create a new node and initialize its attributes using the keyword arguments."""
-        self.ord = None
+        self._root = root
+        self._ord = None
         self.form = form
         self.lemma = lemma
         self.upos = upos
@@ -94,10 +101,27 @@ class Node(object):
         self._parent = None
         self._children = list()
         self._mwt = None
+        self._mentions = list()
 
     def __str__(self):
         """Pretty print of the Node object."""
         return "node<%s, %s>" % (self.address(), self.form)
+
+    @property
+    def root(self):
+        return self._root
+
+    # ord is implemented as a property, so that it can be overriden in EmptyNode and Root
+    @property
+    def ord(self):
+        return self._ord
+
+    @ord.setter
+    def ord(self, new_ord):
+        self._ord = new_ord
+
+    def __lt__(self, other):
+        return self._ord < other._ord
 
     @property
     def udeprel(self):
@@ -196,7 +220,7 @@ class Node(object):
             serialized_deps = []
             for secondary_dependence in self._deps:
                 serialized_deps.append('{}:{}'.format(secondary_dependence[
-                    'parent'].ord, secondary_dependence['deprel']))
+                    'parent']._ord, secondary_dependence['deprel']))
             self._raw_deps = '|'.join(serialized_deps)
         return self._raw_deps
 
@@ -219,7 +243,7 @@ class Node(object):
         """
         if self._deps is None:
             # Obtain a list of all nodes in the dependency tree.
-            nodes = [self.root] + self.root.descendants()
+            nodes = [self._root] + self._root._descendants
 
             # Create a list of secondary dependencies.
             self._deps = list()
@@ -229,16 +253,13 @@ class Node(object):
 
             for raw_dependency in self._raw_deps.split('|'):
                 # Deprel itself may contain one or more ':' (subtypes).
-                pieces = raw_dependency.split(':')
-                head = pieces[0]
-                deprel = ':'.join(pieces[1:])
+                head, deprel = raw_dependency.split(':', maxsplit=1)
                 # Empty nodes have to be located differently than normal nodes.
                 if '.' in head:
-                    matching = [x for x in self.root.empty_nodes if x.ord == head]
-                    if len(matching) > 0:
-                        parent = matching[0]
-                    else:
-                        parent = None ###!!! what should we do here?
+                    try:
+                        parent = next(x for x in self._root.empty_nodes if str(x._ord) == head)
+                    except StopIteration:
+                        raise ValueError(f'Empty node with ord={head} not found')
                 else:
                     parent = nodes[int(head)]
                 self._deps.append({'parent': parent, 'deprel': deprel})
@@ -265,7 +286,7 @@ class Node(object):
         (from the list of original parent's children).
         """
         # If the parent is already assigned, return.
-        if self.parent is new_parent:
+        if self._parent is new_parent:
             return
 
         # The node itself couldn't be assigned as a parent. None cannot be used as parent.
@@ -280,14 +301,13 @@ class Node(object):
             if climbing_node is self:
                 raise ValueError('Setting the parent of %s to %s would lead to a cycle.'
                                  % (self, new_parent))
-            climbing_node = climbing_node.parent
+            climbing_node = climbing_node._parent
 
         # Remove the current Node from the children of the old parent.
         # Forbid moving nodes from one tree to another using parent setter.
         if self._parent:
-            self._parent._children = [node for node in self.parent.children if node is not self]
-            # TODO: .root is currently computed, so it is quite slow
-            old_root, new_root = self._parent.root, climbing_node
+            self._parent._children = [node for node in self._parent._children if node is not self]
+            old_root, new_root = self._parent._root, climbing_node
             if old_root is not new_root:
                 raise ValueError('Cannot move nodes between trees with parent setter, '
                                  'use new_root.steal_nodes(nodes_to_be_moved) instead')
@@ -295,7 +315,12 @@ class Node(object):
         self._parent = new_parent
 
         # Append the current node to the new parent children.
-        new_parent._children = sorted(new_parent.children + [self], key=lambda child: child.ord)
+        new_parent._children.append(self)
+#         if not new_parent._children or self > new_parent._children[-1]:
+#             new_parent._children.append(self)
+#         else:
+#             new_parent._children.append(self)
+#             new_parent._children.sort()
 
     @property
     def children(self):
@@ -321,14 +346,6 @@ class Node(object):
         return ListOfNodes(self._children, origin=self)
 
     @property
-    def root(self):
-        """Return the (technical) root node of the whole tree."""
-        node = self
-        while node.parent:
-            node = node.parent
-        return node
-
-    @property
     def descendants(self):
         """Return a list of all descendants of the current node.
 
@@ -349,39 +366,67 @@ class Node(object):
          nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
-        return ListOfNodes(sorted(self.unordered_descendants(), key=lambda n: n.ord), origin=self)
+        return ListOfNodes(self.unordered_descendants(), origin=self)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
-        climber = self.parent
+        climber = self._parent
         while climber:
             if climber is node:
                 return True
-            climber = climber.parent
+            climber = climber._parent
         return False
 
     def create_child(self, **kwargs):
         """Create and return a new child of the current node."""
-        new_node = Node(**kwargs)
-        new_node.ord = len(self.root._descendants) + 1
-        self.root._descendants.append(new_node)
-        self.children.append(new_node)
-        new_node.parent = self
+        new_node = Node(root=self._root, **kwargs)
+        new_node._ord = len(self._root._descendants) + 1
+        self._root._descendants.append(new_node)
+        self._children.append(new_node)
+        new_node._parent = self
         return new_node
 
-    def create_empty_child(self, **kwargs):
-        """Create and return a new empty node child of the current node."""
-        new_node = Node(**kwargs)
-        self.root.empty_nodes.append(new_node)
+    def create_empty_child(self, deprel, after=True, **kwargs):
+        """Create and return a new empty node child of the current node.
+
+        Args:
+            deprel: the enhanced dependency relation (required to be stored in DEPS)
+            form, lemma, upos, xpos, feats, misc: as in Node, the default is '_'
+            after: position the newly created empty node after this `node`?
+                If True (default), the `new_node.ord` will be `node.ord + 0.1`,
+                unless there is already an empty node with such ord,
+                in which case it will be `node.ord + 0.2` etc.
+                If False, the new node will be placed immediately before `node`.
+        """
+        new_node = EmptyNode(root=self._root, **kwargs)
+        new_node.deps = [{'parent': self, 'deprel': deprel}]
         # self.enh_children.append(new_node) TODO
         # new_node.enh_parents.append(self) TODO
+        base_ord = self._ord if after else self._ord - 1
+        new_ord = base_ord + 0.1
+        for empty in self._root.empty_nodes:
+            if empty._ord > new_ord:
+                break
+            if empty._ord == new_ord:
+                if isinstance(new_ord, OrdTuple):
+                    new_ord.increase()
+                elif new_ord == base_ord + 0.9:
+                    new_ord = OrdTuple(base_ord, 10)
+                else:
+                    new_ord = round(new_ord+0.1, 1)
+        new_node._ord = new_ord
+        if not self._root.empty_nodes or new_node > self._root.empty_nodes[-1]:
+            self._root.empty_nodes.append(new_node)
+        else:
+            self._root.empty_nodes.append(new_node)
+            self._root.empty_nodes.sort()
         return new_node
 
     # TODO: make private: _unordered_descendants
     def unordered_descendants(self):
         """Return a list of all descendants in any order."""
         descendants = []
-        for child in self.children:
+        for child in self._children:
             descendants.append(child)
             descendants.extend(child.unordered_descendants())
         return descendants
@@ -395,6 +440,15 @@ class Node(object):
         """
         return False
 
+    @staticmethod
+    def is_empty():
+        """Is the current node an empty node?
+
+        Returns False for all Node instances.
+        True is returned only by instances of the EmptyNode subclass.
+        """
+        return False
+
     def remove(self, children=None):
         """Delete this node and all its descendants.
 
@@ -405,40 +459,45 @@ class Node(object):
             `warn` means to issue a warning if any children are present and delete them.
             `rehang_warn` means to rehang and warn:-).
         """
-        self.parent._children = [child for child in self.parent.children if child is not self]
-        if children is not None and self.children:
+        self._parent._children = [child for child in self._parent._children if child is not self]
+        if children is not None and self._children:
             if children.startswith('rehang'):
-                for child in self.children:
-                    child.parent = self.parent
+                for child in self._children:
+                    child.parent = self._parent # TODO child._parent = self._parent
             if children.endswith('warn'):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
-        self.root._update_ordering()
+        self._root._update_ordering()
 
     # TODO: make private: _shift
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Internal method for changing word order."""
-        nodes_to_move = [self]
-
         if move_subtree:
-            nodes_to_move.extend(self.descendants())
+            nodes_to_move = self.unordered_descendants()
+            nodes_to_move.append(self)
+        else:
+            nodes_to_move = [self]
 
-        reference_ord = reference_node.ord
-
+        reference_ord = reference_node._ord
         if reference_subtree:
-            for node in [n for n in reference_node.descendants() if n is not self]:
-                if (after and node.ord > reference_ord) or (not after and node.ord < reference_ord):
-                    reference_ord = node.ord
+            if after:
+                for node in reference_node.unordered_descendants():
+                    if node._ord > reference_ord and node is not self:
+                        reference_ord = node._ord
+            else:
+                for node in reference_node.unordered_descendants():
+                    if node._ord < reference_ord and node is not self:
+                        reference_ord = node._ord
 
         common_delta = 0.5 if after else -0.5
 
         # TODO: can we use some sort of epsilon instead of choosing a silly
         # upper bound for out-degree?
         for node_to_move in nodes_to_move:
-            node_to_move.ord = reference_ord + common_delta + \
-                (node_to_move.ord - self.ord) / 100000.
+            node_to_move._ord = reference_ord + common_delta + \
+                (node_to_move._ord - self._ord) / 100000.
 
-        self.root._update_ordering()
+        self._root._update_ordering()
 
     # TODO add without_children kwarg
     def shift_after_node(self, reference_node):
@@ -468,48 +527,48 @@ class Node(object):
     @property
     def prev_node(self):
         """Return the previous node according to word order."""
-        new_ord = self.ord - 1
+        new_ord = self._ord - 1
         if new_ord < 0:
             return None
         if new_ord == 0:
-            return self.root
-        return self.root._descendants[new_ord - 1]
+            return self._root
+        return self._root._descendants[new_ord - 1]
 
     @property
     def next_node(self):
         """Return the following node according to word order."""
         # Note that all_nodes[n].ord == n+1
         try:
-            return self.root._descendants[self.ord]
+            return self._root._descendants[self._ord]
         except IndexError:
             return None
 
     def precedes(self, node):
         """Does this node precedes another `node` in word order (`self.ord < node.ord`)?"""
-        return self.ord < node.ord
+        return self._ord < node._ord
 
     def is_leaf(self):
         """Is this node a leaf, ie. a node without any children?"""
-        return not self.children
+        return not self._children
 
     def _get_attr(self, name):  # pylint: disable=too-many-return-statements
         if name == 'dir':
-            if self.parent.is_root():
+            if self._parent.is_root():
                 return 'root'
-            return 'left' if self.precedes(self.parent) else 'right'
+            return 'left' if self.precedes(self._parent) else 'right'
         if name == 'edge':
-            if self.parent.is_root():
+            if self._parent.is_root():
                 return 0
-            return self.ord - self.parent.ord
+            return self._ord - self._parent._ord
         if name == 'children':
-            return len(self.children)
+            return len(self._children)
         if name == 'siblings':
-            return len(self.parent.children) - 1
+            return len(self._parent._children) - 1
         if name == 'depth':
             value = 0
             tmp = self
             while not tmp.is_root():
-                tmp = tmp.parent
+                tmp = tmp._parent
                 value += 1
             return value
         if name == 'feats_split':
@@ -548,7 +607,7 @@ class Node(object):
         for name in attrs:
             nodes = [self]
             if name.startswith('p_'):
-                nodes, name = [self.parent], name[2:]
+                nodes, name = [self._parent], name[2:]
             elif name.startswith('c_'):
                 nodes, name = self.children, name[2:]
             elif name.startswith('l_'):
@@ -590,8 +649,8 @@ class Node(object):
         for node in self.descendants(add_self=not self.is_root()):
             mwt = node.multiword_token
             if use_mwt and mwt:
-                if node.ord > last_mwt_id:
-                    last_mwt_id = mwt.words[-1].ord
+                if node._ord > last_mwt_id:
+                    last_mwt_id = mwt.words[-1]._ord
                     string += mwt.form
                     if mwt.misc['SpaceAfter'] != 'No':
                         string += ' '
@@ -628,7 +687,7 @@ class Node(object):
         e.g. s123/en_udpipe#4. If zone is empty, the slash is excluded as well,
         e.g. s123#4.
         """
-        return '%s#%d' % (self.root.address() if self.root else '?', self.ord)
+        return '%s#%d' % (self._root.address() if self._root else '?', self._ord)
 
     @property
     def multiword_token(self):
@@ -650,13 +709,13 @@ class Node(object):
         and the total number of nodes in the span.
         """
         # Root and its children are always projective
-        parent = self.parent
+        parent = self._parent
         if not parent or parent.is_root():
             return False
 
         # Edges between neighboring nodes are always projective.
         # Check it now to make it a bit faster.
-        ord1, ord2 = self.ord, parent.ord
+        ord1, ord2 = self._ord, parent._ord
         if ord1 > ord2:
             ord1, ord2 = ord2, ord1
         distance = ord2 - ord1
@@ -664,7 +723,7 @@ class Node(object):
             return False
 
         # Get all the descendants of parent that are in the span of the edge.
-        span = [n for n in parent.descendants if n.ord > ord1 and n.ord < ord2]
+        span = [n for n in parent.unordered_descendants() if n._ord > ord1 and n._ord < ord2]
 
         # For projective edges, span must include all the nodes between parent and self.
         return len(span) != distance - 1
@@ -679,15 +738,15 @@ class Node(object):
         """
         ancestors = set([self])
         node = self
-        while node.parent:
-            node = node.parent
+        while node._parent:
+            node = node._parent
             ancestors.add(node)
-        all_nodes = node.descendants
-        for left_node in all_nodes[:self.ord - 1]:
-            if self.precedes(left_node.parent) and left_node.parent not in ancestors:
+        all_nodes = node._descendants
+        for left_node in all_nodes[:self._ord - 1]:
+            if self.precedes(left_node._parent) and left_node._parent not in ancestors:
                 return True
-        for right_node in all_nodes[self.ord:]:
-            if right_node.parent.precedes(self) and right_node.parent not in ancestors:
+        for right_node in all_nodes[self._ord:]:
+            if right_node._parent.precedes(self) and right_node._parent not in ancestors:
                 return True
         return False
 
@@ -704,6 +763,104 @@ class Node(object):
     @gloss.setter
     def gloss(self, new_gloss):
         self.misc["Gloss"] = new_gloss
+
+    @property
+    def coref_mentions(self):
+        self._root.bundle.document._load_coref()
+        return self._mentions
+
+    @property
+    def coref_clusters(self):
+        self._root.bundle.document._load_coref()
+        return [m.cluster for m in self._mentions if m.cluster is not None]
+
+    def create_coref_cluster(self, **kwargs):
+        return udapi.core.coref.create_coref_cluster(head=self, **kwargs)
+
+
+class EmptyNode(Node):
+    """Class for representing empty nodes (for ellipsis in enhanced UD)."""
+
+    def is_empty(self):
+        """Return True for all EmptyNode instances."""
+        return True
+
+    @property
+    def parent(self):
+        return None
+
+    @parent.setter
+    def parent(self, _):
+        """Attempts at setting parent of EmptyNode result in AttributeError exception."""
+        raise AttributeError('EmptyNode cannot have a (basic-UD) parent.')
+
+    @property
+    def ord(self):
+        return self._ord
+
+    @ord.setter
+    def ord(self, new_ord):
+        """Empty node's ord setter accepts float and str."""
+        if isinstance(new_ord, str):
+            self._ord = float(new_ord)
+        elif isinstance(new_ord, float):
+            self._ord = new_ord
+        else:
+            raise ValueError('Only str and float are allowed for EmptyNode ord setter,'
+                             f' but {type(new_ord)} was given.')
+
+    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+        """Attempts at changing the word order of EmptyNode result in NotImplemented exception."""
+        raise NotImplemented('Empty nodes cannot be re-order using shift* methods yet.')
+
+@functools.total_ordering
+class OrdTuple:
+    """Class for the rare case of 9+ consecutive empty nodes, i.e. ords x.10, x.11 etc.
+
+    Ord 1.10 cannot be stored as float, which would result in 1.1.
+    We thus store it as a tuple (1,10) wrapped in OrdTuple, so that comparisons work,
+    e.g.: 1.9 < OrdTuple('1.10') < 2
+    """
+    __slots__ = ('_key')
+
+    def __init__(self, string):
+        m = re.match(r'(\d+)\.(\d+)$', string)
+        if not m:
+            raise ValueError(f"Ord {string} does not match \\d+.\\d+")
+        major, minor = int(m.group(1)), int(m.group(2))
+        if minor == 0:
+            raise ValueError(f"Ord {string} should be stored as int")
+        if minor < 10:
+            raise ValueError(f"Ord {string} should be stored as float")
+        self._key = (major, minor)
+
+    def __repr__(self):
+        return f"{self._key[0]}.{self._key[1]}"
+
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return False
+        elif isinstance(other, float):
+            return self._key == (int(other), int(10*other - 10*int(other)))
+        elif isinstance(other, OrdTuple):
+            return self._key == other._key
+        else:
+            raise ValueError(f"OrdTuple cannot be compared with {type(other)}")
+
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self._key < (other, 0)
+        elif isinstance(other, float):
+            return self._key < (int(other), int(10*other - 10*int(other)))
+        elif isinstance(other, OrdTuple):
+            return self._key < other._key
+        else:
+            raise ValueError(f"OrdTuple cannot be compared with {type(other)}")
+
+    def increase(self):
+        """Increment the decimal part of this ord."""
+        self._key = (self.key[0], self._key[1]+1)
+
 
 class ListOfNodes(list):
     """Helper class for results of node.children and node.descendants.
@@ -727,7 +884,7 @@ class ListOfNodes(list):
     nodes = node.children(add_self=True, following_only=True)
     """
 
-    def __init__(self, iterable, origin):
+    def __init__(self, iterable, origin, skip_sort=False):
         """Create a new ListOfNodes.
 
         Args:
@@ -735,20 +892,20 @@ class ListOfNodes(list):
         origin: a node which is the parent/ancestor of these nodes
         """
         super().__init__(iterable)
+        if not skip_sort:
+            self.sort()
         self.origin = origin
 
     def __call__(self, add_self=False, following_only=False, preceding_only=False):
         """Returns a subset of nodes contained in this list as specified by the args."""
-        if not add_self and not following_only and not preceding_only:
-            return self
-        result = list(self)
         if add_self:
-            result.append(self.origin)
+            self.append(self.origin)
+            self.sort()
         if preceding_only:
-            result = [x for x in result if x.ord <= self.origin.ord]
+            return [x for x in self if x._ord <= self.origin._ord]
         if following_only:
-            result = [x for x in result if x.ord >= self.origin.ord]
-        return sorted(result, key=lambda node: node.ord)
+            return [x for x in self if x._ord >= self.origin._ord]
+        return self
 
 
 def find_minimal_common_treelet(*args):
@@ -767,7 +924,7 @@ def find_minimal_common_treelet(*args):
     """
     nodes = list(args)
     # The input nodes are surely in the treelet, let's mark this with "1".
-    in_treelet = {node.ord: 1 for node in nodes}
+    in_treelet = {node._ord: 1 for node in nodes}
 
     # Step 1: Find a node (`highest`) which is governing all the input `nodes`.
     #         It may not be the lowest such node, however.
@@ -786,14 +943,14 @@ def find_minimal_common_treelet(*args):
     highest = None
     while len(nodes) > 1:
         node = nodes.pop(0)  # TODO deque
-        parent = node.parent
+        parent = node._parent
         if parent is None:
             highest = node
-        elif in_treelet.get(parent.ord, False):
-            in_treelet[parent.ord] = 1
+        elif in_treelet.get(parent._ord, False):
+            in_treelet[parent._ord] = 1
         else:
-            new_nodes[parent.ord] = parent
-            in_treelet[parent.ord] = node
+            new_nodes[parent._ord] = parent
+            in_treelet[parent._ord] = node
             nodes.append(parent)
 
     # In most cases, `nodes` now contain just one node -- the one we were looking for.
@@ -804,11 +961,11 @@ def find_minimal_common_treelet(*args):
     # If the `highest` node is unsure, climb down using poiners stored in `in_treelet`.
     # All such nodes which were rejected as true members of the minimal common treelet
     # must be deleted from the set of newly added nodes `new_nodes`.
-    child = in_treelet[highest.ord]
+    child = in_treelet[highest._ord]
     while child != 1:
-        del new_nodes[highest.ord]
+        del new_nodes[highest._ord]
         highest = child
-        child = in_treelet[highest.ord]
+        child = in_treelet[highest._ord]
 
     # We return the root of the minimal common treelet plus all the newly added nodes.
     return (highest, new_nodes.values())

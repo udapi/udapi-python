@@ -2,15 +2,9 @@
 
 from setuptools import setup, find_packages
 
-# python_requires is supported by pip only from November 2016,
-# so let's check the Python version also the old way.
-import sys
-if sys.version_info < (3, 3):
-    raise SystemExit('Udapi requires Python 3.3 or higher.')
-
 setup(
     name='udapi',
-    version='0.2.2',
+    version='0.2.3',
     description='Python framework for processing Universal Dependencies data',
     long_description=(
       'Udapi is an open-source framework providing API for processing '
@@ -27,7 +21,7 @@ setup(
     scripts=['bin/udapy'],
     tests_require=['pytest'],
     install_requires=['colorama', 'termcolor'],
-    python_requires='>=3.3',
+    python_requires='>=3.6',
     license='GPL 2 or newer',
     platforms='any',
 )
