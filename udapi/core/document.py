@@ -93,7 +93,7 @@ class Document(object):
         """An iterator over all nodes in the document."""
         for bundle in self:
             for tree in bundle:
-                for node in tree.descendants:
+                for node in tree._descendants:
                     yield node
 
     def draw(self, **kwargs):
