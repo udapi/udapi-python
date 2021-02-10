@@ -342,7 +342,7 @@ class Node(object):
          nodes4 = [n for n in node.children if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
-        return ListOfNodes(self._children, origin=self, skip_sort=True)
+        return ListOfNodes(self._children, origin=self)
 
     @property
     def descendants(self):
@@ -365,7 +365,15 @@ class Node(object):
          nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
-        return ListOfNodes(self.unordered_descendants(), origin=self)
+        stack = list(self._children)
+        descendants = ListOfNodes(stack, origin=self)
+        while(stack):
+            n = stack.pop()
+            if n._children:
+                stack.extend(n._children)
+                descendants.extend(n._children)
+        descendants.sort()
+        return descendants
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
@@ -893,17 +901,14 @@ class ListOfNodes(list):
     """
     __slots__ = ('origin',)
 
-    def __init__(self, iterable, origin, skip_sort=False):
+    def __init__(self, iterable, origin):
         """Create a new ListOfNodes.
 
         Args:
         iterable: a list of nodes
         origin: a node which is the parent/ancestor of these nodes
-        skip_sort: is the data already sorted?
         """
         super().__init__(iterable)
-        if not skip_sort:
-            self.sort()
         self.origin = origin
 
     def __call__(self, add_self=False, following_only=False, preceding_only=False):

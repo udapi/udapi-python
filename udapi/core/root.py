@@ -112,7 +112,7 @@ class Root(Node):
         The nodes are sorted by their ord.
         This root-specific implementation returns all the nodes in the tree except the root itself.
         """
-        return ListOfNodes(self._descendants, origin=self, skip_sort=True)
+        return ListOfNodes(self._descendants, origin=self)
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?
