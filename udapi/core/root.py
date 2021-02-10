@@ -180,16 +180,6 @@ class Root(Node):
         """Set the list of all multi-word tokens in this tree."""
         self._mwts = mwts
 
-    def _update_ordering(self):
-        """Update the ord attribute of all nodes.
-
-        Update also the list of all tree nodes stored in root._descendants.
-        This method is automatically called after node removal or reordering.
-        """
-        self._descendants = sorted(self.unordered_descendants())
-        for (new_ord, node) in enumerate(self._descendants, 1):
-            node.ord = new_ord
-
     def get_sentence(self, if_missing='detokenize'):
         """Return either the stored `root.text` or (if None) `root.compute_text()`.
 
