@@ -478,9 +478,21 @@ class Node(object):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
 
-        self._root._descendants = sorted(self._root.unordered_descendants())
-        for (new_ord, node) in enumerate(self._root._descendants, 1):
-            node.ord = new_ord
+        # When self is the only node being removed, it is faster to root._descendants.remove(self)
+        # and update the ords only where necessary (from self._ord further).
+        # When removing also its children+descendants, it is faster to recompute root._descendants
+        # and update all ords (computing leftmost descendant of self would be too slow).
+        if not self._children:
+            try:
+                self._root._descendants.remove(self)
+            except ValueError:
+                pass # self may be an already deleted node e.g. if n.remove() called twice
+            for (new_ord, node) in enumerate(self._root._descendants[self._ord - 1:], self._ord):
+                node.ord = new_ord
+        else:
+            self._root._descendants = sorted(self._root.unordered_descendants())
+            for (new_ord, node) in enumerate(self._root._descendants, 1):
+                node.ord = new_ord
 
 
     # TODO: make private: _shift
