@@ -477,7 +477,11 @@ class Node(object):
             if children.endswith('warn'):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
-        self._root._update_ordering()
+
+        self._root._descendants = sorted(self._root.unordered_descendants())
+        for (new_ord, node) in enumerate(self._root._descendants, 1):
+            node.ord = new_ord
+
 
     # TODO: make private: _shift
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
@@ -507,7 +511,10 @@ class Node(object):
             node_to_move._ord = reference_ord + common_delta + \
                 (node_to_move._ord - self._ord) / 100000.
 
-        self._root._update_ordering()
+        self._root._descendants.sort()
+        for (new_ord, node) in enumerate(self._root._descendants, 1):
+            node.ord = new_ord
+
 
     # TODO add without_children kwarg
     def shift_after_node(self, reference_node):
