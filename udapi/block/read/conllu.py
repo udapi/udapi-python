@@ -5,6 +5,7 @@ import re
 
 from udapi.core.basereader import BaseReader
 from udapi.core.root import Root
+from udapi.core.node import Node
 
 # Compile a set of regular expressions that will be searched over the lines.
 # The equal sign after sent_id was added to the specification in UD v2.0.
@@ -131,7 +132,8 @@ class Conllu(BaseReader):
                     empty.raw_deps = fields[8]  # TODO
                     continue
 
-                node = root.create_child()
+                node = Node(root=root)
+                root._descendants.append(node)
 
                 # TODO slow implementation of speed-critical loading
                 for (n_attribute, attribute_name) in enumerate(self.node_attributes):
@@ -170,22 +172,31 @@ class Conllu(BaseReader):
             root._descendants = []
 
         # Set dependency parents (now, all nodes of the tree are created).
-        # TODO: parent setter checks for cycles, but this is something like O(n*log n)
-        # if done for each node. It could be done faster if the whole tree is checked at once.
-        # Also parent setter removes the node from its old parent's list of children,
-        # this could be skipped here by not using `node = root.create_child()`.
         for node_ord, node in enumerate(nodes[1:], 1):
             try:
-                node.parent = nodes[parents[node_ord]]
-            # TODO add a special Exception class for cycles
-            except ValueError as e:
-                if self.fix_cycles:
-                    logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", e)
-                    node.parent = root
-                else:
-                    raise
+                parent = nodes[parents[node_ord]]
             except IndexError:
                 raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
+            if node is parent:
+                if self.fix_cycles:
+                    logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", node)
+                    node._parent = root
+                    root._children.append(node)
+                else:
+                    raise ValueError(f"Detected a cycle: {node} attached to itself")
+            elif node.children:
+                climbing = parent._parent
+                while climbing:
+                    if climbing == node:
+                        if self.fix_cycles:
+                            logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", parent)
+                            parent = root
+                            break
+                        else:
+                            raise ValueError(f"Detected a cycle: {node}")
+                    climbing = climbing._parent
+            node._parent = parent
+            parent._children.append(node)
 
         # Create multi-word tokens.
         for fields in mwts:
