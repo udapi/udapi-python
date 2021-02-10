@@ -424,10 +424,13 @@ class Node(object):
     # TODO: make private: _unordered_descendants
     def unordered_descendants(self):
         """Return a list of all descendants in any order."""
-        descendants = []
-        for child in self._children:
-            descendants.append(child)
-            descendants.extend(child.unordered_descendants())
+        stack = list(self._children)
+        descendants = list(stack)
+        while(stack):
+            n = stack.pop()
+            if n._children:
+                stack.extend(n._children)
+                descendants.extend(n._children)
         return descendants
 
     @staticmethod
