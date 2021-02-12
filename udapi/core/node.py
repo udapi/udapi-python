@@ -502,8 +502,7 @@ class Node(object):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Internal method for changing word order."""
         if move_subtree:
-            nodes_to_move = self.unordered_descendants()
-            nodes_to_move.append(self)
+            nodes_to_move = self.descendants(add_self=True)
         else:
             nodes_to_move = [self]
 
@@ -518,17 +517,65 @@ class Node(object):
                     if node._ord < reference_ord and node is not self:
                         reference_ord = node._ord
 
-        common_delta = 0.5 if after else -0.5
+        # convert shift_after_node to shift_before_node
+        reference_ord += 1 if after else 0
 
-        # TODO: can we use some sort of epsilon instead of choosing a silly
-        # upper bound for out-degree?
-        for node_to_move in nodes_to_move:
-            node_to_move._ord = reference_ord + common_delta + \
-                (node_to_move._ord - self._ord) / 100000.
+        first_ord, last_ord = nodes_to_move[0]._ord, nodes_to_move[-1]._ord
+        all_nodes = self._root._descendants
 
-        self._root._descendants.sort()
-        for (new_ord, node) in enumerate(self._root._descendants, 1):
-            node.ord = new_ord
+        # If there are no "gaps" in nodes_to_move (e.g. when it is projective),
+        # we can make the shifting a bit faster and simpler.
+        if last_ord - first_ord + 1 == len(nodes_to_move):
+            # First, move a node from position src_ord to position trg_ord RIGHT-ward.
+            trg_ord, src_ord = last_ord, first_ord - 1
+            while src_ord >= reference_ord:
+                all_nodes[trg_ord - 1] = all_nodes[src_ord - 1]
+                all_nodes[trg_ord-1]._ord = trg_ord
+                trg_ord, src_ord = trg_ord - 1, src_ord - 1
+            # Second, move a node from position src_ord to position trg_ord LEFT-ward.
+            trg_ord, src_ord = first_ord, last_ord + 1
+            while src_ord < reference_ord:
+                all_nodes[trg_ord - 1] = all_nodes[src_ord - 1]
+                all_nodes[trg_ord - 1]._ord = trg_ord
+                trg_ord, src_ord = trg_ord + 1, src_ord + 1
+            # Third, move nodes_to_move to trg_ord RIGHT-ward.
+            trg_ord = reference_ord if reference_ord < first_ord else trg_ord
+            for node in nodes_to_move:
+                all_nodes[trg_ord - 1], node._ord = node, trg_ord
+                trg_ord += 1
+            return
+
+        # First, move a node from position src_ord to position trg_ord RIGHT-ward.
+        # src_ord iterates decreasingly over nodes which are not moving.
+        trg_ord, src_ord, mov_ord = last_ord, last_ord - 1, len(nodes_to_move) - 2
+        while src_ord >= reference_ord:
+            while all_nodes[src_ord - 1] is nodes_to_move[mov_ord]:
+                mov_ord, src_ord = mov_ord - 1, src_ord - 1
+                if src_ord < reference_ord:
+                    break
+            else:
+                all_nodes[trg_ord - 1] = all_nodes[src_ord - 1]
+                all_nodes[trg_ord - 1]._ord = trg_ord
+                trg_ord, src_ord = trg_ord - 1, src_ord - 1
+
+        # Second, move a node from position src_ord to position trg_ord LEFT-ward.
+        # src_ord iterates increasingly over nodes which are not moving.
+        trg_ord, src_ord, mov_ord = first_ord, first_ord + 1, 1
+        while src_ord < reference_ord:
+            while mov_ord < len(nodes_to_move) and all_nodes[src_ord - 1] is nodes_to_move[mov_ord]:
+                mov_ord, src_ord = mov_ord + 1, src_ord + 1
+                if src_ord >= reference_ord:
+                    break
+            else:
+                all_nodes[trg_ord - 1] = all_nodes[src_ord - 1]
+                all_nodes[trg_ord - 1]._ord = trg_ord
+                trg_ord, src_ord = trg_ord + 1, src_ord + 1
+
+        # Third, move nodes_to_move to trg_ord RIGHT-ward.
+        trg_ord = reference_ord if reference_ord < first_ord else trg_ord
+        for node in nodes_to_move:
+            all_nodes[trg_ord - 1], node._ord = node, trg_ord
+            trg_ord += 1
 
 
     # TODO add without_children kwarg
