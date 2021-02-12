@@ -289,26 +289,19 @@ class Node(object):
         if self._parent is new_parent:
             return
 
-        # The node itself couldn't be assigned as a parent. None cannot be used as parent.
-        if self is new_parent:
-            raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s' % self)
+        # Check for None new_parent and cycles.
         if new_parent is None:
-            raise ValueError('Cannot set None as parent: %s' % self)
-
-        # Check if the current Node is not an antecedent of the new parent.
-        climbing_node = new_parent
-        while not climbing_node.is_root():
-            if climbing_node is self:
-                raise ValueError('Setting the parent of %s to %s would lead to a cycle.'
-                                 % (self, new_parent))
-            climbing_node = climbing_node._parent
+            raise ValueError(f'Cannot set None as parent: {self}')
+        if self is new_parent:
+            raise ValueError(f'Cannot set a node as its own parent (cycle are forbidden): {self}')
+        if self._children and new_parent.is_descendant_of(self):
+            raise ValueError(f'Setting the parent of {self} to {new_parent} would lead to a cycle.')
 
         # Remove the current Node from the children of the old parent.
         # Forbid moving nodes from one tree to another using parent setter.
         if self._parent:
-            self._parent._children = [node for node in self._parent._children if node is not self]
-            old_root, new_root = self._parent._root, climbing_node
-            if old_root is not new_root:
+            self._parent._children.remove(self)
+            if self._parent._root is not new_parent._root:
                 raise ValueError('Cannot move nodes between trees with parent setter, '
                                  'use new_root.steal_nodes(nodes_to_be_moved) instead')
         # Set the new parent.
