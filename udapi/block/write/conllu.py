@@ -12,10 +12,6 @@ class Conllu(BaseWriter):
         self.print_text = print_text
         self.print_empty_trees = print_empty_trees
 
-        # A list of Conllu columns.
-        self.node_attributes = ["ord", "form", "lemma", "upos", "xpos",
-                                "feats", "parent", "deprel", "raw_deps", "misc"]
-
     def process_tree(self, tree):  # pylint: disable=too-many-branches
         nodes = tree.descendants
 
@@ -52,29 +48,33 @@ class Conllu(BaseWriter):
         for node in nodes:
             # print all empty nodes which should go here
             while empty_nodes:
-                next_empty_ord = int(float(empty_nodes[0].ord))
+                next_empty_ord = empty_nodes[0]._ord
                 if next_empty_ord > last_ord:
                     break
                 empty = empty_nodes.pop(0)
-                values = [getattr(empty, attr_name) for attr_name in self.node_attributes]
-                values = ['_' if v is None else str(v) for v in values]
-                values[6] = '_'
-                values[7] = '_'
-                print('\t'.join(values))
+                print('\t'.join('_' if v is None else v for v in
+                    (str(node._ord), node.form, node.lemma, node.upos, node.xpos,
+                    '_' if node._feats is None else str(node.feats), '_\t_',
+                    node.raw_deps, '_' if node._misc is None else str(node.misc))))
 
             mwt = node.multiword_token
-            if mwt and node.ord > last_mwt_id:
-                print('\t'.join([mwt.ord_range,
-                                 mwt.form if mwt.form is not None else '_',
-                                 '_\t_\t_\t_\t_\t_\t_', str(mwt.misc)]))
-                last_mwt_id = mwt.words[-1].ord
-            values = [getattr(node, attr_name) for attr_name in self.node_attributes]
-            values = ['_' if v is None else str(v) for v in values]
+            if mwt and node._ord > last_mwt_id:
+                print('\t'.join((mwt.ord_range,
+                                 '_' if mwt.form is None else mwt.form,
+                                 '_\t_\t_\t_\t_\t_\t_',
+                                 '_' if node._misc is None else str(mwt.misc))))
+                last_mwt_id = mwt.words[-1]._ord
+
             try:
-                values[6] = str(node.parent.ord)
+                head = str(node._parent._ord)
             except AttributeError:
-                values[6] = '0'
-            print('\t'.join(values))
+                head = '0'
+
+            print('\t'.join('_' if v is None else v for v in
+                (str(node._ord), node.form, node.lemma, node.upos, node.xpos,
+                '_' if node._feats is None else str(node.feats), head, node.deprel,
+                node.raw_deps, '_' if node._misc is None else str(node.misc))))
+
             last_ord = node.ord
 
         # Empty sentences are not allowed in CoNLL-U,
