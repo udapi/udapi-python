@@ -11,7 +11,7 @@ from udapi.core.node import Node
 # The equal sign after sent_id was added to the specification in UD v2.0.
 # This reader accepts also older-style sent_id (until UD v2.0 treebanks are released).
 RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
-RE_TEXT = re.compile(r'^# text\s*=\s*(.+)')
+RE_TEXT = re.compile(r'^# text\s*=\s*(.*)')
 RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc)(?:\s+id\s*=\s*(.+))?')
 RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
 
