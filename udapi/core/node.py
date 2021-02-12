@@ -490,28 +490,12 @@ class Node(object):
             for (new_ord, node) in enumerate(self._root._descendants, 1):
                 node.ord = new_ord
 
-
-    # TODO: make private: _shift
-    def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
+    def _shift_before_ord(self, reference_ord, without_children=False):
         """Internal method for changing word order."""
-        if move_subtree:
-            nodes_to_move = self.descendants(add_self=True)
-        else:
+        if without_children:
             nodes_to_move = [self]
-
-        reference_ord = reference_node._ord
-        if reference_subtree:
-            if after:
-                for node in reference_node.unordered_descendants():
-                    if node._ord > reference_ord and node is not self:
-                        reference_ord = node._ord
-            else:
-                for node in reference_node.unordered_descendants():
-                    if node._ord < reference_ord and node is not self:
-                        reference_ord = node._ord
-
-        # convert shift_after_node to shift_before_node
-        reference_ord += 1 if after else 0
+        else:
+            nodes_to_move = self.descendants(add_self=True)
 
         first_ord, last_ord = nodes_to_move[0]._ord, nodes_to_move[-1]._ord
         all_nodes = self._root._descendants
@@ -570,23 +554,25 @@ class Node(object):
             all_nodes[trg_ord - 1], node._ord = node, trg_ord
             trg_ord += 1
 
-
-    # TODO add without_children kwarg
-    def shift_after_node(self, reference_node):
+    def shift_after_node(self, reference_node, without_children=False):
         """Shift this node after the reference_node."""
-        self.shift(reference_node, after=1, move_subtree=1, reference_subtree=0)
+        self._shift_before_ord(reference_node._ord + 1, without_children=without_children)
 
-    def shift_before_node(self, reference_node):
+    def shift_before_node(self, reference_node, without_children=False):
         """Shift this node after the reference_node."""
-        self.shift(reference_node, after=0, move_subtree=1, reference_subtree=0)
+        self._shift_before_ord(reference_node._ord, without_children=without_children)
 
-    def shift_after_subtree(self, reference_node, without_children=0):
+    def shift_after_subtree(self, reference_node, without_children=False):
         """Shift this node (and its subtree) after the subtree rooted by reference_node.
 
         Args:
         without_children: shift just this node without its subtree?
         """
-        self.shift(reference_node, after=1, move_subtree=not without_children, reference_subtree=1)
+        ref_ord = reference_node._ord
+        for node in reference_node.unordered_descendants():
+            if node._ord > ref_ord and node is not self:
+                ref_ord = node._ord
+        self._shift_before_ord(ref_ord + 1, without_children=without_children)
 
     def shift_before_subtree(self, reference_node, without_children=0):
         """Shift this node (and its subtree) before the subtree rooted by reference_node.
@@ -594,7 +580,11 @@ class Node(object):
         Args:
         without_children: shift just this node without its subtree?
         """
-        self.shift(reference_node, after=0, move_subtree=not without_children, reference_subtree=1)
+        ref_ord = reference_node._ord
+        for node in reference_node.unordered_descendants():
+            if node._ord < ref_ord and node is not self:
+                ref_ord = node._ord
+        self._shift_before_ord(ref_ord, without_children=without_children)
 
     @property
     def prev_node(self):
