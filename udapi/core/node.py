@@ -93,9 +93,9 @@ class Node(object):
         self.lemma = lemma
         self.upos = upos
         self.xpos = xpos
-        self._feats = Feats(feats)
+        self._feats = Feats(feats) if feats else None
         self.deprel = deprel
-        self._misc = DualDict(misc)
+        self._misc = DualDict(misc) if misc else None
         self._raw_deps = '_'
         self._deps = None
         self._parent = None
@@ -176,11 +176,16 @@ class Node(object):
         For details about the implementation and other methods (e.g. `node.feats.is_plural()`),
         see ``udapi.core.feats.Feats`` which is a subclass of `DualDict`.
         """
+        if self._feats is None:
+            self._feats = Feats()
         return self._feats
 
     @feats.setter
     def feats(self, value):
-        self._feats.set_mapping(value)
+        if self._feats is None:
+            self._feats = Feats(value)
+        else:
+            self._feats.set_mapping(value)
 
     @property
     def misc(self):
@@ -203,11 +208,16 @@ class Node(object):
 
         For details about the implementation, see ``udapi.core.dualdict.DualDict``.
         """
+        if self._misc is None:
+            self._misc = DualDict()
         return self._misc
 
     @misc.setter
     def misc(self, value):
-        self._misc.set_mapping(value)
+        if self._misc is None:
+            self._misc = DualDict(value)
+        else:
+            self._misc.set_mapping(value)
 
     @property
     def raw_deps(self):
@@ -892,6 +902,8 @@ class EmptyNode(Node):
         """Attempts at setting parent of EmptyNode result in AttributeError exception."""
         raise AttributeError('EmptyNode cannot have a (basic-UD) parent.')
 
+    # The ord getter is the same as in Node, but it must be defined,
+    # so that we can override the ord setter.
     @property
     def ord(self):
         return self._ord

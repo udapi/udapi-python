@@ -9,7 +9,7 @@ class MWT(object):
     def __init__(self, words=None, form=None, misc=None, root=None):
         self.words = words if words is not None else []
         self.form = form
-        self._misc = DualDict(misc)
+        self._misc = DualDict(misc) if misc else None
         self.root = root
         for word in self.words:
             word._mwt = self  # pylint: disable=W0212
@@ -20,11 +20,16 @@ class MWT(object):
 
         See `udapi.core.node.Node` for details.
         """
+        if self._misc is None:
+            self._misc = DualDict()
         return self._misc
 
     @misc.setter
     def misc(self, value):
-        self._misc.set_mapping(value)
+        if self._misc is None:
+            self._misc = DualDict(value)
+        else:
+            self._misc.set_mapping(value)
 
     @property
     def ord_range(self):
