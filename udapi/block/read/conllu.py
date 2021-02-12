@@ -19,41 +19,17 @@ RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
 class Conllu(BaseReader):
     """A reader of the CoNLL-U files."""
 
-    def __init__(self, strict=False, separator='tab', empty_parent='warn', fix_cycles=False,
-                 attributes='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc', **kwargs):
+    def __init__(self, strict=False, empty_parent='warn', fix_cycles=False, **kwargs):
         """Create the Conllu reader object.
 
         Args:
         strict: raise an exception if errors found (default=False, i.e. a robust mode)
-        separator: How are the columns separated?
-            Default='tab' is the only possibility in valid CoNLL-U files.
-            'space' means one or more whitespaces (this does not allow forms with space).
-            'doublespace' means two or more spaces.
-        empty_parent: What to do if HEAD is _? Default=warn - issue a warning and attach to the root
+        empty_parent: What to do if HEAD is _? Default=warn: issue a warning and attach to the root
             or if strict=1 issue an exception. With `empty_parent=ignore` no warning is issued.
-        attributes: comma-separated list of column names in the input files
-            (default='ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc')
-            Changing the default can be used for loading CoNLL-like formats (not valid CoNLL-U).
-            For ignoring a column, use "_" as its name.
-            Column "ord" marks the column with 1-based word-order number/index (usualy called ID).
-            Column "head" marks the column with dependency parent index (word-order number).
-
-            For example, for CoNLL-X which uses name1=value1|name2=value2 format of FEATS, use
-            `attributes=ord,form,lemma,upos,xpos,feats,head,deprel,_,_`
-            but note attributes that upos, feats and deprel will contain language-specific values,
-            not valid according to UD guidelines and a further conversion will be needed.
-            You will loose the projective_HEAD and projective_DEPREL attributes.
-
-            For CoNLL-2009 you can use `attributes=ord,form,lemma,_,upos,_,feats,_,head,_,deprel`.
-            You will loose the predicted_* attributes and semantic/predicate annotation.
-
-            TODO: allow storing the rest of columns in misc, e.g. `node.misc[feats]`
-            for feats which do not use the name1=value1|name2=value2 format.
+        fix_cycles: fix cycles by attaching a node in the cycle to the root
         """
         super().__init__(**kwargs)
-        self.node_attributes = attributes.split(',')
         self.strict = strict
-        self.separator = separator
         self.empty_parent = empty_parent
         self.fix_cycles = fix_cycles
 
@@ -88,8 +64,47 @@ class Conllu(BaseReader):
                 container = root.json['__doc__']
             container[json_match.group(2)] = json.loads(json_match.group(3))
             return
-
         root.comment += line[1:] + "\n"
+
+    def parse_node_line(self, line, root, nodes, parents, mwts):
+        fields = line.split('\t')
+        if len(fields) != 10:
+            if self.strict:
+                raise RuntimeError('Wrong number of columns in %r' % line)
+            fields.extend(['_'] * (10 - len(fields)))
+        # multi-word tokens will be processed later
+        if '-' in fields[0]:
+            mwts.append(fields)
+            return
+        if '.' in fields[0]:
+            empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
+                                            xpos=fields[4], feats=fields[5], misc=fields[9])
+            empty.ord = fields[0]
+            empty.raw_deps = fields[8]  # TODO
+            return
+
+        for i in range(1, 10):
+            if fields[i] == '_':
+                fields[i] = None
+
+        # ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc
+        node = Node(root=root, form=fields[1], lemma=fields[2], upos=fields[3],
+                    xpos=fields[4], feats=fields[5], deprel=fields[7], misc=fields[9])
+        root._descendants.append(node)
+        node._ord = int(fields[0])
+        if fields[8] is not None:
+            node.raw_deps = fields[8]
+        try:
+            parents.append(int(fields[6]))
+        except ValueError as exception:
+            if not self.strict and fields[6] == '_':
+                if self.empty_parent == 'warn':
+                    logging.warning("Empty parent/head index in '%s'", line)
+                parents.append(0)
+            else:
+                raise exception
+
+        nodes.append(node)
 
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
@@ -109,52 +124,7 @@ class Conllu(BaseReader):
             if line[0] == '#':
                 self.parse_comment_line(line, root)
             else:
-                if self.separator == 'tab':
-                    fields = line.split('\t')
-                elif self.separator == 'space':
-                    fields = line.split()
-                elif self.separator == 'doublespace':
-                    fields = re.split('  +', line)
-                else:
-                    raise ValueError('separator=%s is not valid' % self.separator)
-                if len(fields) != len(self.node_attributes):
-                    if self.strict:
-                        raise RuntimeError('Wrong number of columns in %r' % line)
-                    fields.extend(['_'] * (len(self.node_attributes) - len(fields)))
-                # multi-word tokens will be processed later
-                if '-' in fields[0]:
-                    mwts.append(fields)
-                    continue
-                if '.' in fields[0]:
-                    empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
-                                                    xpos=fields[4], feats=fields[5], misc=fields[9])
-                    empty.ord = fields[0]
-                    empty.raw_deps = fields[8]  # TODO
-                    continue
-
-                node = Node(root=root)
-                root._descendants.append(node)
-
-                # TODO slow implementation of speed-critical loading
-                for (n_attribute, attribute_name) in enumerate(self.node_attributes):
-                    if attribute_name == 'head':
-                        try:
-                            parents.append(int(fields[n_attribute]))
-                        except ValueError as exception:
-                            if not self.strict and fields[n_attribute] == '_':
-                                if self.empty_parent == 'warn':
-                                    logging.warning("Empty parent/head index in '%s'", line)
-                                parents.append(0)
-                            else:
-                                raise exception
-                    elif attribute_name == 'ord':
-                        setattr(node, 'ord', int(fields[n_attribute]))
-                    elif attribute_name == 'deps':
-                        setattr(node, 'raw_deps', fields[n_attribute])
-                    elif attribute_name != '_':
-                        setattr(node, attribute_name, fields[n_attribute])
-
-                nodes.append(node)
+                self.parse_node_line(line, root, nodes, parents, mwts)
 
         # If no nodes were read from the filehandle (so only root remained in nodes),
         # we return None as a sign of failure (end of file or more than one empty line).
@@ -187,7 +157,7 @@ class Conllu(BaseReader):
             elif node.children:
                 climbing = parent._parent
                 while climbing:
-                    if climbing == node:
+                    if climbing is node:
                         if self.fix_cycles:
                             logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", parent)
                             parent = root
