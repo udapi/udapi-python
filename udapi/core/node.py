@@ -373,11 +373,12 @@ class Node(object):
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
-        climber = self._parent
-        while climber:
-            if climber is node:
-                return True
-            climber = climber._parent
+        if node._children:
+            climber = self._parent
+            while climber:
+                if climber is node:
+                    return True
+                climber = climber._parent
         return False
 
     def create_child(self, **kwargs):
@@ -495,13 +496,27 @@ class Node(object):
 
     def _shift_before_ord(self, reference_ord, without_children=False):
         """Internal method for changing word order."""
-        if without_children:
-            nodes_to_move = [self]
-        else:
-            nodes_to_move = self.descendants(add_self=True)
-
-        first_ord, last_ord = nodes_to_move[0]._ord, nodes_to_move[-1]._ord
         all_nodes = self._root._descendants
+
+        # Moving a single node can be faster than nodes_to_move = [self]
+        if without_children or not self._children:
+            my_ord = self._ord
+            if reference_ord > my_ord + 1:
+                for i_ord in range(my_ord, reference_ord - 1):
+                    all_nodes[i_ord - 1] = all_nodes[i_ord]
+                    all_nodes[i_ord - 1]._ord = i_ord
+                all_nodes[reference_ord - 2] = self
+                self._ord = reference_ord - 1
+            elif reference_ord < my_ord:
+                for i_ord in range(my_ord, reference_ord, -1):
+                    all_nodes[i_ord - 1] = all_nodes[i_ord - 2]
+                    all_nodes[i_ord - 1]._ord = i_ord
+                all_nodes[reference_ord - 1] = self
+                self._ord = reference_ord
+            return
+
+        nodes_to_move = self.descendants(add_self=True)
+        first_ord, last_ord = nodes_to_move[0]._ord, nodes_to_move[-1]._ord
 
         # If there are no "gaps" in nodes_to_move (e.g. when it is projective),
         # we can make the shifting a bit faster and simpler.
@@ -557,32 +572,48 @@ class Node(object):
             all_nodes[trg_ord - 1], node._ord = node, trg_ord
             trg_ord += 1
 
-    def shift_after_node(self, reference_node, without_children=False):
+    def shift_after_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node after the reference_node."""
+        if not without_children and reference_node.is_descendant_of(self):
+            if skip_if_descendant:
+                return
+            raise ValueError(f'{reference_node} is a descendant of {self}. Consider without_children=1.')
         self._shift_before_ord(reference_node._ord + 1, without_children=without_children)
 
-    def shift_before_node(self, reference_node, without_children=False):
+    def shift_before_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node after the reference_node."""
+        if not without_children and reference_node.is_descendant_of(self):
+            if skip_if_descendant:
+                return
+            raise ValueError(f'{reference_node} is a descendant of {self}. Consider without_children=1.')
         self._shift_before_ord(reference_node._ord, without_children=without_children)
 
-    def shift_after_subtree(self, reference_node, without_children=False):
+    def shift_after_subtree(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node (and its subtree) after the subtree rooted by reference_node.
 
         Args:
         without_children: shift just this node without its subtree?
         """
+        if not without_children and reference_node.is_descendant_of(self):
+            if skip_if_descendant:
+                return
+            raise ValueError(f'{reference_node} is a descendant of {self}. Consider without_children=1.')
         ref_ord = reference_node._ord
         for node in reference_node.unordered_descendants():
             if node._ord > ref_ord and node is not self:
                 ref_ord = node._ord
         self._shift_before_ord(ref_ord + 1, without_children=without_children)
 
-    def shift_before_subtree(self, reference_node, without_children=0):
+    def shift_before_subtree(self, reference_node, without_children=0, skip_if_descendant=False):
         """Shift this node (and its subtree) before the subtree rooted by reference_node.
 
         Args:
         without_children: shift just this node without its subtree?
         """
+        if not without_children and reference_node.is_descendant_of(self):
+            if skip_if_descendant:
+                return
+            raise ValueError(f'{reference_node} is a descendant of {self}. Consider without_children=1.')
         ref_ord = reference_node._ord
         for node in reference_node.unordered_descendants():
             if node._ord < ref_ord and node is not self:
