@@ -365,6 +365,9 @@ class Node(object):
          nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
         See documentation of ListOfNodes for details.
         """
+        # The following code is equivalent to
+        # ListOfNodes(sorted(self.unordered_descendants()), origin=self)
+        # but it is faster because there is no extra copying of lists of nodes.
         stack = list(self._children)
         descendants = ListOfNodes(stack, origin=self)
         while(stack):
