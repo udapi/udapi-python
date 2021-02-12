@@ -226,12 +226,13 @@ class Node(object):
         After the access to the raw enhanced dependencies,
         provide the serialization if they were deserialized already.
         """
-        if self._raw_deps is not None:
-            return self._raw_deps
-        if not self._deps:
-            self._raw_deps = '_'
-            return '_'
-        self._raw_deps = '|'.join(f"{dep['parent']._ord}:{dep['deprel']}" for dep in self._deps)
+        # TODO: node.deps.append(dep) should be hooked and
+        # mark the serialized cache dirty, i.e. self._raw_deps = None.
+        # Afterwards, we can use the following optimization
+        #if self._raw_deps is not None:
+        #    return self._raw_deps
+        if self._deps is not None:
+            self._raw_deps = '|'.join(f"{dep['parent']._ord}:{dep['deprel']}" for dep in self._deps)
         return self._raw_deps
 
     @raw_deps.setter
@@ -252,15 +253,14 @@ class Node(object):
         provide the deserialization of the raw data and save deps to the list.
         """
         if self._deps is None:
-            if self._raw_deps == '_':
-                return []
-
-            # Obtain a list of all nodes in the dependency tree.
-            nodes = [self._root] + self._root._descendants
-
             # Create a list of secondary dependencies.
             self._deps = list()
 
+            if self._raw_deps == '_':
+                return self._deps
+
+            # Obtain a list of all nodes in the dependency tree.
+            nodes = [self._root] + self._root._descendants
 
             for raw_dependency in self._raw_deps.split('|'):
                 # Deprel itself may contain one or more ':' (subtypes).
