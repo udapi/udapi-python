@@ -226,12 +226,12 @@ class Node(object):
         After the access to the raw enhanced dependencies,
         provide the serialization if they were deserialized already.
         """
-        if self._deps is not None:
-            serialized_deps = []
-            for secondary_dependence in self._deps:
-                serialized_deps.append('{}:{}'.format(secondary_dependence[
-                    'parent']._ord, secondary_dependence['deprel']))
-            self._raw_deps = '|'.join(serialized_deps)
+        if self._raw_deps is not None:
+            return self._raw_deps
+        if not self._deps:
+            self._raw_deps = '_'
+            return '_'
+        self._raw_deps = '|'.join(f"{dep['parent']._ord}:{dep['deprel']}" for dep in self._deps)
         return self._raw_deps
 
     @raw_deps.setter
@@ -239,9 +239,9 @@ class Node(object):
         """Set serialized enhanced dependencies (the new value is a string).
 
         When updating raw secondary dependencies,
-        delete the current version of the deserialized data.
+        the current version of the deserialized data is deleted.
         """
-        self._raw_deps = str(value)
+        self._raw_deps = value
         self._deps = None
 
     @property
@@ -252,14 +252,15 @@ class Node(object):
         provide the deserialization of the raw data and save deps to the list.
         """
         if self._deps is None:
+            if self._raw_deps == '_':
+                return []
+
             # Obtain a list of all nodes in the dependency tree.
             nodes = [self._root] + self._root._descendants
 
             # Create a list of secondary dependencies.
             self._deps = list()
 
-            if self._raw_deps == '_':
-                return self._deps
 
             for raw_dependency in self._raw_deps.split('|'):
                 # Deprel itself may contain one or more ':' (subtypes).
@@ -280,6 +281,7 @@ class Node(object):
     def deps(self, value):
         """Set deserialized enhanced dependencies (the new value is a list of dicts)."""
         self._deps = value
+        self._raw_deps = None
 
     @property
     def parent(self):
