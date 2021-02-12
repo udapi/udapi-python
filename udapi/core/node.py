@@ -303,11 +303,11 @@ class Node(object):
 
         # Check for None new_parent and cycles.
         if new_parent is None:
-            raise ValueError(f'Cannot set None as parent: {self}')
+            raise ValueError('Cannot set None as parent: %s', self)
         if self is new_parent:
-            raise ValueError(f'Cannot set a node as its own parent (cycle are forbidden): {self}')
+            raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s', self)
         if self._children and new_parent.is_descendant_of(self):
-            raise ValueError(f'Setting the parent of {self} to {new_parent} would lead to a cycle.')
+            raise ValueError('Setting the parent of %s to %s would lead to a cycle.', (self, new_parent))
 
         # Remove the current Node from the children of the old parent.
         # Forbid moving nodes from one tree to another using parent setter.
