@@ -490,6 +490,8 @@ class Node(object):
             for (new_ord, node) in enumerate(self._root._descendants[self._ord - 1:], self._ord):
                 node.ord = new_ord
         else:
+            # TODO nodes_to_remove = self.unordered_descendants()
+            # and mark all nodes as deleted, remove them from MWT and coref mentions
             self._root._descendants = sorted(self._root.unordered_descendants())
             for (new_ord, node) in enumerate(self._root._descendants, 1):
                 node.ord = new_ord

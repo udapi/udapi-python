@@ -64,10 +64,10 @@ class Conllu(BaseWriter):
 
             mwt = node.multiword_token
             if mwt and node.ord > last_mwt_id:
-                last_mwt_id = mwt.words[-1].ord
-                print('\t'.join([mwt.ord_range(),
+                print('\t'.join([mwt.ord_range,
                                  mwt.form if mwt.form is not None else '_',
                                  '_\t_\t_\t_\t_\t_\t_', str(mwt.misc)]))
+                last_mwt_id = mwt.words[-1].ord
             values = [getattr(node, attr_name) for attr_name in self.node_attributes]
             values = ['_' if v is None else str(v) for v in values]
             try:
