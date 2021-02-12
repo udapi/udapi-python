@@ -465,11 +465,14 @@ class Node(object):
             `warn` means to issue a warning if any children are present and delete them.
             `rehang_warn` means to rehang and warn:-).
         """
-        self._parent._children = [child for child in self._parent._children if child is not self]
+        self._parent._children.remove(self)
         if children is not None and self._children:
             if children.startswith('rehang'):
                 for child in self._children:
-                    child.parent = self._parent # TODO child._parent = self._parent
+                    child._parent = self._parent
+                self._parent._children.extend(self._children)
+                self._parent._children.sort()
+                self._children.clear()
             if children.endswith('warn'):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
