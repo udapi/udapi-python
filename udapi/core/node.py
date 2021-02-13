@@ -1,7 +1,8 @@
 """Node class and related classes and functions.
 
-In addition to class `Node`, this module contains also classes
-`EmptyNode`, `OrdTuple` and `ListOfNodes` and function `find_minimal_common_treelet`.
+In addition to class `Node`, this module contains also helper classes
+`CycleError`, `EmptyNode`, `OrdTuple` and `ListOfNodes`
+and function `find_minimal_common_treelet`.
 """
 import logging
 import functools
@@ -303,11 +304,11 @@ class Node(object):
 
         # Check for None new_parent and cycles.
         if new_parent is None:
-            raise ValueError('Cannot set None as parent: %s', self)
+            raise ValueError(f'Cannot set None as parent: {self}')
         if self is new_parent:
-            raise ValueError('Cannot set a node as its own parent (cycle are forbidden): %s', self)
+            raise CycleError('Cannot set a node as its own parent (cycle are forbidden): %s', self)
         if self._children and new_parent.is_descendant_of(self):
-            raise ValueError('Setting the parent of %s to %s would lead to a cycle.', (self, new_parent))
+            raise CycleError('Setting the parent of %s to %s would lead to a cycle.', self, new_parent)
 
         # Remove the current Node from the children of the old parent.
         # Forbid moving nodes from one tree to another using parent setter.
@@ -887,6 +888,19 @@ class Node(object):
     def create_coref_cluster(self, **kwargs):
         return udapi.core.coref.create_coref_cluster(head=self, **kwargs)
 
+
+class CycleError(Exception):
+    '''A cycle in the dependency tree detected (or would be created).'''
+    def __init__(self, message, node1, node2=None):
+        self.message = message
+        self.node1 = node1
+        self.node2 = node2
+        super().__init__(message)
+
+    def __str__(self):
+        if self.node2 is None:
+            return self.message % self.node1
+        return self.message % (self.node1, self.node2)
 
 class EmptyNode(Node):
     """Class for representing empty nodes (for ellipsis in enhanced UD)."""
