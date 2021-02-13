@@ -3,6 +3,7 @@ import re
 import sys
 
 import colorama
+import collections
 from termcolor import colored
 from udapi.core.basewriter import BaseWriter
 
@@ -237,7 +238,13 @@ class TextModeTrees(BaseWriter):
     def process_tree(self, root):
         """Print the tree to (possibly redirected) sys.stdout."""
         if self.print_empty:
-            allnodes = [root] + root.descendants_and_empty
+            if root.is_root():
+                allnodes = [root] + root.descendants_and_empty
+            else:
+                allnodes = root.descendants(add_self=1)
+                empty = [e for e in root._root.empty_nodes if e > allnodes[0] and e < allnodes[-1]]
+                allnodes.extend(empty)
+                allnodes.sort()
         else:
             allnodes = root.descendants(add_self=1)
         if not self.should_print_tree(root, allnodes):
@@ -248,7 +255,7 @@ class TextModeTrees(BaseWriter):
 
         # Precompute the number of non-projective gaps for each subtree
         if self.minimize_cross:
-            self._gaps = [0, ] * (1 + len(root.root.descendants))
+            self._gaps = collections.Counter()
             self._compute_gaps(root)
 
         # Precompute lines for printing
