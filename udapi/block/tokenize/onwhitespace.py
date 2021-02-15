@@ -1,9 +1,14 @@
 """Block tokenize.OnWhitespace"""
+import re
 from udapi.core.block import Block
 
 
 class OnWhitespace(Block):
     """"Base tokenizer, splits on whitespaces, fills SpaceAfter=No."""
+
+    def __init__(self, tokenizer_params={}, **kwargs):
+        super().__init__(**kwargs)
+        self.tokenizer_params = tokenizer_params
 
     @staticmethod
     def tokenize_sentence(string):
@@ -13,24 +18,23 @@ class OnWhitespace(Block):
     def process_tree(self, root):
         if root.children:
             raise ValueError('Tree %s is already tokenized.' % root)
-        sentence = ' '.join(root.text.split())
-        tokens = self.tokenize_sentence(sentence)
-        for i, token in enumerate(tokens, 1):
-            space_after = False
+        #sentence = ' '.join(root.text.split())
+        sentence = root.text
+        tokens = self.tokenize_sentence(sentence, **self.tokenizer_params)
 
-            # Delete the token from the begining of the sentence.
-            if sentence.startswith(token):
-                sentence = sentence[len(token):]
-                # This is the expected case. The sentence starts with the token.
-                # If it is followed by a space, delete the space and set space_after=True.
-                if not len(sentence):
-                    space_after = True
-                elif sentence.startswith(' '):
-                    space_after = True
-                    sentence = sentence[1:]
-            else:
-                # The token (returned from tokenization) does not match the start of sentence.
-                # E.g. '. . . word' is tokenized as  '... word'.
+        # Check if there are any spaces before the first token
+        spaces_before = ""
+        m = re.match(r'\s+', sentence)
+        if m:
+            spaces_before = m.group(0)
+            sentence = sentence[len(spaces_before):]
+
+        for i, token in enumerate(tokens, 1):
+            spaces_after = ""
+
+            # The token (returned from tokenization) does not match the start of sentence.
+            # E.g. '. . . word' is tokenized as  '... word'.
+            if not sentence.startswith(token):
                 # Let's delete the start of sentence anyway,
                 # using a non-greedy regex and the expected next token
                 # returned from the tokenization.
@@ -40,8 +44,22 @@ class OnWhitespace(Block):
                 # $sentence = $rest if (defined $rest);
                 raise ValueError('tokenization does not match: "%s" vs "%s"' % (token, sentence))
 
+            # Delete the token from the begining of the sentence.
+            sentence = sentence[len(token):]
+
+            # Set the SpaceAfter and SpacesAfter properly
+            m = re.match(r'\s+', sentence)
+            if m is not None:
+                spaces_after = m.group(0)
+                sentence = sentence[len(spaces_after):]
+
             # create a new node
             node = root.create_child(form=token)
             node.ord = i
-            if not space_after:
-                node.misc = 'SpaceAfter=No'
+
+            if i == 1 and len(spaces_before) > 0:
+                node.misc["SpacesBefore"] = spaces_before
+            if not len(spaces_after):
+                node.misc["SpaceAfter"] = 'No'
+            elif spaces_after != ' ':
+                node.misc["SpacesAfter"] = spaces_after
