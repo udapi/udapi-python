@@ -15,6 +15,14 @@ class OnWhitespace(Block):
         """A method to be overriden in subclasses."""
         return string.split()
 
+    @staticmethod
+    def escape_whitespace(string):
+        string = re.sub(r' ', r'\\s', string)
+        string = re.sub(r'\t', r'\\t', string)
+        string = re.sub(r'\r', r'\\r', string)
+        string = re.sub(r'\n', r'\\n', string)
+        return string
+
     def process_tree(self, root):
         if root.children:
             raise ValueError('Tree %s is already tokenized.' % root)
@@ -58,8 +66,8 @@ class OnWhitespace(Block):
             node.ord = i
 
             if i == 1 and len(spaces_before) > 0:
-                node.misc["SpacesBefore"] = spaces_before
+                node.misc["SpacesBefore"] = self.escape_whitespace(spaces_before)
             if not len(spaces_after):
                 node.misc["SpaceAfter"] = 'No'
             elif spaces_after != ' ':
-                node.misc["SpacesAfter"] = spaces_after
+                node.misc["SpacesAfter"] = self.escape_whitespace(spaces_after)
