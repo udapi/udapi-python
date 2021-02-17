@@ -13,7 +13,11 @@ class Conllu(BaseWriter):
         self.print_empty_trees = print_empty_trees
 
     def process_tree(self, tree):  # pylint: disable=too-many-branches
-        nodes = tree.descendants
+        empty_nodes = tree.empty_nodes
+        if empty_nodes:
+            nodes = sorted(tree._descendants + empty_nodes)
+        else:
+            nodes = tree._descendants
 
         # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
         # we need to skip the whole tree (including possible comments).
@@ -22,42 +26,25 @@ class Conllu(BaseWriter):
 
         if self.print_sent_id:
             if tree.newdoc:
-                value = ' id = ' + tree.newdoc if tree.newdoc is not True else ''
-                print('# newdoc' + value)
+                 print('# newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else ''))
             if tree.newpar:
-                value = ' id = ' + tree.newpar if tree.newpar is not True else ''
-                print('# newpar' + value)
-            print('# sent_id = ' + tree.address())
+                print('# newpar' + (' id = ' + tree.newpar if tree.newpar is not True else ''))
+            print('# sent_id = ' + tree.sent_id)
 
         if self.print_text:
-            print("# text = " + tree.get_sentence())
+            print('# text = ' + (tree.text or tree.compute_text()))
 
         if tree.json:
             for key, value in sorted(tree.json.items()):
-                print("# json_%s = %s"
-                      % (key, json.dumps(value, ensure_ascii=False, sort_keys=True)))
+                print(f"# json_{key} = {json.dumps(value, ensure_ascii=False, sort_keys=True)}")
 
         comment = tree.comment
         if comment:
-            comment = comment.rstrip()
-            print('#' + comment.replace('\n', '\n#'))
+            print('#' + comment.rstrip().replace('\n', '\n#'))
 
         last_mwt_id = 0
-        last_ord = 0
-        empty_nodes = list(tree.empty_nodes)
         for node in nodes:
-            # print all empty nodes which should go here
-            while empty_nodes:
-                next_empty_ord = empty_nodes[0]._ord
-                if next_empty_ord > last_ord:
-                    break
-                empty = empty_nodes.pop(0)
-                print('\t'.join('_' if v is None else v for v in
-                    (str(node._ord), node.form, node.lemma, node.upos, node.xpos,
-                    '_' if node._feats is None else str(node.feats), '_\t_',
-                    node.raw_deps, '_' if node._misc is None else str(node.misc))))
-
-            mwt = node.multiword_token
+            mwt = node._mwt
             if mwt and node._ord > last_mwt_id:
                 print('\t'.join((mwt.ord_range,
                                  '_' if mwt.form is None else mwt.form,
@@ -65,17 +52,18 @@ class Conllu(BaseWriter):
                                  '_' if node._misc is None else str(mwt.misc))))
                 last_mwt_id = mwt.words[-1]._ord
 
-            try:
-                head = str(node._parent._ord)
-            except AttributeError:
-                head = '0'
+            if node._parent is None:
+                head = '_' # Empty nodes
+            else:
+                try:
+                    head = str(node._parent._ord)
+                except AttributeError:
+                    head = '0'
 
             print('\t'.join('_' if v is None else v for v in
                 (str(node._ord), node.form, node.lemma, node.upos, node.xpos,
                 '_' if node._feats is None else str(node.feats), head, node.deprel,
                 node.raw_deps, '_' if node._misc is None else str(node.misc))))
-
-            last_ord = node.ord
 
         # Empty sentences are not allowed in CoNLL-U,
         # but with print_empty_trees==1 (which is the default),
