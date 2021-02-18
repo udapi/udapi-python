@@ -66,46 +66,6 @@ class Conllu(BaseReader):
             return
         root.comment += line[1:] + "\n"
 
-    def parse_node_line(self, line, root, nodes, parents, mwts):
-        fields = line.split('\t')
-        if len(fields) != 10:
-            if self.strict:
-                raise RuntimeError('Wrong number of columns in %r' % line)
-            fields.extend(['_'] * (10 - len(fields)))
-        # multi-word tokens will be processed later
-        if '-' in fields[0]:
-            mwts.append(fields)
-            return
-        if '.' in fields[0]:
-            empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
-                                            xpos=fields[4], feats=fields[5], misc=fields[9])
-            empty.ord = fields[0]
-            empty.raw_deps = fields[8]  # TODO
-            return
-
-        for i in range(1, 10):
-            if fields[i] == '_':
-                fields[i] = None
-
-        # ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc
-        node = Node(root=root, form=fields[1], lemma=fields[2], upos=fields[3],
-                    xpos=fields[4], feats=fields[5], deprel=fields[7], misc=fields[9])
-        root._descendants.append(node)
-        node._ord = int(fields[0])
-        if fields[8] is not None:
-            node.raw_deps = fields[8]
-        try:
-            parents.append(int(fields[6]))
-        except ValueError as exception:
-            if not self.strict and fields[6] == '_':
-                if self.empty_parent == 'warn':
-                    logging.warning("Empty parent/head index in '%s'", line)
-                parents.append(0)
-            else:
-                raise exception
-
-        nodes.append(node)
-
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
@@ -124,7 +84,45 @@ class Conllu(BaseReader):
             if line[0] == '#':
                 self.parse_comment_line(line, root)
             else:
-                self.parse_node_line(line, root, nodes, parents, mwts)
+                fields = line.split('\t')
+                if len(fields) != 10:
+                    if self.strict:
+                        raise RuntimeError('Wrong number of columns in %r' % line)
+                    fields.extend(['_'] * (10 - len(fields)))
+                # multi-word tokens will be processed later
+                if '-' in fields[0]:
+                    mwts.append(fields)
+                    continue
+                if '.' in fields[0]:
+                    empty = root.create_empty_child(form=fields[1], lemma=fields[2], upos=fields[3],
+                                                    xpos=fields[4], feats=fields[5], misc=fields[9])
+                    empty.ord = fields[0]
+                    empty.raw_deps = fields[8]  # TODO
+                    continue
+
+                for i in range(1, 10):
+                    if fields[i] == '_':
+                        fields[i] = None
+
+                # ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc
+                node = Node(root=root, form=fields[1], lemma=fields[2], upos=fields[3],
+                            xpos=fields[4], feats=fields[5], deprel=fields[7], misc=fields[9])
+                root._descendants.append(node)
+                node._ord = int(fields[0])
+                if fields[8] is not None:
+                    node.raw_deps = fields[8]
+                try:
+                    parents.append(int(fields[6]))
+                except ValueError as exception:
+                    if not self.strict and fields[6] == '_':
+                        if self.empty_parent == 'warn':
+                            logging.warning("Empty parent/head index in '%s'", line)
+                        parents.append(0)
+                    else:
+                        raise exception
+
+                nodes.append(node)
+
 
         # If no nodes were read from the filehandle (so only root remained in nodes),
         # we return None as a sign of failure (end of file or more than one empty line).
