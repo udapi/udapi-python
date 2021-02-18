@@ -94,9 +94,9 @@ class Node(object):
         self.lemma = lemma
         self.upos = upos
         self.xpos = xpos
-        self._feats = Feats(feats) if feats else None
+        self._feats = Feats(feats) if feats and feats != '_' else None
         self.deprel = deprel
-        self._misc = DualDict(misc) if misc else None
+        self._misc = DualDict(misc) if misc and misc != '_' else None
         self._raw_deps = '_'
         self._deps = None
         self._parent = None

@@ -100,16 +100,19 @@ class Conllu(BaseReader):
                     empty.raw_deps = fields[8]  # TODO
                     continue
 
-                for i in range(1, 10):
-                    if fields[i] == '_':
-                        fields[i] = None
+                if fields[3] == '_':
+                    fields[3] = None
+                if fields[4] == '_':
+                    fields[4] = None
+                if fields[7] == '_':
+                    fields[7] = None
 
                 # ord,form,lemma,upos,xpos,feats,head,deprel,deps,misc
                 node = Node(root=root, form=fields[1], lemma=fields[2], upos=fields[3],
                             xpos=fields[4], feats=fields[5], deprel=fields[7], misc=fields[9])
                 root._descendants.append(node)
                 node._ord = int(fields[0])
-                if fields[8] is not None:
+                if fields[8] != '_':
                     node.raw_deps = fields[8]
                 try:
                     parents.append(int(fields[6]))
@@ -122,7 +125,6 @@ class Conllu(BaseReader):
                         raise exception
 
                 nodes.append(node)
-
 
         # If no nodes were read from the filehandle (so only root remained in nodes),
         # we return None as a sign of failure (end of file or more than one empty line).
