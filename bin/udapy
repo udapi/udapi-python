@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-
+import os
+import gc
+import atexit
 import logging
 import argparse
 
@@ -47,6 +49,12 @@ argparser.add_argument(
     help="Add a specified parameter (or a block name) to the end of the scenario\n"
          "For example 'udapy -TNX attributes=form,misc -X layout=align < my.conllu'")
 argparser.add_argument(
+    "--gc", action="store_true",
+    help="By default, udapy disables Python garbage collection and at-exit cleanup\n"
+         "to speed up everything (especially reading CoNLL-U files). In edge cases,\n"
+         "when processing many files and running out of memory, you can disable this\n"
+         "optimization (i.e. enable garbage collection) with 'udapy --gc'.")
+argparser.add_argument(
     'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
 args = argparser.parse_args()
@@ -64,6 +72,20 @@ logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(mes
 
 # Process and provide the scenario.
 if __name__ == "__main__":
+
+    # Disabling garbage collections makes the whole processing much faster.
+    # Similarly, we can save several seconds by partially disabling the at-exit Python cleanup
+    # (atexit hooks are called in reversed order of their registration,
+    # so flushing stdio buffers etc. will be still done before the os._exit(0) call).
+    # See https://instagram-engineering.com/dismissing-python-garbage-collection-at-instagram-4dca40b29172
+    # Is it safe to disable GC?
+    # OS will free the memory allocated by this process after it ends anyway.
+    # The udapy wrapper is aimed for one-time tasks, not a long-running server,
+    # so in a typical case a document is loaded and almost no memory is freed before the end.
+    # Udapi documents have a many cyclic references, so running GC is quite slow.
+    if not args.gc:
+        gc.disable()
+        atexit.register(os._exit, 0)
     if args.save:
         args.scenario = args.scenario + ['write.Conllu']
     if args.save_text_mode_trees:
