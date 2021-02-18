@@ -1,7 +1,5 @@
 """BaseReader is the base class for all reader blocks."""
-import re
-import logging
-
+import gc
 from udapi.core.block import Block
 from udapi.core.files import Files
 
@@ -91,99 +89,114 @@ class BaseReader(Block):
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
     def process_document(self, document):
-        orig_bundles = document.bundles[:]
-        last_bundle_id = ''
-        bundle = None
+        # Temporarily disabling garbage collection makes the loading much faster.
+        gc_was_enabled = gc.isenabled()
+        gc.disable()
+        try:
+            orig_bundles = document.bundles[:]
+            last_bundle_id = ''
+            bundle = None
 
-        # There may be a tree left in the buffer when reading the last doc.
-        if self._buffer:
-            root = self._buffer
-            self._buffer = None
-            if orig_bundles:
-                # TODO list.pop(0) is inefficient, use collections.deque.popleft()
-                bundle = orig_bundles.pop(0)
-            else:
-                bundle = document.create_bundle()
-                if root._sent_id is not None:
-                    bundle.bundle_id = root._sent_id.split('/', 1)[0]
-            bundle.add_tree(root)
-            if root.newdoc and root.newdoc is not True:
-                document.meta["docname"] = root.newdoc
-
-        filehandle = self.filehandle
-        if filehandle is None:
-            filehandle = self.next_filehandle()
-            if filehandle is None:
-                self.finished = True
-                return
-
-        trees_loaded = 0
-        while True:
-            root = self.filtered_read_tree()
-            if root is None:
-                if trees_loaded == 0 and self.files.has_next_file():
-                    filehandle = self.next_filehandle()
-                    continue
-                self.finished = not self.files.has_next_file()
-                break
-            if trees_loaded == 0:
-                document.meta['loaded_from'] = self.filename
-            add_to_the_last_bundle = 0
-            trees_loaded += 1
-
-            if self.ignore_sent_id:
-                root._sent_id = None
-            if root._sent_id is not None:
-                parts = root._sent_id.split('/', 1)
-                bundle_id = parts[0]
-                if len(parts) == 2:
-                    root.zone = parts[1]
-                add_to_the_last_bundle = bundle_id == last_bundle_id
-                last_bundle_id = bundle_id
-
-            if self.zone != 'keep':
-                root.zone = self.zone
-
-            # The `# newdoc` comment in CoNLL-U marks a start of a new document.
-            if root.newdoc:
-                if not bundle and root.newdoc is not True:
-                    document.meta["docname"] = root.newdoc
-                if bundle and self.split_docs:
-                    self._buffer = root
-                    if orig_bundles:
-                        logging.warning("split_docs=1 but the doc had contained %d bundles",
-                                        len(orig_bundles))
-                    self.finished = False
-                    return
-
-            # assign new/next bundle to `bundle` if needed
-            if not bundle or not add_to_the_last_bundle:
-                if self.bundles_per_doc and bundle and self.bundles_per_doc == bundle.number:
-                    self._buffer = root
-                    if orig_bundles:
-                        logging.warning("bundles_per_doc=%d but the doc had contained %d bundles",
-                                        self.bundles_per_doc, len(orig_bundles))
-                    return
-
+            # There may be a tree left in the buffer when reading the last doc.
+            if self._buffer:
+                root = self._buffer
+                self._buffer = None
                 if orig_bundles:
                     # TODO list.pop(0) is inefficient, use collections.deque.popleft()
                     bundle = orig_bundles.pop(0)
-                    if last_bundle_id and last_bundle_id != bundle.bundle_id:
-                        logging.warning('Mismatch in bundle IDs: %s vs %s. Keeping the former one.',
-                                        bundle.bundle_id, last_bundle_id)
                 else:
                     bundle = document.create_bundle()
-                    if last_bundle_id != '':
-                        bundle.bundle_id = last_bundle_id
+                    if root._sent_id is not None:
+                        bundle.bundle_id = root._sent_id.split('/', 1)[0]
+                bundle.add_tree(root)
+                if root.newdoc and root.newdoc is not True:
+                    document.meta["docname"] = root.newdoc
 
-            bundle.add_tree(root)
+            filehandle = self.filehandle
+            if filehandle is None:
+                filehandle = self.next_filehandle()
+                if filehandle is None:
+                    self.finished = True
+                    return
 
-            # If bundles_per_doc is set and we have read the specified number of bundles,
-            # we should end the current document and return.
-            # However, if the reader supports reading multiple zones, we can never know
-            # if the current bundle has ended or there will be another tree for this bundle.
-            # So in case of multizone readers we need to read one extra tree
-            # and store it in the buffer (and include it into the next document).
-            if self.bundles_per_doc and self.bundles_per_doc == bundle.number \
-               and not self.is_multizone_reader():
-                return
+            trees_loaded = 0
+            while True:
+                root = self.filtered_read_tree()
+                if root is None:
+                    if trees_loaded == 0 and self.files.has_next_file():
+                        filehandle = self.next_filehandle()
+                        continue
+                    self.finished = not self.files.has_next_file()
+                    break
+                if trees_loaded == 0:
+                    document.meta['loaded_from'] = self.filename
+                add_to_the_last_bundle = 0
+                trees_loaded += 1
+
+                if self.ignore_sent_id:
+                    root._sent_id = None
+                if root._sent_id is not None:
+                    parts = root._sent_id.split('/', 1)
+                    bundle_id = parts[0]
+                    if len(parts) == 2:
+                        root.zone = parts[1]
+                    add_to_the_last_bundle = bundle_id == last_bundle_id
+                    last_bundle_id = bundle_id
+
+                if self.zone != 'keep':
+                    root.zone = self.zone
+
+                # The `# newdoc` comment in CoNLL-U marks a start of a new document.
+                if root.newdoc:
+                    if not bundle and root.newdoc is not True:
+                        document.meta["docname"] = root.newdoc
+                    if bundle and self.split_docs:
+                        self._buffer = root
+                        if orig_bundles:
+                            logging.warning("split_docs=1 but the doc had contained %d bundles",
+                                            len(orig_bundles))
+                        self.finished = False
+                        return
+
+                # assign new/next bundle to `bundle` if needed
+                if not bundle or not add_to_the_last_bundle:
+                    if self.bundles_per_doc and bundle and self.bundles_per_doc == bundle.number:
+                        self._buffer = root
+                        if orig_bundles:
+                            logging.warning("bundles_per_doc=%d but the doc had contained %d bundles",
+                                            self.bundles_per_doc, len(orig_bundles))
+                        return
+
+                    if orig_bundles:
+                        # TODO list.pop(0) is inefficient, use collections.deque.popleft()
+                        bundle = orig_bundles.pop(0)
+                        if last_bundle_id and last_bundle_id != bundle.bundle_id:
+                            logging.warning('Mismatch in bundle IDs: %s vs %s. Keeping the former one.',
+                                            bundle.bundle_id, last_bundle_id)
+                    else:
+                        bundle = document.create_bundle()
+                        if last_bundle_id != '':
+                            bundle.bundle_id = last_bundle_id
+
+                bundle.add_tree(root)
+
+                # If bundles_per_doc is set and we have read the specified number of bundles,
+                # we should end the current document and return.
+                # However, if the reader supports reading multiple zones, we can never know
+                # if the current bundle has ended or there will be another tree for this bundle.
+                # So in case of multizone readers we need to read one extra tree
+                # and store it in the buffer (and include it into the next document).
+                if self.bundles_per_doc and self.bundles_per_doc == bundle.number \
+                   and not self.is_multizone_reader():
+                    return
+
+        # Running garbage collector now takes about 0.36s for a 720k-words (68MiB) conllu file
+        # but it makes further processing (where new objects are created) much faster,
+        # e.g. 0.85s when creating 65k new nodes.
+        # If garbage collection was already disabled (e.g. in udapy), everything is even faster
+        # (but no memory with cyclic references is ever freed before the process exits)
+        # and in that case we don't want to enable gc here.
+        finally:
+            if gc_was_enabled:
+                gc.enable()
+                gc.collect()
