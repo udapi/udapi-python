@@ -30,6 +30,8 @@ class OnWhitespace(Block):
         preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default True)
     """
 
+    escape_whitespace_table = str.maketrans({' ':r'\s', '\t':r'\t', '\r':r'\r', '\n':r'\n'})
+
     def __init__(self, normalize_spaces=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_spaces = normalize_spaces
@@ -38,14 +40,6 @@ class OnWhitespace(Block):
     def tokenize_sentence(string):
         """A method to be overriden in subclasses."""
         return string.split()
-
-    @staticmethod
-    def escape_whitespace(string):
-        string = re.sub(r' ', r'\\s', string)
-        string = re.sub(r'\t', r'\\t', string)
-        string = re.sub(r'\r', r'\\r', string)
-        string = re.sub(r'\n', r'\\n', string)
-        return string
 
     def process_tree(self, root):
         if root.children:
@@ -95,9 +89,9 @@ class OnWhitespace(Block):
             node = root.create_child(form=token)
             node.ord = i
 
-            if i == 1 and len(spaces_before) > 0:
-                node.misc["SpacesBefore"] = self.escape_whitespace(spaces_before)
-            if not len(spaces_after):
+            if i == 1 and spaces_before:
+                node.misc["SpacesBefore"] = spaces_before.translate(escape_whitespace_table)
+            if not spaces_after:
                 node.misc["SpaceAfter"] = 'No'
             elif spaces_after != " ":
-                node.misc["SpacesAfter"] = self.escape_whitespace(spaces_after)
+                node.misc["SpacesAfter"] = spaces_after.translate(escape_whitespace_table)
