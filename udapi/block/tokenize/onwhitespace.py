@@ -6,16 +6,16 @@ from udapi.core.block import Block
 class OnWhitespace(Block):
     """Base tokenizer, splits on whitespaces, fills SpaceAfter=No.
 
-    Use the `fill_spaces` to preserve all whitespaces in the sentence in the UDPipe way,
-    i.e. using the `SpacesAfter` and `SpacesBefore` features in the MISC field.
-    It is backward compatible with CoNLL-U v2 `SpaceAfter=No` feature. That is, no
-    following whitespace is marked by `SpaceAfter=No` and a single space results in no
+    Use the parameter `normalize_spaces=False` to preserve all whitespaces in the sentence
+    in the UDPipe way, i.e. using the `SpacesAfter` and `SpacesBefore` features in the MISC field.
+    It is backward compatible with CoNLL-U v2 `SpaceAfter=No` feature. That is, no following
+    whitespace is marked by `SpaceAfter=No` and a single following space results in no
     whitespace-related markup.
-    If loading the text using `read.Sentences` and all whitespaces must be preserved
+    If loading the text using `read.Sentences` and all whitespaces need to be preserved
     (in order to be able to reconstruct the original document), the `read.Sentences` block
     must be called with `rstrip=\n` or `rstrip=\r\n` to prevent stripping the trailing
     whitespace, e.g.::
-        $> echo -e "Hello \t world " | udapy read.Sentences $'rstrip=\r\n' tokenize.OnWhitespace fill_spaces=True write.Conllu
+        $> echo -e "Hello \t world " | udapy read.Sentences $'rstrip=\r\n' tokenize.OnWhitespace normalize_spaces=0 write.Conllu
 
         # sent_id = 1
         # text = Hello   world
@@ -26,13 +26,13 @@ class OnWhitespace(Block):
 
     Parameters
     ----------
-    fill_spaces : bool
-        preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default False)
+    normalize_spaces : bool
+        preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default True)
     """
 
-    def __init__(self, fill_spaces=False, **kwargs):
+    def __init__(self, normalize_spaces=True, **kwargs):
         super().__init__(**kwargs)
-        self.fill_spaces = fill_spaces
+        self.normalize_spaces = normalize_spaces
 
     @staticmethod
     def tokenize_sentence(string):
@@ -85,13 +85,19 @@ class OnWhitespace(Block):
                 spaces_after = m.group(0)
                 sentence = sentence[len(spaces_after):]
 
+            # normalize whitespace
+            if self.normalize_spaces:
+                spaces_before = ""
+                # spaces_after = "" <=> SpaceAfter=No is never set for the last token <=> len(sentence) = 0
+                spaces_after = "" if not len(spaces_after) and len(sentence) else " "
+
             # create a new node
             node = root.create_child(form=token)
             node.ord = i
 
-            if self.fill_spaces and i == 1 and len(spaces_before) > 0:
+            if i == 1 and len(spaces_before) > 0:
                 node.misc["SpacesBefore"] = self.escape_whitespace(spaces_before)
             if not len(spaces_after):
                 node.misc["SpaceAfter"] = 'No'
-            elif self.fill_spaces and spaces_after != ' ':
+            elif spaces_after != " ":
                 node.misc["SpacesAfter"] = self.escape_whitespace(spaces_after)
