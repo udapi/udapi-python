@@ -90,8 +90,8 @@ class OnWhitespace(Block):
             node.ord = i
 
             if i == 1 and spaces_before:
-                node.misc["SpacesBefore"] = spaces_before.translate(escape_whitespace_table)
+                node.misc["SpacesBefore"] = spaces_before.translate(self.escape_whitespace_table)
             if not spaces_after:
                 node.misc["SpaceAfter"] = 'No'
             elif spaces_after != " ":
-                node.misc["SpacesAfter"] = spaces_after.translate(escape_whitespace_table)
+                node.misc["SpacesAfter"] = spaces_after.translate(self.escape_whitespace_table)
