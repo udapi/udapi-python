@@ -4,11 +4,35 @@ from udapi.core.block import Block
 
 
 class OnWhitespace(Block):
-    """"Base tokenizer, splits on whitespaces, fills SpaceAfter=No."""
+    """Base tokenizer, splits on whitespaces, fills SpaceAfter=No.
 
-    def __init__(self, tokenizer_params={}, **kwargs):
+    Use the `fill_spaces` to preserve all whitespaces in the sentence in the UDPipe way,
+    i.e. using the `SpacesAfter` and `SpacesBefore` features in the MISC field.
+    It is backward compatible with CoNLL-U v2 `SpaceAfter=No` feature. That is, no
+    following whitespace is marked by `SpaceAfter=No` and a single space results in no
+    whitespace-related markup.
+    If loading the text using `read.Sentences` and all whitespaces must be preserved
+    (in order to be able to reconstruct the original document), the `read.Sentences` block
+    must be called with `rstrip=\n` or `rstrip=\r\n` to prevent stripping the trailing
+    whitespace, e.g.::
+        $> echo -e "Hello \t world " | udapy read.Sentences $'rstrip=\r\n' tokenize.OnWhitespace fill_spaces=True write.Conllu
+
+        # sent_id = 1
+        # text = Hello   world
+        1       Hello   _       _       _       _       0       _       _       SpacesAfter=\s\t\s
+        2       world   _       _       _       _       0       _       _       _
+    Note that the attribute `SpaceAfter=No` is missing for the token `world`, since it is
+    followed by a single space.
+
+    Parameters
+    ----------
+    fill_spaces : bool
+        preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default False)
+    """
+
+    def __init__(self, fill_spaces=False, **kwargs):
         super().__init__(**kwargs)
-        self.tokenizer_params = tokenizer_params
+        self.fill_spaces = fill_spaces
 
     @staticmethod
     def tokenize_sentence(string):
@@ -28,7 +52,7 @@ class OnWhitespace(Block):
             raise ValueError('Tree %s is already tokenized.' % root)
         #sentence = ' '.join(root.text.split())
         sentence = root.text
-        tokens = self.tokenize_sentence(sentence, **self.tokenizer_params)
+        tokens = self.tokenize_sentence(sentence)
 
         # Check if there are any spaces before the first token
         spaces_before = ""
@@ -65,9 +89,9 @@ class OnWhitespace(Block):
             node = root.create_child(form=token)
             node.ord = i
 
-            if i == 1 and len(spaces_before) > 0:
+            if self.fill_spaces and i == 1 and len(spaces_before) > 0:
                 node.misc["SpacesBefore"] = self.escape_whitespace(spaces_before)
             if not len(spaces_after):
                 node.misc["SpaceAfter"] = 'No'
-            elif spaces_after != ' ':
+            elif self.fill_spaces and spaces_after != ' ':
                 node.misc["SpacesAfter"] = self.escape_whitespace(spaces_after)
