@@ -66,21 +66,30 @@ class Conllu(BaseReader):
             return
         root.comment += line[1:] + "\n"
 
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    # Maybe the code could be refactored, but it is speed-critical,
-    # so benchmarking is needed because calling extra methods may result in slowdown.
+    def read_trees(self):
+        return [self.read_tree_from_lines(s.split('\n')) for s in
+                self.filehandle.read().split('\n\n') if s]
+
     def read_tree(self):
         if self.filehandle is None:
             return None
-
-        root = Root()
-        nodes = [root]
-        parents = [0]
-        mwts = []
+        lines = []
         for line in self.filehandle:
             line = line.rstrip()
             if line == '':
                 break
+            lines.append(line)
+        return self.read_tree_from_lines(lines)
+
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    # Maybe the code could be refactored, but it is speed-critical,
+    # so benchmarking is needed because calling extra methods may result in slowdown.
+    def read_tree_from_lines(self, lines):
+        root = Root()
+        nodes = [root]
+        parents = [0]
+        mwts = []
+        for line in lines:
             if line[0] == '#':
                 self.parse_comment_line(line, root)
             else:
