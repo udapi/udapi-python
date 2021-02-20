@@ -31,7 +31,7 @@ class Document(object):
         self._coref_clusters = None
         if filename is not None:
             if filename.endswith(".conllu"):
-                self.load_conllu(filename)
+                self.load_conllu(filename, **kwargs)
             elif filename.endswith(".txt"):
                 reader = SentencesReader(files=filename, **kwargs)
                 reader.apply_on_document(self)
@@ -59,9 +59,9 @@ class Document(object):
         bundle.number = len(self.bundles)
         return bundle
 
-    def load_conllu(self, filename=None):
+    def load_conllu(self, filename=None, **kwargs):
         """Load a document from a conllu-formatted file."""
-        ConlluReader(files=filename).process_document(self)
+        ConlluReader(files=filename, **kwargs).process_document(self)
 
     def store_conllu(self, filename):
         """Store a document into a conllu-formatted file."""
