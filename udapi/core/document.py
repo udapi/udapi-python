@@ -61,13 +61,11 @@ class Document(object):
 
     def load_conllu(self, filename=None):
         """Load a document from a conllu-formatted file."""
-        reader = ConlluReader(files=filename)
-        reader.apply_on_document(self)
+        ConlluReader(files=filename).process_document(self)
 
     def store_conllu(self, filename):
         """Store a document into a conllu-formatted file."""
-        writer = ConlluWriter(files=filename)
-        writer.apply_on_document(self)
+        ConlluWriter(files=filename).apply_on_document(self)
 
     def from_conllu_string(self, string):
         """Load a document from a conllu-formatted string."""

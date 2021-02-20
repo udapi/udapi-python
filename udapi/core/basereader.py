@@ -59,13 +59,21 @@ class BaseReader(Block):
         return self.files.next_filehandle()
 
     def read_tree(self):
-        """Load one (more) tree from self.files and return its root.
+        """Load one (more) tree from self.filehandle and return its root.
 
         This method must be overriden in all readers.
         Usually it is the only method that needs to be implemented.
         The implementation in this base clases raises `NotImplementedError`.
         """
         raise NotImplementedError("Class %s doesn't implement read_tree" % self.__class__.__name__)
+
+    def read_trees(self):
+        """Load all trees from self.filehandle and return a list of their roots.
+
+        This method may be overriden in a reader if a faster alternative to read_tree() is needed.
+        The implementation in this base clases raises `NotImplementedError`.
+        """
+        raise NotImplementedError("Class %s doesn't implement read_trees" % self.__class__.__name__)
 
     def filtered_read_tree(self):
         """Load and return one more tree matching the `sent_id_filter`.
@@ -85,6 +93,53 @@ class BaseReader(Block):
                           tree.sent_id, self.sent_id_filter)
             tree = self.read_tree()
 
+    def try_fast_load(self, document):
+        """Try to use self.read_trees() if possible and return True, otherwise False."""
+        if document.bundles or self.bundles_per_doc or self.sent_id_filter or self.split_docs:
+            return False
+        if self.filehandle is None:
+            filehandle = self.next_filehandle()
+            if filehandle is None:
+                self.finished = True
+                return True
+        try:
+            trees = self.read_trees()
+        except NotImplementedError:
+            return False
+
+        document.meta['loaded_from'] = self.filename
+        if trees and trees[0].newdoc and trees[0].newdoc is not True:
+            document.meta["docname"] = trees[0].newdoc
+
+        bundle, last_bundle_id = None, ''
+        for root in trees:
+            add_to_the_last_bundle = False
+
+            if self.ignore_sent_id:
+                root._sent_id = None
+            elif root._sent_id is not None:
+                parts = root._sent_id.split('/', 1)
+                bundle_id = parts[0]
+                if len(parts) == 2:
+                    root.zone = parts[1]
+                add_to_the_last_bundle = bundle_id == last_bundle_id
+                last_bundle_id = bundle_id
+            if self.zone != 'keep':
+                root.zone = self.zone
+
+            # assign new/next bundle to `bundle` if needed
+            if not bundle or not add_to_the_last_bundle:
+                bundle = document.create_bundle()
+                if last_bundle_id != '':
+                    bundle.bundle_id = last_bundle_id
+
+            bundle.add_tree(root)
+
+        self.next_filehandle()
+        if filehandle is None:
+            self.finished = True
+        return True
+
     # pylint: disable=too-many-branches,too-many-statements
     # Maybe the code could be refactored, but it is speed-critical,
     # so benchmarking is needed because calling extra methods may result in slowdown.
@@ -93,16 +148,16 @@ class BaseReader(Block):
         gc_was_enabled = gc.isenabled()
         gc.disable()
         try:
+            if self.try_fast_load(document):
+                return
             orig_bundles = document.bundles[:]
-            last_bundle_id = ''
-            bundle = None
+            bundle, last_bundle_id = None, ''
 
             # There may be a tree left in the buffer when reading the last doc.
             if self._buffer:
                 root = self._buffer
                 self._buffer = None
                 if orig_bundles:
-                    # TODO list.pop(0) is inefficient, use collections.deque.popleft()
                     bundle = orig_bundles.pop(0)
                 else:
                     bundle = document.create_bundle()
@@ -130,12 +185,12 @@ class BaseReader(Block):
                     break
                 if trees_loaded == 0:
                     document.meta['loaded_from'] = self.filename
-                add_to_the_last_bundle = 0
+                add_to_the_last_bundle = False
                 trees_loaded += 1
 
                 if self.ignore_sent_id:
                     root._sent_id = None
-                if root._sent_id is not None:
+                elif root._sent_id is not None:
                     parts = root._sent_id.split('/', 1)
                     bundle_id = parts[0]
                     if len(parts) == 2:
@@ -168,7 +223,6 @@ class BaseReader(Block):
                         return
 
                     if orig_bundles:
-                        # TODO list.pop(0) is inefficient, use collections.deque.popleft()
                         bundle = orig_bundles.pop(0)
                         if last_bundle_id and last_bundle_id != bundle.bundle_id:
                             logging.warning('Mismatch in bundle IDs: %s vs %s. Keeping the former one.',
