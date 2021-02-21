@@ -136,7 +136,7 @@ class BaseReader(Block):
             bundle.add_tree(root)
 
         self.next_filehandle()
-        if filehandle is None:
+        if self.filehandle is None:
             self.finished = True
         return True
 
