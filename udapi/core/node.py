@@ -386,7 +386,7 @@ class Node(object):
 
     def is_descendant_of(self, node):
         """Is the current node a descendant of the node given as argument?"""
-        if node._children:
+        if node and node._children:
             climber = self._parent
             while climber:
                 if climber is node:
