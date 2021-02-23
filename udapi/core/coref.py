@@ -1,6 +1,7 @@
 """Classes for handling coreference."""
 import re
 import functools
+import logging
 
 @functools.total_ordering
 class CorefMention(object):
