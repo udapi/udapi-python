@@ -2,7 +2,7 @@ Udapi Change Log
 ----------------
 See https://github.com/udapi/udapi-python/commits/master for details.
 
-0.2.3 2021-02-22
+0.2.3 2021-02-23
  - support for enhanced dependencies and coreference
  - requires Python 3.6+ due to f-strings
  - speed-up (benchmark 40.5s -> 10.4s)
