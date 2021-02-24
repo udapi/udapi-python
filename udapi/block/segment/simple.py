@@ -16,6 +16,8 @@ class Simple(Block):
 
     def is_boundary(self, first, second):
         """Is there a sentence boundary between the first and second token?"""
+        if not first or not second:
+            return False
         if first[-1] in '"“»›)':
             first = first[:-1]
         if second[0] in '"„«¿¡‹(':
@@ -25,6 +27,9 @@ class Simple(Block):
         if not first[-1] in '.!?':
             return False
         if first[-1] == '.':
+            # correctly count length in "„A. Merkel"
+            if first[0] in '"„«¿¡‹(':
+                first = first[1:]
             if len(first) == 2 and first[0].isupper():
                 return False
             if self.is_nonfinal_abbrev(first[:-1]):
@@ -39,6 +44,7 @@ class Simple(Block):
         segments = [previous]
         for token in tokens[1:]:
             if self.is_boundary(previous, token):
+                segments[-1] += ' '
                 segments.append(token)
             else:
                 segments[-1] += ' ' + token
