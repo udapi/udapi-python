@@ -194,6 +194,8 @@ def load_coref_from_misc(doc):
             mention = CorefMention(node, cluster)
             if node.misc["MentionSpan" + index_str]:
                 mention.span = node.misc["MentionSpan" + index_str]
+            else:
+                mentions.words = [node]
             cluster_type = node.misc["ClusterType" + index_str]
             if cluster_type is not None:
                 if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
