@@ -6,16 +6,16 @@ from udapi.core.block import Block
 class OnWhitespace(Block):
     """Base tokenizer, splits on whitespaces, fills SpaceAfter=No.
 
-    Use the parameter `normalize_spaces=False` to preserve all whitespaces in the sentence
+    Use the parameter `keep_spaces=True` to preserve all whitespaces in the sentence
     in the UDPipe way, i.e. using the `SpacesAfter` and `SpacesBefore` features in the MISC field.
     It is backward compatible with CoNLL-U v2 `SpaceAfter=No` feature. That is, no following
     whitespace is marked by `SpaceAfter=No` and a single following space results in no
     whitespace-related markup.
     If loading the text using `read.Sentences` and all whitespaces need to be preserved
     (in order to be able to reconstruct the original document), the `read.Sentences` block
-    must be called with `rstrip=\n` or `rstrip=\r\n` to prevent stripping the trailing
-    whitespace, e.g.::
-        $> echo -e "Hello \t world " | udapy read.Sentences $'rstrip=\r\n' tokenize.OnWhitespace normalize_spaces=0 write.Conllu
+    must be called with `rstrip=''`, `rstrip=\n` or `rstrip=\r\n` to prevent stripping the
+    trailing whitespace, e.g.::
+        $> echo -e "Hello \t world " | udapy read.Sentences $'rstrip=\r\n' tokenize.OnWhitespace keep_spaces=1 write.Conllu
 
         # sent_id = 1
         # text = Hello   world
@@ -26,15 +26,15 @@ class OnWhitespace(Block):
 
     Parameters
     ----------
-    normalize_spaces : bool
-        preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default True)
+    keep_spaces : bool
+        preserve whitespaces by filling MISC attributes `SpacesAfter` and `SpacesBefore` (by default False)
     """
 
     escape_whitespace_table = str.maketrans({' ':r'\s', '\t':r'\t', '\r':r'\r', '\n':r'\n'})
 
-    def __init__(self, normalize_spaces=True, **kwargs):
+    def __init__(self, keep_spaces=True, **kwargs):
         super().__init__(**kwargs)
-        self.normalize_spaces = normalize_spaces
+        self.keep_spaces = keep_spaces
 
     @staticmethod
     def tokenize_sentence(string):
@@ -80,7 +80,7 @@ class OnWhitespace(Block):
                 sentence = sentence[len(spaces_after):]
 
             # normalize whitespace
-            if self.normalize_spaces:
+            if not self.keep_spaces:
                 spaces_before = ""
                 # spaces_after = "" <=> SpaceAfter=No is never set for the last token <=> len(sentence) = 0
                 spaces_after = "" if not len(spaces_after) and len(sentence) else " "
