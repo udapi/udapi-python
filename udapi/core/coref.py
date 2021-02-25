@@ -6,7 +6,7 @@ import logging
 @functools.total_ordering
 class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
-    __slots__ = ['_head', '_cluster', '_bridging', '_words']
+    __slots__ = ['_head', '_cluster', '_bridging', '_words', 'misc']
 
     def __init__(self, head, cluster=None):
         self._head = head
@@ -15,6 +15,7 @@ class CorefMention(object):
             cluster._mentions.append(self)
         self._bridging = None
         self._words = []
+        self.misc = None
 
     def __lt__(self, other):
         """Does this mention precedes (word-order wise) the `other` mention?
@@ -195,7 +196,7 @@ def load_coref_from_misc(doc):
             if node.misc["MentionSpan" + index_str]:
                 mention.span = node.misc["MentionSpan" + index_str]
             else:
-                mentions.words = [node]
+                mention.words = [node]
             cluster_type = node.misc["ClusterType" + index_str]
             if cluster_type is not None:
                 if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
@@ -204,6 +205,7 @@ def load_coref_from_misc(doc):
             # TODO deserialize Bridging and SplitAnte
             mention._bridging = node.misc["Bridging" + index_str]
             cluster._split_ante = node.misc["SplitAnte" + index_str]
+            mention.misc = node.misc["MentionMisc" + index_str]
             index += 1
             index_str = f"[{index}]"
             cluster_id = node.misc["ClusterId" + index_str]
@@ -239,6 +241,8 @@ def store_coref_to_misc(doc):
             head.misc["ClusterType" + index_str] = cluster.cluster_type
             head.misc["Bridging" + index_str] = mention.bridging
             head.misc["SplitAnte" + index_str] = cluster.split_ante
+            if mention.misc:
+                head.misc["MentionMisc" + index_str] = mention.misc
 
 
 def span_to_nodes(root, span):
