@@ -32,7 +32,7 @@ class OnWhitespace(Block):
 
     escape_whitespace_table = str.maketrans({' ':r'\s', '\t':r'\t', '\r':r'\r', '\n':r'\n'})
 
-    def __init__(self, keep_spaces=True, **kwargs):
+    def __init__(self, keep_spaces=False, **kwargs):
         super().__init__(**kwargs)
         self.keep_spaces = keep_spaces
 
