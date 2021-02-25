@@ -2,8 +2,6 @@
 import json
 from udapi.core.basewriter import BaseWriter
 
-escape_whitespace_table = str.maketrans({'\r':'', '\n':''})
-
 class Conllu(BaseWriter):
     """A writer of files in the CoNLL-U format."""
 
@@ -33,7 +31,7 @@ class Conllu(BaseWriter):
             print('# sent_id = ' + tree.sent_id)
 
         if self.print_text:
-            print('# text = ' + (tree.compute_text() if tree.text is None else tree.text.translate(escape_whitespace_table).rstrip()))
+            print('# text = ' + (tree.compute_text() if tree.text is None else tree.text.replace('\n', '').replace('\r', '').rstrip()))
 
         if tree.json:
             for key, value in sorted(tree.json.items()):
