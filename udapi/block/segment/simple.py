@@ -4,7 +4,20 @@ from udapi.core.bundle import Bundle
 import re
 
 class Simple(Block):
-    """"Heuristic segmenter, splits on sentence-final segmentation followed by uppercase."""
+    """"Heuristic segmenter, splits on sentence-final segmentation followed by uppercase.
+        The exceptions are:
+            1) abbreviations of names, e.g. "A. Merkel"
+            2) predefined list of nonfinal abbreviations, e.g. "e.g."
+
+        Parameters
+        ----------
+        keep_spaces : bool
+            do not strip whitespaces from the `text` attribute of the sentences created by segmentation
+    """
+    
+    def __init__(self, keep_spaces=False, **kwargs):
+        super().__init__(**kwargs)
+        self.keep_spaces = keep_spaces
 
     @staticmethod
     def is_nonfinal_abbrev(token):
@@ -44,7 +57,8 @@ class Simple(Block):
         segments = [previous]
         for token in tokens[1:]:
             if self.is_boundary(previous, token):
-                segments[-1] += ' '
+                if self.keep_spaces:
+                    segments[-1] += ' '
                 segments.append(token)
             else:
                 segments[-1] += ' ' + token
