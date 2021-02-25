@@ -12,7 +12,9 @@ class Sentences(BaseReader):
     rstrip: a set of characters to be stripped from the end of each line.
         Default='\r\n '. You can use rstrip='\n' if you want to preserve
         any space or '\r' (Carriage Return) at end of line,
-        so that `udpipe.Base resegment=1` keeps these characters in `SpacesAfter`.
+        so that `udpipe.Base` keeps these characters in `SpacesAfter`.
+        As most blocks do not expect whitespace other than a space to appear
+        in the processed text, using this feature is at your own risk.
     """
     def __init__(self, ignore_empty_lines=False, rstrip='\r\n ', **kwargs):
         self.ignore_empty_lines = ignore_empty_lines
