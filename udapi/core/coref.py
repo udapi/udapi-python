@@ -102,13 +102,13 @@ class CorefMention(object):
 
 class CorefCluster(object):
     """Class for representing all mentions of a given entity."""
-    __slots__ = ['_cluster_id', '_mentions', 'cluster_type', '_split_ante']
+    __slots__ = ['_cluster_id', '_mentions', 'cluster_type', 'split_ante']
 
     def __init__(self, cluster_id, cluster_type=None):
         self._cluster_id = cluster_id
         self._mentions = []
         self.cluster_type = cluster_type
-        self._split_ante = None
+        self.split_ante = []
 
     @property
     def cluster_id(self):
@@ -154,12 +154,6 @@ class CorefCluster(object):
             mention.span = mention_span
         return mention
 
-    @property
-    def split_ante(self):
-        return self._split_ante
-
-    # TODO add/edit split_ante
-
     # TODO or should we create a BridgingLinks instance with a fake src_mention?
     def all_bridging(self):
         for m in self._mentions:
@@ -202,7 +196,7 @@ class BridgingLinks(collections.abc.MutableSequence):
     def __len__(self):
         return len(self._data)
 
-    # TODO delete backlinks of old links
+    # TODO delete backlinks of old links, dtto for SplitAnte
     def __setitem__(self, key, new_value):
         self._data[key] = BridgingLink(new_value[0], new_value[1])
 
@@ -275,11 +269,24 @@ def load_coref_from_misc(doc):
                 if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
                     logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
                 cluster.cluster_type = cluster_type
+
             bridging_str = node.misc["Bridging" + index_str]
             if bridging_str:
                 mention._bridging = BridgingLinks(mention, bridging_str)
-            # TODO deserialize SplitAnte
-            cluster._split_ante = node.misc["SplitAnte" + index_str]
+
+            split_ante_str = node.misc["SplitAnte" + index_str]
+            if split_ante_str:
+                split_antes = []
+                for ante_str in split_ante_str.split('+'):
+                    if ante_str in clusters:
+                        split_antes.append(clusters[ante_str])
+                    else:
+                        # split cataphora, e.g. "We, that is you and me..."
+                        cluster = CorefCluster(ante_str)
+                        clusters[ante_str] = cluster
+                        split_antes.append(cluster)
+                cluster.split_ante = split_antes
+
             mention.misc = node.misc["MentionMisc" + index_str]
             index += 1
             index_str = f"[{index}]"
@@ -316,7 +323,9 @@ def store_coref_to_misc(doc):
             head.misc["ClusterType" + index_str] = cluster.cluster_type
             if mention._bridging:
                 head.misc["Bridging" + index_str] = str(mention.bridging)
-            head.misc["SplitAnte" + index_str] = cluster.split_ante
+            if cluster.split_ante:
+                serialized = '+'.join((c.cluster_id for c in cluster.split_ante))
+                head.misc["SplitAnte" + index_str] = serialized
             if mention.misc:
                 head.misc["MentionMisc" + index_str] = mention.misc
 
