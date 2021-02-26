@@ -1,6 +1,7 @@
 """Classes for handling coreference."""
 import re
 import functools
+import collections
 import logging
 
 @functools.total_ordering
@@ -59,6 +60,9 @@ class CorefMention(object):
 
     @property
     def bridging(self):
+        if self._bridging:
+            return self._bridging
+        self._bridging = BridgingLinks(self)
         return self._bridging
 
     # TODO add/edit bridging
@@ -156,12 +160,81 @@ class CorefCluster(object):
 
     # TODO add/edit split_ante
 
-    # TODO adapt depending on how mention.bridging is implemented (callable list subclass)
+    # TODO or should we create a BridgingLinks instance with a fake src_mention?
     def all_bridging(self):
         for m in self._mentions:
             if m._bridging:
                 for b in m._bridging:
                     yield b
+
+
+BridgingLink = collections.namedtuple('BridgingLink', 'target relation')
+
+
+class BridgingLinks(collections.abc.MutableSequence):
+    """BridgingLinks class serves as a list of BridgingLinks tuples with additional methods.
+
+    Example usage:
+    >>> bl = BridgingLinks(src_mention)                                   # empty links
+    >>> bl = BridgingLinks(src_mention, [(c12, 'Part'), (c56, 'Subset')]) # from a list of tuples
+    >>> bl = BridgingLinks(src_mention, 'c12:Part,c56:Subset')            # from a string
+    >>> for cluster, relation in bl:
+    >>>     print(f"{bl.src_mention} ->{relation}-> {cluster.cluster_id}")
+    >>> print(str(bl)) # c12:Part,c56:Subset
+    >>> bl('Part').targets == [c12]
+    >>> bl('Part|Subset').targets == [c12, c56]
+    >>> bl.append((c89, 'Funct'))
+    """
+    def __init__(self, src_mention, value=None):
+        self.src_mention = src_mention
+        self._data = []
+        if value is not None:
+            if isinstance(value, str):
+                self._from_string(string)
+            elif isinstance(value, collections.abc.Sequence):
+                for v in value:
+                    self._data.append(BridgingLink(v[0], v[1]))
+        super().__init__()
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __len__(self):
+        return len(self._data)
+
+    # TODO delete backlinks of old links
+    def __setitem__(self, key, new_value):
+        self._data[key] = BridgingLink(new_value[0], new_value[1])
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def insert(self, key, new_value):
+        self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
+
+    def __str__(self):
+        return ','.join(f'{l.target._cluster_id}:{l.relation}' for l in self)
+
+    def _from_string(self, string):
+        self._data.clear()
+        clusters = self.src_mention.head.root.coref_clusters
+        for link_str in string.split(','):
+            target, relation = link_str.split(':')
+            self._data.append(BridgingLink(clusters[target], relation))
+
+    def __call__(self, relations_re=None):
+        """Return a subset of links contained in this list as specified by the args.
+        Args:
+        relations: only links with a relation matching this regular expression will be returned
+        """
+        if relations_re is None:
+            return self
+        return Links(self.src_mention, [l for l in self._data if re.match(relations_re, l.relation)])
+
+    @property
+    def targets(self):
+        """Return a list of the target clusters (without relations)."""
+        return [link.target for link in self._data]
 
 
 def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
@@ -202,8 +275,10 @@ def load_coref_from_misc(doc):
                 if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
                     logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
                 cluster.cluster_type = cluster_type
-            # TODO deserialize Bridging and SplitAnte
-            mention._bridging = node.misc["Bridging" + index_str]
+            bridging_str = node.misc["Bridging" + index_str]
+            if bridging_str:
+                mention._bridging = BridgingLinks(mention, bridging_str)
+            # TODO deserialize SplitAnte
             cluster._split_ante = node.misc["SplitAnte" + index_str]
             mention.misc = node.misc["MentionMisc" + index_str]
             index += 1
@@ -239,7 +314,8 @@ def store_coref_to_misc(doc):
             head.misc["ClusterId" + index_str] = cluster.cluster_id
             head.misc["MentionSpan" + index_str] = mention.span
             head.misc["ClusterType" + index_str] = cluster.cluster_type
-            head.misc["Bridging" + index_str] = mention.bridging
+            if mention._bridging:
+                head.misc["Bridging" + index_str] = str(mention.bridging)
             head.misc["SplitAnte" + index_str] = cluster.split_ante
             if mention.misc:
                 head.misc["MentionMisc" + index_str] = mention.misc
