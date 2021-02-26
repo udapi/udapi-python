@@ -2,7 +2,7 @@ from udapi.core.block import Block
 from collections import Counter
 import re
 
-class MiscStats(Block):
+class MiscStatsTex(Block):
     """Block corefud.MiscStats prints 10 most frequent values of each attribute stored in the MISC field"""
 
     def __init__(self, maxvalues=10, **kwargs):
@@ -29,7 +29,16 @@ class MiscStats(Block):
 
     def process_end(self):
         for attrname in self.valuecounter:
-            print()
-            print(attrname+"\t"+str(self.totalcounter[attrname]))
+
+            total = self.totalcounter[attrname]
+            distrvalues = []
+            
             for value,freq in self.valuecounter[attrname].most_common(self.maxvalues):
-                print("\t"+str(value)+"\t"+str(freq))
+                value = re.sub(r'_',r'\\_',value)
+                distrvalues.append(f'\\attr{{{str(value)}}} {100*freq/total:2.1f}~\\%')
+
+            attrname = re.sub(r'_',r'\\_',attrname)
+            print(f" \\item attribute \\attr{{{attrname}}}, {total:,} occurrences, values: "+", ".join(distrvalues))     
+#            print(f" \\item attribute \\attr\{{attrname}\}, {str(total)} occurrences, distribution of values: "+", ".join(distrvalues))
+
+                
