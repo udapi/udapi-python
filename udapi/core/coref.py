@@ -171,7 +171,7 @@ class BridgingLinks(collections.abc.MutableSequence):
     Example usage:
     >>> bl = BridgingLinks(src_mention)                                   # empty links
     >>> bl = BridgingLinks(src_mention, [(c12, 'Part'), (c56, 'Subset')]) # from a list of tuples
-    >>> bl = BridgingLinks(src_mention, 'c12:Part,c56:Subset')            # from a string
+    >>> bl = BridgingLinks(src_mention, 'c12:Part,c56:Subset', clusters)  # from a string
     >>> for cluster, relation in bl:
     >>>     print(f"{bl.src_mention} ->{relation}-> {cluster.cluster_id}")
     >>> print(str(bl)) # c12:Part,c56:Subset
@@ -179,12 +179,18 @@ class BridgingLinks(collections.abc.MutableSequence):
     >>> bl('Part|Subset').targets == [c12, c56]
     >>> bl.append((c89, 'Funct'))
     """
-    def __init__(self, src_mention, value=None):
+    def __init__(self, src_mention, value=None, clusters=None):
         self.src_mention = src_mention
         self._data = []
         if value is not None:
             if isinstance(value, str):
-                self._from_string(string)
+                if clusters is None:
+                    raise ValueError('BridgingClusters: clusters must be provided if initializing with a string')
+                try:
+                    self._from_string(value, clusters)
+                except ValueError:
+                    logging.error(f"Problem when parsing {value} in {src_mention.words[0]}:\n")
+                    raise
             elif isinstance(value, collections.abc.Sequence):
                 for v in value:
                     self._data.append(BridgingLink(v[0], v[1]))
@@ -209,9 +215,8 @@ class BridgingLinks(collections.abc.MutableSequence):
     def __str__(self):
         return ','.join(f'{l.target._cluster_id}:{l.relation}' for l in self)
 
-    def _from_string(self, string):
+    def _from_string(self, string, clusters):
         self._data.clear()
-        clusters = self.src_mention.head.root.coref_clusters
         for link_str in string.split(','):
             target, relation = link_str.split(':')
             self._data.append(BridgingLink(clusters[target], relation))
@@ -272,7 +277,7 @@ def load_coref_from_misc(doc):
 
             bridging_str = node.misc["Bridging" + index_str]
             if bridging_str:
-                mention._bridging = BridgingLinks(mention, bridging_str)
+                mention._bridging = BridgingLinks(mention, bridging_str, clusters)
 
             split_ante_str = node.misc["SplitAnte" + index_str]
             if split_ante_str:
