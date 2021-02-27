@@ -105,8 +105,13 @@ class Node(object):
         self._mentions = list()
 
     def __str__(self):
-        """Pretty print of the Node object."""
-        return "node<%s, %s>" % (self.address(), self.form)
+        """String representation of the Node object: <n.address(), n.form>."""
+        return f"<{self.address()}, {self.form}>"
+
+    def __repr__(self):
+        """String representation of the Node object: Node<n.address(), n.form>."""
+        return f"Node<{self.address()}, {self.form}>"
+
 
     @property
     def root(self):
