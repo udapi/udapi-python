@@ -182,7 +182,6 @@ def load_coref_from_misc(doc):
     clusters = {}
     for tree in doc.trees:
         for node in tree.descendants_and_empty:
-            print(node.ord)
             index, index_str = 0, ""
             cluster_id = node.misc["ClusterId"]
             if not cluster_id:
