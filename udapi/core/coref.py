@@ -69,7 +69,7 @@ class CorefMention(object):
     @words.setter
     def words(self, new_words):
         if new_words and self.head not in new_words:
-            raise ValueError(f"Head {self.head} not in new_words")
+            raise ValueError(f"Head {self.head} not in new_words {new_words}")
         kept_words = []
         for old_word in self._words:
             if old_word in new_words:
@@ -250,6 +250,7 @@ def span_to_nodes(root, span):
         except ValueError as e:
             raise ValueError(f"Cannot parse '{span}': {e}")
         ranges.append((lo, hi))
+    ranges.sort()
 
     def _num_in_ranges(num):
         for (lo, hi) in ranges:
