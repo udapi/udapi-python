@@ -9,9 +9,10 @@ class RemoveMisc(Block):
         super().__init__(**kwargs)
         self.attrs4deletion = set(attrnames.split(','))
     
-    def process_node(self,node):
-        for attrname in list(node.misc):
-            shortattrname = re.sub(r'\[\d+\]',r'',attrname)
-            if shortattrname in self.attrs4deletion:
-                del node.misc[attrname]
+    def process_tree(self,root):
+        for node in root.descendants_and_empty:
+            for attrname in list(node.misc):
+                shortattrname = re.sub(r'\[\d+\]',r'',attrname)
+                if shortattrname in self.attrs4deletion:
+                    del node.misc[attrname]
 
