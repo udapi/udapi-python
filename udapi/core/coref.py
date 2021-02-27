@@ -180,31 +180,33 @@ def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
 
 def load_coref_from_misc(doc):
     clusters = {}
-    for node in doc.nodes:
-        index, index_str = 0, ""
-        cluster_id = node.misc["ClusterId"]
-        if not cluster_id:
-            index, index_str = 1, "[1]"
-            cluster_id = node.misc["ClusterId[1]"]
-        while cluster_id:
-            cluster = clusters.get(cluster_id)
-            if cluster is None:
-                cluster = CorefCluster(cluster_id)
-                clusters[cluster_id] = cluster
-            mention = CorefMention(node, cluster)
-            if node.misc["MentionSpan" + index_str]:
-                mention.span = node.misc["MentionSpan" + index_str]
-            cluster_type = node.misc["ClusterType" + index_str]
-            if cluster_type is not None:
-                if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
-                    logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
-                cluster.cluster_type = cluster_type
-            # TODO deserialize Bridging and SplitAnte
-            mention._bridging = node.misc["Bridging" + index_str]
-            cluster._split_ante = node.misc["SplitAnte" + index_str]
-            index += 1
-            index_str = f"[{index}]"
-            cluster_id = node.misc["ClusterId" + index_str]
+    for tree in doc.trees:
+        for node in tree.descendants_and_empty:
+            print(node.ord)
+            index, index_str = 0, ""
+            cluster_id = node.misc["ClusterId"]
+            if not cluster_id:
+                index, index_str = 1, "[1]"
+                cluster_id = node.misc["ClusterId[1]"]
+            while cluster_id:
+                cluster = clusters.get(cluster_id)
+                if cluster is None:
+                    cluster = CorefCluster(cluster_id)
+                    clusters[cluster_id] = cluster
+                mention = CorefMention(node, cluster)
+                if node.misc["MentionSpan" + index_str]:
+                    mention.span = node.misc["MentionSpan" + index_str]
+                cluster_type = node.misc["ClusterType" + index_str]
+                if cluster_type is not None:
+                    if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
+                        logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
+                    cluster.cluster_type = cluster_type
+                # TODO deserialize Bridging and SplitAnte
+                mention._bridging = node.misc["Bridging" + index_str]
+                cluster._split_ante = node.misc["SplitAnte" + index_str]
+                index += 1
+                index_str = f"[{index}]"
+                cluster_id = node.misc["ClusterId" + index_str]
     doc._coref_clusters = clusters
 
 
@@ -212,10 +214,11 @@ def store_coref_to_misc(doc):
     if not doc._coref_clusters:
         return
     attrs = ("ClusterId", "MentionSpan", "ClusterType", "Bridging", "SplitAnte")
-    for node in doc.nodes:
-        for key in list(node.misc):
-            if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
-                del node.misc[key]
+    for tree in doc.trees:
+        for node in tree.descendants_and_empty:
+            for key in list(node.misc):
+                if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
+                    del node.misc[key]
     for cluster in doc._coref_clusters.values():
         for mention in cluster.mentions:
             head = mention.head
