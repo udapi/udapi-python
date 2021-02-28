@@ -803,7 +803,7 @@ class Node(object):
         e.g. s123/en_udpipe#4. If zone is empty, the slash is excluded as well,
         e.g. s123#4.
         """
-        return '%s#%d' % (self._root.address() if self._root else '?', self._ord)
+        return f"{self._root.address() if self._root else '?'}#{self._ord}"
 
     @property
     def multiword_token(self):
