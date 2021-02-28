@@ -88,10 +88,18 @@ class Document(object):
 
     @property
     def nodes(self):
-        """An iterator over all nodes in the document."""
+        """An iterator over all nodes (excluding empty nodes) in the document."""
         for bundle in self:
             for tree in bundle:
                 for node in tree._descendants:
+                    yield node
+
+    @property
+    def nodes_and_empty(self):
+        """An iterator over all nodes and empty nodes in the document."""
+        for bundle in self:
+            for tree in bundle:
+                for node in tree.descendants_and_empty:
                     yield node
 
     def draw(self, **kwargs):
