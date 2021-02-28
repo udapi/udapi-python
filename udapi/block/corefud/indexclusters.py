@@ -5,7 +5,11 @@ from udapi.core.block import Block
 class IndexClusters(Block):
     """Re-index the coreference cluster IDs. The final cluster IDs are of the "c<ID>" form,
        where <ID> are ordinal numbers starting from the one specified by the `start` parameter.
-       
+       This block can be applied on multiple documents within one udapy call.
+       For example, to re-index ClusterId in all conllu files in the current directory
+       (keeping the IDs unique across all the files), use:
+       `udapy read.Conllu files='!*.conllu' corefud.IndexClusters write.Conllu overwrite=1`
+
        Parameters:
        -----------
        start : int
@@ -22,5 +26,6 @@ class IndexClusters(Block):
             cluster = clusters[cid]
             new_cid = "c" + str(idx)
             # need to change private variable
-            cluster._cluster_id = new_cid 
+            cluster._cluster_id = new_cid
             new_clusters[new_cid] = cluster
+        self.start = idx + 1
