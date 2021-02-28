@@ -252,7 +252,7 @@ def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
 
 def load_coref_from_misc(doc):
     clusters = {}
-    for node in doc.nodes:
+    for node in doc.nodes_and_empty:
         index, index_str = 0, ""
         cluster_id = node.misc["ClusterId"]
         if not cluster_id:
@@ -302,7 +302,7 @@ def store_coref_to_misc(doc):
     if not doc._coref_clusters:
         return
     attrs = ("ClusterId", "MentionSpan", "ClusterType", "Bridging", "SplitAnte")
-    for node in doc.nodes:
+    for node in doc.nodes_and_empty:
         for key in list(node.misc):
             if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
                 del node.misc[key]
