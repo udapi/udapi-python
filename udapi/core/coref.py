@@ -60,9 +60,8 @@ class CorefMention(object):
 
     @property
     def bridging(self):
-        if self._bridging:
-            return self._bridging
-        self._bridging = BridgingLinks(self)
+        if not self._bridging:
+            self._bridging = BridgingLinks(self)
         return self._bridging
 
     # TODO add/edit bridging
@@ -166,7 +165,7 @@ BridgingLink = collections.namedtuple('BridgingLink', 'target relation')
 
 
 class BridgingLinks(collections.abc.MutableSequence):
-    """BridgingLinks class serves as a list of BridgingLinks tuples with additional methods.
+    """BridgingLinks class serves as a list of BridgingLink tuples with additional methods.
 
     Example usage:
     >>> bl = BridgingLinks(src_mention)                                   # empty links
