@@ -187,7 +187,7 @@ class BridgingLinks(collections.abc.MutableSequence):
                     raise ValueError('BridgingClusters: clusters must be provided if initializing with a string')
                 try:
                     self._from_string(value, clusters)
-                except ValueError:
+                except Exception:
                     logging.error(f"Problem when parsing {value} in {src_mention.words[0]}:\n")
                     raise
             elif isinstance(value, collections.abc.Sequence):
@@ -218,6 +218,8 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.clear()
         for link_str in string.split(','):
             target, relation = link_str.split(':')
+            if target not in clusters:
+                clusters[target] = CorefCluster(target)
             self._data.append(BridgingLink(clusters[target], relation))
 
     def __call__(self, relations_re=None):
