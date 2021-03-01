@@ -21,11 +21,11 @@ class IndexClusters(Block):
 
     def process_document(self, doc):
         clusters = doc.coref_clusters
-        new_clusters = {}
+        if not clusters:
+            return
         for idx, cid in enumerate(clusters, self.start):
             cluster = clusters[cid]
             new_cid = "c" + str(idx)
             # need to change private variable
             cluster._cluster_id = new_cid
-            new_clusters[new_cid] = cluster
         self.start = idx + 1
