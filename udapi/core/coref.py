@@ -283,7 +283,9 @@ def load_coref_from_misc(doc):
             split_ante_str = node.misc["SplitAnte" + index_str]
             if split_ante_str:
                 split_antes = []
-                for ante_str in split_ante_str.split('+'):
+                # TODO in CorefUD draft "+" was used as the separator, but it was changed to comma.
+                # We can delete `.replace('+', ',')` once there are no more data with the legacy plus separator.
+                for ante_str in split_ante_str.replace('+', ',').split(','):
                     if ante_str in clusters:
                         split_antes.append(clusters[ante_str])
                     else:
@@ -330,7 +332,7 @@ def store_coref_to_misc(doc):
             if mention._bridging:
                 head.misc["Bridging" + index_str] = str(mention.bridging)
             if cluster.split_ante:
-                serialized = '+'.join((c.cluster_id for c in cluster.split_ante))
+                serialized = ','.join((c.cluster_id for c in cluster.split_ante))
                 head.misc["SplitAnte" + index_str] = serialized
             if mention.misc:
                 head.misc["MentionMisc" + index_str] = mention.misc
