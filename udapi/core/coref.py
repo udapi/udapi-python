@@ -34,7 +34,7 @@ class CorefMention(object):
         if node1 is node2:
             node1 = self._words[-1] if self._words else self._head
             node2 = other._words[-1] if other._words else other._head
-            return node1 > node2
+            return node1 < node2
         return node1 < node2
 
     @property
@@ -314,7 +314,11 @@ def load_coref_from_misc(doc):
             index += 1
             index_str = f"[{index}]"
             cluster_id = node.misc["ClusterId" + index_str]
-    doc._coref_clusters = {k: clusters[k] for k in sorted(clusters)}
+    # c=doc.coref_clusters should be sorted, so that c[0] < c[1] etc.
+    # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
+    # not by the keys (cluster_id).
+    # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
+    doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
 
 def store_coref_to_misc(doc):
