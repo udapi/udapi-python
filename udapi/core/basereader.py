@@ -1,5 +1,7 @@
 """BaseReader is the base class for all reader blocks."""
 import gc
+import re
+import logging
 from udapi.core.block import Block
 from udapi.core.files import Files
 
