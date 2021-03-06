@@ -127,6 +127,12 @@ class Node(object):
         self._ord = new_ord
 
     def __lt__(self, other):
+        """Calling `nodeA < nodeB` is equivalent to `nodeA.ord < nodeB.ord`.
+
+        Note that this does not work as expected for nodes from different trees
+        because `ord` is the word order within each sentence.
+        For comparing the word order across trees, use `nodeA.precedes(nodeB)` instead.
+        """
         return self._ord < other._ord
 
     @property
@@ -660,8 +666,18 @@ class Node(object):
             return None
 
     def precedes(self, node):
-        """Does this node precedes another `node` in word order (`self.ord < node.ord`)?"""
-        return self._ord < node._ord
+        """Does this node precedes another `node` in word order?
+
+        This method handles correctly also nodes from different trees (but the same zone).
+        If you have nodes from the same tree, it is faster and more elegant to use just `nodeA < nodeB`,
+        which is equivalent to calling `nodeA.ord < nodeB.ord`.
+        For sorting nodes from the same tree, you can use `nodes.sort()` or `sorted(nodes)`.
+        """
+        if self._root is node._root:
+            return self._ord < node._ord
+        if self._root._zone != node._root._zone:
+            raise ValueError(f"Cannot compare word order across zones: {self} {node}")
+        return self._root._bundle.number < node._root._bundle.number
 
     def is_leaf(self):
         """Is this node a leaf, ie. a node without any children?"""
