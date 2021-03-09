@@ -35,6 +35,7 @@ class Stats(Block):
             elif len_mentions > 1 and self.exclude_nonsingletons:
                 continue
             self.longest_cluster = max(len_mentions, self.longest_cluster)
+            self.counter['c_total_len'] += len_mentions
             self.counter[f"c_len_{min(len_mentions, self.c_len_max)}"] += 1
 
             self.clusters += 1
@@ -45,6 +46,7 @@ class Stats(Block):
                 self.m_words += all_words
                 self.m_empty += all_words - non_empty
                 self.longest_mention = max(non_empty, self.longest_mention)
+                self.counter['m_total_len'] += non_empty
                 self.counter[f"m_len_{min(non_empty, self.m_len_max)}"] += 1
 
     def process_end(self):
@@ -56,14 +58,16 @@ class Stats(Block):
         if self.report_clusters:
             columns += [('clusters', f"{self.clusters:7,}"),
                         ('clusters_per1k', f"{1000 * self.clusters / total_nodes_nonzero:6.0f}"),
-                        ('longest_cluster', f"{self.longest_cluster:6}")]
+                        ('longest_cluster', f"{self.longest_cluster:6}"),
+                        ('avg_cluster', f"{self.counter['c_total_len'] / self.clusters:5.1f}")]
             for i in range(1, self.c_len_max + 1):
                 percent = 100 * self.counter[f"c_len_{i}"] / clusters_nonzero
                 columns.append((f"c_len_{i}{'' if i < self.c_len_max else '+'}", f"{percent:5.1f}"))
         if self.report_mentions:
             columns += [('mentions', f"{self.mentions:7,}"),
                         ('mentions_per1k', f"{1000 * self.mentions / total_nodes_nonzero:6.0f}"),
-                        ('longest_mention', f"{self.longest_mention:6}")]
+                        ('longest_mention', f"{self.longest_mention:6}"),
+                        ('avg_mention', f"{self.counter['m_total_len'] / self.mentions:5.1f}")]
             for i in range(0, self.m_len_max + 1):
                 percent = 100 * self.counter[f"m_len_{i}"] / mentions_nonzero
                 columns.append((f"m_len_{i}{'' if i < self.m_len_max else '+'}", f"{percent:5.1f}"))
