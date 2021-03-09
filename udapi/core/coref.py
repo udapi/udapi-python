@@ -34,7 +34,8 @@ class CorefMention(object):
         if node1 is node2:
             node1 = self._words[-1] if self._words else self._head
             node2 = other._words[-1] if other._words else other._head
-            return node1.precedes(node2)
+            if node1 is node2:
+                return len(self._words) < len(other._words)
         return node1.precedes(node2)
 
     @property
