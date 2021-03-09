@@ -35,8 +35,8 @@ class MoveHead(Block):
         if highest in mention.words:
             return highest, 'treelet'
 
-        if 'warn' in self.bugs:
-            logging.warning(f"Non-treelet mention in {mention.head} (nearest common antecedent={highest})")
+        #if 'warn' in self.bugs:
+        #    logging.warning(f"Non-treelet mention in {mention.head} (nearest common antecedent={highest})")
         if 'mark' in self.bugs:
             mention.head.misc['Bug'] = 'non-treelet-mention'
         for word in mention.words:
