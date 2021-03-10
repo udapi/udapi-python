@@ -131,7 +131,6 @@ class CorefCluster(object):
 
     @property
     def mentions(self):
-        #TODO return sorted(self._mentions, key=lambda x:...
         return self._mentions
 
     def create_mention(self, head=None, mention_words=None, mention_span=None):
@@ -167,6 +166,7 @@ class CorefCluster(object):
             mention.words = mention_words
         if mention_span:
             mention.span = mention_span
+        self._mentions.sort()
         return mention
 
     # TODO or should we create a BridgingLinks instance with a fake src_mention?
@@ -330,6 +330,17 @@ def store_coref_to_misc(doc):
         for key in list(node.misc):
             if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
                 del node.misc[key]
+    # doc._coref_clusters is a dict, which is insertion ordered in Python 3.7+.
+    # The insertion order is sorted according to CorefCluster.__lt__ (see few lines above).
+    # However, new clusters could be added meanwhile or some clusters edited,
+    # so we need to sort the clusters again before storing to MISC.
+    # We also need to mare sure cluster.mentions are sorted in each cluster
+    # because the ordering of clusters is defined by the first mention in each cluster.
+    # Ordering of mentions within a cluster can be changed when e.g. changing the span
+    # of a given mention or reordering words within a sentence and in such events
+    # Udapi currently does not automatically update the ordering of clusters.
+    for cluster in doc._coref_clusters.values():
+        cluster._mentions.sort()
     for cluster in sorted(doc._coref_clusters.values()):
         for mention in cluster.mentions:
             head = mention.head
