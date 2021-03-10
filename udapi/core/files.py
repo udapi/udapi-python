@@ -43,6 +43,8 @@ class Files(object):
         elif isinstance(filenames, list):
             self.filenames = filenames
         elif isinstance(filenames, str):
+            if filenames == '':
+                raise ValueError('Filenames (files=) cannot be an empty string')
             self.filenames = self.string_to_filenames(filenames)
         else:
             raise ValueError('Parameter "filenames" must be a list or str')
