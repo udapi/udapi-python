@@ -310,9 +310,9 @@ def load_coref_from_misc(doc):
                         split_antes.append(clusters[ante_str])
                     else:
                         # split cataphora, e.g. "We, that is you and me..."
-                        cluster = CorefCluster(ante_str)
-                        clusters[ante_str] = cluster
-                        split_antes.append(cluster)
+                        ante_cl = CorefCluster(ante_str)
+                        clusters[ante_str] = ante_cl
+                        split_antes.append(ante_cl)
                 cluster.split_ante = split_antes
 
             mention.misc = node.misc["MentionMisc" + index_str]
