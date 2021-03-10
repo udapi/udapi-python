@@ -6,7 +6,7 @@ from collections import Counter, defaultdict
 class PrintClusters(Block):
     """Block corefud.PrintClusters prints all mentions of a given cluster."""
 
-    def __init__(self, id_re=None, min_mentions=0, print_ranges=True, agregate_mentions=True, **kwargs):
+    def __init__(self, id_re=None, min_mentions=0, print_ranges=True, aggregate_mentions=True, **kwargs):
         """Params:
         id_re: regular expression constraining ClusterId of the clusters to be printed
         min_mentions: print only clusters with with at least N mentions
@@ -17,7 +17,7 @@ class PrintClusters(Block):
         self.id_re = re.compile(str(id_re)) if id_re else None
         self.min_mentions = min_mentions
         self.print_ranges = print_ranges
-        self.agregate_mentions = agregate_mentions
+        self.aggregate_mentions = aggregate_mentions
 
     def process_document(self, doc):
         if 'docname' in doc.meta:
@@ -28,7 +28,7 @@ class PrintClusters(Block):
             if len(cluster.mentions) < self.min_mentions:
                 continue
             print(f" {cluster.cluster_id} has {len(cluster.mentions)} mentions:")
-            if self.agregate_mentions:
+            if self.aggregate_mentions:
                 counter = Counter()
                 ranges = defaultdict(list)
                 for mention in cluster.mentions:
