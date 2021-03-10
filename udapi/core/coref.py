@@ -116,13 +116,17 @@ class CorefCluster(object):
 
         This method defines a total ordering of all clusters
         by the first mention of each cluster (see `CorefMention.__lt__`).
-        Only if one of the clusters has no mentions (which should not happen normally),
-        the ordering is defined by the `cluster_id` (lexicographically).
+        If one of the clusters has no mentions (which should not happen normally),
+        there is a backup solution (see the source code).
         If cluster IDs are not important, it is recommended to use block
         `corefud.IndexClusters` to re-name cluster IDs in accordance with this cluster ordering.
         """
         if not self._mentions or not other._mentions:
-            return self._cluster_id < other._cluster_id
+            # Clusters without mentions should go first, so the ordering is total.
+            # If both clusters are missing mentions, let's use cluster_id, so the ordering is stable.
+            if not self._mentions and not other._mentions:
+                return self._cluster_id < other._cluster_id
+            return not self._mentions
         return self._mentions[0] < other._mentions[0]
 
     @property
