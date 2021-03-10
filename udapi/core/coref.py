@@ -121,9 +121,9 @@ class CorefCluster(object):
         If cluster IDs are not important, it is recommended to use block
         `corefud.IndexClusters` to re-name cluster IDs in accordance with this cluster ordering.
         """
-        if not self.mentions or not other.mentions:
+        if not self._mentions or not other._mentions:
             return self._cluster_id < other._cluster_id
-        return self.mentions[0] < other.mentions[0]
+        return self._mentions[0] < other._mentions[0]
 
     @property
     def cluster_id(self):
@@ -319,6 +319,10 @@ def load_coref_from_misc(doc):
     # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
     # not by the keys (cluster_id).
     # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
+    for cluster in clusters.values():
+        if not cluster._mentions:
+            raise ValueError(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridging, but not defined with ClusterId")
+        cluster._mentions.sort()
     doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
 
