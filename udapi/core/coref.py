@@ -232,7 +232,7 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
-        return ','.join(f'{l.target._cluster_id}:{l.relation}' for l in self)
+        return ','.join(f'{l.target._cluster_id}:{l.relation}' for l in sorted(self._data))
 
     def _from_string(self, string, clusters):
         self._data.clear()
@@ -241,6 +241,7 @@ class BridgingLinks(collections.abc.MutableSequence):
             if target not in clusters:
                 clusters[target] = CorefCluster(target)
             self._data.append(BridgingLink(clusters[target], relation))
+        self._data.sort()
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
@@ -313,7 +314,7 @@ def load_coref_from_misc(doc):
                         ante_cl = CorefCluster(ante_str)
                         clusters[ante_str] = ante_cl
                         split_antes.append(ante_cl)
-                cluster.split_ante = split_antes
+                cluster.split_ante = sorted(split_antes)
 
             mention.misc = node.misc["MentionMisc" + index_str]
             index += 1
@@ -371,7 +372,7 @@ def store_coref_to_misc(doc):
             if mention._bridging:
                 head.misc["Bridging" + index_str] = str(mention.bridging)
             if cluster.split_ante:
-                serialized = ','.join((c.cluster_id for c in cluster.split_ante))
+                serialized = ','.join((c.cluster_id for c in sorted(cluster.split_ante)))
                 head.misc["SplitAnte" + index_str] = serialized
             if mention.misc:
                 head.misc["MentionMisc" + index_str] = mention.misc
