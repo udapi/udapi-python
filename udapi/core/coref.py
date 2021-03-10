@@ -212,6 +212,8 @@ class BridgingLinks(collections.abc.MutableSequence):
                     raise
             elif isinstance(value, collections.abc.Sequence):
                 for v in value:
+                    if v[0] is src_mention._cluster:
+                        raise ValueError("Bridging cannot self-reference the same cluster: " + v[0].cluster_id)
                     self._data.append(BridgingLink(v[0], v[1]))
         super().__init__()
 
@@ -223,12 +225,16 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     # TODO delete backlinks of old links, dtto for SplitAnte
     def __setitem__(self, key, new_value):
+        if new_value[0] is self.src_mention._cluster:
+            raise ValueError("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id)
         self._data[key] = BridgingLink(new_value[0], new_value[1])
 
     def __delitem__(self, key):
         del self._data[key]
 
     def insert(self, key, new_value):
+        if new_value[0] is self.src_mention._cluster:
+            raise ValueError("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id)
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
@@ -238,6 +244,8 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.clear()
         for link_str in string.split(','):
             target, relation = link_str.split(':')
+            if target == self.src_mention._cluster._cluster_id:
+                raise ValueError("Bridging cannot self-reference the same cluster: " + target)
             if target not in clusters:
                 clusters[target] = CorefCluster(target)
             self._data.append(BridgingLink(clusters[target], relation))
@@ -308,6 +316,8 @@ def load_coref_from_misc(doc):
                 # We can delete `.replace('+', ',')` once there are no more data with the legacy plus separator.
                 for ante_str in split_ante_str.replace('+', ',').split(','):
                     if ante_str in clusters:
+                        if ante_str == cluster_id:
+                            raise ValueError("SplitAnte cannot self-reference the same cluster: " + cluster_id)
                         split_antes.append(clusters[ante_str])
                     else:
                         # split cataphora, e.g. "We, that is you and me..."
