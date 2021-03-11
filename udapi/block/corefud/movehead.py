@@ -60,7 +60,12 @@ class MoveHead(Block):
         (highest, added_nodes) = find_minimal_common_treelet(*non_empty)
         if highest in enh_heads:
             return highest, 'gappy'
-        assert highest not in mwords
+        if highest in mwords:
+            if 'warn' in self.bugs:
+                logging.warning(f"Strange mention {mention.head} with highest node {highest}")
+            if 'mark' in self.bugs:
+                highest.misc['Bug'] = 'highest-in-mwords'
+                mention.head.misc['Bug'] = 'highest-head'
 
         # Fifth, try to convervatively preserve the original head, if it is one of the possible heads.
         if mention.head in enh_heads:
