@@ -11,12 +11,36 @@ class MoveHead(Block):
         self.bugs = bugs
         super().__init__(**kwargs)
 
+    def _eparents(self, node):
+        if node.deps:
+            return [d['parent'] for d in node.deps]
+        if node.parent:
+            return [node.parent]
+        return []
+
     def find_head(self, mention):
+        mwords = set(mention.words)
+
+        # First, check the simplest case: no empty words and a treelet in basic dependencies.
+        basic_heads = [w for w in mention.words if not w.parent or not w.parent in mwords]
+        assert basic_heads
+        if len(basic_heads) == 1:
+            return basic_heads[0], 'treelet'
+
+        # Second, check also enhanced dependencies (but only within basic_heads for simplicity).
+        enh_heads = [w for w in basic_heads if not any(p in mwords for p in self._eparents(w))]
+        if not enh_heads:
+            enh_heads = [w for w in basic_heads if not all(p in mwords for p in self._eparents(w))]
+            if not enh_heads:
+                return mention.head, 'cycle'
+        if len(enh_heads) == 1:
+            return enh_heads[0], 'treelet'
+
+        # Third, find non-empty parents (ancestors in future) of empty nodes.
         empty_nodes, non_empty = [], []
-        for w in mention.words:
+        for w in enh_heads:
             (empty_nodes if w.is_empty() else non_empty).append(w)
         if empty_nodes:
-            self.counter['with_empty'] += 1
             for empty_node in empty_nodes:
                 parents = [d['parent'] for d in empty_node.deps if not d['parent'].is_empty()]
                 if parents:
@@ -31,23 +55,19 @@ class MoveHead(Block):
                         node.misc['Bug'] = 'no-parent-of-empty'
             non_empty.sort()
 
+        # Fourth, check if there is a node within the enh_heads governing all the mention nodes
+        # and forming thus a "gappy treelet", where the head is clearly the "highest" node.
         (highest, added_nodes) = find_minimal_common_treelet(*non_empty)
-        if highest in mention.words:
-            return highest, 'treelet'
+        if highest in enh_heads:
+            return highest, 'gappy'
+        assert highest not in mwords
 
-        #if 'warn' in self.bugs:
-        #    logging.warning(f"Non-treelet mention in {mention.head} (nearest common antecedent={highest})")
-        if 'mark' in self.bugs:
-            mention.head.misc['Bug'] = 'non-treelet-mention'
-        for word in mention.words:
-            if not word.is_empty() and word.parent not in non_empty:
-                return word, 'nontreelet'
+        # Fifth, try to convervatively preserve the original head, if it is one of the possible heads.
+        if mention.head in enh_heads:
+            return mention.head, 'nontreelet'
 
-        if 'warn' in self.bugs:
-            logging.warning(f"Strange mention {mention.head} (nearest common antecedent={highest})")
-        if 'mark' in self.bugs:
-            mention.head.misc['Bug'] = 'strange-mention'
-        return mention.head, 'bug'
+        # Finally, return the word-order-wise first head candidate as the head.
+        return enh_heads[0], 'nontreelet'
 
     def process_document(self, doc):
         for cluster in doc.coref_clusters.values():
@@ -57,6 +77,7 @@ class MoveHead(Block):
                     self.counter['single-word'] += 1
                 else:
                     new_head, category = self.find_head(mention)
+                    self.counter[category] += 1
                     if new_head is mention.head:
                         self.counter[category + '-kept'] += 1
                     else:
