@@ -198,9 +198,10 @@ class BridgingLinks(collections.abc.MutableSequence):
     >>> bl('Part|Subset').targets == [c12, c56]
     >>> bl.append((c89, 'Funct'))
     """
-    def __init__(self, src_mention, value=None, clusters=None):
+    def __init__(self, src_mention, value=None, clusters=None, strict=True):
         self.src_mention = src_mention
         self._data = []
+        self.strict = strict
         if value is not None:
             if isinstance(value, str):
                 if clusters is None:
@@ -213,7 +214,7 @@ class BridgingLinks(collections.abc.MutableSequence):
             elif isinstance(value, collections.abc.Sequence):
                 for v in value:
                     if v[0] is src_mention._cluster:
-                        raise ValueError("Bridging cannot self-reference the same cluster: " + v[0].cluster_id)
+                        _error("Bridging cannot self-reference the same cluster: " + v[0].cluster_id, strict)
                     self._data.append(BridgingLink(v[0], v[1]))
         super().__init__()
 
@@ -226,7 +227,7 @@ class BridgingLinks(collections.abc.MutableSequence):
     # TODO delete backlinks of old links, dtto for SplitAnte
     def __setitem__(self, key, new_value):
         if new_value[0] is self.src_mention._cluster:
-            raise ValueError("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id)
+            _error("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id, self.strict)
         self._data[key] = BridgingLink(new_value[0], new_value[1])
 
     def __delitem__(self, key):
@@ -234,7 +235,7 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     def insert(self, key, new_value):
         if new_value[0] is self.src_mention._cluster:
-            raise ValueError("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id)
+            _error("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id, self.strict)
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
@@ -245,7 +246,7 @@ class BridgingLinks(collections.abc.MutableSequence):
         for link_str in string.split(','):
             target, relation = link_str.split(':')
             if target == self.src_mention._cluster._cluster_id:
-                raise ValueError("Bridging cannot self-reference the same cluster: " + target)
+                _error("Bridging cannot self-reference the same cluster: " + target, self.strict)
             if target not in clusters:
                 clusters[target] = CorefCluster(target)
             self._data.append(BridgingLink(clusters[target], relation))
@@ -280,8 +281,12 @@ def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
     clusters[cluster_id] = cluster
     return cluster
 
+def _error(msg, strict):
+    if strict:
+        raise ValueError(msg)
+    logging.error(msg)
 
-def load_coref_from_misc(doc):
+def load_coref_from_misc(doc, strict=True):
     clusters = {}
     for node in doc.nodes_and_empty:
         index, index_str = 0, ""
@@ -307,7 +312,7 @@ def load_coref_from_misc(doc):
 
             bridging_str = node.misc["Bridging" + index_str]
             if bridging_str:
-                mention._bridging = BridgingLinks(mention, bridging_str, clusters)
+                mention._bridging = BridgingLinks(mention, bridging_str, clusters, strict)
 
             split_ante_str = node.misc["SplitAnte" + index_str]
             if split_ante_str:
@@ -317,7 +322,7 @@ def load_coref_from_misc(doc):
                 for ante_str in split_ante_str.replace('+', ',').split(','):
                     if ante_str in clusters:
                         if ante_str == cluster_id:
-                            raise ValueError("SplitAnte cannot self-reference the same cluster: " + cluster_id)
+                            _error("SplitAnte cannot self-reference the same cluster: " + cluster_id, strict)
                         split_antes.append(clusters[ante_str])
                     else:
                         # split cataphora, e.g. "We, that is you and me..."
@@ -336,7 +341,7 @@ def load_coref_from_misc(doc):
     # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
     for cluster in clusters.values():
         if not cluster._mentions:
-            raise ValueError(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridging, but not defined with ClusterId")
+            _error(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridging, but not defined with ClusterId", strict)
         cluster._mentions.sort()
     doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
