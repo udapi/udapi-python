@@ -12,7 +12,7 @@ class MoveHead(Block):
         super().__init__(**kwargs)
 
     def _eparents(self, node):
-        if node.deps:
+        if node._raw_deps != '_':
             return [d['parent'] for d in node.deps]
         if node.parent:
             return [node.parent]

@@ -243,7 +243,7 @@ class Node(object):
         # Afterwards, we can use the following optimization
         #if self._raw_deps is not None:
         #    return self._raw_deps
-        if self._deps is not None:
+        if self._deps:
             self._raw_deps = '|'.join(f"{dep['parent']._ord}:{dep['deprel']}" for dep in self._deps)
         return self._raw_deps
 
