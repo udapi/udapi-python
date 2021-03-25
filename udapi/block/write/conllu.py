@@ -23,23 +23,77 @@ class Conllu(BaseWriter):
         if not nodes and not self.print_empty_trees:
             return
 
+        # If tree.comment contains placeholders $NEWDOC,...$TEXT, replace them with the actual
+        # value of the attribute and make note on which line (i_*) they were present.
+        comment_lines = tree.comment.splitlines()
+        i_newdoc, i_newpar, i_sent_id, i_text = -1, -1, -1, -1
+        for i, c_line in enumerate(comment_lines):
+            if c_line == '$SENT_ID':
+                i_sent_id = i
+                comment_lines[i] = ' sent_id = ' + tree.sent_id if self.print_sent_id else None
+            elif c_line == '$TEXT':
+                i_text = i
+                if self.print_text:
+                    if tree.text is None:
+                        comment_lines[i] = ' text = ' + tree.compute_text()
+                    else:
+                        comment_lines[i] = ' text = ' + tree.text.replace('\n', '').replace('\r', '').rstrip()
+            elif c_line == '$NEWDOC':
+                i_newdoc = i
+                if self.print_sent_id and tree.newdoc:
+                    comment_lines[i] = ' newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else '')
+                else:
+                    comment_lines[i] = None
+            elif c_line == '$NEWPAR':
+                i_newpar = i
+                if self.print_sent_id and tree.newpar:
+                    comment_lines[i] = ' newpar' + (' id = ' + tree.newpar if tree.newpar is not True else '')
+                else:
+                    comment_lines[i] = None
+
+        # Now print the special comments: global.columns, newdoc, newpar, sent_id and text.
+        # If these comments were already present in tree.comment (as marked with the placeholders),
+        # keep them at their original position and print also all comment lines preceding them.
+        # It they were missing, try to print them at the correct position.
+        printed_i = -1
+        if comment_lines and comment_lines[0].startswith(' global.columns'):
+            printed_i += 1
+            print('#' + comment_lines[printed_i])
         if self.print_sent_id:
             if tree.newdoc:
-                 print('# newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else ''))
+                if i_newdoc == -1:
+                    print('# newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else ''))
+                else:
+                    while printed_i < i_newdoc:
+                        printed_i += 1
+                        if comment_lines[printed_i]:
+                            print('#' + comment_lines[printed_i])
             if tree.newpar:
-                print('# newpar' + (' id = ' + tree.newpar if tree.newpar is not True else ''))
-            print('# sent_id = ' + tree.sent_id)
-
-        if self.print_text:
+                if i_newpar == -1:
+                    print('# newpar' + (' id = ' + tree.newpar if tree.newpar is not True else ''))
+                else:
+                    while printed_i < i_newpar:
+                        printed_i += 1
+                        if comment_lines[printed_i]:
+                            print('#' + comment_lines[printed_i])
+            if i_sent_id == -1:
+                print('# sent_id = ' + tree.sent_id)
+            else:
+                while printed_i < i_sent_id:
+                    printed_i += 1
+                    if comment_lines[printed_i]:
+                        print('#' + comment_lines[printed_i])
+        if self.print_text and i_text == -1:
             print('# text = ' + (tree.compute_text() if tree.text is None else tree.text.replace('\n', '').replace('\r', '').rstrip()))
 
+        for c_line in comment_lines[printed_i + 1:]:
+            if c_line:
+                print('#' + c_line)
+
+        # Special-purpose json_* comments should always be at the end of the comment block.
         if tree.json:
             for key, value in sorted(tree.json.items()):
                 print(f"# json_{key} = {json.dumps(value, ensure_ascii=False, sort_keys=True)}")
-
-        comment = tree.comment
-        if comment:
-            print('#' + comment.rstrip().replace('\n', '\n#'))
 
         last_mwt_id = 0
         for node in nodes:

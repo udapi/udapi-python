@@ -39,11 +39,13 @@ class Conllu(BaseReader):
         sent_id_match = RE_SENT_ID.match(line)
         if sent_id_match is not None:
             root.sent_id = sent_id_match.group(1)
+            root.comment += '$SENT_ID\n'
             return
 
         text_match = RE_TEXT.match(line)
         if text_match is not None:
             root.text = text_match.group(1)
+            root.comment += '$TEXT\n'
             return
 
         pardoc_match = RE_NEWPARDOC.match(line)
@@ -51,8 +53,10 @@ class Conllu(BaseReader):
             value = True if pardoc_match.group(2) is None else pardoc_match.group(2)
             if pardoc_match.group(1) == 'newpar':
                 root.newpar = value
+                root.comment += '$NEWPAR\n'
             else:
                 root.newdoc = value
+                root.comment += '$NEWDOC\n'
             return
 
         json_match = RE_JSON.match(line)
