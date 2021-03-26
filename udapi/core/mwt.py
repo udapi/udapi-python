@@ -9,7 +9,7 @@ class MWT(object):
     def __init__(self, words=None, form=None, misc=None, root=None):
         self.words = words if words is not None else []
         self.form = form
-        self._misc = DualDict(misc) if misc else None
+        self._misc = DualDict(misc) if misc and misc != '_' else None
         self.root = root
         for word in self.words:
             word._mwt = self  # pylint: disable=W0212
@@ -49,7 +49,7 @@ class MWT(object):
 
 # TODO: node.remove() should check if the node is not part of any MWT
 # TODO: Document that editing words by mwt.words.append(node), del or remove(node) is not supported
-# TODO: Make mwt._words privat and provide a setter
+# TODO: Make mwt._words private and provide a setter
 # TODO: What to do when mwt.words = []? (It is allowed after mwt=MWT().)
 # TODO: words.setter and node.shift* should check if the MWT does not contain gaps
 #       and is still multi-word
