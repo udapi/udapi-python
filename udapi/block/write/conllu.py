@@ -102,7 +102,7 @@ class Conllu(BaseWriter):
                 print('\t'.join((mwt.ord_range,
                                  '_' if mwt.form is None else mwt.form,
                                  '_\t_\t_\t_\t_\t_\t_',
-                                 '_' if node._misc is None else str(mwt.misc))))
+                                 '_' if mwt._misc is None else str(mwt.misc))))
                 last_mwt_id = mwt.words[-1]._ord
 
             if node._parent is None:
