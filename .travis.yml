@@ -2,8 +2,8 @@ language: python
 python:
   - "3.6"
   - "3.7"
-#  - "3.8"
-#  - "3.9"
+  - "3.8"
+  - "3.9"
 #before_install:
 #  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 #  - sudo apt-get update -qq
@@ -31,6 +31,4 @@ jobs:
       script:
         - python -c 'import colorama;print("\033[31m some red text")'
         - python -Xutf8 -c 'import udapi;udapi.Document("udapi/core/tests/data/babinsky.conllu").draw(color=1)'
-        - set PYTHONUTF8=1
-        - udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
         - python -m pytest
