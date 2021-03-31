@@ -1,6 +1,6 @@
 language: python
 python:
-#  - "3.6"
+  - "3.6"
   - "3.7"
 #  - "3.8"
 #  - "3.9"
@@ -17,17 +17,17 @@ script:
   - python -m pytest
   - udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
   - cd udapi/core/tests && ./external_tests.sh
-matrix:
-  include:
-    - name: "Python 3.7.4 on Windows"
-      os: windows
-      language: shell
-      before_install:
-        - choco install python
-        - python --version
-        - python -m pip install --upgrade pip
-        - pip3 install --upgrade pytest
-      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
-      script:
-        - udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
-        - python -m pytest
+#matrix:
+  #include:
+    #- name: "Python 3.7.4 on Windows"
+      #os: windows
+      #language: shell
+      #before_install:
+        #- choco install python
+        #- python --version
+        #- python -m pip install --upgrade pip
+        #- pip3 install --upgrade pytest
+      #env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      #script:
+        #- udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
+        #- python -m pytest
