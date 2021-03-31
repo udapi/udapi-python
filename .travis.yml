@@ -29,6 +29,8 @@ jobs:
         - pip3 install --upgrade pytest
       env: PATH=/c/Python39:/c/Python39/Scripts:$PATH
       script:
-        - python -c 'import udapi;udapi.Document("udapi/core/tests/data/babinsky.conllu").draw(color=1)'
+        - python -c 'import colorama;print("\033[31m some red text")'
+        - python -Xutf8 -c 'import udapi;udapi.Document("udapi/core/tests/data/babinsky.conllu").draw(color=1)'
+        - set PYTHONUTF8=1
         - udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
         - python -m pytest
