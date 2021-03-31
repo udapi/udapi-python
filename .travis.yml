@@ -19,7 +19,7 @@ script:
   - cd udapi/core/tests && ./external_tests.sh
 jobs:
   include:
-    - name: "Python 3.7 on Windows"
+    - name: "Python 3.9 on Windows"
       os: windows
       language: shell
       before_install:
@@ -27,7 +27,7 @@ jobs:
         - python --version
         - python -m pip install --upgrade pip
         - pip3 install --upgrade pytest
-      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      env: PATH=/c/Python39:/c/Python39/Scripts:$PATH
       script:
         - udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
         - python -m pytest
