@@ -4,13 +4,26 @@ python:
   - "3.7"
   - "3.8"
   - "3.9"
-before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq gcc-4.8 g++-4.8
-  - CC=g++-4.8 pip install ufal.udpipe
+#before_install:
+#  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+#  - sudo apt-get update -qq
+#  - sudo apt-get install -qq gcc-4.8 g++-4.8
+#  - CC=g++-4.8 pip install ufal.udpipe
+#install:
+#  - python setup.py install
 install:
-  - python setup.py install
+  - pip install ".[test]"
 script:
   - python -m pytest
   - cd udapi/core/tests && ./external_tests.sh
+matrix:
+  include:
+  - name: "Python 3.7.4 on Windows"
+      os: windows           # Windows 10.0.17134 N/A Build 17134
+      language: shell       # 'language: python' is an error on Travis CI Windows
+      before_install:
+        - choco install python --version 3.7.4
+        - python --version
+        - python -m pip install --upgrade pip
+        - pip3 install --upgrade pytest
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
