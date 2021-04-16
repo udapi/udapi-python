@@ -28,7 +28,7 @@ MWTS = {
     'deste':   {'form': 'de este', 'lemma': 'de este'},
     'destes':  {'form': 'de estes', 'lemma': 'de este'},
     'disso':   {'form': 'de isso', 'lemma': 'de isso',
-				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *'},
     'disto':   {'form': 'de isto', 'lemma': 'de isto',
 				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
     'do':      {'form': 'de o', 'lemma': 'de o'},  # 'upos': 'ADP PRON', 'deprel': 'case *''
