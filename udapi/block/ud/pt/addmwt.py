@@ -39,8 +39,8 @@ MWTS = {
     'nisso':   {'form': 'em isso', 'lemma': 'em este'},
     'nisto':   {'form': 'em isto', 'lemma': 'em este',
                 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
-    'no':      {'form': 'em o', 'lemma': 'em o'},
-    'nos':     {'form': 'em os', 'lemma': 'em o'},
+    'no':      {'form': 'em o', 'lemma': 'em o'}, # PRON cases are excluded below
+    'nos':     {'form': 'em os', 'lemma': 'em o'}, # PRON cases are excluded below
     'num':     {'form': 'em um', 'lemma': 'em um'},
     'numa':    {'form': 'em uma', 'lemma': 'em um'},
     'numas':   {'form': 'em umas', 'lemma': 'em um'},
@@ -79,6 +79,11 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
 
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
+
+        # "no" can be either a contraction of "em o", or a pronoun
+        if node.form.lower() in ('no', 'nos') and node.upos == 'PRON':
+            return
+
         analysis = MWTS.get(node.form.lower(), None)
 
         # If the input is e.g.:
