@@ -232,16 +232,19 @@ class FixPunct(Block):
         # let's break this rule.
         if len(heads) == 0:
             heads = punct_heads
-        if len(heads) == 1:
+        # If there are no nodes between the opening and closing mark (),
+        # let's treat the marks as any other (non-pair) punctuation.
+        if len(heads) == 0:
+            return
+        elif len(heads) == 1:
             opening_node.parent = heads[0]
             closing_node.parent = heads[0]
-            self._punct_type[opening_node.ord] = 'opening'
-            self._punct_type[closing_node.ord] = 'closing'
-        elif len(heads) > 1:
+        else:
             opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
             closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
-            self._punct_type[opening_node.ord] = 'opening'
-            self._punct_type[closing_node.ord] = 'closing'
+
+        self._punct_type[opening_node.ord] = 'opening'
+        self._punct_type[closing_node.ord] = 'closing'
 
         # In rare cases, non-projective gaps may remain. Let's dirty fix these!
         # E.g. in "the (lack of) reproducibility", the closing parenthesis
