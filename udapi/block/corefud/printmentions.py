@@ -35,7 +35,7 @@ class PrintMentions(Block):
             for mention in cluster.mentions:
                 if not self._ok(len(mention.words) == 1, self.oneword):
                     continue
-                if not self._ok(',' in mention.span, self.continuous):
+                if not self._ok(',' not in mention.span, self.continuous):
                     continue
 
                 heads, mwords = 0, set(mention.words)
