@@ -127,6 +127,14 @@ class TextModeTrees(BaseWriter):
     which is useful for printing subtrees using ``node.draw()``,
     which is internally implemented using this block.
 
+    For use in LaTeX, you can insert the output of this block (without colors)
+    into \begin{verbatim}...\end{verbatim}, but you need to compile with pdflatex (xelatex not supported)
+    and you must add the following code into the preambule::
+
+      \\usepackage{pmboxdraw}
+      \DeclareUnicodeCharacter{256D}{\textSFi}  %╭
+      \DeclareUnicodeCharacter{2570}{\textSFii} %╰
+
     SEE ALSO
     :py:class:`.TextModeTreesHtml`
     """
@@ -205,7 +213,7 @@ class TextModeTrees(BaseWriter):
             self.mark_re = re.compile(mark + '=')
             self.comment_mark_re = re.compile(r'^ %s = ' % mark, re.M)
         self._index_of = []
-        self._gaps = []
+        self._gaps = collections.Counter()
         self.lines = []
         self.lengths = []
 
@@ -255,7 +263,6 @@ class TextModeTrees(BaseWriter):
 
         # Precompute the number of non-projective gaps for each subtree
         if self.minimize_cross:
-            self._gaps = collections.Counter()
             self._compute_gaps(root)
 
         # Precompute lines for printing
@@ -291,7 +298,7 @@ class TextModeTrees(BaseWriter):
 
             # sorting the stack to minimize crossings of edges
             if self.minimize_cross:
-                stack = sorted(stack, key=lambda x: -self._gaps[x.ord])
+                stack.sort(key=lambda x: -self._gaps[x.ord])
 
         if self.layout == 'classic':
             for idx, node in enumerate(allnodes):
