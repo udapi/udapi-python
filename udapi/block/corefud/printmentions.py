@@ -57,7 +57,7 @@ class PrintMentions(Block):
                 if ch not in mwords:
                     if not almost:
                         return False
-                    if not w.parent or w.parent in mwords or ch.udeprel not in {'case', 'cc', 'punct', 'conj'}:
+                    if not w.parent or w.parent in mwords or ch.udeprel not in {'case', 'cc', 'punct', 'conj', 'appos', 'cop', 'aux'}:
                         return False
         return True
 
