@@ -52,13 +52,20 @@ class PrintMentions(Block):
             return True
         return (condition and value == 'only') or (not condition and value=='exclude')
 
+    def _is_auxiliary(self, node):
+        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'cop', 'aux'}:
+            return True
+        if node.udeprel == 'dep' and node.upos in {'ADP', 'SCONJ', 'CCONJ'}:
+            return True
+        return False
+
     def _is_forest(self, mention, mwords, almost):
         for w in mention.words:
             for ch in w.children():
                 if ch not in mwords:
                     if not almost:
                         return False
-                    if not w.parent or w.parent in mwords or ch.udeprel not in {'case', 'cc', 'punct', 'conj', 'appos', 'cop', 'aux'}:
+                    if not (w.parent and w.parent not in mwords and self._is_auxiliary(ch)):
                         return False
         return True
 
