@@ -91,6 +91,9 @@ class Tikz(BaseWriter):
         logging.info('Use pdflatex to compile the output')
         super().after_process_document(doc)
 
+    def _tex_escape(self, string):
+        return string.replace('_', r'\_').replace('$', '\$').replace('[', '$[$').replace(']', '$]$')
+
     def process_tree(self, tree):
         print(r'\begin{dependency}')
         print(r'\begin{deptext}')
@@ -109,7 +112,7 @@ class Tikz(BaseWriter):
 
         lines = ['' for _ in self.node_attributes]
         for node in nodes:
-            values = [v.replace('_', r'\_') for v in node.get_attrs(self.node_attributes)]
+            values = [self._tex_escape(v) for v in node.get_attrs(self.node_attributes)]
             max_len = max(len(value) for value in values)
             for index, value in enumerate(values):
                 if node.ord > 1:
