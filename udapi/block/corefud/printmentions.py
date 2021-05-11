@@ -8,7 +8,7 @@ class PrintMentions(Block):
 
     def __init__(self, continuous='include', treelet='include', forest='include',
                  almost_forest='include', oneword='include', singleton='include',
-                 max_trees=100, html=False,
+                 empty='include', max_trees=100, html=False,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
@@ -21,6 +21,7 @@ class PrintMentions(Block):
         self.almost_forest = self._convert(almost_forest)
         self.oneword = self._convert(oneword)
         self.singleton = self._convert(singleton)
+        self.empty = self._convert(empty)
 
         self.max_trees = max_trees
         self.html = html
@@ -71,6 +72,10 @@ class PrintMentions(Block):
                 if not self._ok(len(mention.words) == 1, self.oneword):
                     continue
                 if not self._ok(',' not in mention.span, self.continuous):
+                    continue
+
+                empty_mwords = [w for w in mention.words if w.is_empty()]
+                if not self._ok(len(empty_mwords) > 0, self.empty):
                     continue
 
                 heads, mwords = 0, set(mention.words)
