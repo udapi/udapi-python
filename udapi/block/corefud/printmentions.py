@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 from udapi.core.block import Block
 from udapi.block.write.textmodetreeshtml import TextModeTreesHtml
 from udapi.block.write.textmodetrees import TextModeTrees
@@ -8,7 +9,7 @@ class PrintMentions(Block):
 
     def __init__(self, continuous='include', almost_continuous='include', treelet='include',
                  forest='include', almost_forest='include', oneword='include', singleton='include',
-                 empty='include', max_trees=0, html=False, shuffle=True,
+                 empty='include', max_trees=0, html=False, shuffle=True, print_other_forms=5,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
@@ -29,6 +30,7 @@ class PrintMentions(Block):
         self.shuffle = shuffle
         if shuffle:
             random.seed(42)
+        self.print_other_forms = print_other_forms
         print_class = TextModeTreesHtml if html else TextModeTrees
         self.print_block = print_class(
                 print_sent_id=print_sent_id, print_text=print_text, add_empty_line=add_empty_line, indent=indent,
@@ -129,6 +131,20 @@ class PrintMentions(Block):
                 if printed_trees > self.max_trees:
                     print(f'######## Only first {self.max_trees} trees printed. Use max_trees=0 to see all.')
                     return
+
+            this_form = ' '.join([w.form for w in mention.words])
+            print("# Mention = " + this_form)
+            if self.print_other_forms:
+                counter = Counter()
+                for m in mention.cluster.mentions:
+                    forms = ' '.join([w.form for w in m.words])
+                    if forms != this_form:
+                        counter[forms] += 1
+                if counter:
+                    print(f"# {min(len(counter), self.print_other_forms)} other forms:", end='')
+                    for form, count in counter.most_common(self.print_other_forms):
+                        print(f' "{form}"({count})', end='')
+                    print()
             self.print_block.process_tree(mention.head.root)
             for w in mention.words:
                 del w.misc['Mark']
