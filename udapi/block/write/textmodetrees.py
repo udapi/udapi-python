@@ -359,11 +359,14 @@ class TextModeTrees(BaseWriter):
         if not node.is_root():
             values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
             self.lengths[idx] += 1 + len(' '.join(values))
+            marked = self.is_marked(node)
             if self.color:
-                marked = self.is_marked(node)
                 for i, attr in enumerate(self.attrs):
                     values[i] = self.colorize_attr(attr, values[i], marked)
-            self.lines[idx] += ' ' + ' '.join(values)
+            if not self.color and marked:
+                self.lines[idx] += ' **' + ' '.join(values) + '**'
+            else:
+                self.lines[idx] += ' ' + ' '.join(values)
 
     def is_marked(self, node):
         """Should a given node be highlighted?"""
