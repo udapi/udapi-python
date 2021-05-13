@@ -1,5 +1,5 @@
+import random
 from udapi.core.block import Block
-import udapi.core.coref
 from udapi.block.write.textmodetreeshtml import TextModeTreesHtml
 from udapi.block.write.textmodetrees import TextModeTrees
 
@@ -8,7 +8,7 @@ class PrintMentions(Block):
 
     def __init__(self, continuous='include', almost_continuous='include', treelet='include',
                  forest='include', almost_forest='include', oneword='include', singleton='include',
-                 empty='include', max_trees=100, html=False,
+                 empty='include', max_trees=0, html=False, shuffle=True,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
@@ -26,6 +26,9 @@ class PrintMentions(Block):
 
         self.max_trees = max_trees
         self.html = html
+        self.shuffle = shuffle
+        if shuffle:
+            random.seed(42)
         print_class = TextModeTreesHtml if html else TextModeTrees
         self.print_block = print_class(
                 print_sent_id=print_sent_id, print_text=print_text, add_empty_line=add_empty_line, indent=indent,
@@ -84,43 +87,48 @@ class PrintMentions(Block):
         return True
 
     def process_document(self, doc):
-        printed_trees = 0
+        mentions = []
         for cluster in doc.coref_clusters.values():
-            if not self._ok(len(cluster.mentions) == 1, self.singleton):
+            if self._ok(len(cluster.mentions) == 1, self.singleton):
+                mentions.extend(cluster.mentions)
+        if self.shuffle:
+            random.shuffle(mentions)
+        else:
+            mentions.sort()
+
+        printed_trees = 0
+        for mention in mentions:
+            if not self._ok(len(mention.words) == 1, self.oneword):
+                continue
+            if not self._ok(',' not in mention.span, self.continuous):
+                continue
+            if self.almost_continuous != 'include' and not self._ok(self._is_almost_continuous(mention), self.almost_continuous):
                 continue
 
-            for mention in cluster.mentions:
-                if not self._ok(len(mention.words) == 1, self.oneword):
-                    continue
-                if not self._ok(',' not in mention.span, self.continuous):
-                    continue
-                if self.almost_continuous != 'include' and not self._ok(self._is_almost_continuous(mention), self.almost_continuous):
-                    continue
+            empty_mwords = [w for w in mention.words if w.is_empty()]
+            if not self._ok(len(empty_mwords) > 0, self.empty):
+                continue
 
-                empty_mwords = [w for w in mention.words if w.is_empty()]
-                if not self._ok(len(empty_mwords) > 0, self.empty):
-                    continue
+            heads, mwords = 0, set(mention.words)
+            for w in mention.words:
+                if w.parent:
+                    heads += 0 if w.parent in mwords else 1
+                else:
+                    heads += 0 if any(d['parent'] in mwords for d in w.deps) else 1
+            if not self._ok(heads <= 1, self.treelet):
+                continue
+            if self.forest != 'include' and not self._ok(self._is_forest(mention, mwords, False), self.forest):
+                continue
+            if self.almost_forest != 'include' and not self._ok(self._is_forest(mention, mwords, True), self.almost_forest):
+                continue
 
-                heads, mwords = 0, set(mention.words)
-                for w in mention.words:
-                    if w.parent:
-                        heads += 0 if w.parent in mwords else 1
-                    else:
-                        heads += 0 if any(d['parent'] in mwords for d in w.deps) else 1
-                if not self._ok(heads <= 1, self.treelet):
-                    continue
-                if self.forest != 'include' and not self._ok(self._is_forest(mention, mwords, False), self.forest):
-                    continue
-                if self.almost_forest != 'include' and not self._ok(self._is_forest(mention, mwords, True), self.almost_forest):
-                    continue
-
-                for w in mention.words:
-                    w.misc['Mark'] = 1
-                if self.max_trees:
-                    printed_trees += 1
-                    if printed_trees > self.max_trees:
-                        return
-                    #print(f"{printed_trees}/{self.max_trees}")
-                self.print_block.process_tree(mention.head.root)
-                for w in mention.words:
-                    del w.misc['Mark']
+            for w in mention.words:
+                w.misc['Mark'] = 1
+            if self.max_trees:
+                printed_trees += 1
+                if printed_trees > self.max_trees:
+                    print(f'######## Only first {self.max_trees} trees printed. Use max_trees=0 to see all.')
+                    return
+            self.print_block.process_tree(mention.head.root)
+            for w in mention.words:
+                del w.misc['Mark']

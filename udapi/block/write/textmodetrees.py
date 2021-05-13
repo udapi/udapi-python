@@ -365,6 +365,7 @@ class TextModeTrees(BaseWriter):
                     values[i] = self.colorize_attr(attr, values[i], marked)
             if not self.color and marked:
                 self.lines[idx] += ' **' + ' '.join(values) + '**'
+                self.lengths[idx] += 4
             else:
                 self.lines[idx] += ' ' + ' '.join(values)
 
