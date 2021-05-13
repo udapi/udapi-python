@@ -6,8 +6,8 @@ from udapi.block.write.textmodetrees import TextModeTrees
 class PrintMentions(Block):
     """Print mentions with various properties."""
 
-    def __init__(self, continuous='include', treelet='include', forest='include',
-                 almost_forest='include', oneword='include', singleton='include',
+    def __init__(self, continuous='include', almost_continuous='include', treelet='include',
+                 forest='include', almost_forest='include', oneword='include', singleton='include',
                  empty='include', max_trees=100, html=False,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
@@ -16,6 +16,7 @@ class PrintMentions(Block):
                  **kwargs):
         super().__init__(**kwargs)
         self.continuous = self._convert(continuous)
+        self.almost_continuous = self._convert(almost_continuous)
         self.treelet = self._convert(treelet)
         self.forest = self._convert(forest)
         self.almost_forest = self._convert(almost_forest)
@@ -69,6 +70,19 @@ class PrintMentions(Block):
                         return False
         return True
 
+    def _is_almost_continuous(self, mention):
+        if ',' not in mention.span:
+            return True
+        nonempty = [w for w in mention.words if not w.is_empty()]
+        if not nonempty:
+            return True
+        mwords = set(mention.words)
+        gap_nodes = [w for w in mention.head.root.descendants if w > nonempty[0] and w < nonempty[-1] and not w in mwords]
+        for gap_node in gap_nodes:
+            if not gap_node.is_empty():
+                return False
+        return True
+
     def process_document(self, doc):
         printed_trees = 0
         for cluster in doc.coref_clusters.values():
@@ -79,6 +93,8 @@ class PrintMentions(Block):
                 if not self._ok(len(mention.words) == 1, self.oneword):
                     continue
                 if not self._ok(',' not in mention.span, self.continuous):
+                    continue
+                if self.almost_continuous != 'include' and not self._ok(self._is_almost_continuous(mention), self.almost_continuous):
                     continue
 
                 empty_mwords = [w for w in mention.words if w.is_empty()]
