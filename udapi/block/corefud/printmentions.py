@@ -59,7 +59,7 @@ class PrintMentions(Block):
         return (condition and value == 'only') or (not condition and value=='exclude')
 
     def _is_auxiliary_etc(self, node):
-        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'aux', 'vocative'}:
+        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'vocative'}:
             return True
         if node.udeprel == 'dep' and node.upos in {'ADP', 'SCONJ', 'CCONJ', 'PUNCT'}:
             return True
