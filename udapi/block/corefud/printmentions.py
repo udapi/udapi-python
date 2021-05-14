@@ -58,20 +58,27 @@ class PrintMentions(Block):
             return True
         return (condition and value == 'only') or (not condition and value=='exclude')
 
-    def _is_auxiliary(self, node):
-        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'cop', 'aux'}:
+    def _is_auxiliary_etc(self, node):
+        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'aux', 'vocative'}:
             return True
-        if node.udeprel == 'dep' and node.upos in {'ADP', 'SCONJ', 'CCONJ'}:
+        if node.udeprel == 'dep' and node.upos in {'ADP', 'SCONJ', 'CCONJ', 'PUNCT'}:
             return True
         return False
 
     def _is_forest(self, mention, mwords, almost):
         for w in mention.words:
-            for ch in w.children():
+            # UD unfortunatelly does not use the copula-as-head style for copula construction,
+            # so e.g. in "It is my fault", "fault" is the root of the tree and all other words its children.
+            # However, in the cop-as-head stule, only "my" would depend on "fault" (and should be part of the mention).
+            # It is difficult to tell apart which w.children are related to w and which to the copula.
+            # We thus ignore these cases completely (we expect any child is potentially related to the copula).
+            if any(ch.udeprel == 'cop' for ch in w.children):
+                continue
+            for ch in w.children:
                 if ch not in mwords:
                     if not almost:
                         return False
-                    if not (w.parent and w.parent not in mwords and self._is_auxiliary(ch)):
+                    if not (w.parent and w.parent not in mwords and self._is_auxiliary_etc(ch)):
                         return False
         return True
 
