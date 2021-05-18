@@ -10,6 +10,7 @@ class PrintMentions(Block):
     def __init__(self, continuous='include', almost_continuous='include', treelet='include',
                  forest='include', almost_forest='include', oneword='include', singleton='include',
                  empty='include', max_trees=0, html=False, shuffle=True, print_other_forms=5,
+                 print_total=True,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
@@ -31,6 +32,7 @@ class PrintMentions(Block):
         if shuffle:
             random.seed(42)
         self.print_other_forms = print_other_forms
+        self.print_total = print_total,
         print_class = TextModeTreesHtml if html else TextModeTrees
         self.print_block = print_class(
                 print_sent_id=print_sent_id, print_text=print_text, add_empty_line=add_empty_line, indent=indent,
@@ -105,7 +107,7 @@ class PrintMentions(Block):
         else:
             mentions.sort()
 
-        printed_trees = 0
+        seen_trees = 0
         for mention in mentions:
             if not self._ok(len(mention.words) == 1, self.oneword):
                 continue
@@ -133,25 +135,32 @@ class PrintMentions(Block):
 
             for w in mention.words:
                 w.misc['Mark'] = 1
-            if self.max_trees:
-                printed_trees += 1
-                if printed_trees > self.max_trees:
-                    print(f'######## Only first {self.max_trees} trees printed. Use max_trees=0 to see all.')
-                    return
 
-            this_form = ' '.join([w.form for w in mention.words])
-            print("# Mention = " + this_form)
-            if self.print_other_forms:
-                counter = Counter()
-                for m in mention.cluster.mentions:
-                    forms = ' '.join([w.form for w in m.words])
-                    if forms != this_form:
-                        counter[forms] += 1
-                if counter:
-                    print(f"# {min(len(counter), self.print_other_forms)} other forms:", end='')
-                    for form, count in counter.most_common(self.print_other_forms):
-                        print(f' "{form}"({count})', end='')
-                    print()
-            self.print_block.process_tree(mention.head.root)
-            for w in mention.words:
-                del w.misc['Mark']
+            seen_trees += 1
+            if self.max_trees and seen_trees > self.max_trees:
+                if not self.print_total:
+                    print(f'######## Only first {self.max_trees} matching mentions printed. Use max_trees=0 to see all.')
+                    return
+            else:
+                this_form = ' '.join([w.form for w in mention.words])
+                print("# Mention = " + this_form)
+                if self.print_other_forms:
+                    counter = Counter()
+                    for m in mention.cluster.mentions:
+                        forms = ' '.join([w.form for w in m.words])
+                        if forms != this_form:
+                            counter[forms] += 1
+                    if counter:
+                        print(f"# {min(len(counter), self.print_other_forms)} other forms:", end='')
+                        for form, count in counter.most_common(self.print_other_forms):
+                            print(f' "{form}"({count})', end='')
+                        print()
+                self.print_block.process_tree(mention.head.root)
+                for w in mention.words:
+                    del w.misc['Mark']
+
+        if self.print_total:
+            if self.max_trees and seen_trees > self.max_trees:
+                print(f'######## Only first {self.max_trees} matching mentions printed. Use max_trees=0 to see all.')
+            print(f'######## Total matching/all mentions = {seen_trees} / {len(mentions)}')
+
