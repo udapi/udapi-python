@@ -2,7 +2,7 @@
 
 Punctuation in Universal Dependencies has the tag PUNCT, dependency relation punct,
 and is always attached projectively, usually to the head of a neighboring subtree
-to its left or right.
+to its left or right (see https://universaldependencies.org/u/dep/punct.html).
 Punctuation normally does not have children. If it does, we will fix it first.
 
 This block tries to re-attach punctuation projectively and according to the guidelines.
@@ -236,12 +236,18 @@ class FixPunct(Block):
         # let's treat the marks as any other (non-pair) punctuation.
         if len(heads) == 0:
             return
-        elif len(heads) == 1:
-            opening_node.parent = heads[0]
-            closing_node.parent = heads[0]
         else:
-            opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
-            closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
+            # Ideally, there should be only a single head.
+            # If not, we could try e.g. to choose the "widests-span head":
+            #  opening_node.parent = sorted(heads, key=lambda n: n.descendants(add_self=1)[0].ord)[0]
+            #  closing_node.parent = sorted(heads, key=lambda n: -n.descendants(add_self=1)[-1].ord)[0]
+            # which often leads to selecting the same head for the opening and closing punctuation
+            # ignoring single words inside the paired punct which are non-projectively attached outside.
+            # However, this means that the paired punctuation will be attached non-projectively,
+            # which is forbidden by the UD guidelines.
+            # Thus, we will choose the nearest head, which is the only way how to prevent non-projectivities.
+            opening_node.parent = heads[0]
+            closing_node.parent = heads[-1]
 
         self._punct_type[opening_node.ord] = 'opening'
         self._punct_type[closing_node.ord] = 'closing'
