@@ -45,7 +45,8 @@ class BaseWriter(Block):
         return self.files.next_filename()
 
     def before_process_document(self, document):
-        udapi.core.coref.store_coref_to_misc(document)
+        if document:
+            udapi.core.coref.store_coref_to_misc(document)
         if self.orig_files == '<filehandle>':
             logging.info('Writing to filehandle.')
             sys.stdout = self.files.filehandle
