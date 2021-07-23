@@ -110,8 +110,8 @@ class F1(BaseWriter):
             return
         self.visited_zones[tree.zone] += 1
 
-        pred_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in tree.descendants]
-        gold_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in gold_tree.descendants]
+        pred_tokens = ['_'.join(n.get_attrs(self.attrs, undefs='None')) for n in tree.descendants]
+        gold_tokens = ['_'.join(n.get_attrs(self.attrs, undefs='None')) for n in gold_tree.descendants]
 
         # lcs("abc", "acb") can be either "ab" or "ac".
         # We want to prefer the LCS with the highest number of non-focused tokens.
