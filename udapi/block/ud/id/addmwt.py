@@ -3,6 +3,8 @@ Block ud.id.AddMwt cuts the clitic "-nya" in Indonesian (preprocessed with
 MorphInd whose output is stored in MISC attribute MorphInd).
 """
 import udapi.block.ud.addmwt
+import logging
+import re
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
