@@ -27,7 +27,7 @@ class FixGSD(Block):
                 del morphemes[0]
             # Check that we are left with just one morpheme.
             if len(morphemes) != 1:
-                logging.warning("One morpheme expected, found %d %s, morphind = '%s'" % (len(morphemes), morphemes, morphind))
+                logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s'" % (len(morphemes), morphemes, morphind, node.form))
             else:
                 lemma = morphemes[0]
                 # Remove the stem POS category.
