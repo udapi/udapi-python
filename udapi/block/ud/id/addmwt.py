@@ -12,7 +12,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
         if node.upos == 'VERB' and re.search(r'nya$', node.form, re.IGNORECASE):
-            splitform = re.sub(r'(nya)$', r' \1', re.IGNORECASE)
+            splitform = re.sub(r'(nya)$', r' \1', flags=re.IGNORECASE)
             # The verb with -nya typically has Number[psor]=Sing|Person[psor]=3.
             # Remove these features from the verb and give the pronoun normal features Number=Sing|Person=3.
             if node.feats["Number[psor]"] != "Sing":
