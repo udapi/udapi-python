@@ -1,6 +1,6 @@
 """Block ud.es.AddMwt for heuristic detection of Spanish contractions.
 
-According to the UD guidelines, contractions such as "dele" = "de ele"
+According to the UD guidelines, contractions such as "del" = "de el"
 should be annotated using multi-word tokens.
 
 Note that this block should be used only for converting legacy conllu files.
@@ -28,7 +28,7 @@ for v in MWTS.values():
     v['lemma'] = v['form']
     v['upos'] = 'ADP DET'
     v['deprel'] = '* det'
-    v['feats'] = '_ *'
+    v['feats'] = '_ Definite=Def|Gender=Masc|Number=Sing|PronType=Art'
     # The following are the default values
     # v['main'] = 0 # which of the two words will inherit the original children (if any)
     # v['shape'] = 'siblings', # the newly created nodes will be siblings
@@ -46,6 +46,11 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         analysis = MWTS.get(node.form.lower(), None)
 
         if analysis is not None:
+            # Modify the default attachment of the new syntactic words in special situations.
+            if re.match(r'^(root|conj|reparandum)$', node.udeprel):
+                # Copy the dictionary so that we do not modify the original and do not affect subsequent usages.
+                analysis = analysis.copy()
+                analysis['shape'] = 'subtree'
             return analysis
 
         if not self.verbpron or node.upos not in {'VERB', 'AUX'}:
