@@ -23,7 +23,7 @@ class FixGSD(Block):
                 del morphemes[-1]
             # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
             # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
-            while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se)$", morphemes[0]):
+            while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se|per)$", morphemes[0]):
                 del morphemes[0]
             # Check that we are left with just one morpheme.
             if len(morphemes) != 1:
