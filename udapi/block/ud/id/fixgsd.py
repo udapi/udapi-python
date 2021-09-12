@@ -19,7 +19,10 @@ class FixGSD(Block):
             # Split morphind to prefix, stem, and suffix.
             morphemes = re.split(r"\+", morphind)
             # Expected suffixes are -kan, -i, -an, or no suffix at all.
-            if len(morphemes) > 1 and re.match(r"^(kan|i|an)$", morphemes[-1]):
+            # There is also the circumfix ke-...-an which seems to be nominalized adjective:
+            # "sama" = "same, similar"; "kesamaan" = "similarity", lemma is "sama";
+            # but I am not sure what is the reason that these are tagged VERB.
+            if len(morphemes) > 1 and re.match(r"^(kan|i|an(_NSD)?)$", morphemes[-1]):
                 del morphemes[-1]
             # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
             # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
