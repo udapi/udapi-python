@@ -31,7 +31,7 @@ class FixGSD(Block):
             else:
                 lemma = morphemes[0]
                 # Remove the stem POS category.
-                lemma = re.sub(r"<[a-z]+>$", "", lemma)
+                lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
                 node.lemma = lemma
 
     def merge_reduplicated_plural(self, node):
@@ -76,4 +76,4 @@ class FixGSD(Block):
 
     def process_node(self, node):
         self.fix_plural_propn(node)
-        #self.lemmatize_verb_from_morphind(node)
+        self.lemmatize_verb_from_morphind(node)
