@@ -59,7 +59,9 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 deprel = '* nmod:poss'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
-            return None
+            else:
+                logging.warning("Form '%s' analyzed by MorphInd as having the -nya clitic but the UPOS is '%s'" % (node.form, node.upos))
+                return None
         return None
 
     def postprocess_mwt(self, mwt):
