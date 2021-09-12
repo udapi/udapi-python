@@ -63,5 +63,17 @@ class FixGSD(Block):
                     # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
                     root.text = root.compute_text()
 
+    def fix_plural_propn(self, node):
+        """
+        It is unlikely that a proper noun will have a plural form in Indonesian.
+        All examples observed in GSD should actually be tagged as common nouns.
+        """
+        if node.upos == 'PROPN' and node.feats['Number'] == 'Plur':
+            node.upos = 'NOUN'
+            node.lemma = node.lemma.lower()
+        if node.upos == 'PROPN':
+            node.feats['Number'] = ''
+
     def process_node(self, node):
-        self.lemmatize_verb_from_morphind(node)
+        self.fix_plural_propn(node)
+        #self.lemmatize_verb_from_morphind(node)
