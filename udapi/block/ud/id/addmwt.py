@@ -38,7 +38,13 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     lemma = re.sub(r' nya$', ' dia', splitform.lower())
                     upos = 'VERB PRON'
                     feats = '* Number=Sing|Person=3|PronType=Prs'
-                    deprel = '* obj:agent' if diverb else '* obj'
+                    # The agent of the passive verb is coded like a direct object of an active verb,
+                    # so we might want to use obj:agent rather than obl:agent. However, full nominals
+                    # as passive agents can be optionally accompanied by the preposition _oleh_ "by",
+                    # which is an argument in favor of saying that they are oblique. So we currently
+                    # mark all passive agents as obliques, although it is disputable in Austronesian
+                    # languages (unlike Indo-European passives).
+                    deprel = '* obl:agent' if diverb else '* obj'
                 xpos = re.sub(r'\+', ' ', node.xpos)
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
