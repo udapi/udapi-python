@@ -126,8 +126,51 @@ class FixGSD(Block):
         if node.upos == 'PROPN':
             node.feats['Number'] = ''
 
+    def fix_satu_satunya(self, node):
+        """
+        'satu' = 'one' (NUM)
+        'satu-satunya' = 'the only'
+        """
+        root = node.root
+        if node.form == 'nya' and node.parent.form.lower() == 'satu' and node.parent.udeprel == 'fixed' and node.parent.parent.form.lower() == 'satu':
+            satu0 = node.parent.parent
+            satu1 = node.parent
+            nya = node
+            dash = None
+            if satu1.ord == satu0.ord+2 and satu1.prev_node.form == '-':
+                dash = satu1.prev_node
+                satu0.misc['SpaceAfter'] = 'No'
+                dash.misc['SpaceAfter'] = 'No'
+                root.text = root.compute_text()
+            satu1.deprel = 'compound:redup'
+            nya.parent = satu0
+        # We actually cannot leave the 'compound:redup' here because it is not used in Indonesian.
+        if node.form == 'nya' and node.parent.form.lower() == 'satu':
+            satu0 = node.parent
+            nya = node
+            if satu0.next_node.form == '-':
+                dash = satu0.next_node
+                if dash.next_node.form.lower() == 'satu':
+                    satu1 = dash.next_node
+                    if satu1.ord == node.ord-1:
+                        # Merge satu0 + dash + satu1 into one node.
+                        satu0.form = satu0.form + dash.form + satu1.form
+                        dash.remove()
+                        satu1.remove()
+                        # There should be a multi-word token comprising satu1 + nya.
+                        mwt = nya.multiword_token
+                        if mwt:
+                            mwtmisc = mwt.misc.copy()
+                            mwt.remove()
+                            mwt = root.create_multiword_token([satu0, nya], satu0.form + nya.form, mwtmisc)
+                            satu0.misc['SpaceAfter'] = ''
+                        root.text = root.compute_text()
+        if node.multiword_token and node.no_space_after:
+            node.misc['SpaceAfter'] = ''
+
     def process_node(self, node):
         self.fix_plural_propn(node)
         self.fix_upos_based_on_morphind(node)
         self.fix_ordinal_numerals(node)
         self.lemmatize_verb_from_morphind(node)
+        self.fix_satu_satunya(node)
