@@ -52,10 +52,6 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
                 # The noun with -nya typically has Number[psor]=Sing|Person[psor]=3.
                 # Remove these features from the noun and give the pronoun normal features Number=Sing|Person=3.
-                if node.feats['Number[psor]'] != 'Sing':
-                    logging.warning("Noun '%s' has Number[psor]=='%s'" % (node.form, node.feats['Number[psor]']))
-                if node.feats['Person[psor]'] != '3':
-                    logging.warning("Noun '%s' has Person[psor]=='%s'" % (node.form, node.feats['Person[psor]']))
                 node.feats['Number[psor]'] = ''
                 node.feats['Person[psor]'] = ''
                 lemma = re.sub(r' nya$', ' dia', splitform.lower())
@@ -65,8 +61,75 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 deprel = '* nmod:poss'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
+            elif node.upos == 'ADJ':
+                # nominalized adjective
+                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                lemma = splitform.lower()
+                upos = 'ADJ DET'
+                feats = '* Definite=Def|PronType=Art'
+                xpos = re.sub(r'\+', ' ', node.xpos)
+                deprel = '* det'
+                # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
+                return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
+            elif re.match(r'^(banyak|semua)nya$', node.form, re.IGNORECASE):
+                # semua = all (DET)
+                # semuanya = nominalization of semua, i.e., 'everything' (PRON)
+                # banyak = many, much (DET)
+                # banyaknya = nominalization of banyak, i.e., 'a lot' (PRON)
+                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                lemma = splitform.lower()
+                upos = 'DET DET'
+                feats = ('PronType=Tot' if lemma == 'semua nya' else 'PronType=Ind')+' Definite=Def|PronType=Art'
+                xpos = re.sub(r'\+', ' ', node.xpos)
+                deprel = '* det'
+                # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
+                return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
+            elif re.match(r'^(satu)nya$', node.form, re.IGNORECASE):
+                # satu = one (NUM)
+                # satunya = nominalization of satu, meaning 'the only one'
+                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                lemma = splitform.lower()
+                upos = 'NUM DET'
+                feats = 'NumType=Card Definite=Def|PronType=Art'
+                xpos = re.sub(r'\+', ' ', node.xpos)
+                deprel = '* det'
+                # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
+                return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
+            elif node.upos == 'ADP' and node.xpos == 'R--+PS3' or re.match(r'^(bersama|dibawah|didalam|sekitar)nya$', node.form, re.IGNORECASE):
+                # Fused preposition and pronoun.
+                # Most of them are recognized as R--+PS3 by MorphInd. However, some are different:
+                # bersamanya = 'with him' = VSA+PS3
+                # dibawahnya = 'under it' = VSP+PS3
+                # didalamnya = 'inside it' = VSP+PS3
+                # sekitarnya = 'around it' = D--+PS3
+                # However:
+                # layaknya = 'like' is a derivation from 'layak' = 'worthy' (ASP+PS3)
+                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                upos = 'ADP PRON'
+                feats = '_ Number=Sing|Person=3|PronType=Prs'
+                xpos = 'R-- PS3'
+                if node.udeprel == 'case':
+                    if re.match(r'^(NOUN|PROPN|PRON|DET|NUM|X|SYM)$', node.parent.upos):
+                        deprel = 'nmod'
+                    else:
+                        deprel = 'obl'
+                else:
+                    deprel = '*'
+                deprel = 'case '+deprel
+                return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'main': 1, 'shape': 'subtree', 'deprel': deprel}
             else:
-                logging.warning("Form '%s' analyzed by MorphInd as having the -nya clitic but the UPOS is '%s'" % (node.form, node.upos))
+                # Do not warn about instances that are known exceptions.
+                # akibatnya = as a result (SCONJ); akibat = result
+                # bukannya = instead (PART); bukan = no, not
+                # dirinya = reflexive himself/herself/itself (similarly, diriku = myself, dirimu = yourself; somewhere else we should check that they have the right features)
+                # layaknya = like (ADP); layak = worthy
+                # sebaiknya = should (AUX)
+                # sesampainya = once in / arriving at (ADP)
+                # tidaknya = whether or not (PART); tidak = no, not
+                # Adverbs are an exception, too. The -nya morpheme could be derivation. E.g., 'ironis' = 'ironic'; 'ironisnya' = 'ironically'.
+                if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|diri|layak|sebaik|sesampai|tidak)nya$', node.form, re.IGNORECASE):
+                    logging.warning("Form '%s' analyzed by MorphInd as having the -nya clitic but the UPOS is '%s' and XPOS is '%s'" % (node.form, node.upos, node.xpos))
                 return None
         return None
 

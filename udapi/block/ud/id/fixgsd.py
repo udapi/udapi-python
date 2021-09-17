@@ -5,6 +5,52 @@ import re
 
 class FixGSD(Block):
 
+    def fix_upos_based_on_morphind(self, node):
+        """
+        Example from data: ("kesamaan"), the correct UPOS is NOUN, as
+        suggested by MorphInd.
+        Based on my observation so far, if there is a different UPOS between
+        the original GSD and MorphInd, it's better to trust MorphInd
+        I found so many incorrect UPOS in GSD, especially when NOUNs become
+        VERBs and VERBs become NOUNs.
+        I suggest adding Voice=Pass when the script decides ke-xxx-an as VERB.
+        """
+        if node.upos == 'VERB' and node.xpos == 'NSD' and re.match(r'^ke.+an$', node.form, re.IGNORECASE):
+            node.upos = 'NOUN'
+            if node.udeprel == 'acl':
+                node.deprel = 'nmod'
+            elif node.udeprel == 'advcl':
+                node.deprel = 'obl'
+
+    def fix_ordinal_numerals(self, node):
+        """
+        Ordinal numerals should be ADJ NumType=Ord in UD. They have many different
+        UPOS tags in Indonesian GSD. This method harmonizes them.
+        pertama = first
+        kedua = second
+        ketiga = third
+        keempat = fourth
+        kelima = fifth
+        keenam = sixth
+        ketujuh = seventh
+        kedelapan = eighth
+        kesembilan = ninth
+        ke48 = 48th
+        """
+        # We could also check the XPOS, which is derived from MorphInd: re.match(r'^CO-', node.xpos)
+        if re.match(r'^(pertama|kedua|ketiga|keempat|kelima|keenam|ketujuh|kedelapan|kesembilan|ke-?\d+)(nya)?$', node.form, re.IGNORECASE):
+            node.upos = 'ADJ'
+            node.feats['NumType'] = 'Ord'
+            if re.match(r'^(det|nummod|nmod)$', node.udeprel):
+                node.deprel = 'amod'
+        # The following is not an ordinal numeral but I am too lazy to create a separate method for that.
+        elif node.form.lower() == 'semua':
+            # It means 'all'. Originally it was DET, PRON, or ADV.
+            node.upos = 'DET'
+            node.feats['PronType'] = 'Tot'
+            if node.udeprel == 'nmod' or node.udeprel == 'advmod':
+                node.deprel = 'det'
+
     def lemmatize_verb_from_morphind(self, node):
         # The MISC column contains the output of MorphInd for the current word.
         # The analysis has been interpreted wrongly for some verbs, so we need
@@ -79,4 +125,6 @@ class FixGSD(Block):
 
     def process_node(self, node):
         self.fix_plural_propn(node)
+        self.fix_upos_based_on_morphind(node)
+        self.fix_ordinal_numerals(node)
         self.lemmatize_verb_from_morphind(node)
