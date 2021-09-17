@@ -57,31 +57,34 @@ class FixGSD(Block):
         # to re-interpret it and extract the correct lemma.
         if node.upos == "VERB":
             morphind = node.misc["MorphInd"]
-            # Remove the start and end tags from morphind.
-            morphind = re.sub(r"^\^", "", morphind)
-            morphind = re.sub(r"\$$", "", morphind)
-            # Remove the final XPOS tag from morphind.
-            morphind = re.sub(r"_VS[AP]$", "", morphind)
-            # Split morphind to prefix, stem, and suffix.
-            morphemes = re.split(r"\+", morphind)
-            # Expected suffixes are -kan, -i, -an, or no suffix at all.
-            # There is also the circumfix ke-...-an which seems to be nominalized adjective:
-            # "sama" = "same, similar"; "kesamaan" = "similarity", lemma is "sama";
-            # but I am not sure what is the reason that these are tagged VERB.
-            if len(morphemes) > 1 and re.match(r"^(kan|i|an(_NSD)?)$", morphemes[-1]):
-                del morphemes[-1]
-            # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
-            # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
-            while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se|per)$", morphemes[0]):
-                del morphemes[0]
-            # Check that we are left with just one morpheme.
-            if len(morphemes) != 1:
-                logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r"_VS[AP]$", "", morphind)
+                # Split morphind to prefix, stem, and suffix.
+                morphemes = re.split(r"\+", morphind)
+                # Expected suffixes are -kan, -i, -an, or no suffix at all.
+                # There is also the circumfix ke-...-an which seems to be nominalized adjective:
+                # "sama" = "same, similar"; "kesamaan" = "similarity", lemma is "sama";
+                # but I am not sure what is the reason that these are tagged VERB.
+                if len(morphemes) > 1 and re.match(r"^(kan|i|an(_NSD)?)$", morphemes[-1]):
+                    del morphemes[-1]
+                # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
+                # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
+                while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se|per)$", morphemes[0]):
+                    del morphemes[0]
+                # Check that we are left with just one morpheme.
+                if len(morphemes) != 1:
+                    logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                else:
+                    lemma = morphemes[0]
+                    # Remove the stem POS category.
+                    lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
+                    node.lemma = lemma
             else:
-                lemma = morphemes[0]
-                # Remove the stem POS category.
-                lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
-                node.lemma = lemma
+                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
 
     def merge_reduplicated_plural(self, node):
         # Instead of compound:plur, merge the reduplicated plurals into a single token.

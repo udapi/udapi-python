@@ -131,11 +131,22 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|diri|layak|sebaik|sesampai|tidak)nya$', node.form, re.IGNORECASE):
                     logging.warning("Form '%s' analyzed by MorphInd as having the -nya clitic but the UPOS is '%s' and XPOS is '%s'" % (node.form, node.upos, node.xpos))
                 return None
+        elif re.search(r'(kah|lah|pun|tah)$', node.form, re.IGNORECASE) and re.search(r'\+(kah|lah|pun|tah)<t>_T--\$$', node.misc['MorphInd']):
+            splitform = re.sub(r'(kah|lah|pun|tah)$', r' \1', node.form, flags=re.IGNORECASE)
+            lemma = splitform.lower()
+            upos = '* PART'
+            feats = '* _'
+            xpos = re.sub(r'\+', ' ', node.xpos)
+            if len(xpos.split()) < 2:
+                xpos = xpos + ' T--'
+            deprel = '* advmod:emph'
+            # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
+            return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
         return None
 
     def postprocess_mwt(self, mwt):
         """Distribute the MorphInd analysis to the two parts so that we can later use it to fix the lemmas of verbs."""
-        match = re.match(r'^\^(.*)\+(dia<p>_PS3)\$$', mwt.misc['MorphInd'])
+        match = re.match(r'^\^(.*)\+(dia<p>_PS3|kah<t>_T--|lah<t>_T--|pun<t>_T--|tah<t>_T--)\$$', mwt.misc['MorphInd'])
         if match:
             mwt.words[0].misc['MorphInd'] = '^'+match.group(1)+'$'
             mwt.words[1].misc['MorphInd'] = '^'+match.group(2)+'$'
