@@ -62,7 +62,7 @@ class FixGSD(Block):
                 morphind = re.sub(r"^\^", "", morphind)
                 morphind = re.sub(r"\$$", "", morphind)
                 # Remove the final XPOS tag from morphind.
-                morphind = re.sub(r"_VS[AP]$", "", morphind)
+                morphind = re.sub(r"_V[SP][AP]$", "", morphind)
                 # Split morphind to prefix, stem, and suffix.
                 morphemes = re.split(r"\+", morphind)
                 # Expected suffixes are -kan, -i, -an, or no suffix at all.

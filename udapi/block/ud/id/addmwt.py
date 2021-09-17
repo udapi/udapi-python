@@ -11,9 +11,30 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
 
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
-        if re.search(r'nya$', node.form, re.IGNORECASE) and re.search(r'\+dia<p>_PS3\$$', node.misc['MorphInd']):
+        if re.search(r'^(ku|kau)', node.form, re.IGNORECASE) and re.search(r'^\^(aku<p>_PS1|kamu<p>_PS2)\+', node.misc['MorphInd']) and node.upos == 'VERB':
+            splitform = re.sub(r'^(ku|kau)', r'\1 ', node.form, flags=re.IGNORECASE)
+            # The verb with -nya typically has Number[psor]=Sing|Person[psor]=3.
+            # Remove these features from the verb and give the pronoun normal features Number=Sing|Person=3.
+            node.feats['Number[psor]'] = ''
+            node.feats['Person[psor]'] = ''
+            upos = 'PRON VERB'
+            if re.search(r'^ku ', splitform.lower()):
+                lemma = re.sub(r'^ku ', 'aku ', splitform.lower())
+                feats = 'Number=Sing|Person=1|PronType=Prs *'
+                xpos = re.sub(r'\+', ' ', node.xpos)
+                if len(xpos.split())<2:
+                    xpos = 'PS1 VSA'
+            else:
+                lemma = re.sub(r'^kau ', 'kamu ', splitform.lower())
+                feats = 'Number=Sing|Person=2|PronType=Prs *'
+                xpos = re.sub(r'\+', ' ', node.xpos)
+                if len(xpos.split())<2:
+                    xpos = 'PS2 VSA'
+            deprel = 'nsubj *'
+            return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'main': 1, 'shape': 'subtree', 'deprel': deprel}
+        elif re.search(r'(nya|ku|mu)$', node.form, re.IGNORECASE) and re.search(r'\+(dia<p>_PS3|aku<p>_PS1|kamu<p>_PS2)\$$', node.misc['MorphInd']):
             if node.upos == 'VERB':
-                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                splitform = re.sub(r'(nya|ku|mu)$', r' \1', node.form, flags=re.IGNORECASE)
                 # For transitive verbs with the meN- prefix, -nya is an object clitic.
                 # For passive verbs with the di- prefix, -nya refers to a passive agent.
                 # For verbs with prefixes ber-, ter-, and verbs without prefixes, -nya is a definite article and signals nominalization.
@@ -23,10 +44,6 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 nominalization = not menverb and not diverb
                 # The verb with -nya typically has Number[psor]=Sing|Person[psor]=3.
                 # Remove these features from the verb and give the pronoun normal features Number=Sing|Person=3.
-                if node.feats['Number[psor]'] != 'Sing':
-                    logging.warning("Verb '%s' has Number[psor]=='%s'" % (node.form, node.feats['Number[psor]']))
-                if node.feats['Person[psor]'] != '3':
-                    logging.warning("Verb '%s' has Person[psor]=='%s'" % (node.form, node.feats['Person[psor]']))
                 node.feats['Number[psor]'] = ''
                 node.feats['Person[psor]'] = ''
                 if nominalization:
@@ -35,9 +52,16 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     feats = '* Definite=Def|PronType=Art'
                     deprel = '* det'
                 else:
-                    lemma = re.sub(r' nya$', ' dia', splitform.lower())
                     upos = 'VERB PRON'
-                    feats = '* Number=Sing|Person=3|PronType=Prs'
+                    if re.search(r' nya$', splitform.lower()):
+                        lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                        feats = '* Number=Sing|Person=3|PronType=Prs'
+                    elif re.search(r' ku$', splitform.lower()):
+                        lemma = re.sub(r' ku$', ' aku', splitform.lower())
+                        feats = '* Number=Sing|Person=1|PronType=Prs'
+                    else:
+                        lemma = re.sub(r' mu$', ' kamu', splitform.lower())
+                        feats = '* Number=Sing|Person=2|PronType=Prs'
                     # The agent of the passive verb is coded like a direct object of an active verb,
                     # so we might want to use obj:agent rather than obl:agent. However, full nominals
                     # as passive agents can be optionally accompanied by the preposition _oleh_ "by",
@@ -49,19 +73,26 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
             elif re.match(r'(NOUN|PROPN|X)', node.upos):
-                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
+                splitform = re.sub(r'(nya|ku|mu)$', r' \1', node.form, flags=re.IGNORECASE)
                 # The noun with -nya typically has Number[psor]=Sing|Person[psor]=3.
                 # Remove these features from the noun and give the pronoun normal features Number=Sing|Person=3.
                 node.feats['Number[psor]'] = ''
                 node.feats['Person[psor]'] = ''
-                lemma = re.sub(r' nya$', ' dia', splitform.lower())
                 upos = '* PRON'
-                feats = '* Number=Sing|Person=3|PronType=Prs'
+                if re.search(r' nya$', splitform.lower()):
+                    lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                    feats = '* Number=Sing|Person=3|PronType=Prs'
+                elif re.search(r' ku$', splitform.lower()):
+                    lemma = re.sub(r' ku$', ' aku', splitform.lower())
+                    feats = '* Number=Sing|Person=1|PronType=Prs'
+                else:
+                    lemma = re.sub(r' mu$', ' kamu', splitform.lower())
+                    feats = '* Number=Sing|Person=2|PronType=Prs'
                 xpos = re.sub(r'\+', ' ', node.xpos)
                 deprel = '* nmod:poss'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
-            elif node.upos == 'ADJ':
+            elif node.upos == 'ADJ' and re.search(r'(nya)$', node.form, re.IGNORECASE):
                 # nominalized adjective
                 splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
                 lemma = splitform.lower()
@@ -95,7 +126,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 deprel = '* det'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
-            elif node.upos == 'ADP' and node.xpos == 'R--+PS3' or re.match(r'^(bersama|dibawah|didalam|sekitar)nya$', node.form, re.IGNORECASE):
+            elif node.upos == 'ADP' and re.match(r'^R--\+PS[123]$', node.xpos) or re.match(r'^(bersama|dibawah|didalam|sekitar)nya$', node.form, re.IGNORECASE):
                 # Fused preposition and pronoun.
                 # Most of them are recognized as R--+PS3 by MorphInd. However, some are different:
                 # bersamanya = 'with him' = VSA+PS3
@@ -104,11 +135,20 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 # sekitarnya = 'around it' = D--+PS3
                 # However:
                 # layaknya = 'like' is a derivation from 'layak' = 'worthy' (ASP+PS3)
-                splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
-                lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                splitform = re.sub(r'(nya|ku|mu)$', r' \1', node.form, flags=re.IGNORECASE)
                 upos = 'ADP PRON'
-                feats = '_ Number=Sing|Person=3|PronType=Prs'
-                xpos = 'R-- PS3'
+                if re.search(r' nya$', splitform.lower()):
+                    lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                    feats = '* Number=Sing|Person=3|PronType=Prs'
+                    xpos = 'R-- PS3'
+                elif re.search(r' ku$', splitform.lower()):
+                    lemma = re.sub(r' ku$', ' aku', splitform.lower())
+                    feats = '* Number=Sing|Person=1|PronType=Prs'
+                    xpos = 'R-- PS1'
+                else:
+                    lemma = re.sub(r' mu$', ' kamu', splitform.lower())
+                    feats = '* Number=Sing|Person=2|PronType=Prs'
+                    xpos = 'R-- PS2'
                 if node.udeprel == 'case':
                     if re.match(r'^(NOUN|PROPN|PRON|DET|NUM|X|SYM)$', node.parent.upos):
                         deprel = 'nmod'
@@ -128,8 +168,8 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 # sesampainya = once in / arriving at (ADP)
                 # tidaknya = whether or not (PART); tidak = no, not
                 # Adverbs are an exception, too. The -nya morpheme could be derivation. E.g., 'ironis' = 'ironic'; 'ironisnya' = 'ironically'.
-                if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|diri|layak|sebaik|sesampai|tidak)nya$', node.form, re.IGNORECASE):
-                    logging.warning("Form '%s' analyzed by MorphInd as having the -nya clitic but the UPOS is '%s' and XPOS is '%s'" % (node.form, node.upos, node.xpos))
+                if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|diri|layak|sebaik|sesampai|tidak)(nya|ku|mu)$', node.form, re.IGNORECASE):
+                    logging.warning("Form '%s' analyzed by MorphInd as having the -nya|-ku|-mu clitic but the UPOS is '%s' and XPOS is '%s'" % (node.form, node.upos, node.xpos))
                 return None
         elif re.search(r'(kah|lah|pun|tah)$', node.form, re.IGNORECASE) and re.search(r'\+(kah|lah|pun|tah)<t>_T--\$$', node.misc['MorphInd']):
             splitform = re.sub(r'(kah|lah|pun|tah)$', r' \1', node.form, flags=re.IGNORECASE)
@@ -146,7 +186,9 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
 
     def postprocess_mwt(self, mwt):
         """Distribute the MorphInd analysis to the two parts so that we can later use it to fix the lemmas of verbs."""
-        match = re.match(r'^\^(.*)\+(dia<p>_PS3|kah<t>_T--|lah<t>_T--|pun<t>_T--|tah<t>_T--)\$$', mwt.misc['MorphInd'])
+        match = re.match(r'^\^(.*)\+(aku<p>_PS1|kamu<p>_PS2|dia<p>_PS3|kah<t>_T--|lah<t>_T--|pun<t>_T--|tah<t>_T--)\$$', mwt.misc['MorphInd'])
+        if not match:
+            match = re.match(r'^\^(aku<p>_PS1|kamu<p>_PS2)\+(.*)\$$', mwt.misc['MorphInd'])
         if match:
             mwt.words[0].misc['MorphInd'] = '^'+match.group(1)+'$'
             mwt.words[1].misc['MorphInd'] = '^'+match.group(2)+'$'
