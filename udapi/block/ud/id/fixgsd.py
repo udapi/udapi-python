@@ -36,13 +36,32 @@ class FixGSD(Block):
         kedelapan = eighth
         kesembilan = ninth
         ke48 = 48th
+
+        However! The ke- forms (i.e., not 'pertama') can also function as total
+        versions of cardinal numbers ('both', 'all three' etc.). If the numeral
+        precedes the noun, it is a total cardinal; if it follows the noun, it is
+        an ordinal. An exception is when the modified noun is 'kali' = 'time'.
+        Then the numeral is ordinal regardless where it occurs, and together
+        with 'kali' it functions as an adverbial ordinal ('for the second time').
         """
         # We could also check the XPOS, which is derived from MorphInd: re.match(r'^CO-', node.xpos)
-        if re.match(r'^(pertama|kedua|ketiga|keempat|kelima|keenam|ketujuh|kedelapan|kesembilan|ke-?\d+)(nya)?$', node.form, re.IGNORECASE):
+        if re.match(r'^pertama(nya)?$', node.form, re.IGNORECASE):
             node.upos = 'ADJ'
             node.feats['NumType'] = 'Ord'
             if re.match(r'^(det|nummod|nmod)$', node.udeprel):
                 node.deprel = 'amod'
+        elif re.match(r'^(kedua|ketiga|keempat|kelima|keenam|ketujuh|kedelapan|kesembilan|ke-?\d+)(nya)?$', node.form, re.IGNORECASE):
+            if node.parent.ord < node.ord or node.parent.lemma == 'kali':
+                node.upos = 'ADJ'
+                node.feats['NumType'] = 'Ord'
+                if re.match(r'^(det|nummod|nmod)$', node.udeprel):
+                    node.deprel = 'amod'
+            else:
+                node.upos = 'NUM'
+                node.feats['NumType'] = 'Card'
+                node.feats['PronType'] = 'Tot'
+                if re.match(r'^(det|amod|nmod)$', node.udeprel):
+                    node.deprel = 'nummod'
         # The following is not an ordinal numeral but I am too lazy to create a separate method for that.
         elif node.form.lower() == 'semua':
             # It means 'all'. Originally it was DET, PRON, or ADV.
