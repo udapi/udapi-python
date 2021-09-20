@@ -35,7 +35,7 @@ class FixGSD(Block):
         ketujuh = seventh
         kedelapan = eighth
         kesembilan = ninth
-        ke48 = 48th
+        ke-48 = 48th
 
         However! The ke- forms (i.e., not 'pertama') can also function as total
         versions of cardinal numbers ('both', 'all three' etc.). If the numeral
