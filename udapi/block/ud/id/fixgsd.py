@@ -70,6 +70,56 @@ class FixGSD(Block):
             if node.udeprel == 'nmod' or node.udeprel == 'advmod':
                 node.deprel = 'det'
 
+    def rejoin_ordinal_numerals(self, node):
+        """
+        If an ordinal numeral is spelled using digits ('ke-18'), it is often
+        tokenized as multiple tokens, which is wrong. Fix it.
+        """
+        if node.form.lower() == 'ke':
+            dash = None
+            number = None
+            if node.next_node:
+                if node.next_node.form == '-':
+                    dash = node.next_node
+                    if dash.next_node and re.match(r'^\d+$', dash.next_node.form):
+                        number = dash.next_node
+                        node.form = node.form + dash.form + number.form
+                        node.lemma = node.lemma + dash.lemma + number.lemma
+                elif re.match(r'^\d+$', node.next_node.form) and (node.parent == node.next_node or node.next_node.parent == node):
+                    number = node.next_node
+                    node.feats['Typo'] = 'Yes'
+                    node.misc['CorrectForm'] = node.form + '-' + number.form
+                    node.form = node.form + number.form
+                    node.lemma = node.lemma + '-' + number.lemma
+                if number:
+                    # Let us pretend that these forms are always ordinal numerals.
+                    # Situations where they act as total cardinals will be disambiguated
+                    # in a subsequent call to fix_ordinal_numerals().
+                    node.upos = 'ADJ'
+                    node.xpos = 'CO-'
+                    node.feats['NumType'] = 'Ord'
+                    node.misc['MorphInd'] = '^ke<r>_R--+' + number.form + '<c>_CC-$'
+                    # Find the parent node. Assume that the dash, if present, was not the head.
+                    if node.parent == number:
+                        node.parent = number.parent
+                        node.deprel = number.deprel
+                    if re.match(r'(case|mark|det|nummod|nmod)', node.udeprel):
+                        node.deprel = 'amod'
+                    # Adjust SpaceAfter.
+                    node.misc['SpaceAfter'] = 'No' if number.no_space_after else ''
+                    # Remove the separate node of the dash and the number.
+                    if dash:
+                        if len(dash.children) > 0:
+                            for c in dash.children:
+                                c.parent = node
+                        dash.remove()
+                    if len(number.children) > 0:
+                        for c in number.children:
+                            c.parent = node
+                    number.remove()
+                    # There may have been spaces around the dash, which are now gone. Recompute the sentence text.
+                    node.root.text = node.root.compute_text()
+
     def lemmatize_verb_from_morphind(self, node):
         # The MISC column contains the output of MorphInd for the current word.
         # The analysis has been interpreted wrongly for some verbs, so we need
@@ -190,6 +240,7 @@ class FixGSD(Block):
     def process_node(self, node):
         self.fix_plural_propn(node)
         self.fix_upos_based_on_morphind(node)
+        self.rejoin_ordinal_numerals(node)
         self.fix_ordinal_numerals(node)
         self.lemmatize_verb_from_morphind(node)
         self.fix_satu_satunya(node)
