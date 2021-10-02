@@ -120,6 +120,57 @@ class FixGSD(Block):
                     # There may have been spaces around the dash, which are now gone. Recompute the sentence text.
                     node.root.text = node.root.compute_text()
 
+    def rejoin_decades(self, node):
+        """
+        In Indonesian, the equivalent of English "1990s" is written as "1990-an".
+        In GSD, it is often tokenized as multiple tokens, which is wrong. Fix it.
+        """
+        if node.form.lower() == 'an':
+            dash = None
+            number = None
+            if node.prev_node:
+                if node.prev_node.form == '-':
+                    dash = node.prev_node
+                    if dash.prev_node and re.match(r'^\d+$', dash.prev_node.form):
+                        number = dash.prev_node
+                        node.form = number.form + dash.form + node.form
+                        node.lemma = number.lemma + dash.lemma + node.lemma
+                elif re.match(r'^\d+$', node.prev_node.form) and (node.parent == node.prev_node or node.prev_node.parent == node):
+                    number = node.prev_node
+                    node.feats['Typo'] = 'Yes'
+                    node.misc['CorrectForm'] = number.form + '-' + node.form
+                    node.form = number.form + node.form
+                    node.lemma = number.lemma + '-' + node.lemma
+                if number:
+                    # The combined token is no longer a numeral. It cannot quantify an entity.
+                    # Instead, it is itself something like a noun (or perhaps proper noun).
+                    node.upos = 'NOUN'
+                    node.xpos = 'NSD'
+                    node.feats['NumType'] = ''
+                    # In some cases, "-an" is labeled as foreign for no obvious reason.
+                    node.feats['Foreign'] = ''
+                    node.misc['MorphInd'] = '^' + number.form + '<c>_CC-+an<f>_F--$'
+                    # Find the parent node. Assume that the dash, if present, was not the head.
+                    if node.parent == number:
+                        node.parent = number.parent
+                        node.deprel = number.deprel
+                    if re.match(r'(case|mark|det|nummod|nmod)', node.udeprel):
+                        node.deprel = 'nmod'
+                    # No need to adjust SpaceAfter, as the 'an' node was the last one in the complex.
+                    #node.misc['SpaceAfter'] = 'No' if number.no_space_after else ''
+                    # Remove the separate node of the dash and the number.
+                    if dash:
+                        if len(dash.children) > 0:
+                            for c in dash.children:
+                                c.parent = node
+                        dash.remove()
+                    if len(number.children) > 0:
+                        for c in number.children:
+                            c.parent = node
+                    number.remove()
+                    # There may have been spaces around the dash, which are now gone. Recompute the sentence text.
+                    node.root.text = node.root.compute_text()
+
     def lemmatize_verb_from_morphind(self, node):
         # The MISC column contains the output of MorphInd for the current word.
         # The analysis has been interpreted wrongly for some verbs, so we need
@@ -242,5 +293,6 @@ class FixGSD(Block):
         self.fix_upos_based_on_morphind(node)
         self.rejoin_ordinal_numerals(node)
         self.fix_ordinal_numerals(node)
+        self.rejoin_decades(node)
         self.lemmatize_verb_from_morphind(node)
         self.fix_satu_satunya(node)
