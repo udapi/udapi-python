@@ -1,5 +1,6 @@
 """Abstract base class ud.AddMwt for heuristic detection of multi-word tokens."""
 from udapi.core.block import Block
+import logging
 
 
 class AddMwt(Block):
@@ -40,6 +41,10 @@ class AddMwt(Block):
             if attr in analysis:
                 values = analysis[attr].split()
                 for i, new_node in enumerate(nodes):
+                    if len(values) <= i:
+                        logging.warning("Attribute '%s' not supplied for word no. %d" % (attr, i))
+                        for attr in 'form lemma upos xpos feats deprel misc'.split():
+                            logging.warning("%s = %s" % (attr, analysis.get(attr, '')))
                     if values[i] == '*':
                         setattr(new_node, attr, orig_attr[attr])
                     elif attr == 'feats' and '*' in values[i]:

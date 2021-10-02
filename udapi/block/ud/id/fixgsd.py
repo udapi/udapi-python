@@ -171,12 +171,12 @@ class FixGSD(Block):
                     # There may have been spaces around the dash, which are now gone. Recompute the sentence text.
                     node.root.text = node.root.compute_text()
 
-    def lemmatize_verb_from_morphind(self, node):
+    def lemmatize_from_morphind(self, node):
         # The MISC column contains the output of MorphInd for the current word.
         # The analysis has been interpreted wrongly for some verbs, so we need
         # to re-interpret it and extract the correct lemma.
-        if node.upos == "VERB":
-            morphind = node.misc["MorphInd"]
+        morphind = node.misc['MorphInd']
+        if node.upos == 'VERB':
             if morphind:
                 # Remove the start and end tags from morphind.
                 morphind = re.sub(r"^\^", "", morphind)
@@ -203,6 +203,55 @@ class FixGSD(Block):
                     # Remove the stem POS category.
                     lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
                     node.lemma = lemma
+            else:
+                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
+        elif node.upos == 'NOUN':
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r'_(N[SP]D|VSA)$', '', morphind)
+                # Do not proceed if there is an unexpected final XPOS tag.
+                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
+                    # Split morphind to prefix, stem, and suffix.
+                    morphemes = re.split(r'\+', morphind)
+                    # Expected prefixes are peN-, per-, ke-, ber-.
+                    # Expected suffix is -an.
+                    if len(morphemes) > 1 and re.match(r'^an$', morphemes[-1]):
+                        del morphemes[-1]
+                    if len(morphemes) > 1 and re.match(r'^(peN|per|ke|ber)$', morphemes[0]):
+                        del morphemes[0]
+                    # Check that we are left with just one morpheme.
+                    if len(morphemes) != 1:
+                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                    else:
+                        lemma = morphemes[0]
+                        # Remove the stem POS category.
+                        lemma = re.sub(r'<[a-z]+>', '', lemma)
+                        node.lemma = lemma
+        elif node.upos == 'ADJ':
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r'_ASS$', '', morphind)
+                # Do not proceed if there is an unexpected final XPOS tag.
+                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
+                    # Split morphind to prefix, stem, and suffix.
+                    morphemes = re.split(r'\+', morphind)
+                    # Expected prefix is ter-.
+                    if len(morphemes) > 1 and re.match(r'^ter$', morphemes[0]):
+                        del morphemes[0]
+                    # Check that we are left with just one morpheme.
+                    if len(morphemes) != 1:
+                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                    else:
+                        lemma = morphemes[0]
+                        # Remove the stem POS category.
+                        lemma = re.sub(r'<[a-z]+>', '', lemma)
+                        node.lemma = lemma
             else:
                 logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
 
@@ -294,5 +343,5 @@ class FixGSD(Block):
         self.rejoin_ordinal_numerals(node)
         self.fix_ordinal_numerals(node)
         self.rejoin_decades(node)
-        self.lemmatize_verb_from_morphind(node)
+        self.lemmatize_from_morphind(node)
         self.fix_satu_satunya(node)

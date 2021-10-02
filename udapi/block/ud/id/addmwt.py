@@ -92,13 +92,39 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 deprel = '* nmod:poss'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
+            elif node.upos == 'PRON' and re.match(r'^diri(nya|ku|mu)$', node.form, re.IGNORECASE):
+                # dirinya = reflexive himself/herself/itself (similarly, diriku = myself, dirimu = yourself; somewhere else we should check that they have the right features)
+                splitform = re.sub(r'(nya|ku|mu)$', r' \1', node.form, flags=re.IGNORECASE)
+                # The noun with -nya typically has Number[psor]=Sing|Person[psor]=3.
+                # Remove these features from the noun and give the pronoun normal features Number=Sing|Person=3.
+                node.feats['Number[psor]'] = ''
+                node.feats['Person[psor]'] = ''
+                upos = 'PRON PRON'
+                if re.search(r' nya$', splitform.lower()):
+                    lemma = re.sub(r' nya$', ' dia', splitform.lower())
+                    feats = 'PronType=Prs|Reflex=Yes Number=Sing|Person=3|PronType=Prs'
+                    xpos = 'NSD PS3'
+                elif re.search(r' ku$', splitform.lower()):
+                    lemma = re.sub(r' ku$', ' aku', splitform.lower())
+                    feats = 'PronType=Prs|Reflex=Yes Number=Sing|Person=1|PronType=Prs'
+                    xpos = 'NSD PS1'
+                else:
+                    lemma = re.sub(r' mu$', ' kamu', splitform.lower())
+                    feats = 'PronType=Prs|Reflex=Yes Number=Sing|Person=2|PronType=Prs'
+                    xpos = 'NSD PS2'
+                deprel = '* nmod:poss'
+                # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
+                return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
             elif node.upos == 'ADJ' and re.search(r'(nya)$', node.form, re.IGNORECASE):
                 # nominalized adjective
                 splitform = re.sub(r'(nya)$', r' \1', node.form, flags=re.IGNORECASE)
                 lemma = splitform.lower()
                 upos = 'ADJ DET'
                 feats = '* Definite=Def|PronType=Art'
-                xpos = re.sub(r'\+', ' ', node.xpos)
+                if re.match(r' ', node.xpos):
+                    xpos = re.sub(r'\+', ' ', node.xpos)
+                else:
+                    xpos = 'ASP PS3'
                 deprel = '* det'
                 # 'main': 0 ... this is the default value (the first node will be the head and inherit children)
                 return {'form': splitform, 'lemma': lemma, 'upos': upos, 'feats': feats, 'xpos': xpos, 'shape': 'subtree', 'deprel': deprel}
@@ -162,13 +188,12 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 # Do not warn about instances that are known exceptions.
                 # akibatnya = as a result (SCONJ); akibat = result
                 # bukannya = instead (PART); bukan = no, not
-                # dirinya = reflexive himself/herself/itself (similarly, diriku = myself, dirimu = yourself; somewhere else we should check that they have the right features)
                 # layaknya = like (ADP); layak = worthy
                 # sebaiknya = should (AUX)
                 # sesampainya = once in / arriving at (ADP)
                 # tidaknya = whether or not (PART); tidak = no, not
                 # Adverbs are an exception, too. The -nya morpheme could be derivation. E.g., 'ironis' = 'ironic'; 'ironisnya' = 'ironically'.
-                if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|diri|layak|sebaik|sesampai|tidak)(nya|ku|mu)$', node.form, re.IGNORECASE):
+                if node.upos != 'ADV' and not re.match(r'^(akibat|bukan|layak|sebaik|sesampai|tidak)(nya|ku|mu)$', node.form, re.IGNORECASE):
                     logging.warning("Form '%s' analyzed by MorphInd as having the -nya|-ku|-mu clitic but the UPOS is '%s' and XPOS is '%s'" % (node.form, node.upos, node.xpos))
                 return None
         elif re.search(r'(kah|lah|pun|tah)$', node.form, re.IGNORECASE) and re.search(r'\+(kah|lah|pun|tah)<t>_T--\$$', node.misc['MorphInd']):
