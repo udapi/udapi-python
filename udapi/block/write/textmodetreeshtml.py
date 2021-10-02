@@ -53,8 +53,8 @@ class TextModeTreesHtml(TextModeTrees):
                 print('%s = %s' % (key, value))
 
     def after_process_document(self, document):
-        super().after_process_document(document)
         print("</pre>\n</body>\n</html>")
+        super().after_process_document(document)
 
     def add_node(self, idx, node):
         if not node.is_root():
