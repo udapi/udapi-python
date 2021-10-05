@@ -33,8 +33,12 @@ class Simple(Block):
             return False
         if first[-1] in '"“»›)':
             first = first[:-1]
+            if not first:
+                return False
         if second[0] in '"„«¿¡‹(':
             second = second[1:]
+            if not second:
+                return False
         if not second[0].isupper() or second[0].isdigit():
             return False
         if not first[-1] in '.!?':
