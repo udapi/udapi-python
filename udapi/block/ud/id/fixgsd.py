@@ -255,34 +255,65 @@ class FixGSD(Block):
             else:
                 logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
 
-    def merge_reduplicated_plural(self, node):
-        # Instead of compound:plur, merge the reduplicated plurals into a single token.
-        if node.deprel == "compound:plur":
-            root = node.root
-            # We assume that the previous token is a hyphen and the token before it is the parent.
-            first = node.parent
-            if first.ord == node.ord-2 and first.form.lower() == node.form.lower():
-                hyph = node.prev_node
-                if hyph.is_descendant_of(first) and re.match(r"^(-|–|--)$", hyph.form):
-                    # Neither the hyphen nor the current node should have children.
-                    # If they do, re-attach the children to the first node.
-                    for c in hyph.children:
-                        c.parent = first
-                    for c in node.children:
-                        c.parent = first
-                    # Merge the three nodes.
-                    first.form = first.form + "-" + node.form
-                    first.feats["Number"] = "Plur"
-                    if node.no_space_after:
-                        first.misc["SpaceAfter"] = "No"
-                    else:
-                        first.misc["SpaceAfter"] = ""
+    def merge_reduplication(self, node):
+        """
+        Reduplication is a common morphological device in Indonesian. Reduplicated
+        nouns signal plural but some reduplications also encode emphasis, modification
+        of meaning etc. In the previous annotation of GSD, reduplication was mostly
+        analyzed as three tokens, e.g., for plurals, the second copy would be attached
+        to the first one as compound:plur, and the hyphen would be attached to the
+        second copy as punct. We want to analyze reduplication as a single token.
+        Fix it.
+        """
+        # We assume that the previous token is a hyphen and the token before it is the parent.
+        first = node.parent
+        if first.ord == node.ord-2 and first.form.lower() == node.form.lower():
+            hyph = node.prev_node
+            if hyph.is_descendant_of(first) and re.match(r'^(-|–|--)$', hyph.form):
+                root = node.root
+                # This is specific to the reduplicated plurals. The rest will be done for any reduplications.
+                # Note that not all reduplicated plurals had compound:plur. So we will look at whether they are NOUN.
+                ###!!! Also, reduplicated plural nouns always have exact copies on both sides of the hyphen.
+                ###!!! Some other reduplications have slight modifications on one or the other side.
+                if node.upos == 'NOUN' and first.form.lower() == node.form.lower():
+                    first.feats['Number'] = 'Plur'
+                # Neither the hyphen nor the current node should have children.
+                # If they do, re-attach the children to the first node.
+                for c in hyph.children:
+                    c.parent = first
+                for c in node.children:
+                    c.parent = first
+                # Merge the three nodes.
+                # It is possible that the last token of the original annotation
+                # is included in a multi-word token. Then we must extend the
+                # multi-word token to the whole reduplication! Example:
+                # pemeran-pemerannya (the actors) ... originally 'pemeran' and '-'
+                # are tokens, 'pemerannya' is a MWT split to 'pemeran' and 'nya'.
+                mwt = node.multiword_token
+                if mwt:
+                    # We assume that the MWT has only two words. We are not prepared for other possibilities.
+                    if len(mwt.words) > 2:
+                        logging.critical('MWT of only two words is expected')
+                    mwtmisc = mwt.misc.copy()
+                    second = mwt.words[1]
+                    mwt.remove()
+                    first.form = first.form + '-' + node.form
                     hyph.remove()
                     node.remove()
-                    # We cannot be sure whether the original annotation correctly said that there are no spaces around the hyphen.
-                    # If it did not, then we have a mismatch with the sentence text, which we must fix.
-                    # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
-                    root.text = root.compute_text()
+                    first.misc['SpaceAfter'] = ''
+                    mwt = root.create_multiword_token([first, second], first.form + second.form, mwtmisc)
+                else:
+                    first.form = first.form + '-' + node.form
+                    if node.no_space_after:
+                        first.misc['SpaceAfter'] = 'No'
+                    else:
+                        first.misc['SpaceAfter'] = ''
+                    hyph.remove()
+                    node.remove()
+                # We cannot be sure whether the original annotation correctly said that there are no spaces around the hyphen.
+                # If it did not, then we have a mismatch with the sentence text, which we must fix.
+                # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
+                root.text = root.compute_text()
 
     def fix_plural_propn(self, node):
         """
@@ -343,5 +374,6 @@ class FixGSD(Block):
         self.rejoin_ordinal_numerals(node)
         self.fix_ordinal_numerals(node)
         self.rejoin_decades(node)
+        self.merge_reduplication(node)
         self.lemmatize_from_morphind(node)
         self.fix_satu_satunya(node)
