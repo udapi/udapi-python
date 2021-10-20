@@ -267,16 +267,29 @@ class FixGSD(Block):
         """
         # We assume that the previous token is a hyphen and the token before it is the parent.
         first = node.parent
-        if first.ord == node.ord-2 and first.form.lower() == node.form.lower():
+        root = node.root
+        # Example of identical reduplication: negara-negara = countries
+        # Example of reduplication with -an: kopi-kopian = various coffee trees
+        # Example of reduplication with vowel substitution: bolak-balik = alternating
+        # Example of reduplication with di-: disebut-sebut = mentioned (the verb sebut is reduplicated, then passivized)
+        # Example of reduplication with se-: sehari-hari = daily (hari = day)
+        # The last pattern is not reduplication but we handle it here because the procedure is very similar: non-/sub-/anti- + a word.
+        if first.ord == node.ord-2 and (first.form.lower() == node.form.lower() or first.form.lower() + 'an' == node.form.lower() or re.match(r'^(.)o(.)a(.)-\1a\2i\3$', first.form.lower() + '-' + node.form.lower()) or first.form.lower() == 'di' + node.form.lower() or first.form.lower() == 'se' + node.form.lower() or re.match(r'^(non|sub|anti)$', first.form.lower())):
             hyph = node.prev_node
             if hyph.is_descendant_of(first) and re.match(r'^(-|–|--)$', hyph.form):
-                root = node.root
                 # This is specific to the reduplicated plurals. The rest will be done for any reduplications.
                 # Note that not all reduplicated plurals had compound:plur. So we will look at whether they are NOUN.
                 ###!!! Also, reduplicated plural nouns always have exact copies on both sides of the hyphen.
                 ###!!! Some other reduplications have slight modifications on one or the other side.
                 if node.upos == 'NOUN' and first.form.lower() == node.form.lower():
                     first.feats['Number'] = 'Plur'
+                # For the non-/sub-/anti- prefix we want to take the morphology from the second word.
+                if re.match(r'^(non|sub|anti)$', first.form.lower()):
+                    first.lemma = first.lemma + '-' + node.lemma
+                    first.upos = node.upos
+                    first.xpos = node.xpos
+                    first.feats = node.feats
+                    first.misc['MorphInd'] = re.sub(r'\$\+\^', '+', first.misc['MorphInd'] + '+' + node.misc['MorphInd'])
                 # Neither the hyphen nor the current node should have children.
                 # If they do, re-attach the children to the first node.
                 for c in hyph.children:
@@ -310,6 +323,48 @@ class FixGSD(Block):
                         first.misc['SpaceAfter'] = ''
                     hyph.remove()
                     node.remove()
+                # We cannot be sure whether the original annotation correctly said that there are no spaces around the hyphen.
+                # If it did not, then we have a mismatch with the sentence text, which we must fix.
+                # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
+                root.text = root.compute_text()
+        # In some cases the non-/sub-/anti- prefix is annotated as the head of the phrase and the above pattern does not catch it.
+        elif first.ord == node.ord+2 and re.match(r'^(non|sub|anti)$', node.form.lower()):
+            prefix = node
+            stem = first # here it is not the first part at all
+            hyph = stem.prev_node
+            if hyph.is_descendant_of(first) and re.match(r'^(-|–|--)$', hyph.form):
+                # For the non-/sub-/anti- prefix we want to take the morphology from the second word.
+                stem.lemma = prefix.lemma + '-' + stem.lemma
+                stem.misc['MorphInd'] = re.sub(r'\$\+\^', '+', prefix.misc['MorphInd'] + '+' + stem.misc['MorphInd'])
+                # Neither the hyphen nor the prefix should have children.
+                # If they do, re-attach the children to the stem.
+                for c in hyph.children:
+                    c.parent = stem
+                for c in prefix.children:
+                    c.parent = stem
+                # Merge the three nodes.
+                # It is possible that the last token of the original annotation
+                # is included in a multi-word token. Then we must extend the
+                # multi-word token to the whole reduplication! Example:
+                # pemeran-pemerannya (the actors) ... originally 'pemeran' and '-'
+                # are tokens, 'pemerannya' is a MWT split to 'pemeran' and 'nya'.
+                mwt = stem.multiword_token
+                if mwt:
+                    # We assume that the MWT has only two words. We are not prepared for other possibilities.
+                    if len(mwt.words) > 2:
+                        logging.critical('MWT of only two words is expected')
+                    mwtmisc = mwt.misc.copy()
+                    second = mwt.words[1]
+                    mwt.remove()
+                    stem.form = prefix.form + '-' + stem.form
+                    prefix.remove()
+                    hyph.remove()
+                    stem.misc['SpaceAfter'] = ''
+                    mwt = root.create_multiword_token([stem, second], stem.form + second.form, mwtmisc)
+                else:
+                    stem.form = prefix.form + '-' + stem.form
+                    prefix.remove()
+                    hyph.remove()
                 # We cannot be sure whether the original annotation correctly said that there are no spaces around the hyphen.
                 # If it did not, then we have a mismatch with the sentence text, which we must fix.
                 # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
