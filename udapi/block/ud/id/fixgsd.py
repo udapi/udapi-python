@@ -274,7 +274,7 @@ class FixGSD(Block):
         # Example of reduplication with di-: disebut-sebut = mentioned (the verb sebut is reduplicated, then passivized)
         # Example of reduplication with se-: sehari-hari = daily (hari = day)
         # The last pattern is not reduplication but we handle it here because the procedure is very similar: non-/sub-/anti- + a word.
-        if first.ord == node.ord-2 and (first.form.lower() == node.form.lower() or first.form.lower() + 'an' == node.form.lower() or re.match(r'^(.)o(.)a(.)-\1a\2i\3$', first.form.lower() + '-' + node.form.lower()) or first.form.lower() == 'di' + node.form.lower() or first.form.lower() == 'se' + node.form.lower() or re.match(r'^(non|sub|anti)$', first.form.lower())):
+        if first.ord == node.ord-2 and (first.form.lower() == node.form.lower() or first.form.lower() + 'an' == node.form.lower() or re.match(r'^(.)o(.)a(.)-\1a\2i\3$', first.form.lower() + '-' + node.form.lower()) or first.form.lower() == 'di' + node.form.lower() or first.form.lower() == 'se' + node.form.lower() or re.match(r'^(non|sub|anti|multi|kontra)$', first.form.lower())):
             hyph = node.prev_node
             if hyph.is_descendant_of(first) and re.match(r'^(-|–|--)$', hyph.form):
                 # This is specific to the reduplicated plurals. The rest will be done for any reduplications.
@@ -284,7 +284,7 @@ class FixGSD(Block):
                 if node.upos == 'NOUN' and first.form.lower() == node.form.lower():
                     first.feats['Number'] = 'Plur'
                 # For the non-/sub-/anti- prefix we want to take the morphology from the second word.
-                if re.match(r'^(non|sub|anti)$', first.form.lower()):
+                if re.match(r'^(non|sub|anti|multi|kontra)$', first.form.lower()):
                     first.lemma = first.lemma + '-' + node.lemma
                     first.upos = node.upos
                     first.xpos = node.xpos
@@ -328,7 +328,7 @@ class FixGSD(Block):
                 # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
                 root.text = root.compute_text()
         # In some cases the non-/sub-/anti- prefix is annotated as the head of the phrase and the above pattern does not catch it.
-        elif first.ord == node.ord+2 and re.match(r'^(non|sub|anti)$', node.form.lower()):
+        elif first.ord == node.ord+2 and re.match(r'^(non|sub|anti|multi|kontra')$', node.form.lower()):
             prefix = node
             stem = first # here it is not the first part at all
             hyph = stem.prev_node
