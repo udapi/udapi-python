@@ -328,7 +328,7 @@ class FixGSD(Block):
                 # The following will also fix cases where there was an n-dash ('–') instead of a hyphen ('-').
                 root.text = root.compute_text()
         # In some cases the non-/sub-/anti- prefix is annotated as the head of the phrase and the above pattern does not catch it.
-        elif first.ord == node.ord+2 and re.match(r'^(non|sub|anti|multi|kontra')$', node.form.lower()):
+        elif first.ord == node.ord+2 and re.match(r'^(non|sub|anti|multi|kontra)$', node.form.lower()):
             prefix = node
             stem = first # here it is not the first part at all
             hyph = stem.prev_node
