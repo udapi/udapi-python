@@ -22,6 +22,25 @@ class FixGSD(Block):
             elif node.udeprel == 'advcl':
                 node.deprel = 'obl'
 
+    def fix_semua(self, node):
+        """
+        Indonesian "semua" means "everything, all".
+        Originally it was DET, PRON, or ADV.
+        Ika: I usually only labeled "semua" as DET only if it's followed by a
+        NOUN/PROPN. If it's followed by DET (including '-nya' as DET) or it's
+        not followed by any NOUN/DET, I labeled them as PRON.
+        """
+        if node.form.lower() == 'semua':
+            if re.match(r'^(NOUN|PROPN)$', node.parent.upos) and node.parent.ord > node.ord:
+                node.upos = 'DET'
+                if node.udeprel == 'nmod' or node.udeprel == 'advmod':
+                    node.deprel = 'det'
+            else:
+                node.upos = 'PRON'
+                if node.udeprel == 'det' or node.udeprel == 'advmod':
+                    node.deprel = 'nmod'
+            node.feats['PronType'] = 'Tot'
+
     def fix_ordinal_numerals(self, node):
         """
         Ordinal numerals should be ADJ NumType=Ord in UD. They have many different
@@ -62,13 +81,6 @@ class FixGSD(Block):
                 node.feats['PronType'] = 'Tot'
                 if re.match(r'^(det|amod|nmod)$', node.udeprel):
                     node.deprel = 'nummod'
-        # The following is not an ordinal numeral but I am too lazy to create a separate method for that.
-        elif node.form.lower() == 'semua':
-            # It means 'all'. Originally it was DET, PRON, or ADV.
-            node.upos = 'DET'
-            node.feats['PronType'] = 'Tot'
-            if node.udeprel == 'nmod' or node.udeprel == 'advmod':
-                node.deprel = 'det'
 
     def rejoin_ordinal_numerals(self, node):
         """
@@ -170,90 +182,6 @@ class FixGSD(Block):
                     number.remove()
                     # There may have been spaces around the dash, which are now gone. Recompute the sentence text.
                     node.root.text = node.root.compute_text()
-
-    def lemmatize_from_morphind(self, node):
-        # The MISC column contains the output of MorphInd for the current word.
-        # The analysis has been interpreted wrongly for some verbs, so we need
-        # to re-interpret it and extract the correct lemma.
-        morphind = node.misc['MorphInd']
-        if node.upos == 'VERB':
-            if morphind:
-                # Remove the start and end tags from morphind.
-                morphind = re.sub(r"^\^", "", morphind)
-                morphind = re.sub(r"\$$", "", morphind)
-                # Remove the final XPOS tag from morphind.
-                morphind = re.sub(r"_V[SP][AP]$", "", morphind)
-                # Split morphind to prefix, stem, and suffix.
-                morphemes = re.split(r"\+", morphind)
-                # Expected suffixes are -kan, -i, -an, or no suffix at all.
-                # There is also the circumfix ke-...-an which seems to be nominalized adjective:
-                # "sama" = "same, similar"; "kesamaan" = "similarity", lemma is "sama";
-                # but I am not sure what is the reason that these are tagged VERB.
-                if len(morphemes) > 1 and re.match(r"^(kan|i|an(_NSD)?)$", morphemes[-1]):
-                    del morphemes[-1]
-                # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
-                # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
-                while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se|per)$", morphemes[0]):
-                    del morphemes[0]
-                # Check that we are left with just one morpheme.
-                if len(morphemes) != 1:
-                    logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
-                else:
-                    lemma = morphemes[0]
-                    # Remove the stem POS category.
-                    lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
-                    node.lemma = lemma
-            else:
-                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
-        elif node.upos == 'NOUN':
-            if morphind:
-                # Remove the start and end tags from morphind.
-                morphind = re.sub(r"^\^", "", morphind)
-                morphind = re.sub(r"\$$", "", morphind)
-                # Remove the final XPOS tag from morphind.
-                morphind = re.sub(r'_(N[SP]D|VSA)$', '', morphind)
-                # Do not proceed if there is an unexpected final XPOS tag.
-                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
-                    # Split morphind to prefix, stem, and suffix.
-                    morphemes = re.split(r'\+', morphind)
-                    # Expected prefixes are peN-, per-, ke-, ber-.
-                    # Expected suffix is -an.
-                    if len(morphemes) > 1 and re.match(r'^an$', morphemes[-1]):
-                        del morphemes[-1]
-                    if len(morphemes) > 1 and re.match(r'^(peN|per|ke|ber)$', morphemes[0]):
-                        del morphemes[0]
-                    # Check that we are left with just one morpheme.
-                    if len(morphemes) != 1:
-                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
-                    else:
-                        lemma = morphemes[0]
-                        # Remove the stem POS category.
-                        lemma = re.sub(r'<[a-z]+>', '', lemma)
-                        node.lemma = lemma
-        elif node.upos == 'ADJ':
-            if morphind:
-                # Remove the start and end tags from morphind.
-                morphind = re.sub(r"^\^", "", morphind)
-                morphind = re.sub(r"\$$", "", morphind)
-                # Remove the final XPOS tag from morphind.
-                morphind = re.sub(r'_ASS$', '', morphind)
-                # Do not proceed if there is an unexpected final XPOS tag.
-                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
-                    # Split morphind to prefix, stem, and suffix.
-                    morphemes = re.split(r'\+', morphind)
-                    # Expected prefix is ter-.
-                    if len(morphemes) > 1 and re.match(r'^ter$', morphemes[0]):
-                        del morphemes[0]
-                    # Check that we are left with just one morpheme.
-                    if len(morphemes) != 1:
-                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
-                    else:
-                        lemma = morphemes[0]
-                        # Remove the stem POS category.
-                        lemma = re.sub(r'<[a-z]+>', '', lemma)
-                        node.lemma = lemma
-            else:
-                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
 
     def merge_reduplication(self, node):
         """
@@ -423,12 +351,97 @@ class FixGSD(Block):
         if node.multiword_token and node.no_space_after:
             node.misc['SpaceAfter'] = ''
 
+    def lemmatize_from_morphind(self, node):
+        # The MISC column contains the output of MorphInd for the current word.
+        # The analysis has been interpreted wrongly for some verbs, so we need
+        # to re-interpret it and extract the correct lemma.
+        morphind = node.misc['MorphInd']
+        if node.upos == 'VERB':
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r"_V[SP][AP]$", "", morphind)
+                # Split morphind to prefix, stem, and suffix.
+                morphemes = re.split(r"\+", morphind)
+                # Expected suffixes are -kan, -i, -an, or no suffix at all.
+                # There is also the circumfix ke-...-an which seems to be nominalized adjective:
+                # "sama" = "same, similar"; "kesamaan" = "similarity", lemma is "sama";
+                # but I am not sure what is the reason that these are tagged VERB.
+                if len(morphemes) > 1 and re.match(r"^(kan|i|an(_NSD)?)$", morphemes[-1]):
+                    del morphemes[-1]
+                # Expected prefixes are meN-, di-, ber-, peN-, ke-, ter-, se-, or no prefix at all.
+                # There can be two prefixes in a row, e.g., "ber+ke+", or "ter+peN+".
+                while len(morphemes) > 1 and re.match(r"^(meN|di|ber|peN|ke|ter|se|per)$", morphemes[0]):
+                    del morphemes[0]
+                # Check that we are left with just one morpheme.
+                if len(morphemes) != 1:
+                    logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                else:
+                    lemma = morphemes[0]
+                    # Remove the stem POS category.
+                    lemma = re.sub(r"<[a-z]+>(_.*)?$", "", lemma)
+                    node.lemma = lemma
+            else:
+                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
+        elif node.upos == 'NOUN':
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r'_(N[SP]D|VSA)$', '', morphind)
+                # Do not proceed if there is an unexpected final XPOS tag.
+                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
+                    # Split morphind to prefix, stem, and suffix.
+                    morphemes = re.split(r'\+', morphind)
+                    # Expected prefixes are peN-, per-, ke-, ber-.
+                    # Expected suffix is -an.
+                    if len(morphemes) > 1 and re.match(r'^an$', morphemes[-1]):
+                        del morphemes[-1]
+                    if len(morphemes) > 1 and re.match(r'^(peN|per|ke|ber)$', morphemes[0]):
+                        del morphemes[0]
+                    # Check that we are left with just one morpheme.
+                    if len(morphemes) != 1:
+                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                    else:
+                        lemma = morphemes[0]
+                        # Remove the stem POS category.
+                        lemma = re.sub(r'<[a-z]+>', '', lemma)
+                        node.lemma = lemma
+        elif node.upos == 'ADJ':
+            if morphind:
+                # Remove the start and end tags from morphind.
+                morphind = re.sub(r"^\^", "", morphind)
+                morphind = re.sub(r"\$$", "", morphind)
+                # Remove the final XPOS tag from morphind.
+                morphind = re.sub(r'_ASS$', '', morphind)
+                # Do not proceed if there is an unexpected final XPOS tag.
+                if not re.search(r'_[A-Z][-A-Z][-A-Z]$', morphind):
+                    # Split morphind to prefix, stem, and suffix.
+                    morphemes = re.split(r'\+', morphind)
+                    # Expected prefix is ter-.
+                    if len(morphemes) > 1 and re.match(r'^ter$', morphemes[0]):
+                        del morphemes[0]
+                    # Check that we are left with just one morpheme.
+                    if len(morphemes) != 1:
+                        logging.warning("One morpheme expected, found %d %s, morphind = '%s', form = '%s', feats = '%s'" % (len(morphemes), morphemes, morphind, node.form, node.feats))
+                    else:
+                        lemma = morphemes[0]
+                        # Remove the stem POS category.
+                        lemma = re.sub(r'<[a-z]+>', '', lemma)
+                        node.lemma = lemma
+            else:
+                logging.warning("No MorphInd analysis found for form '%s'" % (node.form))
+
     def process_node(self, node):
         self.fix_plural_propn(node)
         self.fix_upos_based_on_morphind(node)
+        self.fix_semua(node)
         self.rejoin_ordinal_numerals(node)
         self.fix_ordinal_numerals(node)
         self.rejoin_decades(node)
         self.merge_reduplication(node)
-        self.lemmatize_from_morphind(node)
         self.fix_satu_satunya(node)
+        self.lemmatize_from_morphind(node)
