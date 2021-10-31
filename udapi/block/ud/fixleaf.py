@@ -33,3 +33,8 @@ class FixLeaf(Block):
                     ancestor = ancestor.parent
                 for c in children:
                     c.parent = ancestor
+                    # If there are enhanced dependencies, check whether we want to redirect them too.
+                    if c.deps:
+                        for edep in c.deps:
+                            if edep['parent'] == node:
+                                edep['parent'] = ancestor
