@@ -91,7 +91,9 @@ class Document(object):
         """An iterator over all nodes (excluding empty nodes) in the document."""
         for bundle in self:
             for tree in bundle:
-                for node in tree._descendants:
+                # tree.descendants is slightly slower than tree._descendants,
+                # but it seems safer, see the comment in udapi.core.block.Block.process.process_tree().
+                for node in tree.descendants:
                     yield node
 
     @property

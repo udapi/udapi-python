@@ -29,7 +29,11 @@ class Block(object):
 
     def process_tree(self, tree):
         """Process a UD tree"""
-        for node in tree._descendants:
+        # tree.descendants is slightly slower than tree._descendants (0.05s per iterating over 700k words),
+        # but it seems safer to iterate over a copy of the list of nodes.
+        # If a user calls parent.create_child().shift_before_node(parent) in process_node,
+        # it may end up in endless cycle (because the same node is processed again - Python for cycle remembers the position).
+        for node in tree.descendants:
             self.process_node(node)
 
     def process_bundle(self, bundle):
