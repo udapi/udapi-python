@@ -4,9 +4,10 @@ class FixToValidate(Block):
     """This block fixes the CorefUD data so that the final documents are valid conllu files."""
 
     def _set_root_deprel(self, doc):
-        for node in doc.nodes:
-            if node.parent == node.root and node.deprel != "root":
-                node.deprel = "root"
+        for root in doc.trees:
+            for node in root.children:
+                if node.deprel != "root":
+                    node.deprel = "root"
 
     def _space_before_pardoc(self, doc):
         last_node = None
