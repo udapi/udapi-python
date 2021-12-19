@@ -17,5 +17,5 @@ class FixEdeprels(Block):
                 # The locative is probably more frequent but it is not so likely with every noun.
                 if re.match(r'^(adresát|AIDS|DEM|frank|h|ha|hodina|Honolulu|jméno|koruna|litr|metr|míle|miliarda|milión|mm|MUDr|NATO|obyvatel|OSN|počet|procento|příklad|rok|SSSR|vůz)$', node.lemma):
                     edep['deprel'] = 'nmod:na:acc'
-                else
+                else:
                     edep['deprel'] = 'nmod:na:loc'
