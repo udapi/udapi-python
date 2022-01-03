@@ -357,9 +357,24 @@ class Node(object):
          nodes2 = [n for n in node.children if n.ord > node.ord]
          nodes3 = [n for n in node.children if n.ord < node.ord]
          nodes4 = [n for n in node.children if n.ord < node.ord] + [node]
-        See documentation of ListOfNodes for details.
+        See the documentation of ListOfNodes for details.
         """
         return ListOfNodes(self._children, origin=self)
+
+    @property
+    def siblings(self):
+        """Return a list of dependency sibling nodes.
+
+        When used as a property, `node.siblings` is just a shortcut for:
+         [n for n in node.parent.children if n!=node]
+        However, it is especially helpful when used as a method,
+        so e.g. `node.siblings(preceding_only=True)` stands for
+         [n for n in node.parent.children if n.ord < node.ord]
+        which is something else than
+         node.parent.children(preceding_only=True).
+        See the documentation of ListOfNodes for details.
+        """
+        return ListOfNodes([n for n in self._parent._children if n!=self], origin=self)
 
     @property
     def descendants(self):
@@ -380,7 +395,7 @@ class Node(object):
          nodes2 = [n for n in node.descendants if n.ord > node.ord]
          nodes3 = [n for n in node.descendants if n.ord < node.ord]
          nodes4 = [n for n in node.descendants if n.ord < node.ord] + [node]
-        See documentation of ListOfNodes for details.
+        See the documentation of ListOfNodes for details.
         """
         # The following code is equivalent to
         # ListOfNodes(sorted(self.unordered_descendants()), origin=self)
