@@ -29,6 +29,7 @@ class Eval(Block):
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, doc=None, bundle=None, tree=None, node=None, start=None, end=None,
                  before_doc=None, after_doc=None, before_bundle=None, after_bundle=None,
+                 coref_mention=None, coref_cluster=None,
                  expand_code=True, **kwargs):
         super().__init__(**kwargs)
         self.doc = doc
@@ -41,6 +42,8 @@ class Eval(Block):
         self.after_doc = after_doc
         self.before_bundle = before_bundle
         self.after_bundle = after_bundle
+        self.coref_mention = coref_mention
+        self.coref_cluster = coref_cluster
         self.expand_code = expand_code
         self.count = collections.Counter()
 
@@ -70,6 +73,16 @@ class Eval(Block):
             for bundle in doc.bundles:
                 # TODO if self._should_process_bundle(bundle):
                 self.process_bundle(bundle)
+
+        if self.coref_cluster or self.coref_mention:
+            for cluster in doc.coref_clusters.values():
+                if self.coref_cluster:
+                    this = cluster
+                    exec(self.expand_eval_code(self.coref_cluster))
+                if self.coref_mention:
+                    for mention in cluster.mentions:
+                        this = mention
+                        exec(self.expand_eval_code(self.coref_mention))
 
     def process_bundle(self, bundle):
         # Extract variables, so they can be used in eval code
