@@ -289,59 +289,16 @@ def _error(msg, strict):
 def load_coref_from_misc(doc, strict=True):
     clusters = {}
     for node in doc.nodes_and_empty:
-        index, index_str = 0, ""
-        cluster_id = node.misc["ClusterId"]
-        if not cluster_id:
-            index, index_str = 1, "[1]"
-            cluster_id = node.misc["ClusterId[1]"]
-        while cluster_id:
-            cluster = clusters.get(cluster_id)
-            if cluster is None:
-                cluster = CorefCluster(cluster_id)
-                clusters[cluster_id] = cluster
-            mention = CorefMention(node, cluster)
-            if node.misc["MentionSpan" + index_str]:
-                mention.span = node.misc["MentionSpan" + index_str]
-            else:
-                mention.words = [node]
-            cluster_type = node.misc["ClusterType" + index_str]
-            if cluster_type is not None:
-                if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
-                    logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
-                cluster.cluster_type = cluster_type
+        entity = node.misc["Entity"]
+        # TODO
 
-            bridging_str = node.misc["Bridging" + index_str]
-            if bridging_str:
-                mention._bridging = BridgingLinks(mention, bridging_str, clusters, strict)
-
-            split_ante_str = node.misc["SplitAnte" + index_str]
-            if split_ante_str:
-                split_antes = []
-                # TODO in CorefUD draft "+" was used as the separator, but it was changed to comma.
-                # We can delete `.replace('+', ',')` once there are no more data with the legacy plus separator.
-                for ante_str in split_ante_str.replace('+', ',').split(','):
-                    if ante_str in clusters:
-                        if ante_str == cluster_id:
-                            _error("SplitAnte cannot self-reference the same cluster: " + cluster_id, strict)
-                        split_antes.append(clusters[ante_str])
-                    else:
-                        # split cataphora, e.g. "We, that is you and me..."
-                        ante_cl = CorefCluster(ante_str)
-                        clusters[ante_str] = ante_cl
-                        split_antes.append(ante_cl)
-                cluster.split_ante = sorted(split_antes)
-
-            mention.misc = node.misc["MentionMisc" + index_str]
-            index += 1
-            index_str = f"[{index}]"
-            cluster_id = node.misc["ClusterId" + index_str]
     # c=doc.coref_clusters should be sorted, so that c[0] < c[1] etc.
     # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
     # not by the keys (cluster_id).
     # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
     for cluster in clusters.values():
         if not cluster._mentions:
-            _error(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridging, but not defined with ClusterId", strict)
+            _error(f"Cluster {cluster.cluster_id} referenced in Split or Bridge, but not defined with Entity", strict)
         cluster._mentions.sort()
     doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
@@ -349,48 +306,15 @@ def load_coref_from_misc(doc, strict=True):
 def store_coref_to_misc(doc):
     if not doc._coref_clusters:
         return
-    attrs = ("ClusterId", "MentionSpan", "ClusterType", "Bridging", "SplitAnte", "MentionMisc")
+    attrs = "Entity Split Bridge".split()
     for node in doc.nodes_and_empty:
-        for key in list(node.misc):
-            if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
-                del node.misc[key]
-    # doc._coref_clusters is a dict, which is insertion ordered in Python 3.7+.
-    # The insertion order is sorted according to CorefCluster.__lt__ (see few lines above).
-    # However, new clusters could be added meanwhile or some clusters edited,
-    # so we need to sort the clusters again before storing to MISC.
-    # We also need to mare sure cluster.mentions are sorted in each cluster
-    # because the ordering of clusters is defined by the first mention in each cluster.
-    # Ordering of mentions within a cluster can be changed when e.g. changing the span
-    # of a given mention or reordering words within a sentence and in such events
-    # Udapi currently does not automatically update the ordering of clusters.
-    for cluster in doc._coref_clusters.values():
-        cluster._mentions.sort()
-    for cluster in sorted(doc._coref_clusters.values()):
-        for mention in cluster.mentions:
-            head = mention.head
-            if head.misc["ClusterId"]:
-                for a in attrs:
-                    if head.misc[a]:
-                        head.misc[a + "[1]"] = head.misc[a]
-                        del head.misc[a]
-                index_str = "[2]"
-            else:
-                index, index_str = 1, "[1]"
-                while(head.misc["ClusterId" + index_str]):
-                    index += 1
-                    index_str = f"[{index}]"
-                if index == 1:
-                    index_str = ""
-            head.misc["ClusterId" + index_str] = cluster.cluster_id
-            head.misc["MentionSpan" + index_str] = mention.span
-            head.misc["ClusterType" + index_str] = cluster.cluster_type
-            if mention._bridging:
-                head.misc["Bridging" + index_str] = str(mention.bridging)
-            if cluster.split_ante:
-                serialized = ','.join((c.cluster_id for c in sorted(cluster.split_ante)))
-                head.misc["SplitAnte" + index_str] = serialized
-            if mention.misc:
-                head.misc["MentionMisc" + index_str] = mention.misc
+        for attr in attrs:
+            del node.misc[attr]
+    # TODO
+    #for cluster in doc._coref_clusters.values():
+    #   cluster._mentions.sort()
+    #for cluster in sorted(doc._coref_clusters.values()):
+    #   for mention in cluster.mentions:
 
 
 def span_to_nodes(root, span):
