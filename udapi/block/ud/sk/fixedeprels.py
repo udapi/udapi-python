@@ -17,6 +17,7 @@ class FixEdeprels(Block):
         'na_rozdiel_od':   'na_rozdiel_od:gen',
         'na_základ':       'na_základe:gen',
         'od':              'od:gen',
+        'pod_vplyv':       'pod_vplyvom:gen',
         'pomoc':           'pomocou:gen',
         'pre':             'pre:acc',
         'prostredníctvom': 'prostredníctvom:gen',
