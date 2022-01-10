@@ -76,7 +76,7 @@ class Stats(Block):
             columns += [('clusters', f"{self.clusters:7,}"),
                         ('clusters_per1k', f"{1000 * self.clusters / total_nodes_nonzero:6.0f}"),
                         ('longest_cluster', f"{self.longest_cluster:6}"),
-                        ('avg_cluster', f"{self.counter['c_total_len'] / self.clusters:5.1f}")]
+                        ('avg_cluster', f"{self.counter['c_total_len'] / clusters_nonzero:5.1f}")]
             for i in range(1, self.c_len_max + 1):
                 percent = 100 * self.counter[f"c_len_{i}"] / clusters_nonzero
                 columns.append((f"c_len_{i}{'' if i < self.c_len_max else '+'}", f"{percent:5.1f}"))
@@ -84,7 +84,7 @@ class Stats(Block):
             columns += [('mentions', f"{self.mentions:7,}"),
                         ('mentions_per1k', f"{1000 * self.mentions / total_nodes_nonzero:6.0f}"),
                         ('longest_mention', f"{self.longest_mention:6}"),
-                        ('avg_mention', f"{self.counter['m_total_len'] / self.mentions:5.1f}")]
+                        ('avg_mention', f"{self.counter['m_total_len'] / mentions_nonzero:5.1f}")]
             for i in range(0, self.m_len_max + 1):
                 percent = 100 * self.counter[f"m_len_{i}"] / mentions_nonzero
                 columns.append((f"m_len_{i}{'' if i < self.m_len_max else '+'}", f"{percent:5.1f}"))

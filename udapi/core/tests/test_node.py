@@ -36,6 +36,8 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(len(nodes[1].children), 3)
         self.assertEqual(len(nodes[1].children(add_self=True)), 4)
         self.assertEqual(len(nodes[1].children(add_self=1, following_only=1)), 3)
+        self.assertEqual(nodes[2].siblings, [nodes[0], nodes[3]])
+        self.assertEqual(nodes[2].siblings(following_only=True), [nodes[3]])
 
         self.assertEqual(nodes[0].next_node, nodes[1])
         self.assertEqual(nodes[2].prev_node, nodes[1])
