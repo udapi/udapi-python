@@ -21,6 +21,7 @@ class FixEdeprels(Block):
         'pre':             'pre:acc',
         'prostredníctvom': 'prostredníctvom:gen',
         's':               's:ins',
+        's_cieľ':          's_cieľom', # no case, used with infinitives (advcl)
         's_dôraz_na':      's_dôrazom_na:acc',
         's_ohľad_na':      's_ohľadom_na:acc',
         's_pomoc':         's_pomocou:gen',
@@ -30,7 +31,8 @@ class FixEdeprels(Block):
         'v_dôsledok':      'v_dôsledku:gen',
         'v_meno':          'v_mene:gen',
         'v_oblasť':        'v_oblasti:gen',
-        'v_porovnanie_s':  'v_porovnaniu_s:ins',
+        'v_porovnanie_s':  'v_porovnaní_s:ins',
+        'v_porovnaniu_s':  'v_porovnaní_s:ins',
         'v_priebeh':       'v_priebehu:gen',
         'v_prípad':        'v_prípade:gen',
         'v_prospech':      'v_prospech:gen',
@@ -54,13 +56,51 @@ class FixEdeprels(Block):
         abbreviation and its morphological case is unknown.
         """
         for edep in node.deps:
-            for x, xnorm in unambiguous:
-                # All secondary prepositions have only one fixed morphological case
-                # they appear with, so we can replace whatever case we encounter with the correct one.
-                m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
-                if m:
-                    edep['deprel'] = m.group(0)+':'+xnorm
-                    break
+            m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl):', edep['deprel'])
+            if m:
+                bdeprel = m.group(1)
+                solved = False
+                for x in self.unambiguous:
+                    # All secondary prepositions have only one fixed morphological case
+                    # they appear with, so we can replace whatever case we encounter with the correct one.
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
+                        solved = True
+                        break
+                if not solved:
+                    # The following prepositions have more than one morphological case
+                    # available. Thanks to the Case feature on prepositions, we can
+                    # identify the correct one.
+                    m = re.match(r'^(obl(?::arg)?|nmod):(medzi|na|o|po|pred|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                    if m:
+                        # The following is only partial solution. We will not see
+                        # some children because they may be shared children of coordination.
+                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                            solved = True
+                if not solved:
+                    # If we failed to identify the case of the preposition in the
+                    # preceding steps, pick a default. It applies mostly to 'o'
+                    # with wrongly split time values.
+                    m = re.match(r'^(obl(?::arg)?|nmod):o$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)+':o:acc'
+                        solved = True
+                    m = re.match(r'^(obl(?::arg)?|nmod):(po|v)$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
+                        solved = True
+                if not solved:
+                    # Some cases do not occur with nominal modifiers without preposition.
+                    # If we see them, chances are that it is the same-case modifier,
+                    # and the same case just happens to be the one we see. For vocatives,
+                    # it is also possible that they have been confused with nominatives.
+                    m = re.match(r'^(obl(?::arg)?|nmod):(voc|loc)$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)
+                        solved = True
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
