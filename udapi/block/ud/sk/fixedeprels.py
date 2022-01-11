@@ -11,8 +11,16 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'a_hoci':          'hoci',
+        'ako':             'ako', # remove morphological case
+        'ako_na':          'ako',
+        'akoby_z':         'z:gen',
+        'akže':            'ak',
+        'ani_keby':        'keby',
+        'až_keď':          'keď',
         'do':              'do:gen',
         'k':               'k:dat',
+        'kto':             'kým', ###!!! The lemma should be fixed! The pronoun has grammaticalized as a subordinator.
         'mimo':            'mimo:gen',
         'na_rozdiel_od':   'na_rozdiel_od:gen',
         'na_základ':       'na_základe:gen',
@@ -21,6 +29,7 @@ class FixEdeprels(Block):
         'pomoc':           'pomocou:gen',
         'pre':             'pre:acc',
         'prostredníctvom': 'prostredníctvom:gen',
+        'prv_ako':         'ako',
         's':               's:ins',
         's_cieľ':          's_cieľom', # no case, used with infinitives (advcl)
         's_dôraz_na':      's_dôrazom_na:acc',
@@ -69,10 +78,10 @@ class FixEdeprels(Block):
                         edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
                         solved = True
                         break
+                # The following prepositions have more than one morphological case
+                # available. Thanks to the Case feature on prepositions, we can
+                # identify the correct one.
                 if not solved:
-                    # The following prepositions have more than one morphological case
-                    # available. Thanks to the Case feature on prepositions, we can
-                    # identify the correct one.
                     m = re.match(r'^(obl(?::arg)?|nmod):(medzi|na|o|po|pred|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                     if m:
                         # The following is only partial solution. We will not see
@@ -81,10 +90,10 @@ class FixEdeprels(Block):
                         if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
                             edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
                             solved = True
+                # If we failed to identify the case of the preposition in the
+                # preceding steps, pick a default. It applies mostly to 'o'
+                # with wrongly split time values.
                 if not solved:
-                    # If we failed to identify the case of the preposition in the
-                    # preceding steps, pick a default. It applies mostly to 'o'
-                    # with wrongly split time values.
                     m = re.match(r'^(obl(?::arg)?|nmod):o$', edep['deprel'])
                     if m:
                         edep['deprel'] = m.group(1)+':o:acc'
@@ -93,14 +102,20 @@ class FixEdeprels(Block):
                     if m:
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
                         solved = True
+                # Some cases do not occur with nominal modifiers without preposition.
+                # If we see them, chances are that it is the same-case modifier,
+                # and the same case just happens to be the one we see. For vocatives,
+                # it is also possible that they have been confused with nominatives.
                 if not solved:
-                    # Some cases do not occur with nominal modifiers without preposition.
-                    # If we see them, chances are that it is the same-case modifier,
-                    # and the same case just happens to be the one we see. For vocatives,
-                    # it is also possible that they have been confused with nominatives.
                     m = re.match(r'^(obl(?::arg)?|nmod):(voc|loc)$', edep['deprel'])
                     if m:
                         edep['deprel'] = m.group(1)
+                        solved = True
+                # Annotation and conversion errors.
+                if not solved:
+                    # Povedal som jej „na zdorovie“.
+                    if edep['deprel'] == 'obl:arg:na' and node.form == 'zdorovie':
+                        self.set_basic_and_enhanced(node, edep['parent'], 'ccomp', 'ccomp')
                         solved = True
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
