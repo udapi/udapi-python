@@ -53,7 +53,7 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                             split_antes.append(ante_cl)
                     cluster.split_ante = sorted(split_antes)
 
-                mention.misc = node.misc["MentionMisc" + index_str]
+                mention.other = node.misc["MentionMisc" + index_str].replace('-', '%2D')
                 index += 1
                 index_str = f"[{index}]"
                 cluster_id = node.misc["ClusterId" + index_str]

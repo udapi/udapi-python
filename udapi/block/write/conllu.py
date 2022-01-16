@@ -52,7 +52,7 @@ class Conllu(BaseWriter):
                     comment_lines[i] = None
             elif c_line == '$GLOBAL.ENTITY':
                 i_global_entity = i
-                ge = tree.document.meta.get('global_entity', None)
+                ge = tree.document.meta.get('global.Entity')
                 if ge:
                     comment_lines[i] = ' global.Entity = ' + ge
                 else:
@@ -75,7 +75,7 @@ class Conllu(BaseWriter):
                         printed_i += 1
                         if comment_lines[printed_i]:
                             print('#' + comment_lines[printed_i])
-                ge = tree.document.meta.get('global_entity', None)
+                ge = tree.document.meta.get('global.Entity')
                 if ge:
                     if i_global_entity == -1:
                         print('# global.Entity = ' + ge)

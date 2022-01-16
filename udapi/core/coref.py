@@ -2,12 +2,14 @@
 import re
 import functools
 import collections
+import collections.abc
+import copy
 import logging
 
 @functools.total_ordering
 class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
-    __slots__ = ['_head', '_cluster', '_bridging', '_words', 'misc']
+    __slots__ = ['_head', '_cluster', '_bridging', '_words', '_other']
 
     def __init__(self, head, cluster=None):
         self._head = head
@@ -16,10 +18,10 @@ class CorefMention(object):
             cluster._mentions.append(self)
         self._bridging = None
         self._words = []
-        self.misc = None
+        self._other = None
 
-    def __lt__(self, other):
-        """Does this mention precedes (word-order wise) the `other` mention?
+    def __lt__(self, another):
+        """Does this mention precedes (word-order wise) `another` mention?
 
         This method defines a total ordering of all mentions
         (within one cluster or across different clusters).
@@ -30,13 +32,26 @@ class CorefMention(object):
         -- the shorter mention precedes the longer one.
         """
         node1 = self._words[0] if self._words else self._head
-        node2 = other._words[0] if other._words else other._head
+        node2 = another._words[0] if another._words else another._head
         if node1 is node2:
             node1 = self._words[-1] if self._words else self._head
-            node2 = other._words[-1] if other._words else other._head
+            node2 = another._words[-1] if another._words else another._head
             if node1 is node2:
-                return len(self._words) < len(other._words)
+                return len(self._words) < len(another._words)
         return node1.precedes(node2)
+
+    @property
+    def other(self):
+        if self._other is None:
+            self._other = OtherDualDict()
+        return self._other
+
+    @other.setter
+    def other(self, value):
+        if self._other is None:
+            self._other = OtherDualDict(value)
+        else:
+            self._other.set_mapping(value)
 
     @property
     def head(self):
@@ -111,8 +126,8 @@ class CorefCluster(object):
         self.cluster_type = cluster_type
         self.split_ante = []
 
-    def __lt__(self, other):
-        """Does this CorefCluster precedes (word-order wise) the `other` cluster?
+    def __lt__(self, another):
+        """Does this CorefCluster precedes (word-order wise) `another` cluster?
 
         This method defines a total ordering of all clusters
         by the first mention of each cluster (see `CorefMention.__lt__`).
@@ -121,13 +136,13 @@ class CorefCluster(object):
         If cluster IDs are not important, it is recommended to use block
         `corefud.IndexClusters` to re-name cluster IDs in accordance with this cluster ordering.
         """
-        if not self._mentions or not other._mentions:
+        if not self._mentions or not another._mentions:
             # Clusters without mentions should go first, so the ordering is total.
             # If both clusters are missing mentions, let's use cluster_id, so the ordering is stable.
-            if not self._mentions and not other._mentions:
-                return self._cluster_id < other._cluster_id
+            if not self._mentions and not another._mentions:
+                return self._cluster_id < another._cluster_id
             return not self._mentions
-        return self._mentions[0] < other._mentions[0]
+        return self._mentions[0] < another._mentions[0]
 
     @property
     def cluster_id(self):
@@ -286,11 +301,167 @@ def _error(msg, strict):
         raise ValueError(msg)
     logging.error(msg)
 
+
+RE_DISCONTINUOUS = re.compile(r'^([^[]+)\[(\d+)/(\d+)\]')
+
 def load_coref_from_misc(doc, strict=True):
     clusters = {}
+    unfinished_mentions = collections.defaultdict(list)
+    global_entity = doc.meta.get('global.Entity')
+    was_global_entity = True
+    if not global_entity:
+        was_global_entity = False
+        global_entity = 'eid-etype-head-other'
+        doc.meta['global.Entity'] = global_entity
+    # backward compatibility
+    if global_entity == 'entity-GRP-infstat-MIN-coref_type-identity':
+        global_entity = 'etype-eid-infstat-minspan-link-identity'
+        # Which global.Entity should be used for serialization?
+        doc.meta['global.Entity'] = global_entity
+        #doc.meta['global.Entity'] = 'eid-etype-head-other'
+    if 'eid' not in global_entity:
+        raise ValueError("No eid in global.Entity = " + global_entity)
+    fields = global_entity.split('-')
+
     for node in doc.nodes_and_empty:
-        entity = node.misc["Entity"]
-        # TODO
+        misc_entity = node.misc["Entity"]
+        if not misc_entity:
+            continue
+
+        if not was_global_entity:
+            raise ValueError(f"No global.Entity header found, but Entity= annotations are presents")
+
+        # The Entity attribute may contain multiple entities, e.g.
+        # Entity=(abstract-7-new-2-coref(abstract-3-giv:act-1-coref)
+        # means a start of entity id=7 and start&end (i.e. single-word mention) of entity id=3.
+        # The following re.split line splits this into
+        # chunks = ["(abstract-7-new-2-coref", "(abstract-3-giv:act-1-coref)"]
+        chunks = [x for x in re.split('(\([^()]+\)?|[^()]+\))', misc_entity) if x]
+        for chunk in chunks:
+            opening, closing = (chunk[0] == '(', chunk[-1] == ')')
+            chunk = chunk.strip('()')
+            if not opening and not closing:
+                logging.warning(f"Entity {chunk} at {node} has no opening nor closing bracket.")
+            elif not opening and closing:
+                if '-' in chunk:
+                    # TODO delete this legacy hack once we don't need to load UD GUM v2.8 anymore
+                    if not strict and global_entity.startswith('etype-eid'):
+                        chunk = chunk.split('-')[1]
+                    else:
+                        _error("Unexpected closing eid " + chunk, strict)
+                if chunk not in unfinished_mentions:
+                    m = RE_DISCONTINUOUS.match(chunk)
+                    if not m:
+                        raise ValueError(f"Mention {chunk} closed at {node}, but not opened.")
+                    eid, subspan_idx, total_subspans = m.group(1, 2, 3)
+                    mention, head_idx = unfinished_mentions[eid].pop()
+                    mention.words += span_to_nodes(mention.head.root, f'{mention.head.ord}-{node.ord}')
+                    if subspan_idx == total_subspans and head_idx:
+                        mention.head = mention.words[head_idx - 1]
+                else:
+                    mention, head_idx = unfinished_mentions[chunk].pop()
+                    mention.span = f'{mention.head.ord}-{node.ord}'
+                    if head_idx:
+                        mention.head = mention.words[head_idx - 1]
+            else:
+                eid, etype, head_idx, other = None, None, None, OtherDualDict()
+                for name, value in zip(fields, chunk.split('-')):
+                    if name == 'eid':
+                        eid = value
+                    elif name == 'etype':
+                        etype = value
+                    elif name == 'head':
+                        try:
+                            head_idx = int(value)
+                        except ValueError as err:
+                            raise ValueError(f"Non-integer {value} as head index in {chunk} in {node}: {err}")
+                    elif name == 'other':
+                        if other:
+                            new_other = OtherDualDict(value)
+                            for k,v in other.values():
+                                new_other[k] = v
+                            other = new_other
+                        else:
+                            other = OtherDualDict(value)
+                    else:
+                        other[name] = value
+                if eid is None:
+                    raise ValueError("No eid in " + chunk)
+                subspan_idx, total_subspans = '1', '0'
+                if eid[-1] == ']':
+                    m = RE_DISCONTINUOUS.match(eid)
+                    if not m:
+                        _error(f"eid={eid} ending with ], but not valid discontinous mention ID ", strict)
+                    else:
+                        eid, subspan_idx, total_subspans = m.group(1, 2, 3)
+
+                cluster = clusters.get(eid)
+                if cluster is None:
+                    if subspan_idx != '1':
+                        _error(f'Non-first subspan of a discontinous mention {eid} at {node} does not have any previous mention.', 1)
+                    cluster = CorefCluster(eid)
+                    clusters[eid] = cluster
+                    cluster.cluster_type = etype
+                elif etype and cluster.cluster_type and cluster.cluster_type != etype:
+                    logging.warning(f"etype mismatch in {node}: {cluster.cluster_type} != {etype}")
+                if subspan_idx != '1':
+                    mention = cluster.mentions[-1]
+                    mention.words += [node]
+                    mention.head = node
+                    if not closing:
+                        unfinished_mentions[eid].append((mention, head_idx))
+                else:
+                    mention = CorefMention(node, cluster)
+                    if other:
+                        mention._other = other
+                    if closing:
+                        mention.words = [node]
+                    else:
+                        unfinished_mentions[eid].append((mention, head_idx))
+
+        misc_bridges = node.misc['Bridge']
+        if misc_bridges:
+            # E.g. Entity=event-12|Bridge=12<124,12<125
+            # or with relations Bridge=c173<c188:subset,c174<c188:part
+            for misc_bridge in misc_bridges.split(','):
+                try:
+                    trg_str, src_str = misc_bridge.split('<')
+                except ValueError as err:
+                    raise ValueError(f"{node}: {misc_bridge} {err}")
+                relation = '_'
+                if ':' in src_str:
+                    src_str, relation = src_str.split(':')
+                try:
+                    trg_cluster = clusters[trg_str]
+                    src_cluster = clusters[src_str]
+                except KeyError as err:
+                    logging.warning(f"{node}: Cannot find cluster {err}")
+                else:
+                    mention = src_cluster.mentions[-1]
+                    mention.bridging.append((trg_cluster, relation))
+
+        misc_split = node.misc['SplitAnte']
+        if not misc_split and 'Split' in node.misc:
+            misc_split = node.misc.pop('Split')
+        if misc_split:
+            # E.g. Entity=(person-54)|Split=4<54,9<54
+            src_str = misc_split.split('<')[-1]
+            ante_clusters = []
+            for x in misc_split.split(','):
+                ante_str, this_str = x.split('<')
+                if this_str != src_str:
+                    raise ValueError(f'{node} invalid SplitAnte: {this_str} != {src_str}')
+                ante_clusters.append(clusters[ante_str])
+            clusters[src_str].split_ante = ante_clusters
+
+    for cluster_name, mentions in unfinished_mentions.items():
+        for mention in mentions:
+            logging.warning(f"Mention {cluster_name} opened at {mention.head}, but not closed. Deleting.")
+            cluster = mention.cluster
+            mention.words = []
+            cluster._mentions.remove(mention)
+            if not cluster._mentions:
+                del clusters[name]
 
     # c=doc.coref_clusters should be sorted, so that c[0] < c[1] etc.
     # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
@@ -298,7 +469,7 @@ def load_coref_from_misc(doc, strict=True):
     # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
     for cluster in clusters.values():
         if not cluster._mentions:
-            _error(f"Cluster {cluster.cluster_id} referenced in Split or Bridge, but not defined with Entity", strict)
+            _error(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridge, but not defined with Entity", strict)
         cluster._mentions.sort()
     doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
@@ -306,16 +477,84 @@ def load_coref_from_misc(doc, strict=True):
 def store_coref_to_misc(doc):
     if not doc._coref_clusters:
         return
-    attrs = "Entity Split Bridge".split()
+
+    global_entity = doc.meta.get('global.Entity')
+    if not global_entity:
+        global_entity = 'eid-etype-head-other'
+        doc.meta['global.Entity'] = global_entity
+    fields = global_entity.split('-')
+    # GRP and entity are legacy names for eid and etype, respectively.
+    other_fields = [f for f in fields if f not in ('eid etype head other GRP entity'.split(), )]
+
+    attrs = "Entity SplitAnte Bridge".split()
     for node in doc.nodes_and_empty:
         for attr in attrs:
             del node.misc[attr]
-    # TODO
-    #for cluster in doc._coref_clusters.values():
-    #   cluster._mentions.sort()
-    #for cluster in sorted(doc._coref_clusters.values()):
-    #   for mention in cluster.mentions:
 
+    # TODO benchmark for node in doc.nodes_and_empty: for mention in node.coref_mentions
+    # We need reversed because if two mentions start at the same node, the longer one must go first.
+    for mention in reversed(doc.coref_mentions):
+        cluster = mention.cluster
+        values = []
+        for field in fields:
+            if field == 'eid' or field == 'GRP':
+                values.append(cluster.cluster_id)
+            elif field == 'etype' or field == 'entity':
+                if cluster.cluster_type is None:
+                    values.append('unk')
+                else:
+                    values.append(cluster.cluster_type)
+            elif field == 'head':
+                values.append(str(mention.words.index(mention.head) + 1))
+            elif field == 'other':
+                if not mention.other:
+                    values.append('')
+                elif not other_fields:
+                    values.append(str(mention.other))
+                else:
+                    other_copy = OtherDualDict(mention.other)
+                    for other_field in other_fields:
+                        del other_copy[other_field]
+                    values.append(str(other_copy))
+            else:
+                values.append(mention.other[field].replace('%2C', ','))
+        # optional fields
+        while values and values[-1] == '':
+            del values[-1]
+        mention_str = '(' + '-'.join(values)
+
+        if len(mention.words) == 1:
+            mention.words[0].misc['Entity'] += mention_str + ')'
+        else:
+            if '-' in mention.span:
+                subspans = mention.span.split('-')
+                root = mention.words[0].root
+                for idx,subspan in enumerate(subspans, 1):
+                    subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
+                    subspan_words = span_to_nodes(root, subspan)
+                    if len(subspan_words) == 1:
+                        subspan_words[0].misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid) + ')'
+                    else:
+                        subspan_words[0].misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid)
+                        subspan_words[-1].misc['Entity'] += subspan_eid + ')'
+            else:
+                mention.words[0].misc['Entity'] += mention_str
+                mention.words[-1].misc['Entity'] += cluster.cluster_id + ')'
+        if mention.bridging:
+            # TODO BridgingLinks.__src__ should already return c173<c188:subset,c174<c188:part
+            strs = ','.join(f'{l.target.cluster_id}<{cluster.cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(mention.bridging))
+            if mention.words[0].misc['Bridge']:
+                strs = mention.words[0].misc['Bridge'] + ',' + strs
+            mention.words[0].misc['Bridge'] = strs
+
+    # SplitAnte=c5<c61,c10<c61
+    for cluster in doc.coref_clusters.values():
+        if cluster.split_ante:
+            first_word = cluster.mentions[0].words[0]
+            strs = ','.join(f'{sa.cluster_id}<{cluster.cluster_id}' for sa in cluster.split_ante)
+            if first_word.misc['SplitAnte']:
+                strs = first_word.misc['SplitAnte'] + ',' + strs
+            first_word.misc['SplitAnte'] = strs
 
 def span_to_nodes(root, span):
     ranges = []
@@ -365,3 +604,122 @@ def nodes_to_span(nodes):
             hi = all_nodes[i - 1].ord
             ranges.append(f"{lo}-{hi}" if hi > lo else f"{lo}")
     return ','.join(ranges)
+
+
+# TODO fix code duplication with udapi.core.dualdict after making sure benchmarks are not slower
+class OtherDualDict(collections.abc.MutableMapping):
+    """OtherDualDict class serves as dict with lazily synchronized string representation.
+
+    >>> ddict = OtherDualDict('anacata:anaphoric,antetype:entity,nptype:np')
+    >>> ddict['mention'] = 'np'
+    >>> str(ddict)
+    'anacata:anaphoric,antetype:entity,mention:np,nptype:np'
+    >>> ddict['NonExistent']
+    ''
+
+    This class provides access to both
+    * a structured (dict-based, deserialized) representation,
+      e.g. {'anacata': 'anaphoric', 'antetype': 'entity'}, and
+    * a string (serialized) representation of the mapping, e.g. `anacata:anaphoric,antetype:entity`.
+    There is a clever mechanism that makes sure that users can read and write
+    both of the representations which are always kept synchronized.
+    Moreover, the synchronization is lazy, so the serialization and deserialization
+    is done only when needed. This speeds up scenarios where access to dict is not needed.
+
+    A value can be deleted with any of the following three ways:
+    >>> del ddict['nptype']
+    >>> ddict['nptype'] = None
+    >>> ddict['nptype'] = ''
+    and it works even if the value was already missing.
+    """
+    __slots__ = ['_string', '_dict']
+
+    def __init__(self, value=None, **kwargs):
+        if value is not None and kwargs:
+            raise ValueError('If value is specified, no other kwarg is allowed ' + str(kwargs))
+        self._dict = dict(**kwargs)
+        self._string = None
+        if value is not None:
+            self.set_mapping(value)
+
+    def __str__(self):
+        if self._string is None:
+            serialized = []
+            for name, value in sorted(self._dict.items(), key=lambda s: s[0].lower()):
+                if value is True:
+                    serialized.append(name)
+                else:
+                    serialized.append('%s:%s' % (name, value))
+            self._string = ','.join(serialized) if serialized else ''
+        return self._string
+
+    def _deserialize_if_empty(self):
+        if not self._dict and self._string is not None and self._string != '':
+            for raw_feature in self._string.split(','):
+                namevalue = raw_feature.split(':', 1)
+                if len(namevalue) == 2:
+                    name, value = namevalue
+                else:
+                    name, value = namevalue[0], True
+                self._dict[name] = value
+
+    def __getitem__(self, key):
+        self._deserialize_if_empty()
+        return self._dict.get(key, '')
+
+    def __setitem__(self, key, value):
+        self._deserialize_if_empty()
+        self._string = None
+        if value is None or value == '':
+            self.__delitem__(key)
+        else:
+            value = value.replace(',', '%2C') # TODO report a warning? Escape also '|' and '-'?
+            self._dict[key] = value
+
+    def __delitem__(self, key):
+        self._deserialize_if_empty()
+        try:
+            del self._dict[key]
+            self._string = None
+        except KeyError:
+            pass
+
+    def __iter__(self):
+        self._deserialize_if_empty()
+        return self._dict.__iter__()
+
+    def __len__(self):
+        self._deserialize_if_empty()
+        return len(self._dict)
+
+    def __contains__(self, key):
+        self._deserialize_if_empty()
+        return self._dict.__contains__(key)
+
+    def clear(self):
+        self._string = '_'
+        self._dict.clear()
+
+    def copy(self):
+        """Return a deep copy of this instance."""
+        return copy.deepcopy(self)
+
+    def set_mapping(self, value):
+        """Set the mapping from a dict or string.
+
+        If the `value` is None, it is converted to storing an empty string.
+        If the `value` is a string, it is stored as is.
+        If the `value` is a dict (or any instance of `collections.abc.Mapping`),
+        its copy is stored.
+        Other types of `value` raise an `ValueError` exception.
+        """
+        if value is None:
+            self.clear()
+        elif isinstance(value, str):
+            self._dict.clear()
+            self._string = value
+        elif isinstance(value, collections.abc.Mapping):
+            self._string = None
+            self._dict = dict(value)
+        else:
+            raise ValueError("Unsupported value type " + str(value))

@@ -111,7 +111,7 @@ class BaseReader(Block):
             return False
 
         document.meta['loaded_from'] = self.filename
-        document.meta['global_entity'] = self._global_entity
+        document.meta['global.Entity'] = self._global_entity
         if trees and trees[0].newdoc and trees[0].newdoc is not True:
             document.meta["docname"] = trees[0].newdoc
 
@@ -189,7 +189,7 @@ class BaseReader(Block):
                     break
                 if trees_loaded == 0:
                     document.meta['loaded_from'] = self.filename
-                    document.meta['global_entity'] = self._global_entity
+                    document.meta['global.Entity'] = self._global_entity
                 add_to_the_last_bundle = False
                 trees_loaded += 1
 
