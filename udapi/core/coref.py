@@ -526,8 +526,8 @@ def store_coref_to_misc(doc):
         if len(mention.words) == 1:
             mention.words[0].misc['Entity'] += mention_str + ')'
         else:
-            if '-' in mention.span:
-                subspans = mention.span.split('-')
+            if ',' in mention.span:
+                subspans = mention.span.split(',')
                 root = mention.words[0].root
                 for idx,subspan in enumerate(subspans, 1):
                     subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
