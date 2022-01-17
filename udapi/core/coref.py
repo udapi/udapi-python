@@ -89,7 +89,7 @@ class CorefMention(object):
     @words.setter
     def words(self, new_words):
         if new_words and self.head not in new_words:
-            raise ValueError(f"Head {self.head} not in new_words {new_words}")
+            raise ValueError(f"Head {self.head} not in new_words {new_words} for {self._cluster.cluster_id}")
         kept_words = []
         for old_word in self._words:
             if old_word in new_words:
@@ -492,8 +492,7 @@ def store_coref_to_misc(doc):
             del node.misc[attr]
 
     # TODO benchmark for node in doc.nodes_and_empty: for mention in node.coref_mentions
-    # We need reversed because if two mentions start at the same node, the longer one must go first.
-    for mention in reversed(doc.coref_mentions):
+    for mention in doc.coref_mentions:
         cluster = mention.cluster
         values = []
         for field in fields:
@@ -523,29 +522,46 @@ def store_coref_to_misc(doc):
             del values[-1]
         mention_str = '(' + '-'.join(values)
 
+        # We place single-word mentions before the previous content of misc['Entity']
+        # because there should be no previous opening brackets (doc.coref_mentions are sorted)
+        # and single-word mentions are nicer before closing brackets.
+        firstword = mention.words[0]
         if len(mention.words) == 1:
-            mention.words[0].misc['Entity'] += mention_str + ')'
+            firstword.misc['Entity'] = mention_str + ')' + firstword.misc['Entity']
         else:
+            # Handle discontinous mentions
             if ',' in mention.span:
                 subspans = mention.span.split(',')
-                root = mention.words[0].root
+                root = firstword.root
                 for idx,subspan in enumerate(subspans, 1):
                     subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
                     subspan_words = span_to_nodes(root, subspan)
+                    fword = subspan_words[0]
                     if len(subspan_words) == 1:
-                        subspan_words[0].misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid) + ')'
+                        fword.misc['Entity'] = mention_str.replace(cluster.cluster_id, subspan_eid, 1) + ')' + fword.misc['Entity']
                     else:
-                        subspan_words[0].misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid)
-                        subspan_words[-1].misc['Entity'] += subspan_eid + ')'
+                        fword.misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid, 1)
+                        subspan_words[-1].misc['Entity'] = subspan_eid + ')' + subspan_words[-1].misc['Entity']
             else:
-                mention.words[0].misc['Entity'] += mention_str
-                mention.words[-1].misc['Entity'] += cluster.cluster_id + ')'
+                # Closing brackets must be unintuitively before opening brackets
+                # if both are present on the same line/node, which can happen only for crossing spans, e.g.
+                #  `Entity=e1)(e2` this is OK, but
+                #  `Entity=(e2e1)` this couldn't be parsed.
+                # Thus we append the opening bracket, but "prepend" the closing bracket.
+                # Mentions in doc.coref_mentions are sorted by ClusterMention.__lt__,
+                # so if two mentions start at the same word, the shorter goes first.
+                # So by appending the opening brackets and prepending the closing brackets
+                # we also get "valid bracketing" if there are no crossing spans,
+                # e.g. `Entity=(c1(c2(c3` and `Entity=c4)c5)c6)`,
+                # although the order here should not matter.
+                firstword.misc['Entity'] += mention_str
+                mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
         if mention.bridging:
             # TODO BridgingLinks.__src__ should already return c173<c188:subset,c174<c188:part
             strs = ','.join(f'{l.target.cluster_id}<{cluster.cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(mention.bridging))
-            if mention.words[0].misc['Bridge']:
-                strs = mention.words[0].misc['Bridge'] + ',' + strs
-            mention.words[0].misc['Bridge'] = strs
+            if firstword.misc['Bridge']:
+                strs = firstword.misc['Bridge'] + ',' + strs
+            firstword.misc['Bridge'] = strs
 
     # SplitAnte=c5<c61,c10<c61
     for cluster in doc.coref_clusters.values():
