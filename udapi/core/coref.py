@@ -1,4 +1,102 @@
-"""Classes for handling coreference."""
+"""Classes for handling coreference.
+
+# CorefUD 1.0 format implementation details
+
+## Rules for ordering "chunks" within `node.misc['Entity']`
+Entity mentions are annotated using "chunks" stored in `misc['Entity']`.
+Chunks are of three types:
+1. opening bracket, e.g. `(e1-person`
+2. closing bracket, e.g. `e1-person)`
+3. single-word span (both opening and closing), e.g. `(e1-person)`
+
+The `Entity` MISC attribute contains a sequence of chunks
+without any separators, e.g. `Entity=(e1-person(e2-place)`
+means opening `e1` mention and single-word `e2` mention
+starting on a given node.
+
+### Crossing mentions
+Two mentions are crossing iff their spans have non-zero intersection,
+but neither is a subset of the other, e.g. `e1` spanning nodes 1-3
+and `e2` spanning `2-4` would be represented as:
+```
+1 ... Entity=(e1
+2 ... Entity=(e2
+3 ... Entity=e1)
+4 ... Entity=e2)
+```
+This may be an annotation error and we may forbid such cases in future annotation guidelines,
+but in CorefUD 0.2, there are thousands of such cases (see https://github.com/ufal/corefUD/issues/23).
+
+It can even happen that one entity ends and another starts at the same node: `Entity=e1)(e2`
+For this reason, we need
+
+**Rule1**: closing brackets MUST always precede opening brackets.
+Otherwise, we would get `Entity=(e2e1)`, which could not be parsed.
+
+Note that cannot have same-entity crossing mentions in the CorefUD 1.0 format,
+so e.g. if we substitute `e2` with `e1` in the example above, we'll get
+`(e1`, `e1)`, `(e1`, `e1)`, which will be interpreted as two non-overlapping mentions of the same entity.
+
+### Nested mentions
+One mention (span) can be often embedded within another mention (span).
+It can happen that both these mentions correspond to the same entity (i.e. are in the same cluster),
+for example, "<the man <who> sold the world>".
+It can even happen that both mentions start at the same node, e.g. "<<w1 w2> w3>" (TODO: find nice real-world examples).
+In such cases, we need to make sure the brackets are well-nested:
+
+**Rule2**: when opening multiple brackets at the same node, longer mentions MUST be opened first.
+
+This is important because
+- The closing bracket has the same form for both mentions of the same entity - it includes just the entity ID (`eid`).
+- The opening-bracket annotation contains other mention attributes, e.g. head index.
+- The two mentions may differ in these attributes, e.g. the "<w1 w2 w3>" mention's head may be w3.
+- When breaking Rule2, we would get
+```
+1 w1 ... Entity=(e1-person-1(e1-person-3
+2 w2 ... Entity=e1)
+3 w3 ... Entity=e1)
+```
+which would be interpreted as if the head of the "<w1 w2>" mention is its third word, which is invalid.
+
+### Other rules
+
+**Rule3**: when closing multiple brackets at the same node, shorter mentions SHOULD be closed first.
+See Rule4 for a single exception from this rule regarding crossing mentions.
+I'm not aware of any problems when breaking this rule, but it seems intuitive
+(to make the annotation well-nested if possible) and we want to define some canonical ordering anyway.
+The API should be able to load even files breaking Rule3.
+
+**Rule4**: single-word chunks SHOULD follow all opening brackets and precede all closing brackets if possible.
+When considering single-word chunks as a subtype of both opening and closing brackets,
+this rule follows from the well-nestedness (and Rule2).
+So we should have `Entity=(e1(e2)` and `Entity=(e3)e1)`,
+but the API should be able to load even `Entity=(e2)(e1(` and `Entity=e1)(e3)`.
+
+In case of crossing mentions (annotated following Rule1), we cannot follow Rule4.
+If we want to add a single-word mention `e2` to a node with `Entity=e1)(e3`,
+it seems intuitive to prefer Rule2 over Rule3, which results in `Entity=e1)(e3(e2)`.
+So the canonical ordering will be achieved by placing single-word chunks after all opening brackets.
+The API should be able to load even `Entity=(e2)e1)(e3` and `Entity=e1)(e2)(e3`.
+
+**Rule5**: ordering of same-span single-word mentions
+TODO: I am not sure here. We may want to forbid such cases or define canonical ordering even for them.
+E.g. `Entity=(e1)(e2)` vs. `Entity=(e2)(e1)`.
+
+**Rule6**: ordering of same-start same-end multiword mentions
+TODO: I am not sure here.
+These can be either same-span multiword mentions (which may be forbidden)
+or something like
+```
+1 w1 ... Entity=(e1(e2[1/2])
+2 w2 ...
+3 w3 ... Entity=(e2[2/2])e1)
+```
+where both `e1` and `e2` start at w1 and end at w3, but `e2` is discontinous and does not contain w2.
+If we interpret "shorter" and "longer" in Rule2 and Rule3 as `len(mention.words)`
+(and not as `mention.words[-1].ord - mention.words[0].ord`),
+we get the cannonical ordering as in the example above.
+
+"""
 import re
 import functools
 import collections
@@ -24,21 +122,32 @@ class CorefMention(object):
         """Does this mention precedes (word-order wise) `another` mention?
 
         This method defines a total ordering of all mentions
-        (within one cluster or across different clusters).
-        The position is primarily defined by the first word in each mention
-        (or by the head if mention.words are missing).
+        (within one entity or across different entities).
+        The position is primarily defined by the first word in each mention.
         If two mentions start at the same word,
-        their order is defined by the last word in their span
-        -- the shorter mention precedes the longer one.
+        their order is defined by their length (i.e. number of words)
+        -- the shorter mention follows the longer one.
+
+        In the rare case of two same-length mentions starting at the same word, but having different spans,
+        their order is defined by the order of the last word in their span.
+        For example <w1, w2> precedes <w1, w3>.
+
+        TODO: the order of two same-span mentions is not well defined yet.
+        Both `m1.precedes(m2)` and `m2.precedes(m1)` returns False.
         """
-        node1 = self._words[0] if self._words else self._head
-        node2 = another._words[0] if another._words else another._head
-        if node1 is node2:
-            node1 = self._words[-1] if self._words else self._head
-            node2 = another._words[-1] if another._words else another._head
-            if node1 is node2:
-                return len(self._words) < len(another._words)
-        return node1.precedes(node2)
+        #TODO: no mention.words should be handled already when loading
+        if not self._words:
+            self._words = [self._head]
+        if not another._words:
+            another._words = [another._head]
+
+        if self._words[0] is another._words[0]:
+            if len(self._words) > len(another._words):
+                return True
+            if  len(self._words) < len(another._words):
+                return False
+            return self._words[-1].precedes(another._words[-1])
+        return self._words[0].precedes(another._words[0])
 
     @property
     def other(self):
@@ -362,7 +471,10 @@ def load_coref_from_misc(doc, strict=True):
                     mention, head_idx = unfinished_mentions[chunk].pop()
                     mention.span = f'{mention.head.ord}-{node.ord}'
                     if head_idx:
-                        mention.head = mention.words[head_idx - 1]
+                        try:
+                            mention.head = mention.words[head_idx - 1]
+                        except IndexError as err:
+                            _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} opened at {mention.head} and closed at {node}", 1)
             else:
                 eid, etype, head_idx, other = None, None, None, OtherDualDict()
                 for name, value in zip(fields, chunk.split('-')):
@@ -523,8 +635,9 @@ def store_coref_to_misc(doc):
         mention_str = '(' + '-'.join(values)
 
         # We place single-word mentions before the previous content of misc['Entity']
-        # because there should be no previous opening brackets (doc.coref_mentions are sorted)
+        # because there should be no* previous opening brackets (doc.coref_mentions are sorted)
         # and single-word mentions are nicer before closing brackets.
+        # *) Except for non-first parts of discontinous mentions.
         firstword = mention.words[0]
         if len(mention.words) == 1:
             firstword.misc['Entity'] = mention_str + ')' + firstword.misc['Entity']
@@ -543,17 +656,16 @@ def store_coref_to_misc(doc):
                         fword.misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid, 1)
                         subspan_words[-1].misc['Entity'] = subspan_eid + ')' + subspan_words[-1].misc['Entity']
             else:
-                # Closing brackets must be unintuitively before opening brackets
+                # Closing brackets must be placed (unintuitively) before opening brackets
                 # if both are present on the same line/node, which can happen only for crossing spans, e.g.
                 #  `Entity=e1)(e2` this is OK, but
                 #  `Entity=(e2e1)` this couldn't be parsed.
                 # Thus we append the opening bracket, but "prepend" the closing bracket.
                 # Mentions in doc.coref_mentions are sorted by ClusterMention.__lt__,
-                # so if two mentions start at the same word, the shorter goes first.
+                # so if two mentions start at the same word, the longer goes first.
                 # So by appending the opening brackets and prepending the closing brackets
-                # we also get "valid bracketing" if there are no crossing spans,
-                # e.g. `Entity=(c1(c2(c3` and `Entity=c4)c5)c6)`,
-                # although the order here should not matter.
+                # we also get "well-nested bracketing" if there are no crossing spans,
+                # e.g. `Entity=(c1(c2(c3` and `Entity=c4)c5)c6)`.
                 firstword.misc['Entity'] += mention_str
                 mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
         if mention.bridging:
