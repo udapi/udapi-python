@@ -1,15 +1,19 @@
 from udapi.core.block import Block
 import udapi.core.coref
 import itertools
+import logging
 
 class MarkCrossing(Block):
     """Find mentions with crossing spans."""
 
-    def __init__(self, same_cluster_only=False, continuous_only=False, print_form=False, **kwargs):
+    def __init__(self, same_cluster_only=False, continuous_only=False, print_form=False,
+                 log=True, mark=True, **kwargs):
         super().__init__(**kwargs)
         self.same_cluster_only = same_cluster_only
         self.continuous_only = continuous_only
         self.print_form = print_form
+        self.log = log
+        self.mark = mark
 
     def _print(self, mention):
         if self.print_form:
@@ -25,4 +29,8 @@ class MarkCrossing(Block):
                         continue
                     if self.continuous_only and (',' in mA.span or ',' in mB.span):
                         continue
-                    node.misc['Mark'] = f'cross:{self._print(mA)}+{self._print(mB)}'
+                    msg = f'cross:{self._print(mA)}+{self._print(mB)}'
+                    if self.mark:
+                        node.misc['Mark'] = msg
+                    if self.log:
+                        print(msg)
