@@ -14,6 +14,7 @@ class MarkCrossing(Block):
         self.print_form = print_form
         self.log = log
         self.mark = mark
+        self._logged = {}
 
     def _print(self, mention):
         if self.print_form:
@@ -29,8 +30,10 @@ class MarkCrossing(Block):
                         continue
                     if self.continuous_only and (',' in mA.span or ',' in mB.span):
                         continue
-                    msg = f'cross:{self._print(mA)}+{self._print(mB)}'
                     if self.mark:
-                        node.misc['Mark'] = msg
+                        node.misc['Mark'] = f"{self._print(mA)}+{self._print(mB)}"
                     if self.log:
-                        print(msg)
+                        cross_id = node.root.sent_id + mA.span + mB.span
+                        if cross_id not in self._logged:
+                            self._logged[cross_id] = True
+                            print(f"crossing mentions at {node}: {self._print(mA)} + {self._print(mB)}")
