@@ -313,33 +313,52 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     Example usage:
     >>> bl = BridgingLinks(src_mention)                                   # empty links
-    >>> bl = BridgingLinks(src_mention, [(c12, 'Part'), (c56, 'Subset')]) # from a list of tuples
-    >>> bl = BridgingLinks(src_mention, 'c12:Part,c56:Subset', clusters)  # from a string
+    >>> bl = BridgingLinks(src_mention, [(c12, 'part'), (c56, 'subset')]) # from a list of tuples
+    >>> (bl8, bl9) = BridgingLinks.from_string('c12<c8:part,c56<c8:subset,c5<c9', clusters)
     >>> for cluster, relation in bl:
     >>>     print(f"{bl.src_mention} ->{relation}-> {cluster.cluster_id}")
-    >>> print(str(bl)) # c12:Part,c56:Subset
-    >>> bl('Part').targets == [c12]
-    >>> bl('Part|Subset').targets == [c12, c56]
-    >>> bl.append((c89, 'Funct'))
+    >>> print(str(bl)) # c12<c8:part,c56<c8:subset
+    >>> bl('part').targets == [c12]
+    >>> bl('part|subset').targets == [c12, c56]
+    >>> bl.append((c57, 'funct'))
     """
-    def __init__(self, src_mention, value=None, clusters=None, strict=True):
+
+    @classmethod
+    def from_string(cls, string, clusters, strict=True):
+        src_str2bl = {}
+        for link_str in string.split(','):
+            try:
+                trg_str, src_str = link_str.split('<')
+            except ValueError as err:
+                _error(f"invalid Bridge {link_str} {err} at {node}", strict)
+                continue
+            relation = '_'
+            if ':' in src_str:
+                src_str, relation = src_str.split(':', 1)
+            if trg_str == src_str:
+                _error("Bridge cannot self-reference the same cluster: " + trg_str, strict)
+            bl = src_str2bl.get(src_str)
+            if not bl:
+                bl = clusters[src_str].mentions[-1].bridging
+                src_str2bl[src_str] = bl
+            if trg_str not in clusters:
+                clusters[trg_str] = CorefCluster(trg_str)
+            bl._data.append(BridgingLink(clusters[trg_str], relation))
+        return src_str2bl.values()
+
+    def __init__(self, src_mention, value=None, strict=True):
         self.src_mention = src_mention
         self._data = []
         self.strict = strict
         if value is not None:
-            if isinstance(value, str):
-                if clusters is None:
-                    raise ValueError('BridgingClusters: clusters must be provided if initializing with a string')
-                try:
-                    self._from_string(value, clusters)
-                except Exception:
-                    logging.error(f"Problem when parsing {value} in {src_mention.words[0]}:\n")
-                    raise
-            elif isinstance(value, collections.abc.Sequence):
+            if isinstance(value, collections.abc.Sequence):
                 for v in value:
                     if v[0] is src_mention._cluster:
                         _error("Bridging cannot self-reference the same cluster: " + v[0].cluster_id, strict)
                     self._data.append(BridgingLink(v[0], v[1]))
+            else:
+                raise ValueError(f"Unknown value type: {type(value)}")
+        self.src_mention._bridging = self
         super().__init__()
 
     def __getitem__(self, key):
@@ -363,18 +382,7 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
-        return ','.join(f'{l.target._cluster_id}:{l.relation}' for l in sorted(self._data))
-
-    def _from_string(self, string, clusters):
-        self._data.clear()
-        for link_str in string.split(','):
-            target, relation = link_str.split(':')
-            if target == self.src_mention._cluster._cluster_id:
-                _error("Bridging cannot self-reference the same cluster: " + target, self.strict)
-            if target not in clusters:
-                clusters[target] = CorefCluster(target)
-            self._data.append(BridgingLink(clusters[target], relation))
-        self._data.sort()
+        return ','.join(f'{l.target._cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(self._data))
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
@@ -383,7 +391,7 @@ class BridgingLinks(collections.abc.MutableSequence):
         """
         if relations_re is None:
             return self
-        return Links(self.src_mention, [l for l in self._data if re.match(relations_re, l.relation)])
+        return BridgingLinks(self.src_mention, [l for l in self._data if re.match(relations_re, l.relation)])
 
     @property
     def targets(self):
@@ -531,38 +539,28 @@ def load_coref_from_misc(doc, strict=True):
                     else:
                         unfinished_mentions[eid].append((mention, head_idx))
 
-        misc_bridges = node.misc['Bridge']
-        if misc_bridges:
-            # E.g. Entity=event-12|Bridge=12<124,12<125
-            # or with relations Bridge=c173<c188:subset,c174<c188:part
-            for misc_bridge in misc_bridges.split(','):
-                try:
-                    trg_str, src_str = misc_bridge.split('<')
-                except ValueError as err:
-                    raise ValueError(f"{node}: {misc_bridge} {err}")
-                relation = '_'
-                if ':' in src_str:
-                    src_str, relation = src_str.split(':')
-                try:
-                    trg_cluster = clusters[trg_str]
-                    src_cluster = clusters[src_str]
-                except KeyError as err:
-                    logging.warning(f"{node}: Cannot find cluster {err}")
-                else:
-                    mention = src_cluster.mentions[-1]
-                    mention.bridging.append((trg_cluster, relation))
+        # Bridge, e.g. Entity=event-12|Bridge=12<124,12<125
+        # or with relations Bridge=c173<c188:subset,c174<c188:part
+        misc_bridge = node.misc['Bridge']
+        if misc_bridge:
+            BridgingLinks.from_string(misc_bridge, clusters, strict)
 
+        # SplitAnte, e.g. Entity=(person-54)|Split=4<54,9<54
         misc_split = node.misc['SplitAnte']
         if not misc_split and 'Split' in node.misc:
             misc_split = node.misc.pop('Split')
         if misc_split:
-            # E.g. Entity=(person-54)|Split=4<54,9<54
             src_str = misc_split.split('<')[-1]
             ante_clusters = []
             for x in misc_split.split(','):
                 ante_str, this_str = x.split('<')
+                if ante_str == this_str:
+                    _error("SplitAnte cannot self-reference the same cluster: " + this_str, strict)
                 if this_str != src_str:
-                    raise ValueError(f'{node} invalid SplitAnte: {this_str} != {src_str}')
+                    _error(f'{node} invalid SplitAnte: {this_str} != {src_str}', strict)
+                # split cataphora, e.g. "We, that is you and me..."
+                if ante_str not in clusters:
+                    clusters[ante_str] = CorefCluster(ante_str)
                 ante_clusters.append(clusters[ante_str])
             clusters[src_str].split_ante = ante_clusters
 
@@ -669,11 +667,10 @@ def store_coref_to_misc(doc):
                 firstword.misc['Entity'] += mention_str
                 mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
         if mention.bridging:
-            # TODO BridgingLinks.__src__ should already return c173<c188:subset,c174<c188:part
-            strs = ','.join(f'{l.target.cluster_id}<{cluster.cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(mention.bridging))
+            str_bridge = str(mention.bridging)
             if firstword.misc['Bridge']:
-                strs = firstword.misc['Bridge'] + ',' + strs
-            firstword.misc['Bridge'] = strs
+                str_bridge = firstword.misc['Bridge'] + ',' + str_bridge
+            firstword.misc['Bridge'] = str_bridge
 
     # SplitAnte=c5<c61,c10<c61
     for cluster in doc.coref_clusters.values():

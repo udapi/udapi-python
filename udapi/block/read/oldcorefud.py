@@ -34,7 +34,14 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
 
                 bridging_str = node.misc["Bridging" + index_str]
                 if bridging_str:
-                    mention._bridging = BridgingLinks(mention, bridging_str, clusters, strict)
+                    mention._bridging = BridgingLinks(mention)
+                    for link_str in bridging_str.split(','):
+                        target, relation = link_str.split(':')
+                        if target == cluster_id:
+                            _error("Bridging cannot self-reference the same cluster: " + target, strict)
+                        if target not in clusters:
+                            clusters[target] = CorefCluster(target)
+                        mention._bridging.append((clusters[target], relation))
 
                 split_ante_str = node.misc["SplitAnte" + index_str]
                 if split_ante_str:

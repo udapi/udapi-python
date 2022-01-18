@@ -48,7 +48,7 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
                 head.misc["MentionSpan" + index_str] = mention.span
                 head.misc["ClusterType" + index_str] = cluster.cluster_type
                 if mention._bridging:
-                    head.misc["Bridging" + index_str] = str(mention.bridging)
+                    head.misc["Bridging" + index_str] = ','.join(f'{l.target.cluster_id}:{l.relation}' for l in sorted(mention.bridging))
                 if cluster.split_ante:
                     serialized = ','.join((c.cluster_id for c in sorted(cluster.split_ante)))
                     head.misc["SplitAnte" + index_str] = serialized
