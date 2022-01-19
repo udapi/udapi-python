@@ -125,6 +125,9 @@ class F1(BaseWriter):
             nf_common = find_lcs(nf_pred_tokens, nf_gold_tokens)
             i, j, c, un_pred, un_gold, common  = 0, 0, 0, [], [], []
             while i < len(pred_tokens) and j < len(gold_tokens):
+                if c == len(nf_common):
+                    common += find_lcs(pred_tokens[i+1:], gold_tokens[j+1:])
+                    break
                 while nf_common[c] != pred_tokens[i]:
                     un_pred.append(pred_tokens[i])
                     i += 1
@@ -135,9 +138,6 @@ class F1(BaseWriter):
                 un_pred, un_gold  = [], []
                 while c < len(nf_common) and nf_common[c] == pred_tokens[i] and nf_common[c] == gold_tokens[j]:
                     i, j, c = i+1, j+1, c+1
-                if c == len(nf_common):
-                    common += find_lcs(pred_tokens[i+1:], gold_tokens[j+1:])
-                    break
             common = [x for x in common if self.focus.fullmatch(x)]
             pred_tokens = [x for x in pred_tokens if self.focus.fullmatch(x)]
             gold_tokens = [x for x in gold_tokens if self.focus.fullmatch(x)]
