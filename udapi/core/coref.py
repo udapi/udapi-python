@@ -15,9 +15,9 @@ means opening `e1` mention and single-word `e2` mention
 starting on a given node.
 
 ### Crossing mentions
-Two mentions are crossing iff their spans have non-zero intersection,
+Two mentions are crossing iff their spans have non-empty intersection,
 but neither is a subset of the other, e.g. `e1` spanning nodes 1-3
-and `e2` spanning `2-4` would be represented as:
+and `e2` spanning 2-4 would be represented as:
 ```
 1 ... Entity=(e1
 2 ... Entity=(e2
@@ -33,15 +33,15 @@ For this reason, we need
 **Rule1**: closing brackets MUST always precede opening brackets.
 Otherwise, we would get `Entity=(e2e1)`, which could not be parsed.
 
-Note that cannot have same-entity crossing mentions in the CorefUD 1.0 format,
+Note that we cannot have same-entity crossing mentions in the CorefUD 1.0 format,
 so e.g. if we substitute `e2` with `e1` in the example above, we'll get
 `(e1`, `e1)`, `(e1`, `e1)`, which will be interpreted as two non-overlapping mentions of the same entity.
 
 ### Nested mentions
 One mention (span) can be often embedded within another mention (span).
 It can happen that both these mentions correspond to the same entity (i.e. are in the same cluster),
-for example, "<the man <who> sold the world>".
-It can even happen that both mentions start at the same node, e.g. "<<w1 w2> w3>" (TODO: find nice real-world examples).
+for example, "`<the man <who> sold the world>`".
+It can even happen that both mentions start at the same node, e.g. "`<<w1 w2> w3>`" (TODO: find nice real-world examples).
 In such cases, we need to make sure the brackets are well-nested:
 
 **Rule2**: when opening multiple brackets at the same node, longer mentions MUST be opened first.
@@ -49,14 +49,14 @@ In such cases, we need to make sure the brackets are well-nested:
 This is important because
 - The closing bracket has the same form for both mentions of the same entity - it includes just the entity ID (`eid`).
 - The opening-bracket annotation contains other mention attributes, e.g. head index.
-- The two mentions may differ in these attributes, e.g. the "<w1 w2 w3>" mention's head may be w3.
+- The two mentions may differ in these attributes, e.g. the "`<w1 w2 w3>`" mention's head may be w3.
 - When breaking Rule2, we would get
 ```
 1 w1 ... Entity=(e1-person-1(e1-person-3
 2 w2 ... Entity=e1)
 3 w3 ... Entity=e1)
 ```
-which would be interpreted as if the head of the "<w1 w2>" mention is its third word, which is invalid.
+which would be interpreted as if the head of the "`<w1 w2>`" mention is its third word, which is invalid.
 
 ### Other rules
 
@@ -91,10 +91,10 @@ or something like
 2 w2 ...
 3 w3 ... Entity=(e2[2/2])e1)
 ```
-where both `e1` and `e2` start at w1 and end at w3, but `e2` is discontinous and does not contain w2.
+where both `e1` and `e2` start at w1 and end at w3, but `e2` is discontinuous and does not contain w2.
 If we interpret "shorter" and "longer" in Rule2 and Rule3 as `len(mention.words)`
 (and not as `mention.words[-1].ord - mention.words[0].ord`),
-we get the cannonical ordering as in the example above.
+we get the canonical ordering as in the example above.
 
 """
 import re
@@ -109,13 +109,15 @@ class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
     __slots__ = ['_head', '_cluster', '_bridging', '_words', '_other']
 
-    def __init__(self, head, cluster=None):
-        self._head = head
+    def __init__(self, words, head=None, cluster=None):
+        if not words:
+            raise ValueError("mention.words must be non-empty")
+        self._words = words
+        self._head = head if head else words[0]
         self._cluster = cluster
         if cluster is not None:
             cluster._mentions.append(self)
         self._bridging = None
-        self._words = []
         self._other = None
 
     def __lt__(self, another):
@@ -424,6 +426,7 @@ RE_DISCONTINUOUS = re.compile(r'^([^[]+)\[(\d+)/(\d+)\]')
 def load_coref_from_misc(doc, strict=True):
     clusters = {}
     unfinished_mentions = collections.defaultdict(list)
+    discontinuous_mentions = collections.defaultdict(list)
     global_entity = doc.meta.get('global.Entity')
     was_global_entity = True
     if not global_entity:
@@ -457,32 +460,45 @@ def load_coref_from_misc(doc, strict=True):
         for chunk in chunks:
             opening, closing = (chunk[0] == '(', chunk[-1] == ')')
             chunk = chunk.strip('()')
+            # 1. invalid
             if not opening and not closing:
                 logging.warning(f"Entity {chunk} at {node} has no opening nor closing bracket.")
+            # 2. closing bracket
             elif not opening and closing:
+                # closing brackets should include just the ID,
+                # but older GUM versions repeated all the fields
                 if '-' in chunk:
                     # TODO delete this legacy hack once we don't need to load UD GUM v2.8 anymore
                     if not strict and global_entity.startswith('etype-eid'):
                         chunk = chunk.split('-')[1]
                     else:
                         _error("Unexpected closing eid " + chunk, strict)
+
+                # 2a. closing discontinuous mention
                 if chunk not in unfinished_mentions:
                     m = RE_DISCONTINUOUS.match(chunk)
                     if not m:
                         raise ValueError(f"Mention {chunk} closed at {node}, but not opened.")
                     eid, subspan_idx, total_subspans = m.group(1, 2, 3)
                     mention, head_idx = unfinished_mentions[eid].pop()
-                    mention.words += span_to_nodes(mention.head.root, f'{mention.head.ord}-{node.ord}')
+                    mention.words += span_to_nodes(mention.head.root, f'{mention.words[-1].ord + 1}-{node.ord}')
                     if subspan_idx == total_subspans and head_idx:
-                        mention.head = mention.words[head_idx - 1]
+                        try:
+                            mention.head = mention.words[head_idx - 1]
+                        except IndexError as err:
+                            _error(f"Invalid head_idx={head_idx} for discontinuous {mention.cluster.cluster_id} "
+                                   f"opened at {mention.head} and closed at {node} with words={mention.words}", 1)
+
+                # 2b. closing continuous mentions
                 else:
                     mention, head_idx = unfinished_mentions[chunk].pop()
-                    mention.span = f'{mention.head.ord}-{node.ord}'
+                    mention.span = f'{mention.words[0].ord}-{node.ord}'
                     if head_idx:
                         try:
                             mention.head = mention.words[head_idx - 1]
                         except IndexError as err:
                             _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} opened at {mention.head} and closed at {node}", 1)
+            # 3. opening or single-word
             else:
                 eid, etype, head_idx, other = None, None, None, OtherDualDict()
                 for name, value in zip(fields, chunk.split('-')):
@@ -507,37 +523,37 @@ def load_coref_from_misc(doc, strict=True):
                         other[name] = value
                 if eid is None:
                     raise ValueError("No eid in " + chunk)
-                subspan_idx, total_subspans = '1', '0'
+                subspan_idx, total_subspans = None, '0'
                 if eid[-1] == ']':
                     m = RE_DISCONTINUOUS.match(eid)
                     if not m:
-                        _error(f"eid={eid} ending with ], but not valid discontinous mention ID ", strict)
+                        _error(f"eid={eid} ending with ], but not valid discontinuous mention ID ", strict)
                     else:
                         eid, subspan_idx, total_subspans = m.group(1, 2, 3)
 
                 cluster = clusters.get(eid)
                 if cluster is None:
-                    if subspan_idx != '1':
-                        _error(f'Non-first subspan of a discontinous mention {eid} at {node} does not have any previous mention.', 1)
+                    if subspan_idx and subspan_idx != '1':
+                        _error(f'Non-first subspan of a discontinuous mention {eid} at {node} does not have any previous mention.', 1)
                     cluster = CorefCluster(eid)
                     clusters[eid] = cluster
                     cluster.cluster_type = etype
                 elif etype and cluster.cluster_type and cluster.cluster_type != etype:
                     logging.warning(f"etype mismatch in {node}: {cluster.cluster_type} != {etype}")
-                if subspan_idx != '1':
-                    mention = cluster.mentions[-1]
+
+                if subspan_idx and subspan_idx != '1':
+                    mention = discontinuous_mentions[eid][-1]
                     mention.words += [node]
-                    mention.head = node
-                    if not closing:
-                        unfinished_mentions[eid].append((mention, head_idx))
                 else:
-                    mention = CorefMention(node, cluster)
+                    mention = CorefMention(words=[node], cluster=cluster)
                     if other:
                         mention._other = other
-                    if closing:
-                        mention.words = [node]
-                    else:
-                        unfinished_mentions[eid].append((mention, head_idx))
+                    if subspan_idx:
+                        discontinuous_mentions[eid].append(mention)
+
+                if not closing:
+                    unfinished_mentions[eid].append((mention, head_idx))
+
 
         # Bridge, e.g. Entity=event-12|Bridge=12<124,12<125
         # or with relations Bridge=c173<c188:subset,c174<c188:part
@@ -635,12 +651,12 @@ def store_coref_to_misc(doc):
         # We place single-word mentions before the previous content of misc['Entity']
         # because there should be no* previous opening brackets (doc.coref_mentions are sorted)
         # and single-word mentions are nicer before closing brackets.
-        # *) Except for non-first parts of discontinous mentions.
+        # *) Except for non-first parts of discontinuous mentions.
         firstword = mention.words[0]
         if len(mention.words) == 1:
             firstword.misc['Entity'] = mention_str + ')' + firstword.misc['Entity']
         else:
-            # Handle discontinous mentions
+            # Handle discontinuous mentions
             if ',' in mention.span:
                 subspans = mention.span.split(',')
                 root = firstword.root
