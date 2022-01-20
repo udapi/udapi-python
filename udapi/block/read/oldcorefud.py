@@ -21,11 +21,9 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                 if cluster is None:
                     cluster = CorefCluster(cluster_id)
                     clusters[cluster_id] = cluster
-                mention = CorefMention(node, cluster)
+                mention = CorefMention(words=[node], cluster=cluster)
                 if node.misc["MentionSpan" + index_str]:
                     mention.span = node.misc["MentionSpan" + index_str]
-                else:
-                    mention.words = [node]
                 cluster_type = node.misc["ClusterType" + index_str]
                 if cluster_type is not None:
                     if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
