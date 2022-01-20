@@ -384,7 +384,7 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
-        return ','.join(f'{l.target._cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(self._data))
+        return ','.join(f'{l.target._cluster_id}<{self.src_mention.cluster.cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(self._data))
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
