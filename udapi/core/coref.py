@@ -474,30 +474,31 @@ def load_coref_from_misc(doc, strict=True):
                     else:
                         _error("Unexpected closing eid " + chunk, strict)
 
-                # 2a. closing discontinuous mention
+                # closing discontinuous mentions
+                eid, subspan_idx = chunk, None
                 if chunk not in unfinished_mentions:
                     m = RE_DISCONTINUOUS.match(chunk)
                     if not m:
                         raise ValueError(f"Mention {chunk} closed at {node}, but not opened.")
                     eid, subspan_idx, total_subspans = m.group(1, 2, 3)
-                    mention, head_idx = unfinished_mentions[eid].pop()
-                    mention.words += span_to_nodes(mention.head.root, f'{mention.words[-1].ord + 1}-{node.ord}')
-                    if subspan_idx == total_subspans and head_idx:
-                        try:
-                            mention.head = mention.words[head_idx - 1]
-                        except IndexError as err:
-                            _error(f"Invalid head_idx={head_idx} for discontinuous {mention.cluster.cluster_id} "
-                                   f"opened at {mention.head} and closed at {node} with words={mention.words}", 1)
 
-                # 2b. closing continuous mentions
-                else:
-                    mention, head_idx = unfinished_mentions[chunk].pop()
-                    mention.span = f'{mention.words[0].ord}-{node.ord}'
-                    if head_idx:
-                        try:
-                            mention.head = mention.words[head_idx - 1]
-                        except IndexError as err:
-                            _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} opened at {mention.head} and closed at {node}", 1)
+                mention, head_idx = unfinished_mentions[eid].pop()
+                last_word = mention.words[-1]
+                if node.root is not last_word.root:
+                    # TODO cross-sentence mentions
+                    raise ValueError(f"Cross-sentence mentions not supported yet: {chunk}")
+                for w in node.root.descendants_and_empty:
+                    if last_word.precedes(w):
+                        mention.words.append(w)
+                        if w is node:
+                            break
+                if head_idx and (subspan_idx is None or subspan_idx == total_subspans):
+                    try:
+                        mention.head = mention.words[head_idx - 1]
+                    except IndexError as err:
+                        _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
+                                f"closed at {node} with words={mention.words}", 1)
+
             # 3. opening or single-word
             else:
                 eid, etype, head_idx, other = None, None, None, OtherDualDict()
