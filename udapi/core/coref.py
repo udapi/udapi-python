@@ -545,6 +545,12 @@ def load_coref_from_misc(doc, strict=True):
                 if subspan_idx and subspan_idx != '1':
                     mention = discontinuous_mentions[eid][-1]
                     mention.words += [node]
+                    if closing and subspan_idx == total_subspans:
+                        try:
+                            mention.head = mention.words[head_idx - 1]
+                        except IndexError as err:
+                            _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
+                                    f"closed at {node} with words={mention.words}", 1)
                 else:
                     mention = CorefMention(words=[node], cluster=cluster)
                     if other:
