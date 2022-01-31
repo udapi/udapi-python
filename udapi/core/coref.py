@@ -307,7 +307,26 @@ class CorefCluster(object):
                     yield b
 
 
-BridgingLink = collections.namedtuple('BridgingLink', 'target relation')
+# BridgingLink
+# Especially the relation should be mutable, so we cannot use
+#   BridgingLink = collections.namedtuple('BridgingLink', 'target relation')
+# TODO once dropping support for Python 3.6, we could use
+#   from dataclasses import dataclass
+#   @dataclass
+#   class DataClassCard:
+#      target: CorefCluster
+#      relation: str
+class BridgingLink:
+    __slots__ = ['target', 'relation']
+
+    def __init__(self, target, relation):
+        self.target = target
+        self.relation = relation
+
+    def __lt__(self, another):
+        if self.target == another.target:
+            return self.relation < another.relation
+        return self.target < another.target
 
 
 class BridgingLinks(collections.abc.MutableSequence):
