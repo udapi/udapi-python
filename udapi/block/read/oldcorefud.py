@@ -25,7 +25,7 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                 if node.misc["MentionSpan" + index_str]:
                     mention.span = node.misc["MentionSpan" + index_str]
                 cluster_type = node.misc["ClusterType" + index_str]
-                if cluster_type is not None:
+                if cluster_type:
                     if cluster.cluster_type is not None and cluster_type != cluster.cluster_type:
                         logging.warning(f"cluster_type mismatch in {node}: {cluster.cluster_type} != {cluster_type}")
                     cluster.cluster_type = cluster_type

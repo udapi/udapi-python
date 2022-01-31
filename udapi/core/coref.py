@@ -541,6 +541,9 @@ def load_coref_from_misc(doc, strict=True):
                     cluster.cluster_type = etype
                 elif etype and cluster.cluster_type and cluster.cluster_type != etype:
                     logging.warning(f"etype mismatch in {node}: {cluster.cluster_type} != {etype}")
+                # CorefCluster could be created first with "Bridge=" without any type
+                elif etype and cluster.cluster_type is None:
+                    cluster.cluster_type = etype
 
                 if subspan_idx and subspan_idx != '1':
                     mention = discontinuous_mentions[eid][-1]
@@ -632,8 +635,8 @@ def store_coref_to_misc(doc):
             if field == 'eid' or field == 'GRP':
                 values.append(cluster.cluster_id)
             elif field == 'etype' or field == 'entity':
-                if cluster.cluster_type is None:
-                    values.append('unk')
+                if not cluster.cluster_type:
+                    values.append('')
                 else:
                     values.append(cluster.cluster_type)
             elif field == 'head':
