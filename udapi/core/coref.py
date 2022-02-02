@@ -646,8 +646,30 @@ def store_coref_to_misc(doc):
         for attr in attrs:
             del node.misc[attr]
 
-    # TODO benchmark for node in doc.nodes_and_empty: for mention in node.coref_mentions
+    # Convert each subspan of each discontinuous mention into a fake CorefMention instance,
+    # so that we can sort both real and fake mentions and process them in the correct order.
+    doc_mentions = []
     for mention in doc.coref_mentions:
+        if ',' not in mention.span:
+            doc_mentions.append(mention)
+        else:
+            cluster = mention.cluster
+            head = str(mention.words.index(mention.head) + 1)
+            subspans = mention.span.split(',')
+            root = mention.words[0].root
+            for idx,subspan in enumerate(subspans, 1):
+                subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
+                subspan_words = span_to_nodes(root, subspan)
+                fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
+                fake_mention = CorefMention(subspan_words, head, fake_cluster)
+                if mention._other:
+                    fake_mention._other = mention._other
+                if mention._bridging:
+                    fake_mention._bridging = mention._bridging
+                doc_mentions.append(fake_mention)
+    doc_mentions.sort()
+
+    for mention in doc_mentions:
         cluster = mention.cluster
         values = []
         for field in fields:
@@ -659,9 +681,12 @@ def store_coref_to_misc(doc):
                 else:
                     values.append(cluster.cluster_type)
             elif field == 'head':
-                values.append(str(mention.words.index(mention.head) + 1))
+                if isinstance(mention.head, str):
+                    values.append(mention.head) # fake mention for discontinuous spans
+                else:
+                    values.append(str(mention.words.index(mention.head) + 1))
             elif field == 'other':
-                if not mention.other:
+                if not mention._other:
                     values.append('')
                 elif not other_fields:
                     values.append(str(mention.other))
@@ -677,41 +702,23 @@ def store_coref_to_misc(doc):
             del values[-1]
         mention_str = '(' + '-'.join(values)
 
-        # We place single-word mentions before the previous content of misc['Entity']
-        # because there should be no* previous opening brackets (doc.coref_mentions are sorted)
-        # and single-word mentions are nicer before closing brackets.
-        # *) Except for non-first parts of discontinuous mentions.
+        # First, handle single-word mentions.
+        # If there are no opening brackets, single word mentions should
+        # precede all closing brackets, e.g. `Entity=(e9)e1)e2)`.
+        # Otherwise, they should follow all opening brackets,
+        # e.g. `Entity=(e1(e2(e9)` or `Entity=e3)e4)(e1(e2(e9)`
         firstword = mention.words[0]
         if len(mention.words) == 1:
-            firstword.misc['Entity'] = mention_str + ')' + firstword.misc['Entity']
-        else:
-            # Handle discontinuous mentions
-            if ',' in mention.span:
-                subspans = mention.span.split(',')
-                root = firstword.root
-                for idx,subspan in enumerate(subspans, 1):
-                    subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
-                    subspan_words = span_to_nodes(root, subspan)
-                    fword = subspan_words[0]
-                    if len(subspan_words) == 1:
-                        fword.misc['Entity'] = mention_str.replace(cluster.cluster_id, subspan_eid, 1) + ')' + fword.misc['Entity']
-                    else:
-                        fword.misc['Entity'] += mention_str.replace(cluster.cluster_id, subspan_eid, 1)
-                        subspan_words[-1].misc['Entity'] = subspan_eid + ')' + subspan_words[-1].misc['Entity']
+            orig_entity = firstword.misc['Entity']
+            if not orig_entity or '(' not in orig_entity:
+                firstword.misc['Entity'] = mention_str + ')' + orig_entity
             else:
-                # Closing brackets must be placed (unintuitively) before opening brackets
-                # if both are present on the same line/node, which can happen only for crossing spans, e.g.
-                #  `Entity=e1)(e2` this is OK, but
-                #  `Entity=(e2e1)` this couldn't be parsed.
-                # Thus we append the opening bracket, but "prepend" the closing bracket.
-                # Mentions in doc.coref_mentions are sorted by ClusterMention.__lt__,
-                # so if two mentions start at the same word, the longer goes first.
-                # So by appending the opening brackets and prepending the closing brackets
-                # we also get "well-nested bracketing" if there are no crossing spans,
-                # e.g. `Entity=(c1(c2(c3` and `Entity=c4)c5)c6)`.
-                firstword.misc['Entity'] += mention_str
-                mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
-        if mention.bridging:
+                firstword.misc['Entity'] += mention_str + ')'
+        # Second, multi-word mentions. Opening brackets should follow closing brackets.
+        else:
+            firstword.misc['Entity'] += mention_str
+            mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
+        if mention._bridging:
             str_bridge = str(mention.bridging)
             if firstword.misc['Bridge']:
                 str_bridge = firstword.misc['Bridge'] + ',' + str_bridge
