@@ -6,11 +6,12 @@ class FixInterleaved(Block):
     """Fix mentions with interleaved or crossing spans."""
 
     def __init__(self, same_cluster_only=True, both_discontinuous=False,
-                 crossing_only=False, **kwargs):
+                 crossing_only=False, nested_same_subspan=True, **kwargs):
         super().__init__(**kwargs)
         self.same_cluster_only = same_cluster_only
         self.both_discontinuous = both_discontinuous
         self.crossing_only = crossing_only
+        self.nested_same_subspan = nested_same_subspan
 
     def process_tree(self, tree):
         mentions = set()
@@ -22,13 +23,16 @@ class FixInterleaved(Block):
             if self.same_cluster_only and mA.cluster != mB.cluster:
                 continue
 
-            # Fully nested spans are OK
+            # Fully nested spans are OK, expect for same-subspan
             sA, sB = set(mA.words), set(mB.words)
             if (sA <= sB) or (sB <= sA):
-                continue
+                if not self.nested_same_subspan:
+                    continue
+                elif not set(mA.span.split(',')).intersection(set(mB.span.split(','))):
+                    continue
 
             # Crossing or interleaved+crossing?
-            if self.crossing_only:
+            elif self.crossing_only:
                 if not sA.intersection(sB):
                     continue
             else:
