@@ -654,17 +654,17 @@ def store_coref_to_misc(doc):
             doc_mentions.append(mention)
         else:
             cluster = mention.cluster
-            head = str(mention.words.index(mention.head) + 1)
+            head_str = str(mention.words.index(mention.head) + 1)
             subspans = mention.span.split(',')
             root = mention.words[0].root
             for idx,subspan in enumerate(subspans, 1):
                 subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
                 subspan_words = span_to_nodes(root, subspan)
                 fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
-                fake_mention = CorefMention(subspan_words, head, fake_cluster)
+                fake_mention = CorefMention(subspan_words, head_str, fake_cluster)
                 if mention._other:
                     fake_mention._other = mention._other
-                if mention._bridging:
+                if mention._bridging and idx == 1:
                     fake_mention._bridging = mention._bridging
                 doc_mentions.append(fake_mention)
     doc_mentions.sort()
@@ -718,8 +718,10 @@ def store_coref_to_misc(doc):
         else:
             firstword.misc['Entity'] += mention_str
             mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
+
+        # Bridge=c1<c5:subset,c2<c6:subset|Entity=(c5(c6
         if mention._bridging:
-            str_bridge = str(mention.bridging)
+            str_bridge = str(mention._bridging)
             if firstword.misc['Bridge']:
                 str_bridge = firstword.misc['Bridge'] + ',' + str_bridge
             firstword.misc['Bridge'] = str_bridge
