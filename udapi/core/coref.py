@@ -505,7 +505,7 @@ def load_coref_from_misc(doc, strict=True):
                 last_word = mention.words[-1]
                 if node.root is not last_word.root:
                     # TODO cross-sentence mentions
-                    raise ValueError(f"Cross-sentence mentions not supported yet: {chunk}")
+                    raise ValueError(f"Cross-sentence mentions not supported yet: {chunk} at {node}")
                 for w in node.root.descendants_and_empty:
                     if last_word.precedes(w):
                         mention.words.append(w)
@@ -517,6 +517,10 @@ def load_coref_from_misc(doc, strict=True):
                     except IndexError as err:
                         _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
                                 f"closed at {node} with words={mention.words}", 1)
+                if subspan_idx and subspan_idx == total_subspans:
+                    m = discontinuous_mentions[eid].pop()
+                    if m is not mention:
+                        _error(f"Closing mention {mention} at {node}, but it has unfinished nested mentions ({m})", 1)
 
             # 3. opening or single-word
             else:
@@ -565,9 +569,13 @@ def load_coref_from_misc(doc, strict=True):
                     cluster.cluster_type = etype
 
                 if subspan_idx and subspan_idx != '1':
-                    mention = discontinuous_mentions[eid][-1]
+                    opened = [pair[0] for pair in unfinished_mentions[eid]]
+                    mention = next(m for m in discontinuous_mentions[eid] if m not in opened)
                     mention.words += [node]
                     if closing and subspan_idx == total_subspans:
+                        m = discontinuous_mentions[eid].pop()
+                        if m is not mention:
+                            _error(f"Closing mention {mention} at {node}, but it has unfinished nested mentions ({m})", 1)
                         try:
                             mention.head = mention.words[head_idx - 1]
                         except IndexError as err:
