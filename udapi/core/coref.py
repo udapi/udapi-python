@@ -508,7 +508,8 @@ def load_coref_from_misc(doc, strict=True):
                     raise ValueError(f"Cross-sentence mentions not supported yet: {chunk} at {node}")
                 for w in node.root.descendants_and_empty:
                     if last_word.precedes(w):
-                        mention.words.append(w)
+                        mention._words.append(w)
+                        w._mentions.append(mention)
                         if w is node:
                             break
                 if head_idx and (subspan_idx is None or subspan_idx == total_subspans):
@@ -571,22 +572,23 @@ def load_coref_from_misc(doc, strict=True):
                 if subspan_idx and subspan_idx != '1':
                     opened = [pair[0] for pair in unfinished_mentions[eid]]
                     mention = next(m for m in discontinuous_mentions[eid] if m not in opened)
-                    mention.words += [node]
+                    mention._words.append(node)
                     if closing and subspan_idx == total_subspans:
                         m = discontinuous_mentions[eid].pop()
                         if m is not mention:
                             _error(f"Closing mention {mention} at {node}, but it has unfinished nested mentions ({m})", 1)
                         try:
-                            mention.head = mention.words[head_idx - 1]
+                            mention.head = mention._words[head_idx - 1]
                         except IndexError as err:
                             _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
-                                    f"closed at {node} with words={mention.words}", 1)
+                                    f"closed at {node} with words={mention._words}", 1)
                 else:
                     mention = CorefMention(words=[node], cluster=cluster)
                     if other:
                         mention._other = other
                     if subspan_idx:
                         discontinuous_mentions[eid].append(mention)
+                node._mentions.append(mention)
 
                 if not closing:
                     unfinished_mentions[eid].append((mention, head_idx))
@@ -634,6 +636,9 @@ def load_coref_from_misc(doc, strict=True):
         if not cluster._mentions:
             _error(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridge, but not defined with Entity", strict)
         cluster._mentions.sort()
+        for mention in cluster._mentions:
+            for node in mention._words:
+                node._mentions.sort()
     doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
 
 
