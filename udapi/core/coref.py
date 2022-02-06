@@ -134,8 +134,8 @@ class CorefMention(object):
         their order is defined by the order of the last word in their span.
         For example <w1, w2> precedes <w1, w3>.
 
-        TODO: the order of two same-span mentions is not well defined yet.
-        Both `m1.precedes(m2)` and `m2.precedes(m1)` returns False.
+        The order of two same-span mentions is currently defined by their cluster_id.
+        There should be no same-span (or same-subspan) same-cluster mentions.
         """
         #TODO: no mention.words should be handled already when loading
         if not self._words:
@@ -148,7 +148,11 @@ class CorefMention(object):
                 return True
             if  len(self._words) < len(another._words):
                 return False
-            return self._words[-1].precedes(another._words[-1])
+            if self._words[-1].precedes(another._words[-1]):
+                return True
+            if another._words[-1].precedes(self._words[-1]):
+                return False
+            return self._cluster.cluster_id < another._cluster.cluster_id
         return self._words[0].precedes(another._words[0])
 
     @property
@@ -576,7 +580,7 @@ def load_coref_from_misc(doc, strict=True):
                     if closing and subspan_idx == total_subspans:
                         m = discontinuous_mentions[eid].pop()
                         if m is not mention:
-                            _error(f"Closing mention {mention} at {node}, but it has unfinished nested mentions ({m})", 1)
+                            _error(f"{node}: closing mention {mention.cluster.cluster_id} ({mention.words}), but it has an unfinished nested mention ({m.words})", 1)
                         try:
                             mention.head = mention._words[head_idx - 1]
                         except IndexError as err:
@@ -716,30 +720,41 @@ def store_coref_to_misc(doc):
         mention_str = '(' + '-'.join(values)
 
         # First, handle single-word mentions.
-        # If there are no opening brackets, single word mentions should
-        # precede all closing brackets, e.g. `Entity=(e9)e1)e2)`.
-        # Otherwise, they should follow all opening brackets,
-        # e.g. `Entity=(e1(e2(e9)` or `Entity=e3)e4)(e1(e2(e9)`
+        # If there are no opening brackets (except for single-word),
+        # single-word mentions should precede all closing brackets, e.g. `Entity=(e10)(e9)e4)e3)`.
+        # Otherwise, single-word mentions should follow all opening brackets,
+        # e.g. `Entity=(e1(e2(e9)(e10)` or `Entity=e4)e3)(e1(e2(e9)(e10)`.
         firstword = mention.words[0]
         if len(mention.words) == 1:
             orig_entity = firstword.misc['Entity']
-            if not orig_entity or '(' not in orig_entity:
-                firstword.misc['Entity'] = mention_str + ')' + orig_entity
-            else:
+            # empty     --> (e10)
+            # (e1(e2    --> (e1(e2(e10)
+            # e3)(e1(e2 --> e3)(e1(e2(e10)
+            if not orig_entity or orig_entity[-1] != ')':
                 firstword.misc['Entity'] += mention_str + ')'
+            # e4)e3)    --> (e10)e4)e3)
+            elif '(' not in orig_entity:
+                firstword.misc['Entity'] = mention_str + ')' + orig_entity
+            # (e9)e4)e3) --> (e10)(e9)e4)e3)
+            elif any(c and c[0] == '(' and c[-1] != ')' for c in re.split('(\([^()]+\)?|[^()]+\))', orig_entity)):
+                firstword.misc['Entity'] += mention_str + ')'
+            # (e1(e2(e9)   --> (e1(e2(e9)(e10)
+            # e3)(e1(e2(e9)--> e3)(e1(e2(e9)(e10)
+            else:
+                firstword.misc['Entity'] = mention_str + ')' + orig_entity
         # Second, multi-word mentions. Opening brackets should follow closing brackets.
         else:
             firstword.misc['Entity'] += mention_str
             mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
 
-        # Bridge=c1<c5:subset,c2<c6:subset|Entity=(c5(c6
+        # Bridge=e1<e5:subset,e2<e6:subset|Entity=(e5(e6
         if mention._bridging:
             str_bridge = str(mention._bridging)
             if firstword.misc['Bridge']:
                 str_bridge = firstword.misc['Bridge'] + ',' + str_bridge
             firstword.misc['Bridge'] = str_bridge
 
-    # SplitAnte=c5<c61,c10<c61
+    # SplitAnte=e5<e61,e10<e61
     for cluster in doc.coref_clusters.values():
         if cluster.split_ante:
             first_word = cluster.mentions[0].words[0]
