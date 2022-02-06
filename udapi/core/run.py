@@ -101,7 +101,7 @@ def _import_blocks(block_names, block_args):
         command = "b%s(**kwargs)" % block_id
         logging.debug("Trying to evaluate this: %s", command)
         new_block_instance = eval(command)  # pylint: disable=eval-used
-        blocks.append(new_block_instance)
+        blocks.append((block_name, new_block_instance))
 
     return blocks
 
@@ -133,11 +133,11 @@ class Run(object):
         blocks = _import_blocks(block_names, block_args)
 
         # Initialize blocks (process_start).
-        for block in blocks:
+        for bname, block in blocks:
             block.process_start()
 
         readers = []
-        for block in blocks:
+        for bname, block in blocks:
             try:
                 block.finished  # pylint: disable=pointless-statement
                 readers.append(block)
@@ -147,15 +147,15 @@ class Run(object):
             logging.info('No reader specified, using read.Conllu')
             conllu_reader = Conllu()
             readers = [conllu_reader]
-            blocks = readers + blocks
+            blocks = [('read.Conllu', conllu_reader)] + blocks
 
         # Apply blocks on the data.
         finished = False
         while not finished:
             document = Document()
             logging.info(" ---- ROUND ----")
-            for block in blocks:
-                logging.info("Executing block " + block.__class__.__name__)
+            for bname, block in blocks:
+                logging.info(f"Executing block {bname}")
                 block.apply_on_document(document)
 
             finished = True
@@ -164,7 +164,7 @@ class Run(object):
                 finished = finished and reader.finished
 
         # 6. close blocks (process_end)
-        for block in blocks:
+        for bname, block in blocks:
             block.process_end()
 
     # TODO: better implementation, included Scen
