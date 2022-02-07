@@ -88,7 +88,10 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                             split_antes.append(ante_cl)
                     cluster.split_ante = sorted(split_antes)
 
-                mention.other = node.misc["MentionMisc" + index_str].replace('-', '%2D')
+                # Some CorefUD 0.2 datasets (e.g. ARRAU) separate key-value pairs with spaces instead of commas.
+                # We also need to escape forbidden characters.
+                mmisc = node.misc["MentionMisc" + index_str].replace(' ', ',')
+                mention.other = mmisc.replace('-', '%2D').replace('(', '%28').replace(')', '%29')
                 index += 1
                 index_str = f"[{index}]"
                 cluster_id = self._fix_id(node.misc["ClusterId" + index_str])
