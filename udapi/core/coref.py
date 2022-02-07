@@ -236,6 +236,8 @@ class CorefCluster(object):
     __slots__ = ['_cluster_id', '_mentions', 'cluster_type', 'split_ante']
 
     def __init__(self, cluster_id, cluster_type=None):
+        if any(x in cluster_id for x in "-=| \t"):
+            raise ValueError(f"{cluster_id} contains forbidden characters [-=| \\t]")
         self._cluster_id = cluster_id
         self._mentions = []
         self.cluster_type = cluster_type
@@ -262,6 +264,12 @@ class CorefCluster(object):
     @property
     def cluster_id(self):
         return self._cluster_id
+
+    @cluster_id.setter
+    def cluster_id(self, new_cluster_id):
+        if any(x in new_cluster_id for x in "-=| \t"):
+            raise ValueError(f"{new_cluster_id} contains forbidden characters [-=| \\t]")
+        self._cluster_id = new_cluster_id
 
     @property
     def mentions(self):
@@ -691,7 +699,11 @@ def store_coref_to_misc(doc):
         values = []
         for field in fields:
             if field == 'eid' or field == 'GRP':
-                values.append(cluster.cluster_id)
+                eid = cluster.cluster_id
+                if any(x in eid for x in "-=| \t"):
+                    _error(f"{eid} contains forbidden characters [-=| \\t]", strict)
+                    eid = eid.replace('-','').replace('=','').replace('|','').replace(' ','').replace('\t','')
+                values.append(eid)
             elif field == 'etype' or field == 'entity':
                 if not cluster.cluster_type:
                     values.append('')
