@@ -334,9 +334,9 @@ class CorefCluster(object):
 class BridgingLink:
     __slots__ = ['target', 'relation']
 
-    def __init__(self, target, relation):
+    def __init__(self, target, relation=''):
         self.target = target
-        self.relation = relation
+        self.relation = '' if relation is None else relation
 
     def __lt__(self, another):
         if self.target == another.target:
@@ -368,7 +368,7 @@ class BridgingLinks(collections.abc.MutableSequence):
             except ValueError as err:
                 _error(f"invalid Bridge {link_str} {err} at {node}", strict)
                 continue
-            relation = '_'
+            relation = ''
             if ':' in src_str:
                 src_str, relation = src_str.split(':', 1)
             if trg_str == src_str:
@@ -418,7 +418,8 @@ class BridgingLinks(collections.abc.MutableSequence):
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
-        return ','.join(f'{l.target._cluster_id}<{self.src_mention.cluster.cluster_id}{":" + l.relation if l.relation != "_" else ""}' for l in sorted(self._data))
+        # TODO in future link.relation should never be None, 0 nor "_", so we could delete the <not in (None, "_", "")> below.
+        return ','.join(f'{l.target._cluster_id}<{self.src_mention.cluster.cluster_id}{":" + l.relation if l.relation not in (None, "_", "") else ""}' for l in sorted(self._data))
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
