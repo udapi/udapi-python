@@ -666,6 +666,11 @@ def store_coref_to_misc(doc):
     if not global_entity:
         global_entity = 'eid-etype-head-other'
         doc.meta['global.Entity'] = global_entity
+
+    # global.Entity won't be written without newdoc
+    if not doc[0].trees[0].newdoc:
+        doc[0].trees[0].newdoc = True
+
     fields = global_entity.split('-')
     # GRP and entity are legacy names for eid and etype, respectively.
     other_fields = [f for f in fields if f not in ('eid etype head other GRP entity'.split(), )]
