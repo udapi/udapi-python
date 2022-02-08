@@ -21,7 +21,6 @@ class MergeSameSpan(Block):
             for m in node.coref_mentions:
                 mentions.add(m)
 
-        logging.info("Same-span mentions found!")
         for mA, mB in itertools.combinations(mentions, 2):
             if self.same_cluster_only and mA.cluster != mB.cluster:
                 continue
