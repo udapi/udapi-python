@@ -18,7 +18,7 @@ class FixCorefUD02(Block):
     def process_document(self, doc):
         # Temporary hack for GUM
         if doc.meta['global.Entity'] == 'entity-GRP-infstat-MIN-coref_type-identity':
-            doc.meta['global.Entity'] = 'eid-etype-head-other'
+            doc.meta['global.Entity'] = 'eid-etype-head-other-infstat-minspan-identity'
 
         for cluster in doc.coref_clusters.values():
             if cluster.cluster_type:
