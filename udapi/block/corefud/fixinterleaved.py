@@ -54,3 +54,25 @@ class FixInterleaved(Block):
                 mB.cluster.mentions.remove(mB)
             except ValueError:
                 pass
+
+            # By changing the mA.words, we could have create another error:
+            # making the span same as another mention. Let's fix it
+            sA = set(mA.words)
+            for mC in mentions:
+                if mC is mA or mC is mB:
+                    continue
+                if sA != set(mC.words):
+                    continue
+                # So mA and mC have the same span and we need to delete one of them to fix it.
+                # We will delete mA because it has the artificially enlarged span,
+                # while mC is from the original annotation.
+                for wa in sA:
+                    try:
+                        wa._mentions.remove(mA)
+                    except ValueError:
+                        pass
+                try:
+                    mA.cluster.mentions.remove(mA)
+                except ValueError:
+                    pass
+                break
