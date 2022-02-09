@@ -212,6 +212,7 @@ class FixEdeprels(Block):
         'zatím_co':         'zatímco',
         'závěr':            'závěrem:gen',
         'závisle_na':       'nezávisle_na:loc',
+        'že':               'že', # remove morphological case
         'že_ať':            'ať',
         'že_jako':          'že',
         'že_jakoby':        'že',
