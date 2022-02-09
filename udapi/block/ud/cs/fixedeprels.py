@@ -5,6 +5,217 @@ import re
 
 class FixEdeprels(Block):
 
+    # Secondary prepositions sometimes have the lemma of the original part of
+    # speech. We want the grammaticalized form instead. List even those that
+    # will have the same lexical form, as we also want to check the morphological
+    # case. And include all other prepositions that have unambiguous morphological
+    # case, even if they are not secondary.
+    unambiguous = {
+        'abi':              'aby',
+        'aby_na':           'na',
+        'ačkoliv':          'ačkoli',
+        'ať':               'ať', # remove morphological case
+        'ať_forma':         'formou:gen',
+        'ať_v':             'v:loc',
+        'ať_z':             'z:gen',
+        'ať_z_strana':      'ze_strany:gen',
+        'až_do':            'do:gen',
+        'až_o':             'o:acc',
+        'během':            'během:gen',
+        'bez':              'bez:gen',
+        'bez_ohled_na':     'bez_ohledu_na:acc',
+        'bez_zřetel_k':     'bez_zřetele_k:dat',
+        'bez_zřetel_na':    'bez_zřetele_na:acc',
+        'blíž':             'blízko:dat',
+        'cesta':            'cestou:gen',
+        'daleko':           'nedaleko:gen',
+        'daleko_od':        'od:gen',
+        'dík':              'díky:dat',
+        'díky':             'díky:dat',
+        'dle':              'dle:gen',
+        'do':               'do:gen',
+        'do_k':             'k:dat',
+        'do_oblast':        'do_oblasti:gen',
+        'do_rozpor_s':      'do_rozporu_s:ins',
+        'do_soulad_s':      'do_souladu_s:ins',
+        'forma':            'formou:gen',
+        'i_když':           'i_když', # remove morphological case
+        'jak_aby':          'jak',
+        'jak_ad':           'jak',
+        'jakkoliv':         'jakkoli',
+        'jako':             'jako', # remove morphological case
+        'jako_kupříkladu':  'jako',
+        'jakoby':           'jako',
+        'jakoby_pod':       'pod:ins',
+        'jelikož_do':       'jelikož',
+        'jestli_že':        'jestliže',
+        'k':                'k:dat',
+        'k_konec':          'ke_konci:gen',
+        'kdykoliv':         'kdykoli',
+        'kol':              'kolem:gen',
+        'kolem':            'kolem:gen',
+        'konec':            'koncem:gen',
+        'kromě':            'kromě:gen',
+        'liž':              'li',
+        'mezi_uvnitř':      'uvnitř:gen',
+        'na_báze':          'na_bázi:gen',
+        'na_čelo':          'na_čele:gen',
+        'na_mimo':          'na:loc', # na kurtě i mimo něj
+        'na_než':           'na:acc', # na víc než čtyři a půl kilometru
+        'na_od':            'na_rozdíl_od:gen',
+        'na_podklad':       'na_podkladě:gen',
+        'na_rozdíl_od':     'na_rozdíl_od:gen',
+        'na_újma':          'gen', # 'nebude na újmu' is a multi-word predicate but 'na újmu' is probably not used as an independent oblique modifier
+        'na_úroveň':        'na_úrovni:gen',
+        'na_úsek':          'na_úseku:gen',
+        'na_základ':        'na_základě:gen',
+        'na_základna':      'na_základně:gen',
+        'na_závěr':         'na_závěr:gen',
+        'namísto':          'namísto:gen',
+        'namísto_do':       'do:gen',
+        'narozdíl_od':      'na_rozdíl_od:gen',
+        'následek':         'následkem:gen',
+        'navzdory':         'navzdory:dat',
+        'nedaleko':         'nedaleko:gen',
+        'než':              'než', # remove morphological case
+        'nežli':            'nežli', # remove morphological case
+        'o_jako':           'jako',
+        'o_o':              'o:acc',
+        'od':               'od:gen',
+        'ohledně':          'ohledně:gen',
+        'okolo':            'okolo:gen',
+        'oproti':           'oproti:dat',
+        'po_v':             'po:loc',
+        'po_doba':          'po_dobu:gen',
+        'po_vzor':          'po_vzoru:gen',
+        'poblíž':           'poblíž:gen',
+        'počátek':          'počátkem:gen',
+        'počínat':          'počínaje:ins',
+        'pod_dojem':        'pod_dojmem:gen',
+        'pod_vliv':         'pod_vlivem:gen',
+        'podle':            'podle:gen',
+        'pomoc':            'pomocí:gen',
+        'pomocí':           'pomocí:gen',
+        'postup':           'postupem:gen',
+        'pouze_v':          'v:loc',
+        'pro':              'pro:acc',
+        'prostřednictví':   'prostřednictvím:gen',
+        'prostřednictvím':  'prostřednictvím:gen',
+        'proti':            'proti:dat',
+        'protože':          'protože', # remove morphological case
+        'před_během':       'během:gen', # před a během utkání
+        'před_po':          'po:loc', # před a po vyloučení Schindlera
+        'přes':             'přes:acc',
+        'přestože':         'přestože', # remove morphological case
+        'při':              'při:loc',
+        'při_příležitost':  'při_příležitosti:gen',
+        's_ohled_k':        's_ohledem_k:dat',
+        's_ohled_na':       's_ohledem_na:acc',
+        's_pomoc':          's_pomocí:gen',
+        's_přihlédnutí_k':  's_přihlédnutím_k:dat',
+        's_přihlédnutí_na': 's_přihlédnutím_na:acc',
+        's_výjimka':        's_výjimkou:gen',
+        's_vyloučení':      's_vyloučením:gen',
+        's_zřetel_k':       'se_zřetelem_k:dat',
+        's_zřetel_na':      'se_zřetelem_na:acc',
+        'severně_od':       'od:gen',
+        'skrz':             'skrz:acc',
+        'směr_do':          'směrem_do:gen',
+        'směr_k':           'směrem_k:dat',
+        'směr_na':          'směrem_na:acc',
+        'směr_od':          'směrem_od:gen',
+        'společně_s':       'společně_s:ins',
+        'spolu':            'spolu_s:ins',
+        'spolu_s':          'spolu_s:ins',
+        'stranou':          'stranou:gen',
+        'takže':            'takže', # remove morphological case
+        'takže_a':          'takže',
+        'třebaže':          'třebaže', # remove morphological case
+        'u':                'u:gen',
+        'u_příležitost':    'u_příležitosti:gen',
+        'uprostřed':        'uprostřed:gen',
+        'uvnitř':           'uvnitř:gen',
+        'v_analogie_s':     'v_analogii_s:ins',
+        'v_čelo':           'v_čele:gen',
+        'v_čelo_s':         'v_čele_s:ins',
+        'v_dohoda_s':       'v_dohodě_s:ins',
+        'v_duch':           'v_duchu:gen',
+        'v_důsledek':       'v_důsledku:gen',
+        'v_forma':          've_formě:gen',
+        'v_jméno':          've_jménu:gen',
+        'v_k':              'k:dat',
+        'v_kombinace_s':    'v_kombinaci_s:ins',
+        'v_konfrontace_s':  'v_konfrontaci_s:ins',
+        'v_kontext_s':      'v_kontextu_s:ins',
+        'v_na':             'na:loc',
+        'v_oblast':         'v_oblasti:gen',
+        'v_oblast_s':       's:ins',
+        'v_obor':           'v_oboru:gen',
+        'v_otázka':         'v_otázce:gen',
+        'v_podoba':         'v_podobě:gen',
+        'v_poměr_k':        'v_poměru_k:dat',
+        'v_proces':         'v_procesu:gen',
+        'v_prospěch':       've_prospěch:gen',
+        'v_protiklad_k':    'v_protikladu_k:dat',
+        'v_průběh':         'v_průběhu:gen',
+        'v_případ':         'v_případě:gen',
+        'v_případ_že':      'v_případě_že',
+        'v_rámec':          'v_rámci:gen',
+        'v_rozpor_s':       'v_rozporu_s:ins',
+        'v_řada':           'v_řadě:gen',
+        'v_shoda_s':        've_shodě_s:ins',
+        'v_služba':         've_službách:gen',
+        'v_směr':           've_směru:gen',
+        'v_směr_k':         've_směru_k:dat',
+        'v_smysl':          've_smyslu:gen',
+        'v_součinnost_s':   'v_součinnosti_s:ins',
+        'v_souhlas_s':      'v_souhlasu_s:ins',
+        'v_soulad_s':       'v_souladu_s:ins',
+        'v_souvislost_s':   'v_souvislosti_s:ins',
+        'v_spojení_s':      've_spojení_s:ins',
+        'v_spojený_s':      've_spojení_s:ins',
+        'v_spojitost_s':    've_spojitosti_s:ins',
+        'v_spolupráce_s':   've_spolupráci_s:ins',
+        'v_s_spolupráce':   've_spolupráci_s:ins',
+        'v_srovnání_s':     've_srovnání_s:ins',
+        'v_srovnání_se':    've_srovnání_s:ins',
+        'v_světlo':         've_světle:gen',
+        'v_věc':            've_věci:gen',
+        'v_vztah_k':        've_vztahu_k:dat',
+        'v_zájem':          'v_zájmu:gen',
+        'v_záležitost':     'v_záležitosti:gen',
+        'v_závěr':          'v_závěru:gen',
+        'v_závislost_na':   'v_závislosti_na:loc',
+        'v_závislost_s':    'v_závislosti_s:ins',
+        'v_znamení':        've_znamení:gen',
+        'včetně':           'včetně:gen',
+        'vedle':            'vedle:gen',
+        'vina':             'vinou:gen',
+        'vliv':             'vlivem:gen',
+        'vůči':             'vůči:dat',
+        'vzhledem':         'vzhledem_k:dat',
+        'vzhledem_k':       'vzhledem_k:dat',
+        'z':                'z:gen',
+        'z_důvod':          'z_důvodu:gen',
+        'z_hledisko':       'z_hlediska:gen',
+        'z_oblast':         'z_oblasti:gen',
+        'z_řada':           'z_řad:gen',
+        'z_strana':         'ze_strany:gen',
+        'z_nedostatek':     'z_nedostatku:gen',
+        'z_titul':          'z_titulu:gen',
+        'za_pomoc':         'za_pomoci:gen',
+        'za_účast':         'za_účasti:gen',
+        'za_účel':          'za_účelem:gen',
+        'začátek':          'začátkem:gen',
+        'zásluha':          'zásluhou:gen',
+        'zatím_co':         'zatímco',
+        'závěr':            'závěrem:gen',
+        'závisle_na':       'nezávisle_na:loc',
+        'že_ať':            'ať',
+        'že_jako':          'že',
+        'že_za':            'za:gen'
+    }
+
     def process_node(self, node):
         """
         Occasionally the edeprels automatically derived from the Czech basic
@@ -12,26 +223,39 @@ class FixEdeprels(Block):
         abbreviation and its morphological case is unknown.
         """
         for edep in node.deps:
+            m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl):', edep['deprel'])
+            if m:
+                bdeprel = m.group(1)
+                solved = False
+                for x in self.unambiguous:
+                    # All secondary prepositions have only one fixed morphological case
+                    # they appear with, so we can replace whatever case we encounter with the correct one.
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
+                        solved = True
+                        break
+                # The following prepositions have more than one morphological case
+                # available. Thanks to the Case feature on prepositions, we can
+                # identify the correct one.
+                if not solved:
+                    m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                    if m:
+                        # The following is only partial solution. We will not see
+                        # some children because they may be shared children of coordination.
+                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                            solved = True
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 # We do not include 'i' in the list of redundant prefixes because we want to preserve 'i když' (but we want to discard the other combinations).
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):abi$', r'\1:aby', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):ačkoliv$', r'\1:ačkoli', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):jak_aby$', r'\1:jak', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):jak_ad$', r'\1:jak', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):jakkoliv$', r'\1:jakkoli', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):jako_kupříkladu$', r'\1:jako', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):jakoby$', r'\1:jako', edep['deprel']) # these instances in FicTree should be spelled 'jako by'
-                edep['deprel'] = re.sub(r'^(advcl):jelikož_do$', r'\1:jelikož', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):jestli_že$', r'\1:jestliže', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl):k$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:k$', r'obl:k:dat', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):kdykoliv$', r'\1:kdykoli', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):liž$', r'\1:li', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:místo$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
                 edep['deprel'] = re.sub(r'^acl:na_způsob$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
                 edep['deprel'] = re.sub(r'^(advcl):neboť$', r'\1', edep['deprel']) # 'neboť' is coordinating
@@ -39,14 +263,9 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl):od$', r'nmod:od:gen', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(advcl):podle$', r'obl:podle:gen', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:pro$', r'obl:pro:acc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):takže_a$', r'\1:takže', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl):v$', r'nmod:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):v_případ_že$', r'\1:v_případě_že', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:v_duch$', r'obl:v_duchu:gen', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):zatím_co$', r'\1:zatímco', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):že_ať$', r'\1:ať', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):že_jako$', r'\1:že', edep['deprel'])
                 if edep['deprel'] == 'acl:v' and node.form == 'patře':
                     edep['deprel'] = 'nmod:v:loc'
                     node.deprel = 'nmod'
@@ -84,27 +303,11 @@ class FixEdeprels(Block):
                 elif edep['deprel'] == 'nmod:voc':
                     # 'v 8. čísle tiskoviny Ty rudá krávo'
                     edep['deprel'] = 'nmod:nom'
-                elif re.match(r'^(nmod|obl(:arg)?):během$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):bez$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif edep['deprel'] == 'nmod:co:nom':
                     # Annotation error: 'kompatibilní znamená tolik co slučitelný'
                     # 'co' should be relative pronoun rather than subordinating conjunction.
                     edep['deprel'] = 'acl:relcl'
                     node.deprel = 'acl:relcl'
-                elif re.match(r'^(nmod|obl(:arg)?):díky$', edep['deprel']):
-                    edep['deprel'] += ':dat'
-                elif re.match(r'^(nmod|obl(:arg)?):dle$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):do$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):k(:nom)?$', edep['deprel']):
-                    edep['deprel'] = re.sub(r':nom$', '', edep['deprel']) + ':dat'
-                elif re.match(r'^(nmod|obl(:arg)?):kolem$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):kromě$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif re.match(r'^(obl(:arg)?):li$', edep['deprel']):
                     edep['deprel'] = 'advcl:li'
                 elif re.match(r'^(nmod|obl(:arg)?):mezi$', edep['deprel']):
@@ -145,17 +348,11 @@ class FixEdeprels(Block):
                         edep['deprel'] += ':acc'
                     else:
                         edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):namísto$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):navzdory$', edep['deprel']):
-                    edep['deprel'] += ':dat'
                 elif re.match(r'^(nmod|obl(:arg)?):o$', edep['deprel']):
                     if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
                         edep['deprel'] += ':acc'
                     else:
                         edep['deprel'] += ':loc'
-                elif re.match(r'^(nmod|obl(:arg)?):od$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif re.match(r'^(nmod|obl(:arg)?):ohled_na:ins$', edep['deprel']):
                     # Annotation error.
                     if node.form == 's':
@@ -166,10 +363,6 @@ class FixEdeprels(Block):
                         self.set_basic_and_enhanced(ohled, node, 'fixed', 'fixed')
                         self.set_basic_and_enhanced(na, node, 'fixed', 'fixed')
                         self.set_basic_and_enhanced(node, noun, 'case', 'case')
-                elif re.match(r'^(nmod|obl(:arg)?):okolo$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):oproti$', edep['deprel']):
-                    edep['deprel'] += ':dat'
                 elif re.match(r'^nmod:pára:nom$', edep['deprel']):
                     # Annotation error: 'par excellence'.
                     edep['deprel'] = 'nmod'
@@ -184,42 +377,21 @@ class FixEdeprels(Block):
                             c.feats['Polarity'] = ''
                             c.feats['AdpType'] = 'Prep'
                 elif re.match(r'^(nmod|obl(:arg)?):po$', edep['deprel']):
-                    ###!!! Taky bychom se mohli dívat do XPOS předložky, protože tam bude pád uveden!
                     if len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
                         edep['deprel'] += ':acc'
                     else:
                         edep['deprel'] += ':loc'
-                elif re.match(r'^(nmod|obl(:arg)?):poblíž$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif re.match(r'^(nmod|obl(:arg)?):pod$', edep['deprel']):
                     if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
                         edep['deprel'] += ':acc'
                     else:
                         edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):podle$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):pro$', edep['deprel']):
-                    edep['deprel'] += ':acc'
-                elif re.match(r'^(nmod|obl(:arg)?):proti$', edep['deprel']):
-                    edep['deprel'] += ':dat'
                 elif re.match(r'^(nmod|obl(:arg)?):před$', edep['deprel']):
                     # Accusative would be possible but unlikely.
                     edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):přes$', edep['deprel']):
-                    edep['deprel'] += ':acc'
-                elif re.match(r'^(nmod|obl(:arg)?):při$', edep['deprel']):
-                    edep['deprel'] += ':loc'
                 elif re.match(r'^(nmod|obl(:arg)?):s$', edep['deprel']):
                     # Genitive would be possible but unlikely.
                     edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):skrz$', edep['deprel']):
-                    edep['deprel'] += ':acc'
-                elif re.match(r'^(nmod|obl(:arg)?):u$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):uprostřed$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):uvnitř$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif re.match(r'^(nmod|obl(:arg)?):v_s(:loc)?$', edep['deprel']) and node.form == 'spolupráci':
                     # Annotation error. 'Ve spolupráci s' should be analyzed as a multi-word preposition.
                     # Find the content nominal.
@@ -244,51 +416,23 @@ class FixEdeprels(Block):
                     # 'Předloňský kůň roku Law Soziri šel již v Lahovickém oblouku v čele s Raddelliosem a tato dvojice také nakonec zahanbila ostatní soupeře...'
                     # There should be two independent oblique modifiers, 'v čele' and 's Raddelliosem'.
                     edep['deprel'] = 'obl:s:ins'
-                elif re.match(r'^(nmod|obl(:arg)?):včetně$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):vedle$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^(nmod|obl(:arg)?):vůči$', edep['deprel']):
-                    edep['deprel'] += ':dat'
-                elif re.match(r'^(nmod|obl(:arg)?):z$', edep['deprel']):
-                    edep['deprel'] += ':gen'
                 elif re.match(r'^(nmod|obl(:arg)?):za$', edep['deprel']):
                     # Instrumental would be possible but unlikely.
                     edep['deprel'] += ':acc'
                 else:
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a([_:].+)?$', r'\1', edep['deprel']) # ala vršovický dloubák
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a_l[ae]([_:].+)?$', r'\1', edep['deprel']) # a la bondovky
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):aby_na:loc$', r'\1:na:loc', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ač([_:].+)?$', r'\1:ač', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ačkoliv?([_:].+)?$', r'\1:ačkoli', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(jak_)?ad([_:].+)?$', r'\1', edep['deprel']) # ad infinitum
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať_v(:loc)?$', r'\1:v:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať_z(:gen)?$', r'\1:z:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):až_do(:gen)?$', r'\1:do:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):až_o(:acc)?$', r'\1:o:acc', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):bez_ohled_na(:acc)?$', r'\1:bez_ohledu_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):bez_zřetel_k(:dat)?$', r'\1:bez_zřetele_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):bez_zřetel_na(:acc)?$', r'\1:bez_zřetele_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):blíž(:dat)?$', r'\1:blízko:dat', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):byť[_:].+$', r'\1:byť', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):cesta:ins$', r'\1:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):cesta(:gen)?$', r'\1:cestou:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):co(:nom)?$', r'advmod', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):daleko(:nom)?$', r'\1:nedaleko:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):daleko_od(:gen)?$', r'\1:od:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):de([_:].+)?$', r'\1', edep['deprel']) # de facto
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):di([_:].+)?$', r'\1', edep['deprel']) # Lido di Jesolo
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):dík(:dat)?$', r'\1:díky:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):do:(nom|dat)$', r'\1:do:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):do_k:dat$', r'\1:k:dat', edep['deprel']) # do maloobchodní sítě (nebo k dalšímu zpracování)
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):do_oblast(:gen)?$', r'\1:do_oblasti:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):do_rozpor_s(:ins)?$', r'\1:do_rozporu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):do_soulad_s(:ins)?$', r'\1:do_souladu_s:ins', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):en([_:].+)?$', r'\1', edep['deprel']) # bienvenue en France
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(ať_)?forma(:gen)?$', r'\1:formou:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):i_když[_:].+$', r'\1:i_když', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):in([_:].+)?$', r'\1', edep['deprel']) # made in NHL
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):into([_:].+)?$', r'\1', edep['deprel']) # made in NHL
@@ -296,161 +440,27 @@ class FixEdeprels(Block):
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakkoliv?[_:].+$', r'\1:jakkoli', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jako[_:].+$', r'\1:jako', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakoby[_:].+$', r'\1:jako', edep['deprel']) # these instances in FicTree should be spelled 'jako by'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakoby_pod:ins$', r'\1:pod:ins', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno:nom$', r'\1:jménem:nom', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno(:gen)?$', r'\1:jménem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):k(:gen)?$', r'\1:k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):k_konec(:gen)?$', r'\1:ke_konci:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):kol(em)?(:gen)?$', r'\1:kolem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):konec(:gen)?$', r'\1:koncem:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):mezi:(nom|dat)$', r'\1:mezi:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):mezi_uvnitř:gen$', r'\1:uvnitř:gen', edep['deprel']) # 'nejdou mezi, ale uvnitř odvětví a oborů'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na(:gen|:nom)$', r'\1:na:acc', edep['deprel']) # 'odložit na 1. září'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_báze(:gen)?$', r'\1:na_bázi:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_čelo(:gen)?$', r'\1:na_čele:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_mimo:loc$', r'\1:na:loc', edep['deprel']) # 'na kurtě i mimo něj'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_než:acc$', r'\1:na:acc', edep['deprel']) # 'na víc než čtyři a půl kilometru'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_od:acc$', r'\1:na_rozdíl_od:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_podklad(:gen)?$', r'\1:na_podkladě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_?rozdíl_od(:gen)?$', r'\1:na_rozdíl_od:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_újma(:gen)?$', r'\1:gen', edep['deprel']) # 'nebude na újmu' is a multi-word predicate but 'na újmu' is probably not used as an independent oblique modifier
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_úroveň(:gen)?$', r'\1:na_úrovni:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_úsek(:gen)?$', r'\1:na_úseku:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_základ(:gen)?$', r'\1:na_základě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_základna(:gen)?$', r'\1:na_základně:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):na_závěr(:gen)?$', r'\1:na_závěr:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):namísto_do(:gen)?$', r'\1:do:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):následek(:gen)?$', r'\1:následkem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(ne)?daleko(:gen)?$', r'\1:nedaleko:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):než[_:].+$', r'\1:než', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):nežli[_:].+$', r'\1:nežli', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):o:(nom|gen|dat)$', r'\1:o:acc', edep['deprel']) # 'zájem o obaly'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):o_jako[_:].+$', r'\1:jako', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):o_o:acc$', r'\1:o:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):od:(nom|dat)$', r'\1:od:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):of([_:].+)?$', r'\1', edep['deprel']) # University of North Carolina
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ohledně(:gen)?$', r'\1:ohledně:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):per([_:].+)?$', r'\1', edep['deprel']) # per rollam
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po:(nom|gen)$', r'\1:po:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po_v:loc$', r'\1:po:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po_doba(:gen)?$', r'\1:po_dobu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po_vzor(:gen)?$', r'\1:po_vzoru:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):počátek(:gen)?$', r'\1:počátkem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):počínat(:ins)?$', r'\1:počínaje:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):pod_dojem(:gen)?$', r'\1:pod_dojmem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):pod_vliv(:gen)?$', r'\1:pod_vlivem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):pomocí?(:gen)?$', r'\1:pomocí:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):postup(:gen)?$', r'\1:postupem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):pouze_v(:loc)?$', r'\1:v:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):pro:(nom|dat)$', r'\1:pro:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):prostřednictvím?(:gen|:ins)?$', r'\1:prostřednictvím:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):proti:nom$', r'\1:proti:dat', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):protože[_:].+$', r'\1:protože', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):před:gen$', r'\1:před:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):před_během:gen$', r'\1:během:gen', edep['deprel']) # 'před a během utkání'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):před_po:loc$', r'\1:po:loc', edep['deprel']) # 'před a po vyloučení Schindlera'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):přes:gen$', r'\1:přes:acc', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):přestože[_:].+$', r'\1:přestože', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):při_příležitost(:gen)?$', r'\1:při_příležitosti:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):se?:(nom|acc|ins)$', r'\1:s:ins', edep['deprel']) # accusative: 'být s to' should be a fixed expression and it should be the predicate!
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_ohled_k(:dat)?$', r'\1:s_ohledem_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_ohled_na(:acc)?$', r'\1:s_ohledem_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_pomoc(:gen)?$', r'\1:s_pomocí:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_přihlédnutí_k(:dat)?$', r'\1:s_přihlédnutím_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_přihlédnutí_na(:acc)?$', r'\1:s_přihlédnutím_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_výjimka(:gen)?$', r'\1:s_výjimkou:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_vyloučení(:gen)?$', r'\1:s_vyloučením:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_zřetel_k(:dat)?$', r'\1:se_zřetelem_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):s_zřetel_na(:acc)?$', r'\1:se_zřetelem_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):severně_od(:gen)?$', r'\1:od:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):shoda(:gen)?$', r'\1', edep['deprel']) # 'shodou okolností' is not a prepositional phrase
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):směr_do(:gen)?$', r'\1:směrem_do:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):směr_k(:dat)?$', r'\1:směrem_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):směr_na(:acc)?$', r'\1:směrem_na:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):směr_od(:gen)?$', r'\1:směrem_od:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):společně_s(:ins)?$', r'\1:společně_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):spolu(_s)?(:ins|:dat)?$', r'\1:spolu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):stranou(:gen|:dat)?$', r'\1:stranou:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):takže[_:].+$', r'\1:takže', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):třebaže[_:].+$', r'\1:třebaže', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):u_příležitost(:gen)?$', r'\1:u_příležitosti:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v:gen$', r'\1:v:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_analogie_s(:ins)?$', r'\1:v_analogii_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_čelo(:gen)?$', r'\1:v_čele:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_čelo_s(:ins)?$', r'\1:v_čele_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_dohoda_s(:ins)?$', r'\1:v_dohodě_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_duch(:gen)?$', r'\1:v_duchu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_důsledek(:gen)?$', r'\1:v_důsledku:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_forma(:gen)?$', r'\1:ve_formě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_jméno(:gen)?$', r'\1:ve_jménu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_k:dat$', r'\1:k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_kombinace_s(:ins)?$', r'\1:v_kombinaci_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_konfrontace_s(:ins)?$', r'\1:v_konfrontaci_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_kontext_s(:ins)?$', r'\1:v_kontextu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_na:loc$', r'\1:na:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_oblast(:gen)?$', r'\1:v_oblasti:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_oblast_s(:ins)?$', r'\1:s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_obor(:gen)?$', r'\1:v_oboru:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_otázka(:gen)?$', r'\1:v_otázce:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_podoba(:gen)?$', r'\1:v_podobě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_poměr_k(:dat)?$', r'\1:v_poměru_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_proces(:gen)?$', r'\1:v_procesu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_prospěch(:gen)?$', r'\1:ve_prospěch:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_protiklad_k(:dat)?$', r'\1:v_protikladu_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_průběh(:gen)?$', r'\1:v_průběhu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_případ(:gen)?$', r'\1:v_případě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_rámec(:gen)?$', r'\1:v_rámci:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_rozpor_s(:ins)?$', r'\1:v_rozporu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_řada(:gen)?$', r'\1:v_řadě:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_shoda_s(:ins)?$', r'\1:ve_shodě_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_služba(:gen)?$', r'\1:ve_službách:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_směr(:gen)?$', r'\1:ve_směru:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_směr_k(:dat)?$', r'\1:ve_směru_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_smysl(:gen)?$', r'\1:ve_smyslu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_součinnost_s(:ins|:nom)?$', r'\1:v_součinnosti_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_souhlas_s(:ins|:nom)?$', r'\1:v_souhlasu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_soulad_s(:ins|:nom)?$', r'\1:v_souladu_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_souvislost_s(:ins)?$', r'\1:v_souvislosti_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_spojení_s(:ins)?$', r'\1:ve_spojení_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_spojený_s(:ins)?$', r'\1:ve_spojení_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_spojitost_s(:ins)?$', r'\1:ve_spojitosti_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_spolupráce_s(:ins)?$', r'\1:ve_spolupráci_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_s_spolupráce(:ins)?$', r'\1:ve_spolupráci_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_srovnání_se?(:ins)?$', r'\1:ve_srovnání_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_světlo(:gen)?$', r'\1:ve_světle:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_věc(:gen)?$', r'\1:ve_věci:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_vztah_k(:dat)?$', r'\1:ve_vztahu_k:dat', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_zájem(:gen|:loc)?$', r'\1:v_zájmu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_záležitost(:gen)?$', r'\1:v_záležitosti:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_závěr(:gen)?$', r'\1:v_závěru:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_závislost_na(:loc)?$', r'\1:v_závislosti_na:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_závislost_s(:ins)?$', r'\1:v_závislosti_s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v_znamení(:gen)?$', r'\1:ve_znamení:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vina(:gen)?$', r'\1:vinou:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vliv(:gen)?$', r'\1:vlivem:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vo:acc$', r'\1:o:acc', edep['deprel']) # colloquial: vo všecko
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):von([_:].+)?$', r'\1', edep['deprel']) # von Neumannem
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):voor([_:].+)?$', r'\1', edep['deprel']) # Hoge Raad voor Diamant
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vzhledem(_k)?(:dat)?$', r'\1:vzhledem_k:dat', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:nom$', r'\1:z:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:ins$', r'\1:s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_důvod(:gen)?$', r'\1:z_důvodu:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_hledisko(:gen|:nom)?$', r'\1:z_hlediska:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_oblast(:gen)?$', r'\1:z_oblasti:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_řada(:gen)?$', r'\1:z_řad:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(ať_)?z_strana(:gen)?$', r'\1:ze_strany:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_nedostatek(:gen)?$', r'\1:z_nedostatku:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z_titul(:gen)?$', r'\1:z_titulu:gen', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za:nom$', r'\1:za:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za_pomoc(:gen)?$', r'\1:za_pomoci:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za_účast(:gen)?$', r'\1:za_účasti:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za_účel(:gen)?$', r'\1:za_účelem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):začátek(:gen)?$', r'\1:začátkem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):zásluha(:gen)?$', r'\1:zásluhou:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):závěr(:gen)?$', r'\1:závěrem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):závisle_na(:loc)?$', r'\1:nezávisle_na:loc', edep['deprel'])
                     edep['deprel'] = re.sub(r'^nmod:že:gen$', 'acl:že', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):že_za:gen$', r'\1:za:gen', edep['deprel'])
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
