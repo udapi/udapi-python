@@ -42,7 +42,7 @@ class FixCorefUD02(Block):
                 if etype == 'appos':
                     etype = ''
                     for mention in cluster.mentions[1:]:
-                        mention.other['appos'] = 1
+                        mention.other['appos'] = '1'
                 cluster.cluster_type = etype
 
             for mention in cluster.mentions:
