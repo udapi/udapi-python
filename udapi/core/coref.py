@@ -610,30 +610,27 @@ def load_coref_from_misc(doc, strict=True):
                     unfinished_mentions[eid].append((mention, head_idx))
 
 
-        # Bridge, e.g. Entity=event-12|Bridge=12<124,12<125
+        # Bridge, e.g. Entity=(e12-event|Bridge=e12<e124,e12<e125
         # or with relations Bridge=c173<c188:subset,c174<c188:part
         misc_bridge = node.misc['Bridge']
         if misc_bridge:
             BridgingLinks.from_string(misc_bridge, clusters, strict)
 
-        # SplitAnte, e.g. Entity=(person-54)|Split=4<54,9<54
+        # SplitAnte, e.g. Entity=(e11-person(e12-person)|SplitAnte=e3<e11,e4<e11,e6<e12,e7<e12
+        # which means that both e11 and e12 have split antecedents (e11=e3+e4, e12=e6+e7).
         misc_split = node.misc['SplitAnte']
         if not misc_split and 'Split' in node.misc:
             misc_split = node.misc.pop('Split')
         if misc_split:
-            src_str = misc_split.split('<')[-1]
             ante_clusters = []
             for x in misc_split.split(','):
                 ante_str, this_str = x.split('<')
                 if ante_str == this_str:
                     _error("SplitAnte cannot self-reference the same cluster: " + this_str, strict)
-                if this_str != src_str:
-                    _error(f'{node} invalid SplitAnte: {this_str} != {src_str}', strict)
                 # split cataphora, e.g. "We, that is you and me..."
                 if ante_str not in clusters:
                     clusters[ante_str] = CorefCluster(ante_str)
-                ante_clusters.append(clusters[ante_str])
-            clusters[src_str].split_ante = ante_clusters
+                clusters[this_str].split_ante.append(clusters[ante_str])
 
     for cluster_name, mentions in unfinished_mentions.items():
         for mention in mentions:
