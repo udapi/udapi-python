@@ -225,14 +225,14 @@ class FixEdeprels(Block):
         abbreviation and its morphological case is unknown.
         """
         for edep in node.deps:
-            m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)):', edep['deprel'])
+            m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):', edep['deprel'])
             if m:
                 bdeprel = m.group(1)
                 solved = False
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
-                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
                     if m:
                         edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
                         solved = True
