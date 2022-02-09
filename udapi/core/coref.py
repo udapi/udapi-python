@@ -537,7 +537,7 @@ def load_coref_from_misc(doc, strict=True):
                 if subspan_idx and subspan_idx == total_subspans:
                     m = discontinuous_mentions[eid].pop()
                     if m is not mention:
-                        _error(f"Closing mention {mention} at {node}, but it has unfinished nested mentions ({m})", 1)
+                        _error(f"Closing mention {mention.cluster.cluster_id} at {node}, but it has unfinished nested mentions ({m.words})", 1)
 
             # 3. opening or single-word
             else:

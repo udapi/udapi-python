@@ -16,7 +16,7 @@ class FixCorefUD02(Block):
     """Fix errors in CorefUD 0.2 for release of CorefUD 1.0."""
 
     def process_document(self, doc):
-        # Temporary hack for GUM
+        # For GUM
         if doc.meta['global.Entity'] == 'entity-GRP-infstat-MIN-coref_type-identity':
             doc.meta['global.Entity'] = 'eid-etype-head-other-infstat-minspan-identity'
 
@@ -42,7 +42,7 @@ class FixCorefUD02(Block):
                 if etype == 'appos':
                     etype = ''
                     for mention in cluster.mentions[1:]:
-                        mentions[0].other['appos'] = 1
+                        mention.other['appos'] = 1
                 cluster.cluster_type = etype
 
             for mention in cluster.mentions:

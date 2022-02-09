@@ -14,12 +14,14 @@ class FixInterleaved(Block):
         self.nested_same_subspan = nested_same_subspan
 
     def process_tree(self, tree):
-        mentions = set()
+        mentions, deleted = set(), set()
         for node in tree.descendants_and_empty:
             for m in node.coref_mentions:
                 mentions.add(m)
 
         for mA, mB in itertools.combinations(mentions, 2):
+            if mA in deleted or mB in deleted:
+                continue
             if self.same_cluster_only and mA.cluster != mB.cluster:
                 continue
 
@@ -54,12 +56,13 @@ class FixInterleaved(Block):
                 mB.cluster.mentions.remove(mB)
             except ValueError:
                 pass
+            deleted.add(mB)
 
             # By changing the mA.words, we could have create another error:
             # making the span same as another mention. Let's fix it
             sA = set(mA.words)
             for mC in mentions:
-                if mC is mA or mC is mB:
+                if mC in deleted or mC is mA or mC is mB:
                     continue
                 if sA != set(mC.words):
                     continue
@@ -76,3 +79,4 @@ class FixInterleaved(Block):
                 except ValueError:
                     pass
                 break
+                deleted.add(mA)
