@@ -6,9 +6,10 @@ from udapi.core.node import find_minimal_common_treelet
 class MoveHead(Block):
     """Block corefud.MoveHead moves the head to the highest node in each mention."""
 
-    def __init__(self, bugs='warn', **kwargs):
+    def __init__(self, bugs='warn', keep_head_if_possible=True, **kwargs):
         self.counter = Counter()
         self.bugs = bugs
+        self.keep_head_if_possible = keep_head_if_possible
         super().__init__(**kwargs)
 
     def _eparents(self, node):
@@ -68,7 +69,7 @@ class MoveHead(Block):
                 mention.head.misc['Bug'] = 'highest-head'
 
         # Fifth, try to convervatively preserve the original head, if it is one of the possible heads.
-        if mention.head in enh_heads:
+        if self.keep_head_if_possible and mention.head in enh_heads:
             return mention.head, 'nontreelet'
 
         # Finally, return the word-order-wise first head candidate as the head.

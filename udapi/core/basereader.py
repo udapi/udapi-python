@@ -28,6 +28,7 @@ class BaseReader(Block):
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
         self.split_docs = split_docs
         self.ignore_sent_id = ignore_sent_id
+        self._global_entity = None
 
     @staticmethod
     def is_multizone_reader():
@@ -110,6 +111,7 @@ class BaseReader(Block):
             return False
 
         document.meta['loaded_from'] = self.filename
+        document.meta['global.Entity'] = self._global_entity
         if trees and trees[0].newdoc and trees[0].newdoc is not True:
             document.meta["docname"] = trees[0].newdoc
 
@@ -187,6 +189,7 @@ class BaseReader(Block):
                     break
                 if trees_loaded == 0:
                     document.meta['loaded_from'] = self.filename
+                    document.meta['global.Entity'] = self._global_entity
                 add_to_the_last_bundle = False
                 trees_loaded += 1
 

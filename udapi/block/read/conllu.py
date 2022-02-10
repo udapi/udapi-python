@@ -14,6 +14,7 @@ RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.*)')
 RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc)(?:\s+id\s*=\s*(.+))?')
 RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
+RE_GLOBAL_ENTITY = re.compile(r'^# global.Entity\s*=\s*(\S+)')
 
 
 class Conllu(BaseReader):
@@ -33,8 +34,7 @@ class Conllu(BaseReader):
         self.empty_parent = empty_parent
         self.fix_cycles = fix_cycles
 
-    @staticmethod
-    def parse_comment_line(line, root):
+    def parse_comment_line(self, line, root):
         """Parse one line of CoNLL-U and fill sent_id, text, newpar, newdoc in root."""
         sent_id_match = RE_SENT_ID.match(line)
         if sent_id_match is not None:
@@ -68,6 +68,16 @@ class Conllu(BaseReader):
                 container = root.json['__doc__']
             container[json_match.group(2)] = json.loads(json_match.group(3))
             return
+
+        entity_match = RE_GLOBAL_ENTITY.match(line)
+        if entity_match is not None:
+            global_entity = entity_match.group(1)
+            if self._global_entity and self._global_entity != global_entity:
+                logging.warning("Mismatch in global.Entity: %s != %s", (self._global_entity, global_entity))
+            self._global_entity = global_entity
+            root.comment += '$GLOBAL.ENTITY\n'
+            return
+
         root.comment += line[1:] + "\n"
 
     def read_trees(self):

@@ -72,6 +72,10 @@ class Root(Node):
         return self.sent_id
 
     @property
+    def document(self):
+        return self._bundle._document
+
+    @property
     def bundle(self):
         """Return the bundle which this tree belongs to."""
         return self._bundle

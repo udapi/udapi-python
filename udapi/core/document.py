@@ -123,3 +123,13 @@ class Document(object):
         """A dict mapping ClusterId to a CorefCluster object."""
         self._load_coref()
         return self._coref_clusters
+
+    @property
+    def coref_mentions(self):
+        """A sorted list of all CorefMention objects in the document."""
+        self._load_coref()
+        all_mentions = []
+        for cluster in self._coref_clusters.values():
+            all_mentions.extend(cluster.mentions)
+        all_mentions.sort()
+        return all_mentions

@@ -6,9 +6,8 @@ import udapi.block.write.conllu
 class OldCorefUD(udapi.block.write.conllu.Conllu):
 
     def process_document(self, doc):
-        if not doc._coref_clusters:
+        if not doc.coref_clusters:
             logging.warning("Using write.OldCorefUD on a document without any coreference annotation")
-            doc._coref_clusters = {}
 
         # Delete both new-style (GUM-style) and old-style (CorefUD 0.1) coreference annotations from MISC.
         attrs = "Entity Split Bridge ClusterId MentionSpan ClusterType Bridging SplitAnte MentionMisc".split()
@@ -16,6 +15,7 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
             for key in list(node.misc):
                 if any(re.match(attr + r'(\[\d+\])?$', key) for attr in attrs):
                     del node.misc[key]
+        del doc.meta['global.Entity']
 
         # doc._coref_clusters is a dict, which is insertion ordered in Python 3.7+.
         # The insertion order is sorted according to CorefCluster.__lt__ (see few lines above).
@@ -48,11 +48,11 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
                 head.misc["MentionSpan" + index_str] = mention.span
                 head.misc["ClusterType" + index_str] = cluster.cluster_type
                 if mention._bridging:
-                    head.misc["Bridging" + index_str] = str(mention.bridging)
+                    head.misc["Bridging" + index_str] = ','.join(f'{l.target.cluster_id}:{l.relation}' for l in sorted(mention.bridging))
                 if cluster.split_ante:
                     serialized = ','.join((c.cluster_id for c in sorted(cluster.split_ante)))
                     head.misc["SplitAnte" + index_str] = serialized
-                if mention.misc:
-                    head.misc["MentionMisc" + index_str] = mention.misc
+                if mention.other:
+                    head.misc["MentionMisc" + index_str] = str(mention.other).replace('%2D', '-')
 
         super().process_document(doc)

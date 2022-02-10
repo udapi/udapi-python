@@ -26,7 +26,7 @@ class Conllu(BaseWriter):
         # If tree.comment contains placeholders $NEWDOC,...$TEXT, replace them with the actual
         # value of the attribute and make note on which line (i_*) they were present.
         comment_lines = tree.comment.splitlines()
-        i_newdoc, i_newpar, i_sent_id, i_text = -1, -1, -1, -1
+        i_newdoc, i_newpar, i_sent_id, i_text, i_global_entity = -1, -1, -1, -1, -1
         for i, c_line in enumerate(comment_lines):
             if c_line == '$SENT_ID':
                 i_sent_id = i
@@ -50,6 +50,13 @@ class Conllu(BaseWriter):
                     comment_lines[i] = ' newpar' + (' id = ' + tree.newpar if tree.newpar is not True else '')
                 else:
                     comment_lines[i] = None
+            elif c_line == '$GLOBAL.ENTITY':
+                i_global_entity = i
+                ge = tree.document.meta.get('global.Entity')
+                if ge:
+                    comment_lines[i] = ' global.Entity = ' + ge
+                else:
+                    comment_lines[i] = None
 
         # Now print the special comments: global.columns, newdoc, newpar, sent_id and text.
         # If these comments were already present in tree.comment (as marked with the placeholders),
@@ -68,6 +75,15 @@ class Conllu(BaseWriter):
                         printed_i += 1
                         if comment_lines[printed_i]:
                             print('#' + comment_lines[printed_i])
+                ge = tree.document.meta.get('global.Entity')
+                if ge:
+                    if i_global_entity == -1:
+                        print('# global.Entity = ' + ge)
+                    else:
+                        while printed_i < i_global_entity:
+                            printed_i += 1
+                            if comment_lines[printed_i]:
+                                print('#' + comment_lines[printed_i])
             if tree.newpar:
                 if i_newpar == -1:
                     print('# newpar' + (' id = ' + tree.newpar if tree.newpar is not True else ''))

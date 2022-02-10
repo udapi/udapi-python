@@ -6,17 +6,20 @@ from collections import Counter, defaultdict
 class PrintClusters(Block):
     """Block corefud.PrintClusters prints all mentions of a given cluster."""
 
-    def __init__(self, id_re=None, min_mentions=0, print_ranges=True, aggregate_mentions=True, **kwargs):
+    def __init__(self, id_re=None, min_mentions=0, print_ranges=True, mark_head=True,
+                 aggregate_mentions=True, **kwargs):
         """Params:
         id_re: regular expression constraining ClusterId of the clusters to be printed
         min_mentions: print only clusters with with at least N mentions
         print_ranges: print also addressess of all mentions
                       (compactly, using the longest common prefix of sent_id)
+        mark_head: mark the head (e.g. as "red **car**")
         """
         super().__init__(**kwargs)
         self.id_re = re.compile(str(id_re)) if id_re else None
         self.min_mentions = min_mentions
         self.print_ranges = print_ranges
+        self.mark_head = mark_head
         self.aggregate_mentions = aggregate_mentions
 
     def process_document(self, doc):
@@ -32,7 +35,7 @@ class PrintClusters(Block):
                 counter = Counter()
                 ranges = defaultdict(list)
                 for mention in cluster.mentions:
-                    forms = ' '.join([w.form for w in mention.words])
+                    forms = ' '.join([f"**{w.form}**" if self.mark_head and w is mention.head else w.form for w in mention.words])
                     counter[forms] += 1
                     if self.print_ranges:
                         ranges[forms].append(mention.head.root.address() + ':' +mention.span)
@@ -46,6 +49,7 @@ class PrintClusters(Block):
                             print(f'        {prefix} ({" ".join(f[len(prefix):] for f in ranges[form])})')
             else:
                 for mention in cluster.mentions:
-                    print('   ' + ' '.join([w.form for w in mention.words]))
+                    forms = ' '.join([f"**{w.form}**" if self.mark_head and w is mention.head else w.form for w in mention.words])
+                    print('   ' + forms)
                     if self.print_ranges:
                         print(f"     {mention.head.root.address()}:{mention.span}")
