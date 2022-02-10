@@ -109,16 +109,23 @@ class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
     __slots__ = ['_head', '_cluster', '_bridging', '_words', '_other']
 
-    def __init__(self, words, head=None, cluster=None):
+    def __init__(self, words, head=None, cluster=None, add_word_backlinks=True):
         if not words:
             raise ValueError("mention.words must be non-empty")
-        self._words = words
         self._head = head if head else words[0]
         self._cluster = cluster
         if cluster is not None:
             cluster._mentions.append(self)
         self._bridging = None
         self._other = None
+        self._words = words
+        if add_word_backlinks:
+            for new_word in words:
+                if not new_word._mentions or not cluster or self > new_word._mentions[-1]:
+                    new_word._mentions.append(self)
+                else:
+                    new_word._mentions.append(self)
+                    new_word._mentions.sort()
 
     def __lt__(self, another):
         """Does this mention precedes (word-order wise) `another` mention?
@@ -692,7 +699,7 @@ def store_coref_to_misc(doc):
                 subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
                 subspan_words = span_to_nodes(root, subspan)
                 fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
-                fake_mention = CorefMention(subspan_words, head_str, fake_cluster)
+                fake_mention = CorefMention(subspan_words, head_str, fake_cluster, add_word_backlinks=False)
                 if mention._other:
                     fake_mention._other = mention._other
                 if mention._bridging and idx == 1:
