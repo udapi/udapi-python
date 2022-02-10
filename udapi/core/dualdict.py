@@ -45,7 +45,7 @@ class DualDict(collections.abc.MutableMapping):
                 if value is True:
                     serialized.append(name)
                 else:
-                    serialized.append('%s=%s' % (name, value))
+                    serialized.append(f"{name}:{value}")
             self._string = '|'.join(serialized) if serialized else '_'
         return self._string
 

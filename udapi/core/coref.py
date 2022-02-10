@@ -70,7 +70,7 @@ The API should be able to load even files breaking Rule3.
 When considering single-word chunks as a subtype of both opening and closing brackets,
 this rule follows from the well-nestedness (and Rule2).
 So we should have `Entity=(e1(e2)` and `Entity=(e3)e1)`,
-but the API should be able to load even `Entity=(e2)(e1(` and `Entity=e1)(e3)`.
+but the API should be able to load even `Entity=(e2)(e1` and `Entity=e1)(e3)`.
 
 In case of crossing mentions (annotated following Rule1), we cannot follow Rule4.
 If we want to add a single-word mention `e2` to a node with `Entity=e1)(e3`,
@@ -875,7 +875,7 @@ class OtherDualDict(collections.abc.MutableMapping):
                 if value is True:
                     serialized.append(name)
                 else:
-                    serialized.append('%s:%s' % (name, value))
+                    serialized.append(f"{name}:{value}")
             self._string = ','.join(serialized) if serialized else ''
         return self._string
 
