@@ -281,6 +281,18 @@ class CorefCluster(object):
         self._cluster_id = new_cluster_id
 
     @property
+    def eid_or_grp(self):
+        root = self._mentions[0].head.root
+        meta = root.document.meta
+        if 'GRP' in meta['global.Entity'] and meta['tree2docid']:
+            docid = meta['tree2docid'][root]
+            if self._cluster_id.startswith(docid):
+                return self._cluster_id.replace(docid, '', 1)
+            else:
+                logging.warning(f"GRP in global.Entity, but eid={self._cluster_id} does not start with docid={docid}")
+        return self._cluster_id
+
+    @property
     def mentions(self):
         return self._mentions
 
@@ -366,7 +378,14 @@ class BridgingLinks(collections.abc.MutableSequence):
     """
 
     @classmethod
-    def from_string(cls, string, clusters, strict=True):
+    def from_string(cls, string, clusters, node, strict=True, tree2docid=None):
+        """Return a sequence of BridgingLink objects representing a given string serialization.
+        The bridging links are also added to the mentions (`mention.bridging`) in the supplied `clusters`,
+        so the returned sequence can be usually ignored.
+        If `tree2docid` parameter is provided (mapping trees to document IDs used as prefixes in eid),
+        the entity IDs in the provided string are interpreted as "GRP", i.e. as document-wide IDs,
+        which need to be prefixed by the document IDs, to get corpus-wide unique "eid".
+        """
         src_str2bl = {}
         for link_str in string.split(','):
             try:
@@ -378,7 +397,10 @@ class BridgingLinks(collections.abc.MutableSequence):
             if ':' in src_str:
                 src_str, relation = src_str.split(':', 1)
             if trg_str == src_str:
-                _error("Bridge cannot self-reference the same cluster: " + trg_str, strict)
+                _error(f"Bridge cannot self-reference the same cluster {trg_str} at {node}", strict)
+            if tree2docid:
+                src_str = tree2docid[node.root] + src_str
+                trg_str = tree2docid[node.root] + trg_str
             bl = src_str2bl.get(src_str)
             if not bl:
                 bl = clusters[src_str].mentions[-1].bridging
@@ -425,7 +447,7 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     def __str__(self):
         # TODO in future link.relation should never be None, 0 nor "_", so we could delete the <not in (None, "_", "")> below.
-        return ','.join(f'{l.target._cluster_id}<{self.src_mention.cluster.cluster_id}{":" + l.relation if l.relation not in (None, "_", "") else ""}' for l in sorted(self._data))
+        return ','.join(f'{l.target.eid_or_grp}<{self.src_mention.cluster.eid_or_grp}{":" + l.relation if l.relation not in (None, "_", "") else ""}' for l in sorted(self._data))
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
@@ -463,8 +485,14 @@ def _error(msg, strict):
 
 
 RE_DISCONTINUOUS = re.compile(r'^([^[]+)\[(\d+)/(\d+)\]')
+# When converting doc-level GRP IDs to corpus-level eid IDs,
+# we need to assign each document a short ID/number (document names are too long).
+# These document numbers must be unique even when loading multiple files,
+# so we need to store the highest number generated so far here, at the Python module level.
+highest_doc_n = 0
 
 def load_coref_from_misc(doc, strict=True):
+    global highest_doc_n
     clusters = {}
     unfinished_mentions = collections.defaultdict(list)
     discontinuous_mentions = collections.defaultdict(list)
@@ -474,13 +502,17 @@ def load_coref_from_misc(doc, strict=True):
         was_global_entity = False
         global_entity = 'eid-etype-head-other'
         doc.meta['global.Entity'] = global_entity
-    # backward compatibility
-    if global_entity == 'entity-GRP-infstat-MIN-coref_type-identity':
-        global_entity = 'etype-eid-infstat-minspan-link-identity'
-        # Which global.Entity should be used for serialization?
-        doc.meta['global.Entity'] = global_entity
-        #doc.meta['global.Entity'] = 'eid-etype-head-other'
-    if 'eid' not in global_entity:
+    tree2docid = None
+    if 'GRP' in global_entity:
+        tree2docid, docid = {}, ""
+        for bundle in doc:
+            for tree in bundle:
+                if tree.newdoc or docid == "":
+                    highest_doc_n += 1
+                    docid = f"d{highest_doc_n}."
+                tree2docid[tree] = docid
+        doc.meta['tree2docid'] = tree2docid
+    elif 'eid' not in global_entity:
         raise ValueError("No eid in global.Entity = " + global_entity)
     fields = global_entity.split('-')
 
@@ -506,14 +538,15 @@ def load_coref_from_misc(doc, strict=True):
                 logging.warning(f"Entity {chunk} at {node} has no opening nor closing bracket.")
             # 2. closing bracket
             elif not opening and closing:
-                # closing brackets should include just the ID,
-                # but older GUM versions repeated all the fields
-                if '-' in chunk:
+                # closing brackets should include just the ID, but GRP needs to be converted to eid
+                if tree2docid:
                     # TODO delete this legacy hack once we don't need to load UD GUM v2.8 anymore
-                    if not strict and global_entity.startswith('etype-eid'):
-                        chunk = chunk.split('-')[1]
-                    else:
-                        _error("Unexpected closing eid " + chunk, strict)
+                    if '-' in chunk:
+                        if not strict and global_entity.startswith('entity-GRP'):
+                            chunk = chunk.split('-')[1]
+                        else:
+                            _error("Unexpected closing eid " + chunk, strict)
+                    chunk = tree2docid[node.root] + chunk
 
                 # closing discontinuous mentions
                 eid, subspan_idx = chunk, None
@@ -551,7 +584,9 @@ def load_coref_from_misc(doc, strict=True):
                 for name, value in zip(fields, chunk.split('-')):
                     if name == 'eid':
                         eid = value
-                    elif name == 'etype':
+                    elif name == 'GRP':
+                        eid = tree2docid[node.root] + value
+                    elif name == 'etype' or name == 'entity': # entity is an old name for etype used in UD GUM 2.8 and 2.9
                         etype = value
                     elif name == 'head':
                         try:
@@ -617,10 +652,10 @@ def load_coref_from_misc(doc, strict=True):
 
 
         # Bridge, e.g. Entity=(e12-event|Bridge=e12<e124,e12<e125
-        # or with relations Bridge=c173<c188:subset,c174<c188:part
+        # or with relations Bridge=e173<c188:subset,e174<e188:part
         misc_bridge = node.misc['Bridge']
         if misc_bridge:
-            BridgingLinks.from_string(misc_bridge, clusters, strict)
+            BridgingLinks.from_string(misc_bridge, clusters, node, strict, tree2docid)
 
         # SplitAnte, e.g. Entity=(e11-person(e12-person)|SplitAnte=e3<e11,e4<e11,e6<e12,e7<e12
         # which means that both e11 and e12 have split antecedents (e11=e3+e4, e12=e6+e7).
@@ -633,6 +668,9 @@ def load_coref_from_misc(doc, strict=True):
                 ante_str, this_str = x.split('<')
                 if ante_str == this_str:
                     _error("SplitAnte cannot self-reference the same cluster: " + this_str, strict)
+                if tree2docid:
+                    ante_str = tree2docid[node.root] + ante_str
+                    this_str = tree2docid[node.root] + this_str
                 # split cataphora, e.g. "We, that is you and me..."
                 if ante_str not in clusters:
                     clusters[ante_str] = CorefCluster(ante_str)
@@ -665,6 +703,7 @@ def store_coref_to_misc(doc):
     if not doc._coref_clusters:
         return
 
+    tree2docid = doc.meta.get('tree2docid')
     global_entity = doc.meta.get('global.Entity')
     if not global_entity:
         global_entity = 'eid-etype-head-other'
@@ -695,7 +734,10 @@ def store_coref_to_misc(doc):
             subspans = mention.span.split(',')
             root = mention.words[0].root
             for idx,subspan in enumerate(subspans, 1):
-                subspan_eid = f'{cluster.cluster_id}[{idx}/{len(subspans)}]'
+                eid = cluster.cluster_id
+                if tree2docid and 'GRP' in fields:
+                    eid = re.sub('^d\d+\.', '', eid) # TODO or "eid = cluster.eid_or_grp"?
+                subspan_eid = f'{eid}[{idx}/{len(subspans)}]'
                 subspan_words = span_to_nodes(root, subspan)
                 fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
                 fake_mention = CorefMention(subspan_words, head_str, fake_cluster, add_word_backlinks=False)
@@ -712,6 +754,8 @@ def store_coref_to_misc(doc):
         for field in fields:
             if field == 'eid' or field == 'GRP':
                 eid = cluster.cluster_id
+                if field == 'GRP':
+                    eid = re.sub('^d\d+\.', '', eid)
                 if any(x in eid for x in CHARS_FORBIDDEN_IN_ID):
                     _error(f"{eid} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]", strict)
                     for c in CHARS_FORBIDDEN_IN_ID:
@@ -737,8 +781,10 @@ def store_coref_to_misc(doc):
                     for other_field in other_fields:
                         del other_copy[other_field]
                     values.append(str(other_copy))
+            elif field == 'identity':
+                values.append(mention.other[field]) # don't replace('%2C', ',') in wikification
             else:
-                values.append(mention.other[field].replace('%2C', ','))
+                values.append(mention.other[field].replace('%2C', ',')) # but de-escape commas e.g. in minspan
         # optional fields
         while values and values[-1] == '':
             del values[-1]
@@ -770,7 +816,10 @@ def store_coref_to_misc(doc):
         # Second, multi-word mentions. Opening brackets should follow closing brackets.
         else:
             firstword.misc['Entity'] += mention_str
-            mention.words[-1].misc['Entity'] = cluster.cluster_id + ')' + mention.words[-1].misc['Entity']
+            eid = cluster.cluster_id
+            if tree2docid and 'GRP' in fields:
+                eid = re.sub('^d\d+\.', '', eid)
+            mention.words[-1].misc['Entity'] = eid + ')' + mention.words[-1].misc['Entity']
 
         # Bridge=e1<e5:subset,e2<e6:subset|Entity=(e5(e6
         if mention._bridging:
@@ -783,7 +832,10 @@ def store_coref_to_misc(doc):
     for cluster in doc.coref_clusters.values():
         if cluster.split_ante:
             first_word = cluster.mentions[0].words[0]
-            strs = ','.join(f'{sa.cluster_id}<{cluster.cluster_id}' for sa in cluster.split_ante)
+            if tree2docid:
+                strs = ','.join(f'{sa.eid_or_grp}<{cluster.eid_or_grp}' for sa in cluster.split_ante)
+            else:
+                strs = ','.join(f'{sa.cluster_id}<{cluster.cluster_id}' for sa in cluster.split_ante)
             if first_word.misc['SplitAnte']:
                 strs = first_word.misc['SplitAnte'] + ',' + strs
             first_word.misc['SplitAnte'] = strs
