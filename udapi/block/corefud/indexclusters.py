@@ -3,7 +3,7 @@ from udapi.core.block import Block
 
 
 class IndexClusters(Block):
-    """Re-index the coreference cluster IDs. The final cluster IDs are of the "c<ID>" form,
+    """Re-index the coreference cluster IDs. The final cluster IDs are of the "e<ID>" form,
        where <ID> are ordinal numbers starting from the one specified by the `start` parameter.
        This block can be applied on multiple documents within one udapy call.
        For example, to re-index ClusterId in all conllu files in the current directory
@@ -13,11 +13,14 @@ class IndexClusters(Block):
        Parameters:
        -----------
        start : int
-            the starting index (by default 1)
+            the starting index (default=1)
+       prefix : str
+            prefix of the IDs before the number (default="e")
     """
 
-    def __init__(self, start=1):
+    def __init__(self, start=1, prefix='e'):
         self.start = start
+        self.prefix = prefix
 
     def process_document(self, doc):
         clusters = doc.coref_clusters
@@ -26,7 +29,7 @@ class IndexClusters(Block):
         new_clusters = {}
         for idx, cid in enumerate(clusters, self.start):
             cluster = clusters[cid]
-            new_cid = "c" + str(idx)
+            new_cid = self.prefix + str(idx)
             cluster.cluster_id = new_cid
             new_clusters[new_cid] = cluster
         self.start = idx + 1
