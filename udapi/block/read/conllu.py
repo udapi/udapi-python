@@ -12,7 +12,7 @@ from udapi.core.node import Node
 # This reader accepts also older-style sent_id (until UD v2.0 treebanks are released).
 RE_SENT_ID = re.compile(r'^# sent_id\s*=?\s*(\S+)')
 RE_TEXT = re.compile(r'^# text\s*=\s*(.*)')
-RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc)(?:\s+id\s*=\s*(.+))?')
+RE_NEWPARDOC = re.compile(r'^# (newpar|newdoc)(?:\s+id\s*=\s*(.+))?$')
 RE_JSON = re.compile(r'^# (doc_)?json_([^ =]+)\s*=\s*(.+)')
 RE_GLOBAL_ENTITY = re.compile(r'^# global.Entity\s*=\s*(\S+)')
 
