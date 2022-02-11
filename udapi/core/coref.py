@@ -246,9 +246,8 @@ class CorefCluster(object):
     __slots__ = ['_cluster_id', '_mentions', 'cluster_type', 'split_ante']
 
     def __init__(self, cluster_id, cluster_type=None):
-        if any(x in cluster_id for x in CHARS_FORBIDDEN_IN_ID):
-            raise ValueError(f"{cluster_id} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]")
-        self._cluster_id = cluster_id
+        self._cluster_id = None # prepare the _cluster_id slot
+        self.cluster_id = cluster_id # call the setter and check the ID is valid
         self._mentions = []
         self.cluster_type = cluster_type
         self.split_ante = []
@@ -277,8 +276,8 @@ class CorefCluster(object):
 
     @cluster_id.setter
     def cluster_id(self, new_cluster_id):
-        if any(x in new_cluster_id for x in "-=| \t"):
-            raise ValueError(f"{new_cluster_id} contains forbidden characters [-=| \\t]")
+        if any(x in new_cluster_id for x in CHARS_FORBIDDEN_IN_ID):
+            raise ValueError(f"{new_cluster_id} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]")
         self._cluster_id = new_cluster_id
 
     @property
