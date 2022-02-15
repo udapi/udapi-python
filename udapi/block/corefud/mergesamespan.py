@@ -24,6 +24,12 @@ class MergeSameSpan(Block):
         for mA, mB in itertools.combinations(mentions, 2):
             if self.same_cluster_only and mA.cluster != mB.cluster:
                 continue
+            # Reduce non-determinism in which mention is removed:
+            # If the mentions belong to different entities, sort them by entity (cluster) ids.
+            if mA.cluster.cluster_id > mB.cluster.cluster_id:
+                mX = mA
+                mA = mB
+                mB = mX
 
             sA, sB = set(mA.words), set(mB.words)
             if sA != sB:
@@ -40,6 +46,7 @@ class MergeSameSpan(Block):
                 #    m.cluster = mA.cluster
             # Remove mention B. It may have been removed earlier because of
             # another duplicate, that is the purpose of try-except.
+            ###!!! TODO: If we remove a singleton, we are destroying the cluster. Then we must also handle possible bridging and split antecedents pointing to that cluster!
             for wb in sB:
                 try:
                     wb._mentions.remove(mB)
