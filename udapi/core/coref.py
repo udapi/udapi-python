@@ -206,6 +206,11 @@ class CorefMention(object):
 
     @property
     def words(self):
+        # Words in a sentence could have been reordered, so we cannot rely on sorting self._words in the setter.
+        # The serialization relies on storing the opening bracket in the first word (and closing in the last),
+        # so we need to make sure the words are always returned sorted.
+        # TODO: benchmark updating the order of mention._words in node.shift_*() and node.remove().
+        self._words.sort()
         return self._words
 
     @words.setter
@@ -213,12 +218,13 @@ class CorefMention(object):
         if new_words and self.head not in new_words:
             raise ValueError(f"Head {self.head} not in new_words {new_words} for {self._cluster.cluster_id}")
         kept_words = []
+        # Make sure each word is included just once and they are in the correct order.
+        new_words = sorted(list(set(new_words)))
         for old_word in self._words:
             if old_word in new_words:
                 kept_words.append(old_word)
             else:
                 old_word._mentions.remove(self)
-        new_words.sort()
         self._words = new_words
         for new_word in new_words:
             if new_word not in kept_words:
@@ -556,7 +562,10 @@ def load_coref_from_misc(doc, strict=True):
                         raise ValueError(f"Mention {chunk} closed at {node}, but not opened.")
                     eid, subspan_idx, total_subspans = m.group(1, 2, 3)
 
-                mention, head_idx = unfinished_mentions[eid].pop()
+                try:
+                    mention, head_idx = unfinished_mentions[eid].pop()
+                except IndexError as err:
+                    raise ValueError(f"Mention {chunk} closed at {node}, but not opened.")
                 last_word = mention.words[-1]
                 if node.root is not last_word.root:
                     # TODO cross-sentence mentions
