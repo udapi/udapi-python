@@ -469,6 +469,13 @@ class BridgingLinks(collections.abc.MutableSequence):
         """Return a list of the target clusters (without relations)."""
         return [link.target for link in self._data]
 
+    def _delete_targets_without_mentions(self, warn=True):
+        for link in self._data:
+            if not link.target.mentions:
+                if warn:
+                    logging.warning(f"Cluster {link.target.cluster_id} has no mentions, but is referred to in bridging of {self.src_mention.cluster.cluster_id}")
+                self._data.remove(link)
+
 
 def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
     clusters = head.root.bundle.document.coref_clusters
@@ -832,6 +839,7 @@ def store_coref_to_misc(doc):
 
         # Bridge=e1<e5:subset,e2<e6:subset|Entity=(e5(e6
         if mention._bridging:
+            mention._bridging._delete_targets_without_mentions()
             str_bridge = str(mention._bridging)
             if firstword.misc['Bridge']:
                 str_bridge = firstword.misc['Bridge'] + ',' + str_bridge
@@ -840,6 +848,13 @@ def store_coref_to_misc(doc):
     # SplitAnte=e5<e61,e10<e61
     for cluster in doc.coref_clusters.values():
         if cluster.split_ante:
+            for ante_entity in cluster.split_ante:
+                if not ante_entity.mentions:
+                    logging.warning(f"Cluster {ante_entity.cluster_id} has no mentions, but is referred to in SplitAnte of {cluster.cluster_id}")
+                    cluster.split_ante.remove(ante_entity)
+            if not cluster.split_ante or len(cluster.split_ante) < 2:
+                logging.warning(f"SplitAnte of {cluster.cluster_id} has less than two antecedents, omitting")
+                continue
             first_word = cluster.mentions[0].words[0]
             if tree2docid:
                 strs = ','.join(f'{sa.eid_or_grp}<{cluster.eid_or_grp}' for sa in cluster.split_ante)
