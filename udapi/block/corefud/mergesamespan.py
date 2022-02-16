@@ -27,9 +27,7 @@ class MergeSameSpan(Block):
             # Reduce non-determinism in which mention is removed:
             # If the mentions belong to different entities, sort them by entity (cluster) ids.
             if mA.cluster.cluster_id > mB.cluster.cluster_id:
-                mX = mA
-                mA = mB
-                mB = mX
+                mA, mB = mB, mA
 
             sA, sB = set(mA.words), set(mB.words)
             if sA != sB:
@@ -40,18 +38,14 @@ class MergeSameSpan(Block):
             # mentions from the other cluster to this cluster, and remove the
             # other cluster.
             if mA.cluster != mB.cluster:
-                logging.warning("Merging same-span mentions that belong to different entities: '%s' vs. '%s'." % (mA.cluster.cluster_id, mB.cluster.cluster_id))
+                logging.warning(f"Merging same-span mentions that belong to different entities: {mA.cluster.cluster_id} vs. {mB.cluster.cluster_id}")
                 ###!!! TODO: As of now, changing the cluster of a mention is not supported in the API.
                 #for m in mB.cluster.mentions:
                 #    m.cluster = mA.cluster
             # Remove mention B. It may have been removed earlier because of
             # another duplicate, that is the purpose of try-except.
             ###!!! TODO: If we remove a singleton, we are destroying the cluster. Then we must also handle possible bridging and split antecedents pointing to that cluster!
-            for wb in sB:
-                try:
-                    wb._mentions.remove(mB)
-                except ValueError:
-                    pass
+            mB.words = []
             try:
                 mB.cluster.mentions.remove(mB)
             except ValueError:
