@@ -259,3 +259,16 @@ class BaseReader(Block):
             if gc_was_enabled:
                 gc.enable()
                 gc.collect()
+
+    def read_documents(self):
+        """Load all documents of this reader and return them as a list."""
+        # udapi.core.document imports udapi.block.read.conllu because of doc.load_conllu(filename)
+        # and udapi.block.read.conllu loads this module (udapi.core.basereader),
+        # so we cannot load udapi.core.document at the beginning of this module.
+        from udapi.core.document import Document
+        docs = []
+        while not self.finished:
+            doc = Document()
+            self.process_document(doc)
+            docs.append(doc)
+        return docs
