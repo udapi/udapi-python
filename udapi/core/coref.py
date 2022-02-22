@@ -542,7 +542,7 @@ def load_coref_from_misc(doc, strict=True):
         # means a start of entity id=7 and start&end (i.e. single-word mention) of entity id=3.
         # The following re.split line splits this into
         # chunks = ["(abstract-7-new-2-coref", "(abstract-3-giv:act-1-coref)"]
-        chunks = [x for x in re.split('(\([^()]+\)?|[^()]+\))', misc_entity) if x]
+        chunks = [x for x in re.split(r'(\([^()]+\)?|[^()]+\))', misc_entity) if x]
         for chunk in chunks:
             opening, closing = (chunk[0] == '(', chunk[-1] == ')')
             chunk = chunk.strip('()')
@@ -752,7 +752,7 @@ def store_coref_to_misc(doc):
             for idx,subspan in enumerate(subspans, 1):
                 eid = cluster.cluster_id
                 if tree2docid and 'GRP' in fields:
-                    eid = re.sub('^d\d+\.', '', eid) # TODO or "eid = cluster.eid_or_grp"?
+                    eid = re.sub(r'^d\d+\.', '', eid) # TODO or "eid = cluster.eid_or_grp"?
                 subspan_eid = f'{eid}[{idx}/{len(subspans)}]'
                 subspan_words = span_to_nodes(root, subspan)
                 fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
@@ -771,7 +771,7 @@ def store_coref_to_misc(doc):
             if field == 'eid' or field == 'GRP':
                 eid = cluster.cluster_id
                 if field == 'GRP':
-                    eid = re.sub('^d\d+\.', '', eid)
+                    eid = re.sub(r'^d\d+\.', '', eid)
                 if any(x in eid for x in CHARS_FORBIDDEN_IN_ID):
                     _error(f"{eid} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]", strict)
                     for c in CHARS_FORBIDDEN_IN_ID:
@@ -823,7 +823,7 @@ def store_coref_to_misc(doc):
             elif '(' not in orig_entity:
                 firstword.misc['Entity'] = mention_str + ')' + orig_entity
             # (e9)e4)e3) --> (e10)(e9)e4)e3)
-            elif any(c and c[0] == '(' and c[-1] != ')' for c in re.split('(\([^()]+\)?|[^()]+\))', orig_entity)):
+            elif any(c and c[0] == '(' and c[-1] != ')' for c in re.split(r'(\([^()]+\)?|[^()]+\))', orig_entity)):
                 firstword.misc['Entity'] += mention_str + ')'
             # (e1(e2(e9)   --> (e1(e2(e9)(e10)
             # e3)(e1(e2(e9)--> e3)(e1(e2(e9)(e10)
@@ -834,7 +834,7 @@ def store_coref_to_misc(doc):
             firstword.misc['Entity'] += mention_str
             eid = cluster.cluster_id
             if tree2docid and 'GRP' in fields:
-                eid = re.sub('^d\d+\.', '', eid)
+                eid = re.sub(r'^d\d+\.', '', eid)
             mention.words[-1].misc['Entity'] = eid + ')' + mention.words[-1].misc['Entity']
 
         # Bridge=e1<e5:subset,e2<e6:subset|Entity=(e5(e6

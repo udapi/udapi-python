@@ -44,6 +44,9 @@ class Document(object):
     def __getitem__(self, key):
         return self.bundles[key]
 
+    def __len__(self):
+        return len(self.bundles)
+
     def __str__(self):
         """Pretty print the whole document using write.TextModeTrees."""
         fh = io.StringIO()
