@@ -176,6 +176,7 @@ class BaseReader(Block):
                 bundle.add_tree(root)
                 if root.newdoc and root.newdoc is not True:
                     document.meta["docname"] = root.newdoc
+                document.meta['global.Entity'] = self._global_entity
 
             filehandle = self.filehandle
             if filehandle is None:
