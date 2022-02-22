@@ -49,39 +49,16 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl):k:dat$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:(od|do)$', r'obl:\1:gen', edep['deprel'])
             elif re.match(r'^(nmod|obl):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
                     # This is a same-case noun-noun modifier, which just happens to be in the locative.
                     # For example, 'v Ostravě-Porubě', 'Porubě' is attached to 'Ostravě', 'Ostravě' has
                     # nmod:v:loc, which is OK, but for 'Porubě' the case does not say anything significant.
                     edep['deprel'] = 'nmod'
-                elif edep['deprel'] == 'obl:loc':
-                    # Annotation error. The first occurrence in PDT dev:
-                    # 'V Rapaportu, ceníku Antverpské burzy i Diamantberichtu jsou uvedeny ceny...'
-                    # The preposition 'V' should modify coordination 'Rapaportu i Diamantberichtu'.
-                    # However, 'Rapaportu' is attached as 'obl' to 'Diamantberichtu'.
-                    edep['deprel'] = 'obl:v:loc'
-                elif edep['deprel'] == 'obl:arg:loc':
-                    # Annotation error. The first occurrence in PDT dev:
-                    edep['deprel'] = 'obl:arg:na:loc'
                 elif edep['deprel'] == 'nmod:loc':
-                    # 'působil v kanadském Edmontonu Oilers', 'Edmontonu' attached to 'Oilers' and not vice versa.
                     edep['deprel'] = 'nmod:nom'
-                elif edep['deprel'] == 'obl:nom' or edep['deprel'] == 'obl:voc':
-                    # Possibly an annotation error, nominative should be accusative, and the nominal should be direct object?
-                    # However, there seems to be a great variability in the causes, some are subjects and many are really obliques, so let's go just with 'obl' for now.
-                    edep['deprel'] = 'obl'
                 elif edep['deprel'] == 'nmod:voc':
-                    # 'v 8. čísle tiskoviny Ty rudá krávo'
                     edep['deprel'] = 'nmod:nom'
-                elif re.match(r'^(nmod|obl(:arg)?):o$', edep['deprel']):
-                    if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':loc'
                 else:
                     # If one of the following expressions occurs followed by another preposition,
                     # remove the additional preposition. For example, 'i_když_s' becomes just 'i_když'.
