@@ -11,7 +11,8 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'как':              'как' # remove morphological case
+        'как':              'как', # remove morphological case
+        'с_помощь':         'с_помощью:gen'
     }
 
     def process_node(self, node):
