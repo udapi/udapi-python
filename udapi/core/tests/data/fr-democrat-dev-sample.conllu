@@ -1,0 +1,60 @@
+# newdoc id = ungroupped-estrepublicain-2-066
+# global.Entity = eid-etype-head-other
+# newpar id = ungroupped-estrepublicain-2-066-p0
+# sent_id = ungroupped-estrepublicain-2-066-p0-s1
+# text = Les allocations de décembre arrivent !
+1	Les	le	DET	_	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	2	det	_	Entity=(e36772--2
+2	allocations	allocation	NOUN	_	Gender=Fem|Number=Plur	5	nsubj	_	_
+3	de	de	ADP	_	_	4	case	_	_
+4	décembre	décembre	NOUN	_	Gender=Masc|Number=Sing	2	nmod	_	Entity=e36772)
+5	arrivent	arriver	VERB	_	Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+6	!	!	PUNCT	_	_	5	punct	_	_
+
+# newpar id = ungroupped-estrepublicain-2-066-p1
+# sent_id = ungroupped-estrepublicain-2-066-p1-s1
+# text = La Caisse d' Allocations familiales du Territoire de Belfort informe ses allocataires que le montant des prestations sera disponible sur les comptes bancaires ou postaux à partir du 8 janvier .
+1	La	le	DET	_	Definite=Def|Gender=Fem|Number=Sing|PronType=Art	2	det	_	Entity=(e36773--2
+2	Caisse	caisse	NOUN	_	Gender=Fem|Number=Sing	11	nsubj	_	Entity=(e36774-organization-1
+3	d'	de	ADP	_	_	4	case	_	_
+4	Allocations	Allocations	NOUN	_	Gender=Fem|Number=Plur	2	nmod	_	_
+5	familiales	familial	ADJ	_	Gender=Fem|Number=Plur	4	amod	_	_
+6-7	du	_	_	_	_	_	_	_	_
+6	de	de	ADP	_	_	8	case	_	_
+7	le	le	DET	_	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	8	det	_	Entity=(e36775--2
+8	Territoire	territoire	NOUN	_	Gender=Masc|Number=Sing	2	nmod	_	_
+9	de	de	ADP	_	_	10	case	_	_
+10	Belfort	Belfort	PROPN	_	_	8	nmod	_	Entity=e36775)e36774)e36773)
+11	informe	informer	VERB	_	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	0	root	_	_
+12	ses	son	DET	_	Gender=Masc|Number=Plur|Poss=Yes|PronType=Prs	13	det	_	Entity=(e36776--2(e36773--1)
+13	allocataires	allocataire	NOUN	_	Gender=Masc|Number=Plur	11	obj	_	Entity=e36776)
+14	que	que	PRON	_	PronType=Rel	21	mark	_	_
+15	le	le	DET	_	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	16	det	_	Entity=(e36777--2
+16	montant	montant	NOUN	_	Gender=Masc|Number=Sing	21	nsubj	_	_
+17-18	des	_	_	_	_	_	_	_	_
+17	de	de	ADP	_	_	19	case	_	_
+18	les	le	DET	_	Definite=Def|Gender=Fem|Number=Plur|PronType=Art	19	det	_	Entity=(e36778--2
+19	prestations	prestation	NOUN	_	Gender=Fem|Number=Plur	16	nmod	_	Entity=e36778)e36777)
+20	sera	être	AUX	_	Mood=Ind|Number=Sing|Person=3|Tense=Fut|VerbForm=Fin	21	cop	_	_
+21	disponible	disponible	ADJ	_	Gender=Fem|Number=Sing	11	advcl	_	_
+22	sur	sur	ADP	_	_	24	case	_	_
+23	les	le	DET	_	Definite=Def|Gender=Masc|Number=Plur|PronType=Art	24	det	_	Entity=(e36779--2
+24	comptes	compte	NOUN	_	Gender=Masc|Number=Plur	21	obl	_	_
+25	bancaires	bancaire	ADJ	_	Gender=Masc|Number=Plur	24	amod	_	_
+26	ou	ou	CCONJ	_	_	27	cc	_	_
+27	postaux	postal	ADJ	_	Gender=Masc|Number=Plur	25	conj	_	Entity=e36779)
+28	à	à	ADP	_	_	33	case	_	_
+29	partir	partir	VERB	_	VerbForm=Inf	28	fixed	_	_
+30-31	du	_	_	_	_	_	_	_	_
+30	de	de	ADP	_	_	28	fixed	_	_
+31	le	le	DET	_	Definite=Def|Gender=Masc|Number=Sing|PronType=Art	33	det	_	Entity=(e36780--3
+32	8	8	NUM	_	_	33	nummod	_	_
+33	janvier	janvier	NOUN	_	Gender=Masc|Number=Sing	21	obl	_	Entity=e36780)
+34	.	.	PUNCT	_	_	11	punct	_	_
+
+# newdoc id = ungroupped-estrepublicain-2-005
+# global.Entity = eid-etype-head-other
+# newpar id = ungroupped-estrepublicain-2-005-p0
+# sent_id = ungroupped-estrepublicain-2-005-p0-s1
+# text = Vitry-le-François
+1	Vitry-le-François	Vitry-le-François	PROPN	_	_	0	root	_	Entity=(e36781-place-1)
+

@@ -28,6 +28,12 @@ class BaseReader(Block):
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
         self.split_docs = split_docs
         self.ignore_sent_id = ignore_sent_id
+        # `global.Entity` is a header stored in a comment before the first tree of each document in a given CoNLL-U file.
+        # In Udapi, it is stored in `document.meta['global.Entity']`, but for technical reasons, we need to temporarily store it in here, the reader.
+        # The reason is that `read.Conllu` uses a fast loading interface with `read_trees()`,
+        # which reads all the trees in a file at once, but it does not have access to the document instance,
+        # it just returns a sequence of trees (which may be split into multiple documents if `bundles_per_doc` is set).
+        # So `read.Conllu` cannot store the `global.Entity` in `document.meta['global.Entity']` where it belongs.
         self._global_entity = None
 
     @staticmethod
@@ -170,6 +176,7 @@ class BaseReader(Block):
                 bundle.add_tree(root)
                 if root.newdoc and root.newdoc is not True:
                     document.meta["docname"] = root.newdoc
+                document.meta['global.Entity'] = self._global_entity
 
             filehandle = self.filehandle
             if filehandle is None:
@@ -259,3 +266,16 @@ class BaseReader(Block):
             if gc_was_enabled:
                 gc.enable()
                 gc.collect()
+
+    def read_documents(self):
+        """Load all documents of this reader and return them as a list."""
+        # udapi.core.document imports udapi.block.read.conllu because of doc.load_conllu(filename)
+        # and udapi.block.read.conllu loads this module (udapi.core.basereader),
+        # so we cannot load udapi.core.document at the beginning of this module.
+        from udapi.core.document import Document
+        docs = []
+        while not self.finished:
+            doc = Document()
+            self.process_document(doc)
+            docs.append(doc)
+        return docs
