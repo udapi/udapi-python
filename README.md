@@ -1,7 +1,7 @@
 # udapi-python
 Python framework for processing Universal Dependencies data
 
-[![Build Status](https://circleci.com/gh/udapi/udapi-python.svg?style=svg)](https://circleci.com/gh/udapi/udapi-python)
+[![Build Status](https://circleci.com/gh/udapi/udapi-python.svg?style=shield)](https://circleci.com/gh/udapi/udapi-python)
 [![Website](https://img.shields.io/website-up-down-green-red/http/udapi.github.io.svg)](http://udapi.github.io)
 [![Documentation Status](https://readthedocs.org/projects/udapi/badge/)](http://udapi.readthedocs.io)
 
