@@ -302,7 +302,7 @@ class CorefCluster(object):
     def mentions(self):
         return self._mentions
 
-    def create_mention(self, head=None, mention_words=None, mention_span=None):
+    def create_mention(self, head=None, words=None, span=None):
         """Create a new CoreferenceMention object within this CorefCluster.
 
         Args:
@@ -310,31 +310,31 @@ class CorefCluster(object):
             The head is supposed to be the linguistic head of the mention,
             i.e. the highest node in the dependency tree,
             but if such information is not available (yet),
-            it can be any node within the mention_words.
-            If no head is specified, the first word from mention_words will be used instead.
-        mention_words: a list of nodes of the mention.
+            it can be any node within the `words`.
+            If no head is specified, the first word from `words` will be used instead.
+        words: a list of nodes of the mention.
             This argument is optional, but if provided, it must contain the head.
             The nodes can be both normal nodes or empty nodes.
-        mention_span: an alternative way how to specify mention_words
+        span: an alternative way how to specify `words`
             using a string such as "3-5,6,7.1-7.2".
             (which means, there is an empty node 5.1 and normal node 7,
             which are not part of the mention).
-            At most one of the args mention_words and mention_span can be specified.
+            At most one of the args `words` and `span` can be specified.
         """
-        if mention_words and mention_span:
-            raise ValueError("Cannot specify both mention_words and mention_span")
-        if head and mention_words and head not in mention_words:
-            raise ValueError(f"Head {head} is not among the specified mention_words")
-        if head is None and mention_words is None:
-            raise ValueError("Either head or mention_words must be specified")
+        if words and span:
+            raise ValueError("Cannot specify both words and span")
+        if head and words and head not in words:
+            raise ValueError(f"Head {head} is not among the specified words")
+        if head is None and words is None:
+            raise ValueError("Either head or words must be specified")
         if head is None:
-            head = mention_words[0]
+            head = words[0]
 
         mention = CorefMention(words=[head], head=head, cluster=self)
-        if mention_words:
-            mention.words = mention_words
-        if mention_span:
-            mention.span = mention_span
+        if words:
+            mention.words = words
+        if span:
+            mention.span = span
         self._mentions.sort()
         return mention
 
@@ -476,20 +476,6 @@ class BridgingLinks(collections.abc.MutableSequence):
                     logging.warning(f"Cluster {link.target.cluster_id} has no mentions, but is referred to in bridging of {self.src_mention.cluster.cluster_id}")
                 self._data.remove(link)
 
-
-def create_coref_cluster(head, cluster_id=None, cluster_type=None, **kwargs):
-    clusters = head.root.bundle.document.coref_clusters
-    if not cluster_id:
-        counter = 1
-        while clusters.get('c%d' % counter):
-            counter += 1
-        cluster_id = 'c%d' % counter
-    elif clusters.get(cluster_id):
-        raise ValueError("Cluster with a id %s already exists", cluster_id)
-    cluster = CorefCluster(cluster_id, cluster_type)
-    cluster.create_mention(head, **kwargs)
-    clusters[cluster_id] = cluster
-    return cluster
 
 def _error(msg, strict):
     if strict:

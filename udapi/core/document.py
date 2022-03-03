@@ -136,3 +136,16 @@ class Document(object):
             all_mentions.extend(cluster.mentions)
         all_mentions.sort()
         return all_mentions
+
+    def create_coref_cluster(self, cluster_id=None, cluster_type=None):
+        self._load_coref()
+        if not cluster_id:
+            counter = 1
+            while self._coref_clusters.get(f'c{counter}'):
+                counter += 1
+            cluster_id = f'c{counter}'
+        elif clusters.get(cluster_id):
+            raise ValueError("Cluster with a id %s already exists", cluster_id)
+        cluster = udapi.core.coref.CorefCluster(cluster_id, cluster_type)
+        self._coref_clusters[cluster_id] = cluster
+        return cluster

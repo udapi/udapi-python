@@ -23,10 +23,12 @@ class TestCoref(unittest.TestCase):
         doc = udapi.Document(data_filename)
         first_node = next(doc.nodes)
         second_node = first_node.next_node
-        new_entity = first_node.create_coref_cluster(cluster_type='person')
+        new_entity = doc.create_coref_cluster(cluster_type='person')
         self.assertEqual(new_entity.cluster_type, 'person')
+        self.assertEqual(len(new_entity.mentions), 0)
+        m1 = new_entity.create_mention(words=[first_node]) # head will be automatically set to words[0]
         self.assertEqual(len(new_entity.mentions), 1)
-        m1 = new_entity.mentions[0]
+        self.assertEqual(m1, new_entity.mentions[0])
         self.assertEqual(m1.cluster, new_entity)
         self.assertEqual(m1.head, first_node)
         self.assertEqual(m1.words, [first_node])
@@ -36,7 +38,7 @@ class TestCoref(unittest.TestCase):
         self.assertEqual(m1.span, '1-2')
         m1.head = second_node
         self.assertEqual(m1.head, second_node)
-        m2 = new_entity.create_mention(head=second_node, mention_span='1-3')
+        m2 = new_entity.create_mention(head=second_node, span='1-3') # mention.words will be filled according to the span
         self.assertEqual(len(new_entity.mentions), 2)
         self.assertEqual(new_entity.mentions[0], m2) # 1-3 should go before 1-2
         self.assertEqual(new_entity.mentions[1], m1)
