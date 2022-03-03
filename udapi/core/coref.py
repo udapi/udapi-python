@@ -330,7 +330,7 @@ class CorefCluster(object):
         if head is None:
             head = mention_words[0]
 
-        mention = CorefMention(head, self)
+        mention = CorefMention(words=[head], head=head, cluster=self)
         if mention_words:
             mention.words = mention_words
         if mention_span:
