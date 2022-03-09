@@ -11,8 +11,12 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'в_качество':       'в_качестве:gen',
+        'в_течение':        'в_течение:gen',
         'как':              'как', # remove morphological case
-        'с_помощь':         'с_помощью:gen'
+        'несмотря_на':      'несмотря_на:acc',
+        'с_помощь':         'с_помощью:gen',
+        'чем':              'чем' # remove morphological case
     }
 
     def process_node(self, node):
@@ -38,7 +42,7 @@ class FixEdeprels(Block):
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
                 if not solved:
-                    m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                    m = re.match(r'^(obl(?::arg)?|nmod):(на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                     if m:
                         # The following is only partial solution. We will not see
                         # some children because they may be shared children of coordination.
@@ -46,6 +50,9 @@ class FixEdeprels(Block):
                         if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
                             edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
                             solved = True
+                        else:
+                            # Accusative or locative are possible. Pick locative.
+                            edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
