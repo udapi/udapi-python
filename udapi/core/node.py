@@ -921,8 +921,12 @@ class Node(object):
         self._root.bundle.document._load_coref()
         return [m.cluster for m in self._mentions if m.cluster is not None]
 
-    def create_coref_cluster(self, **kwargs):
-        return udapi.core.coref.create_coref_cluster(head=self, **kwargs)
+    # TODO: is this method useful?
+    def create_coref_cluster(self, cluster_id=None, cluster_type=None, **kwargs):
+        doc = self._root.bundle.document
+        cluster = doc.create_coref_cluster(cluster_id, cluster_type)
+        cluster.create_mention(head=self, **kwargs)
+        return cluster
 
 
 class CycleError(Exception):
