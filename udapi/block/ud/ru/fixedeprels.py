@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     unambiguous = {
         'в_качество':       'в_качестве:gen',
         'в_течение':        'в_течение:gen',
+        'в_ход':            'в_ходе:gen',
         'как':              'как', # remove morphological case
         'несмотря_на':      'несмотря_на:acc',
         'с_помощь':         'с_помощью:gen',
@@ -42,9 +43,10 @@ class FixEdeprels(Block):
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
                 if not solved:
-                    ###!!! Both "на" and "в" seem to also occur with genitive.
-                    ###!!! I don't think it is valid but let's see some examples before we ban it.
-                    m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|dat|voc))?$', edep['deprel'])
+                    # Both "на" and "в" also occur with genitive. However, this
+                    # is only because there are numerals in the phrase ("в 9 случаев из 10")
+                    # and the whole phrase should not be analyzed as genitive.
+                    m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                     if m:
                         # The following is only partial solution. We will not see
                         # some children because they may be shared children of coordination.
