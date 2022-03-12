@@ -12,10 +12,13 @@ class FixEdeprels(Block):
     # case, even if they are not secondary.
     unambiguous = {
         'в_качество':       'в_качестве:gen',
+        'в_связь_с':        'в_связи_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
         'как':              'как', # remove morphological case
         'несмотря_на':      'несмотря_на:acc',
+        'помимо':           'помимо:gen',
+        'со_сторона':       'со_стороны:gen',
         'с_помощь':         'с_помощью:gen',
         'чем':              'чем' # remove morphological case
     }
