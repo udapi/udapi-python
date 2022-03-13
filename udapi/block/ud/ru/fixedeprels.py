@@ -15,11 +15,13 @@ class FixEdeprels(Block):
         'в_связь_с':        'в_связи_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
+        'до':               'до:gen',
         'как':              'как', # remove morphological case
         'несмотря_на':      'несмотря_на:acc',
         'помимо':           'помимо:gen',
         'со_сторона':       'со_стороны:gen',
         'с_помощь':         'с_помощью:gen',
+        'так_что':          'так_что', # remove morphological case
         'чем':              'чем' # remove morphological case
     }
 
