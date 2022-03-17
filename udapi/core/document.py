@@ -112,20 +112,26 @@ class Document(object):
         TextModeTrees(**kwargs).run(self)
 
     def _load_coref(self):
-        """De-serialize coreference-related objects (CorefMention, CorefCluster).
+        """De-serialize coreference-related objects (CorefMention, CorefEntity).
 
         This internal method will be called automatically whenever any coref-related method is called.
         It iterates through all nodes in the document and creates the objects based on the info in MISC
-        (stored in attributes ClusterId, MentionSpan, ClusterType, Split, Bridging).
+        (stored in attributes Entity, SplitAnte, Bridge).
         """
         if self._coref_clusters is None:
             udapi.core.coref.load_coref_from_misc(self)
 
     @property
     def coref_clusters(self):
-        """A dict mapping ClusterId to a CorefCluster object."""
+        """A dict mapping eid to a CorefEntity object."""
         self._load_coref()
         return self._coref_clusters
+
+    @property
+    def coref_entities(self):
+        """A list of all CorefEntity objects in the document."""
+        self._load_coref()
+        return self._coref_clusters.values()
 
     @property
     def coref_mentions(self):
