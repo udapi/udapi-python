@@ -66,6 +66,20 @@ class FixEdeprels(Block):
                         else:
                             # Accusative or locative are possible. Pick locative.
                             edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
+                    # Both "за" and "" also occur with instrumental. However, this
+                    # is only because there are numerals in the phrase ("за последние 20 лет")
+                    # and the whole phrase should be usually analyzed as accusative.
+                    m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                    if m:
+                        # The following is only partial solution. We will not see
+                        # some children because they may be shared children of coordination.
+                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                            solved = True
+                        else:
+                            # Accusative or instrumental are possible. Pick accusative.
+                            edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
