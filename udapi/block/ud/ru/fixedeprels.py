@@ -99,7 +99,7 @@ class FixEdeprels(Block):
                 # and the whole phrase should not be analyzed as genitive.
                 m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
-                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
                         edep['deprel'] = m.group(1)+':'+adpcase
                     else:
@@ -108,7 +108,7 @@ class FixEdeprels(Block):
                     continue
                 m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
-                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
                         edep['deprel'] = m.group(1)+':'+adpcase
                     else:
@@ -117,7 +117,7 @@ class FixEdeprels(Block):
                     continue
                 m = re.match(r'^(obl(?::arg)?|nmod):(с)(?::(?:nom|dat|acc|voc|loc))?$', edep['deprel'])
                 if m:
-                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
                         edep['deprel'] = m.group(1)+':'+adpcase
                     else:
