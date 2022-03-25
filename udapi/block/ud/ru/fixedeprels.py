@@ -12,6 +12,7 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
+        'будто':   [],
         'ведь':    [],
         'как':     ['как_только'],
         'словно':  [],
@@ -32,6 +33,7 @@ class FixEdeprels(Block):
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
         'до':               'до:gen',
+        'к':                'к:dat',
         'несмотря_на':      'несмотря_на:acc',
         'по_повод':         'по_поводу:gen',
         'помимо':           'помимо:gen',
@@ -106,11 +108,7 @@ class FixEdeprels(Block):
                     else:
                         # Accusative or instrumental are possible. Pick accusative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
-            if re.match(r'^(acl|advcl):', edep['deprel']):
-                edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
-            elif re.match(r'^(nmod|obl):', edep['deprel']):
+            if re.match(r'^(nmod|obl):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
                     # This is a same-case noun-noun modifier, which just happens to be in the locative.
                     # For example, 'v Ostravě-Porubě', 'Porubě' is attached to 'Ostravě', 'Ostravě' has
