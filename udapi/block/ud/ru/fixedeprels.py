@@ -5,31 +5,40 @@ import re
 
 class FixEdeprels(Block):
 
+    # Sometimes there are multiple layers of case marking and only the outermost
+    # layer should be reflected in the relation. For example, the semblative 'как'
+    # is used with the same case (preposition + morphology) as the nominal that
+    # is being compared ('как_в:loc' etc.) We do not want to multiply the relations
+    # by all the inner cases.
+    outermost = [
+        'ведь',
+        'как',
+        'словно',
+        'так_что',
+        'чем'
+    ]
+
     # Secondary prepositions sometimes have the lemma of the original part of
     # speech. We want the grammaticalized form instead. List even those that
     # will have the same lexical form, as we also want to check the morphological
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'в_вид':            'в_виде:gen',
         'в_качество':       'в_качестве:gen',
         'в_отношение':      'в_отношении:gen',
         'в_связь_с':        'в_связи_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
-        'ведь':             'ведь', # remove morphological case
         'до':               'до:gen',
-        'как':              'как', # remove morphological case
         'несмотря_на':      'несмотря_на:acc',
         'по_повод':         'по_поводу:gen',
         'помимо':           'помимо:gen',
         'при_помощь':       'при_помощи:gen',
         'с_помощь':         'с_помощью:gen',
-        'словно':           'словно', # remove morphological case
         'со_сторона':       'со_стороны:gen',
         'согласно':         'согласно:dat',
-        'спустя':           'спустя:acc',
-        'так_что':          'так_что', # remove morphological case
-        'чем':              'чем' # remove morphological case
+        'спустя':           'спустя:acc'
     }
 
     def process_node(self, node):
@@ -43,6 +52,17 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
+                # If one of the following expressions occurs followed by another preposition
+                # or by morphological case, remove the additional case marking. For example,
+                # 'словно_у' becomes just 'словно'.
+                for x in self.outermost:
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'([_:].+)?$', edep['deprel'])
+                    if m:
+                        edep['deprel'] = m.group(1)+':'+x
+                        solved = True
+                        break
+                if solved:
+                    break
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
@@ -52,13 +72,6 @@ class FixEdeprels(Block):
                         solved = True
                         break
                 if solved:
-                    break
-                # If one of the following expressions occurs followed by another preposition
-                # or by morphological case, remove the additional case marking. For example,
-                # 'словно_у' becomes just 'словно'.
-                m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):словно([_:].+)?$', edep['deprel'])
-                if m:
-                    edep['deprel'] = m.group(1)+':словно'
                     break
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
