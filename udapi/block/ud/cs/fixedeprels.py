@@ -295,7 +295,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:do:gen$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^(acl):k:dat$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:k:dat$', r'obl:k:dat', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:místo$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
                 edep['deprel'] = re.sub(r'^acl:na_způsob(?::gen)?$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
