@@ -251,6 +251,22 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
+                # Issues caused by errors in the original annotation must be fixed early.
+                # Especially if acl|advcl occurs with a preposition that unambiguously
+                # receives a morphological case in the subsequent steps, and then gets
+                # flagged as solved.
+                edep['deprel'] = re.sub(r'^advcl:do(?::gen)?$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
+                edep['deprel'] = re.sub(r'^acl:k(?::dat)?$', r'acl', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
+                edep['deprel'] = re.sub(r'^advcl:místo(?::gen)?$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
+                edep['deprel'] = re.sub(r'^acl:na_způsob(?::gen)?$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
+                edep['deprel'] = re.sub(r'^acl:od(?::gen)?$', r'nmod:od:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:od(?::gen)?$', r'obl:od:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
+                edep['deprel'] = re.sub(r'^advcl:podle(?::gen)?$', r'obl:podle:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:pro(?::acc)?$', r'obl:pro:acc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^acl:v$', r'nmod:v:loc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:v_duchu(?::gen)?$', r'obl:v_duchu:gen', edep['deprel'])
                 # Removing 'až' must be done early. The remainder may be 'počátek'
                 # and we will want to convert it to 'počátkem:gen'.
                 edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
@@ -293,21 +309,9 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:do:gen$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
-                edep['deprel'] = re.sub(r'^(acl):k:dat$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:místo$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
-                edep['deprel'] = re.sub(r'^acl:na_způsob(?::gen)?$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
                 edep['deprel'] = re.sub(r'^(advcl):neboť$', r'\1', edep['deprel']) # 'neboť' is coordinating
                 edep['deprel'] = re.sub(r'^(advcl):nechť$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^acl:od:gen$', r'nmod:od:gen', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:od:gen$', r'obl:od:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
-                edep['deprel'] = re.sub(r'^advcl:podle:gen$', r'obl:podle:gen', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:pro:acc$', r'obl:pro:acc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^acl:v$', r'nmod:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:v_duchu:gen$', r'obl:v_duchu:gen', edep['deprel'])
                 if edep['deprel'] == 'acl:v' and node.form == 'patře':
                     edep['deprel'] = 'nmod:v:loc'
                     node.deprel = 'nmod'
