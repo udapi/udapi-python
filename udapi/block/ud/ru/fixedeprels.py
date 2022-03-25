@@ -59,7 +59,7 @@ class FixEdeprels(Block):
                 for x in self.outermost:
                     exceptions = self.outermost[x]
                     m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'([_:].+)?$', edep['deprel'])
-                    if m and not x+m.group(2) in exceptions:
+                    if m and m.group(2) and not x+m.group(2) in exceptions:
                         edep['deprel'] = m.group(1)+':'+x
                         solved = True
                         break
