@@ -256,6 +256,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:do:gen$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^(acl):k:dat$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:k:dat$', r'obl:k:dat', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
@@ -264,6 +265,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(advcl):neboť$', r'\1', edep['deprel']) # 'neboť' is coordinating
                 edep['deprel'] = re.sub(r'^(advcl):nechť$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^acl:od:gen$', r'nmod:od:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:od:gen$', r'obl:od:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^advcl:podle:gen$', r'obl:podle:gen', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:pro:acc$', r'obl:pro:acc', edep['deprel'])
                 edep['deprel'] = re.sub(r'^acl:v$', r'nmod:v:loc', edep['deprel'])
