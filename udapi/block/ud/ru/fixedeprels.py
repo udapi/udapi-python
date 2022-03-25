@@ -21,9 +21,10 @@ class FixEdeprels(Block):
         'как':              'как', # remove morphological case
         'несмотря_на':      'несмотря_на:acc',
         'помимо':           'помимо:gen',
-        'согласно':         'согласно:dat',
-        'со_сторона':       'со_стороны:gen',
         'с_помощь':         'с_помощью:gen',
+        'словно':           'словно', # remove morphological case
+        'со_сторона':       'со_стороны:gen',
+        'согласно':         'согласно:dat',
         'спустя':           'спустя:acc',
         'так_что':          'так_что', # remove morphological case
         'чем':              'чем' # remove morphological case
@@ -48,38 +49,46 @@ class FixEdeprels(Block):
                         edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
                         solved = True
                         break
+                if solved:
+                    break
+                # If one of the following expressions occurs followed by another preposition
+                # or by morphological case, remove the additional case marking. For example,
+                # 'словно_у' becomes just 'словно'.
+                m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):словно([_:].+)?$', edep['deprel'])
+                if m:
+                    edep['deprel'] = m.group(1)+':словно'
+                    break
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
-                if not solved:
-                    # Both "на" and "в" also occur with genitive. However, this
-                    # is only because there are numerals in the phrase ("в 9 случаев из 10")
-                    # and the whole phrase should not be analyzed as genitive.
-                    m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
-                    if m:
-                        # The following is only partial solution. We will not see
-                        # some children because they may be shared children of coordination.
-                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                            solved = True
-                        else:
-                            # Accusative or locative are possible. Pick locative.
-                            edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
-                    # Both "за" and "" also occur with instrumental. However, this
-                    # is only because there are numerals in the phrase ("за последние 20 лет")
-                    # and the whole phrase should be usually analyzed as accusative.
-                    m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
-                    if m:
-                        # The following is only partial solution. We will not see
-                        # some children because they may be shared children of coordination.
-                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                            solved = True
-                        else:
-                            # Accusative or instrumental are possible. Pick accusative.
-                            edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                # Both "на" and "в" also occur with genitive. However, this
+                # is only because there are numerals in the phrase ("в 9 случаев из 10")
+                # and the whole phrase should not be analyzed as genitive.
+                m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                if m:
+                    # The following is only partial solution. We will not see
+                    # some children because they may be shared children of coordination.
+                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                        solved = True
+                    else:
+                        # Accusative or locative are possible. Pick locative.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
+                # Both "за" and "" also occur with instrumental. However, this
+                # is only because there are numerals in the phrase ("за последние 20 лет")
+                # and the whole phrase should be usually analyzed as accusative.
+                m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                if m:
+                    # The following is only partial solution. We will not see
+                    # some children because they may be shared children of coordination.
+                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                        solved = True
+                    else:
+                        # Accusative or instrumental are possible. Pick accusative.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
@@ -94,17 +103,6 @@ class FixEdeprels(Block):
                     edep['deprel'] = 'nmod:nom'
                 elif edep['deprel'] == 'nmod:voc':
                     edep['deprel'] = 'nmod:nom'
-                else:
-                    # If one of the following expressions occurs followed by another preposition,
-                    # remove the additional preposition. For example, 'i_když_s' becomes just 'i_když'.
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ač([_:].+)?$', r'\1:ač', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ačkoliv?([_:].+)?$', r'\1:ačkoli', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):byť[_:].+$', r'\1:byť', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):i_když[_:].+$', r'\1:i_když', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jak[_:].+$', r'\1:jak', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakkoliv?[_:].+$', r'\1:jakkoli', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jako[_:].+$', r'\1:jako', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakoby[_:].+$', r'\1:jako', edep['deprel']) # these instances in FicTree should be spelled 'jako by'
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
