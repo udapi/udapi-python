@@ -66,7 +66,7 @@ class FixEdeprels(Block):
                         solved = True
                         break
                 if solved:
-                    break
+                    continue
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
@@ -76,7 +76,7 @@ class FixEdeprels(Block):
                         solved = True
                         break
                 if solved:
-                    break
+                    continue
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.

@@ -265,7 +265,7 @@ class FixEdeprels(Block):
                         solved = True
                         break
                 if solved:
-                    break
+                    continue
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
@@ -275,7 +275,7 @@ class FixEdeprels(Block):
                         solved = True
                         break
                 if solved:
-                    break
+                    continue
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
@@ -319,7 +319,6 @@ class FixEdeprels(Block):
                     node.feats['Tense'] = ''
                     node.feats['VerbForm'] = ''
                     node.feats['Voice'] = ''
-                edep['deprel'] = re.sub(r'^advcl:(od|do)$', r'obl:\1:gen', edep['deprel'])
             elif re.match(r'^(nmod|obl):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
                     # This is a same-case noun-noun modifier, which just happens to be in the locative.
