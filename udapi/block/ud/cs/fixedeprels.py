@@ -5,6 +5,27 @@ import re
 
 class FixEdeprels(Block):
 
+    # Sometimes there are multiple layers of case marking and only the outermost
+    # layer should be reflected in the relation. For example, the semblative 'jako'
+    # is used with the same case (preposition + morphology) as the nominal that
+    # is being compared ('jako_v:loc' etc.) We do not want to multiply the relations
+    # by all the inner cases.
+    # The list in the value contains exceptions that should be left intact.
+    outermost = {
+        'ač':      [],
+        'ačkoli':  [], # 'ačkoliv' se převede na 'ačkoli' dole
+        'byť':     [],
+        'i_když':  [],
+        'jak':     [],
+        'jakkoli': [], # 'jakkoliv' se převede na 'jakkoli' dole
+        'jako':    [],
+        'jakoby':  [], # these instances in FicTree should be spelled 'jako by'
+        'než':     [],
+        'protože': [],
+        'takže':   [],
+        'třebaže': []
+    }
+
     # Secondary prepositions sometimes have the lemma of the original part of
     # speech. We want the grammaticalized form instead. List even those that
     # will have the same lexical form, as we also want to check the morphological
@@ -230,6 +251,21 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
+                # Removing 'až' must be done early. The remainder may be 'počátek'
+                # and we will want to convert it to 'počátkem:gen'.
+                edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
+                # If one of the following expressions occurs followed by another preposition
+                # or by morphological case, remove the additional case marking. For example,
+                # 'jako_v' becomes just 'jako'.
+                for x in self.outermost:
+                    exceptions = self.outermost[x]
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'([_:].+)?$', edep['deprel'])
+                    if m and m.group(2) and not x+m.group(2) in exceptions:
+                        edep['deprel'] = m.group(1)+':'+x
+                        solved = True
+                        break
+                if solved:
+                    break
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
@@ -238,18 +274,19 @@ class FixEdeprels(Block):
                         edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
                         solved = True
                         break
+                if solved:
+                    break
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
-                if not solved:
-                    m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
-                    if m:
-                        # The following is only partial solution. We will not see
-                        # some children because they may be shared children of coordination.
-                        prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                            edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                            solved = True
+                m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                if m:
+                    # The following is only partial solution. We will not see
+                    # some children because they may be shared children of coordination.
+                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
+                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
+                        solved = True
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 # We do not include 'i' in the list of redundant prefixes because we want to preserve 'i když' (but we want to discard the other combinations).
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
@@ -261,7 +298,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^advcl:k:dat$', r'obl:k:dat', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:místo$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
-                edep['deprel'] = re.sub(r'^acl:na_způsob:gen$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
+                edep['deprel'] = re.sub(r'^acl:na_způsob(?::gen)?$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
                 edep['deprel'] = re.sub(r'^(advcl):neboť$', r'\1', edep['deprel']) # 'neboť' is coordinating
                 edep['deprel'] = re.sub(r'^(advcl):nechť$', r'\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^acl:od:gen$', r'nmod:od:gen', edep['deprel'])
@@ -427,26 +464,10 @@ class FixEdeprels(Block):
                     # Instrumental would be possible but unlikely.
                     edep['deprel'] += ':acc'
                 else:
-                    # If one of the following expressions occurs followed by another preposition,
-                    # remove the additional preposition. For example, 'i_když_s' becomes just 'i_když'.
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ač([_:].+)?$', r'\1:ač', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ačkoliv?([_:].+)?$', r'\1:ačkoli', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):byť[_:].+$', r'\1:byť', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):i_když[_:].+$', r'\1:i_když', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jak[_:].+$', r'\1:jak', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakkoliv?[_:].+$', r'\1:jakkoli', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jako[_:].+$', r'\1:jako', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jakoby[_:].+$', r'\1:jako', edep['deprel']) # these instances in FicTree should be spelled 'jako by'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):než[_:].+$', r'\1:než', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):protože[_:].+$', r'\1:protože', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):takže[_:].+$', r'\1:takže', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):třebaže[_:].+$', r'\1:třebaže', edep['deprel'])
-                    #
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a([_:].+)?$', r'\1', edep['deprel']) # ala vršovický dloubák
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a_?l[ae]([_:].+)?$', r'\1', edep['deprel']) # a la bondovky
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(jak_)?ad([_:].+)?$', r'\1', edep['deprel']) # ad infinitum
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):co(:nom)?$', r'advmod', edep['deprel'])
                     edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):de([_:].+)?$', r'\1', edep['deprel']) # de facto
