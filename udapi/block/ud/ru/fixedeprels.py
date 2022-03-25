@@ -30,6 +30,7 @@ class FixEdeprels(Block):
         'в_качество':       'в_качестве:gen',
         'в_отношение':      'в_отношении:gen',
         'в_связь_с':        'в_связи_с:ins',
+        'в_соответствие_с': 'в_соответствии_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
         'до':               'до:gen',
@@ -43,6 +44,19 @@ class FixEdeprels(Block):
         'согласно':         'согласно:dat',
         'спустя':           'спустя:acc'
     }
+
+    def copy_case_from_adposition(self, node, adposition):
+        """
+        In some treebanks, adpositions have the Case feature and it denotes the
+        valency case that the preposition's nominal must be in.
+        """
+        # The following is only partial solution. We will not see
+        # some children because they may be shared children of coordination.
+        prepchildren = [x for x in node.children if x.lemma == adposition]
+        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+            return adposition+':'+prepchildren[0].feats['Case'].lower()
+        else:
+            return None
 
     def process_node(self, node):
         """
@@ -85,29 +99,31 @@ class FixEdeprels(Block):
                 # and the whole phrase should not be analyzed as genitive.
                 m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
-                    # The following is only partial solution. We will not see
-                    # some children because they may be shared children of coordination.
-                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                        solved = True
+                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
                     else:
                         # Accusative or locative are possible. Pick locative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
-                # Both "за" and "" also occur with instrumental. However, this
-                # is only because there are numerals in the phrase ("за последние 20 лет")
-                # and the whole phrase should be usually analyzed as accusative.
+                    continue
                 m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
-                    # The following is only partial solution. We will not see
-                    # some children because they may be shared children of coordination.
-                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                        solved = True
+                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
                     else:
                         # Accusative or instrumental are possible. Pick accusative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                    continue
+                m = re.match(r'^(obl(?::arg)?|nmod):(с)(?::(?:nom|dat|acc|voc|loc))?$', edep['deprel'])
+                if m:
+                    adpcase = copy_case_from_adposition(self, node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
+                    else:
+                        # Genitive or instrumental are possible. Pick instrumental.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                    continue
             if re.match(r'^(nmod|obl):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
                     # This is a same-case noun-noun modifier, which just happens to be in the locative.
