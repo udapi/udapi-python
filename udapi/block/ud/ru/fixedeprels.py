@@ -10,13 +10,14 @@ class FixEdeprels(Block):
     # is used with the same case (preposition + morphology) as the nominal that
     # is being compared ('как_в:loc' etc.) We do not want to multiply the relations
     # by all the inner cases.
-    outermost = [
-        'ведь',
-        'как',
-        'словно',
-        'так_что',
-        'чем'
-    ]
+    # The list in the value contains exceptions that should be left intact.
+    outermost = {
+        'ведь':    [],
+        'как':     ['как_только'],
+        'словно':  [],
+        'так_что': [],
+        'чем':     []
+    }
 
     # Secondary prepositions sometimes have the lemma of the original part of
     # speech. We want the grammaticalized form instead. List even those that
@@ -56,8 +57,9 @@ class FixEdeprels(Block):
                 # or by morphological case, remove the additional case marking. For example,
                 # 'словно_у' becomes just 'словно'.
                 for x in self.outermost:
+                    exceptions = self.outermost[x]
                     m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'([_:].+)?$', edep['deprel'])
-                    if m:
+                    if m and not x+m.group(2) in exceptions:
                         edep['deprel'] = m.group(1)+':'+x
                         solved = True
                         break
