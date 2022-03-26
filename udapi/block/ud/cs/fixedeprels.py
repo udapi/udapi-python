@@ -19,7 +19,7 @@ class FixEdeprels(Block):
         'jak':     [],
         'jakkoli': [], # 'jakkoliv' se převede na 'jakkoli' dole
         'jako':    [],
-        'jakoby':  ['jakoby_pod'], # these instances in FicTree should be spelled 'jako by'
+        'jakoby':  ['jakoby_pod:ins'], # these instances in FicTree should be spelled 'jako by'
         'než':     [],
         'protože': [],
         'takže':   [],
