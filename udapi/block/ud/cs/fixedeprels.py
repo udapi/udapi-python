@@ -19,7 +19,7 @@ class FixEdeprels(Block):
         'jak':     [],
         'jakkoli': [], # 'jakkoliv' se převede na 'jakkoli' dole
         'jako':    [],
-        'jakoby':  [], # these instances in FicTree should be spelled 'jako by'
+        'jakoby':  ['jakoby_pod'], # these instances in FicTree should be spelled 'jako by'
         'než':     [],
         'protože': [],
         'takže':   [],
@@ -33,7 +33,7 @@ class FixEdeprels(Block):
     # case, even if they are not secondary.
     unambiguous = {
         'abi':              'aby',
-        'aby_na':           'na',
+        'aby_na':           'na:loc',
         'ačkoliv':          'ačkoli',
         'ať':               'ať', # remove morphological case
         'ať_forma':         'formou:gen',
@@ -240,6 +240,19 @@ class FixEdeprels(Block):
         'že_za':            'za:gen'
     }
 
+    def copy_case_from_adposition(self, node, adposition):
+        """
+        In some treebanks, adpositions have the Case feature and it denotes the
+        valency case that the preposition's nominal must be in.
+        """
+        # The following is only partial solution. We will not see
+        # some children because they may be shared children of coordination.
+        prepchildren = [x for x in node.children if x.lemma == adposition]
+        if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
+            return adposition+':'+prepchildren[0].feats['Case'].lower()
+        else:
+            return None
+
     def process_node(self, node):
         """
         Occasionally the edeprels automatically derived from the Czech basic
@@ -266,7 +279,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^advcl:pro(?::acc)?$', r'obl:pro:acc', edep['deprel'])
                 edep['deprel'] = re.sub(r'^acl:v$', r'nmod:v:loc', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:v_duchu(?::gen)?$', r'obl:v_duchu:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:v_duchu?(?::gen)?$', r'obl:v_duchu:gen', edep['deprel'])
                 # Removing 'až' must be done early. The remainder may be 'počátek'
                 # and we will want to convert it to 'počátkem:gen'.
                 edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
@@ -297,12 +310,10 @@ class FixEdeprels(Block):
                 # identify the correct one.
                 m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
-                    # The following is only partial solution. We will not see
-                    # some children because they may be shared children of coordination.
-                    prepchildren = [x for x in node.children if x.lemma == m.group(2)]
-                    if len(prepchildren) > 0 and prepchildren[0].feats['Case'] != '':
-                        edep['deprel'] = m.group(1)+':'+m.group(2)+':'+prepchildren[0].feats['Case'].lower()
-                        solved = True
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
+                        continue
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 # We do not include 'i' in the list of redundant prefixes because we want to preserve 'i když' (but we want to discard the other combinations).
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
@@ -323,7 +334,7 @@ class FixEdeprels(Block):
                     node.feats['Tense'] = ''
                     node.feats['VerbForm'] = ''
                     node.feats['Voice'] = ''
-            elif re.match(r'^(nmod|obl):', edep['deprel']):
+            elif re.match(r'^(nmod|obl(:arg)?):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
                     # This is a same-case noun-noun modifier, which just happens to be in the locative.
                     # For example, 'v Ostravě-Porubě', 'Porubě' is attached to 'Ostravě', 'Ostravě' has
