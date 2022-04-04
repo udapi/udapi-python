@@ -312,6 +312,9 @@ class FixEdeprels(Block):
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
+                        ###!!! CAC contains 'o' with genitive, which is wrong!
+                        if m.group(1) == 'o' and adpcase == 'gen':
+                            adpcase = 'acc'
                         edep['deprel'] = m.group(1)+':'+adpcase
                         continue
             if re.match(r'^(acl|advcl):', edep['deprel']):
