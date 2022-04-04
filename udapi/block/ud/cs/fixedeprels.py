@@ -311,10 +311,7 @@ class FixEdeprels(Block):
                 m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
-                    if adpcase:
-                        ###!!! CAC contains 'o' with genitive, which is wrong!
-                        if m.group(1) == 'o' and adpcase == 'gen':
-                            adpcase = 'acc'
+                    if adpcase and not re.search(r':(nom|gen|dat|voc)$', adpcase):
                         edep['deprel'] = m.group(1)+':'+adpcase
                         continue
             if re.match(r'^(acl|advcl):', edep['deprel']):
