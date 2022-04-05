@@ -2,6 +2,7 @@
 
 import io
 import contextlib
+import logging
 import udapi.core.coref
 from udapi.core.bundle import Bundle
 from udapi.block.read.conllu import Conllu as ConlluReader
@@ -122,10 +123,21 @@ class Document(object):
             udapi.core.coref.load_coref_from_misc(self)
 
     @property
-    def coref_eid_to_entity(self):
-        """A dict mapping eid to a CorefEntity object."""
+    def eid_to_entity(self):
+        """A dict mapping each eid (entity ID) to a CorefEntity object."""
         self._load_coref()
         return self._eid_to_entity
+
+    @property
+    def coref_clusters(self):
+        """DEPRECATED: A dict mapping eid to a CorefEntity object.
+
+        Substitute `doc.coref_clusters.values()` and `list(doc.coref_clusters.values())`
+        with `doc.coref_entities`.
+        Otherwise, substitute `doc.coref_clusters` with `doc.eid_to_entity`.
+        """
+        logging.warning("coref_clusters is deprecated, use coref_entities or eid_to_entity instead.")
+        return self.eid_to_entity
 
     @property
     def coref_entities(self):

@@ -698,11 +698,11 @@ def load_coref_from_misc(doc, strict=True):
         for mention in entity._mentions:
             for node in mention._words:
                 node._mentions.sort()
-    doc._coref_eid_to_entity = {c._eid: c for c in sorted(entities.values())}
+    doc._eid_to_entity = {c._eid: c for c in sorted(entities.values())}
 
 
 def store_coref_to_misc(doc):
-    if not doc._coref_eid_to_entity:
+    if not doc._eid_to_entity:
         return
 
     tree2docid = doc.meta.get('tree2docid')
