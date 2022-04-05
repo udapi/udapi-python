@@ -1,6 +1,9 @@
 """Block class represents the basic Udapi processing unit."""
 import logging
 
+def not_overriden(method):
+  method.is_not_overridden = True
+  return method
 
 class Block(object):
     """The smallest processing unit for processing Universal Dependencies data.
@@ -58,6 +61,32 @@ class Block(object):
             logging.debug('Block %s processing bundle #%d (id=%s)',
                           self.__class__.__name__, bundle_no, bundle.bundle_id)
             self.process_bundle(bundle)
+
+        # Calling document.coref_entities is expensive because
+        # it needs to deserialize coref_entities from the MISC attributes.
+        # If no block in a scenario needs to process coreference entities/mentions,
+        # the deserialization does not need to be done.
+        # So we need to detect if any of the methods process_coref_entity and process_coref_mention
+        # has been overriden (without calling them, which could have adverse side effects).
+        # Let's use method annotations for this.
+        proc_entities = not hasattr(self.process_coref_entity, 'is_not_overriden')
+        proc_mentions = not hasattr(self.process_coref_mention, 'is_not_overriden')
+        if proc_entities or proc_mentions:
+            for entity in document.coref_entities:
+                self.process_coref_entity(entity)
+                if proc_mentions:
+                    for mention in entity.mentions:
+                        self.process_coref_mention(mention)
+
+    @not_overriden
+    def process_coref_entity(self, entity):
+        """This method is called on each coreference entity in the document."""
+        pass
+
+    @not_overriden
+    def process_coref_mention(self, mention):
+        """This method is called on each coreference mention in the document."""
+        pass
 
     def before_process_document(self, document):
         """This method is called before each process_document."""

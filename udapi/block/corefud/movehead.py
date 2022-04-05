@@ -75,20 +75,18 @@ class MoveHead(Block):
         # Finally, return the word-order-wise first head candidate as the head.
         return enh_heads[0], 'nontreelet'
 
-    def process_document(self, doc):
-        for cluster in doc.coref_clusters.values():
-            for mention in cluster.mentions:
-                self.counter['total'] += 1
-                if len(mention.words) < 2:
-                    self.counter['single-word'] += 1
-                else:
-                    new_head, category = self.find_head(mention)
-                    self.counter[category] += 1
-                    if new_head is mention.head:
-                        self.counter[category + '-kept'] += 1
-                    else:
-                        self.counter[category + '-moved'] += 1
-                        mention.head = new_head
+    def process_coref_mention(self, mention):
+        self.counter['total'] += 1
+        if len(mention.words) < 2:
+            self.counter['single-word'] += 1
+        else:
+            new_head, category = self.find_head(mention)
+            self.counter[category] += 1
+            if new_head is mention.head:
+                self.counter[category + '-kept'] += 1
+            else:
+                self.counter[category + '-moved'] += 1
+                mention.head = new_head
 
     def process_end(self):
         logging.info("corefud.MoveHead overview of mentions:")
