@@ -28,7 +28,7 @@ class Document(object):
         self._highest_bundle_id = 0
         self.meta = {}
         self.json = {}
-        self._coref_clusters = None
+        self._eid_to_entity = None
         if filename is not None:
             if filename.endswith(".conllu"):
                 self.load_conllu(filename, **kwargs)
@@ -118,40 +118,40 @@ class Document(object):
         It iterates through all nodes in the document and creates the objects based on the info in MISC
         (stored in attributes Entity, SplitAnte, Bridge).
         """
-        if self._coref_clusters is None:
+        if self._eid_to_entity is None:
             udapi.core.coref.load_coref_from_misc(self)
 
     @property
-    def coref_clusters(self):
+    def coref_eid_to_entity(self):
         """A dict mapping eid to a CorefEntity object."""
         self._load_coref()
-        return self._coref_clusters
+        return self._eid_to_entity
 
     @property
     def coref_entities(self):
         """A list of all CorefEntity objects in the document."""
         self._load_coref()
-        return self._coref_clusters.values()
+        return list(self._eid_to_entity.values())
 
     @property
     def coref_mentions(self):
         """A sorted list of all CorefMention objects in the document."""
         self._load_coref()
         all_mentions = []
-        for cluster in self._coref_clusters.values():
-            all_mentions.extend(cluster.mentions)
+        for entity in self._eid_to_entity.values():
+            all_mentions.extend(entity.mentions)
         all_mentions.sort()
         return all_mentions
 
-    def create_coref_cluster(self, cluster_id=None, cluster_type=None):
+    def create_coref_entity(self, eid=None, etype=None):
         self._load_coref()
-        if not cluster_id:
+        if not eid:
             counter = 1
-            while self._coref_clusters.get(f'c{counter}'):
+            while self._eid_to_entity.get(f'c{counter}'):
                 counter += 1
-            cluster_id = f'c{counter}'
-        elif clusters.get(cluster_id):
-            raise ValueError("Cluster with a id %s already exists", cluster_id)
-        cluster = udapi.core.coref.CorefCluster(cluster_id, cluster_type)
-        self._coref_clusters[cluster_id] = cluster
-        return cluster
+            eid = f'c{counter}'
+        elif self._eid_to_entity.get(eid):
+            raise ValueError("Entity with eid=%s already exists", eid)
+        entity = udapi.core.coref.CorefEntity(eid, etype)
+        self._eid_to_entity[eid] = entity
+        return entity

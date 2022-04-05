@@ -17,9 +17,9 @@ class MarkSameSubSpan(Block):
 
     def _print(self, mention):
         if self.print_form:
-            return mention.cluster.cluster_id + ':' + ' '.join([w.form for w in mention.words])
+            return mention.cluster.eid + ':' + ' '.join([w.form for w in mention.words])
         else:
-            return mention.cluster.cluster_id + ':' + mention.span
+            return mention.cluster.eid + ':' + mention.span
 
     def process_tree(self, tree):
         mentions = set()

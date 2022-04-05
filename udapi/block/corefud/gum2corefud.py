@@ -49,7 +49,7 @@ class Gum2CorefUD(Block):
                     name = docname + grp
                     cluster = clusters.get(name)
                     if cluster is None:
-                        cluster = node.create_coref_cluster(cluster_id=name, cluster_type=etype)
+                        cluster = node.create_coref_cluster(eid=name, etype=etype)
                         mention = cluster.mentions[0]
                         mention.misc = f"Infstat:{infstat},MinSpan:{minspan},CorefType:{ctype}"
                         if wiki:

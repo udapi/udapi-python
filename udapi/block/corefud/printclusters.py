@@ -26,11 +26,11 @@ class PrintClusters(Block):
         if 'docname' in doc.meta:
             print(f"Coref clusters in document {doc.meta['docname']}:")
         for cluster in doc.coref_clusters.values():
-            if self.id_re and not self.id_re.match(cluster.cluster_id):
+            if self.id_re and not self.id_re.match(cluster.eid):
                 continue
             if len(cluster.mentions) < self.min_mentions:
                 continue
-            print(f" {cluster.cluster_id} has {len(cluster.mentions)} mentions:")
+            print(f" {cluster.eid} has {len(cluster.mentions)} mentions:")
             if self.aggregate_mentions:
                 counter = Counter()
                 ranges = defaultdict(list)

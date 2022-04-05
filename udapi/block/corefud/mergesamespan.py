@@ -26,7 +26,7 @@ class MergeSameSpan(Block):
                 continue
             # Reduce non-determinism in which mention is removed:
             # If the mentions belong to different entities, sort them by entity (cluster) ids.
-            if mA.cluster.cluster_id > mB.cluster.cluster_id:
+            if mA.cluster.eid > mB.cluster.eid:
                 mA, mB = mB, mA
 
             sA, sB = set(mA.words), set(mB.words)
@@ -38,7 +38,7 @@ class MergeSameSpan(Block):
             # mentions from the other cluster to this cluster, and remove the
             # other cluster.
             if mA.cluster != mB.cluster:
-                logging.warning(f"Merging same-span mentions that belong to different entities: {mA.cluster.cluster_id} vs. {mB.cluster.cluster_id}")
+                logging.warning(f"Merging same-span mentions that belong to different entities: {mA.cluster.eid} vs. {mB.cluster.eid}")
                 ###!!! TODO: As of now, changing the cluster of a mention is not supported in the API.
                 #for m in mB.cluster.mentions:
                 #    m.cluster = mA.cluster

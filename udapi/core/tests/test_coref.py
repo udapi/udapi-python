@@ -14,22 +14,22 @@ class TestCoref(unittest.TestCase):
         docs = reader.read_documents()
         self.assertEqual(len(docs), 2)
         docs[-1].draw()
-        coref_entities = list(docs[-1].coref_clusters.values())
+        coref_entities = docs[-1].coref_entities
         self.assertEqual(len(coref_entities), 1)
-        self.assertEqual(coref_entities[0].cluster_id, 'e36781')
+        self.assertEqual(coref_entities[0].eid, 'e36781')
 
     def test_edits(self):
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'fr-democrat-dev-sample.conllu')
         doc = udapi.Document(data_filename)
         first_node = next(doc.nodes)
         second_node = first_node.next_node
-        new_entity = doc.create_coref_cluster(cluster_type='person')
-        self.assertEqual(new_entity.cluster_type, 'person')
+        new_entity = doc.create_coref_entity(etype='person')
+        self.assertEqual(new_entity.etype, 'person')
         self.assertEqual(len(new_entity.mentions), 0)
         m1 = new_entity.create_mention(words=[first_node]) # head will be automatically set to words[0]
         self.assertEqual(len(new_entity.mentions), 1)
         self.assertEqual(m1, new_entity.mentions[0])
-        self.assertEqual(m1.cluster, new_entity)
+        self.assertEqual(m1.entity, new_entity)
         self.assertEqual(m1.head, first_node)
         self.assertEqual(m1.words, [first_node])
         self.assertEqual(m1.span, '1')

@@ -44,13 +44,13 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
                         index_str = f"[{index}]"
                     if index == 1:
                         index_str = ""
-                head.misc["ClusterId" + index_str] = cluster.cluster_id
+                head.misc["ClusterId" + index_str] = cluster.eid
                 head.misc["MentionSpan" + index_str] = mention.span
-                head.misc["ClusterType" + index_str] = cluster.cluster_type
+                head.misc["ClusterType" + index_str] = cluster.etype
                 if mention._bridging:
-                    head.misc["Bridging" + index_str] = ','.join(f'{l.target.cluster_id}:{l.relation}' for l in sorted(mention.bridging))
+                    head.misc["Bridging" + index_str] = ','.join(f'{l.target.eid}:{l.relation}' for l in sorted(mention.bridging))
                 if cluster.split_ante:
-                    serialized = ','.join((c.cluster_id for c in sorted(cluster.split_ante)))
+                    serialized = ','.join((c.eid for c in sorted(cluster.split_ante)))
                     head.misc["SplitAnte" + index_str] = serialized
                 if mention.other:
                     head.misc["MentionMisc" + index_str] = str(mention.other).replace('%2D', '-')

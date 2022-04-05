@@ -30,7 +30,7 @@ class IndexClusters(Block):
         for idx, cid in enumerate(clusters, self.start):
             cluster = clusters[cid]
             new_cid = self.prefix + str(idx)
-            cluster.cluster_id = new_cid
+            cluster.eid = new_cid
             new_clusters[new_cid] = cluster
         self.start = idx + 1
         doc._coref_clusters = new_clusters
