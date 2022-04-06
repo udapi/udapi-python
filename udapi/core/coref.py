@@ -107,21 +107,21 @@ import logging
 @functools.total_ordering
 class CorefMention(object):
     """Class for representing a mention (instance of an entity)."""
-    __slots__ = ['_head', '_cluster', '_bridging', '_words', '_other']
+    __slots__ = ['_head', '_entity', '_bridging', '_words', '_other']
 
-    def __init__(self, words, head=None, cluster=None, add_word_backlinks=True):
+    def __init__(self, words, head=None, entity=None, add_word_backlinks=True):
         if not words:
             raise ValueError("mention.words must be non-empty")
         self._head = head if head else words[0]
-        self._cluster = cluster
-        if cluster is not None:
-            cluster._mentions.append(self)
+        self._entity = entity
+        if entity is not None:
+            entity._mentions.append(self)
         self._bridging = None
         self._other = None
         self._words = words
         if add_word_backlinks:
             for new_word in words:
-                if not new_word._mentions or not cluster or self > new_word._mentions[-1]:
+                if not new_word._mentions or not entity or self > new_word._mentions[-1]:
                     new_word._mentions.append(self)
                 else:
                     new_word._mentions.append(self)
@@ -141,8 +141,8 @@ class CorefMention(object):
         their order is defined by the order of the last word in their span.
         For example <w1, w2> precedes <w1, w3>.
 
-        The order of two same-span mentions is currently defined by their cluster_id.
-        There should be no same-span (or same-subspan) same-cluster mentions.
+        The order of two same-span mentions is currently defined by their eid.
+        There should be no same-span (or same-subspan) same-entity mentions.
         """
         #TODO: no mention.words should be handled already when loading
         if not self._words:
@@ -159,7 +159,7 @@ class CorefMention(object):
                 return True
             if another._words[-1].precedes(self._words[-1]):
                 return False
-            return self._cluster.cluster_id < another._cluster.cluster_id
+            return self._entity.eid < another._entity.eid
         return self._words[0].precedes(another._words[0])
 
     @property
@@ -186,15 +186,15 @@ class CorefMention(object):
         self._head = new_head
 
     @property
-    def cluster(self):
-        return self._cluster
+    def entity(self):
+        return self._entity
 
-    @cluster.setter
-    def cluster(self, new_cluster):
-        if self._cluster is not None:
-            raise NotImplementedError('changing the cluster of a mention not supported yet')
-        self._cluster = new_cluster
-        new_cluster._mentions.append(new_cluster)
+    @entity.setter
+    def entity(self, new_entity):
+        if self._entity is not None:
+            raise NotImplementedError('changing the entity of a mention not supported yet')
+        self._entity = new_entity
+        new_entity._mentions.append(new_entity)
 
     @property
     def bridging(self):
@@ -216,7 +216,7 @@ class CorefMention(object):
     @words.setter
     def words(self, new_words):
         if new_words and self.head not in new_words:
-            raise ValueError(f"Head {self.head} not in new_words {new_words} for {self._cluster.cluster_id}")
+            raise ValueError(f"Head {self.head} not in new_words {new_words} for {self._entity.eid}")
         kept_words = []
         # Make sure each word is included just once and they are in the correct order.
         new_words = sorted(list(set(new_words)))
@@ -247,44 +247,44 @@ CHARS_FORBIDDEN_IN_ID = "-=| \t()"
 
 
 @functools.total_ordering
-class CorefCluster(object):
+class CorefEntity(object):
     """Class for representing all mentions of a given entity."""
-    __slots__ = ['_cluster_id', '_mentions', 'cluster_type', 'split_ante']
+    __slots__ = ['_eid', '_mentions', 'etype', 'split_ante']
 
-    def __init__(self, cluster_id, cluster_type=None):
-        self._cluster_id = None # prepare the _cluster_id slot
-        self.cluster_id = cluster_id # call the setter and check the ID is valid
+    def __init__(self, eid, etype=None):
+        self._eid = None # prepare the _eid slot
+        self.eid = eid # call the setter and check the ID is valid
         self._mentions = []
-        self.cluster_type = cluster_type
+        self.etype = etype
         self.split_ante = []
 
     def __lt__(self, another):
-        """Does this CorefCluster precedes (word-order wise) `another` cluster?
+        """Does this CorefEntity precedes (word-order wise) `another` entity?
 
-        This method defines a total ordering of all clusters
-        by the first mention of each cluster (see `CorefMention.__lt__`).
-        If one of the clusters has no mentions (which should not happen normally),
+        This method defines a total ordering of all entities
+        by the first mention of each entity (see `CorefMention.__lt__`).
+        If one of the entities has no mentions (which should not happen normally),
         there is a backup solution (see the source code).
-        If cluster IDs are not important, it is recommended to use block
-        `corefud.IndexClusters` to re-name cluster IDs in accordance with this cluster ordering.
+        If entity IDs are not important, it is recommended to use block
+        `corefud.IndexClusters` to re-name entity IDs in accordance with this entity ordering.
         """
         if not self._mentions or not another._mentions:
-            # Clusters without mentions should go first, so the ordering is total.
-            # If both clusters are missing mentions, let's use cluster_id, so the ordering is stable.
+            # Entities without mentions should go first, so the ordering is total.
+            # If both entities are missing mentions, let's use eid, so the ordering is stable.
             if not self._mentions and not another._mentions:
-                return self._cluster_id < another._cluster_id
+                return self._eid < another._eid
             return not self._mentions
         return self._mentions[0] < another._mentions[0]
 
     @property
-    def cluster_id(self):
-        return self._cluster_id
+    def eid(self):
+        return self._eid
 
-    @cluster_id.setter
-    def cluster_id(self, new_cluster_id):
-        if any(x in new_cluster_id for x in CHARS_FORBIDDEN_IN_ID):
-            raise ValueError(f"{new_cluster_id} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]")
-        self._cluster_id = new_cluster_id
+    @eid.setter
+    def eid(self, new_eid):
+        if any(x in new_eid for x in CHARS_FORBIDDEN_IN_ID):
+            raise ValueError(f"{new_eid} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]")
+        self._eid = new_eid
 
     @property
     def eid_or_grp(self):
@@ -292,18 +292,18 @@ class CorefCluster(object):
         meta = root.document.meta
         if 'GRP' in meta['global.Entity'] and meta['tree2docid']:
             docid = meta['tree2docid'][root]
-            if self._cluster_id.startswith(docid):
-                return self._cluster_id.replace(docid, '', 1)
+            if self._eid.startswith(docid):
+                return self._eid.replace(docid, '', 1)
             else:
-                logging.warning(f"GRP in global.Entity, but eid={self._cluster_id} does not start with docid={docid}")
-        return self._cluster_id
+                logging.warning(f"GRP in global.Entity, but eid={self._eid} does not start with docid={docid}")
+        return self._eid
 
     @property
     def mentions(self):
         return self._mentions
 
     def create_mention(self, head=None, words=None, span=None):
-        """Create a new CoreferenceMention object within this CorefCluster.
+        """Create a new CoreferenceMention object within this CorefEntity.
 
         Args:
         head: a node where the annotation about this CorefMention will be stored in MISC.
@@ -330,7 +330,7 @@ class CorefCluster(object):
         if head is None:
             head = words[0]
 
-        mention = CorefMention(words=[head], head=head, cluster=self)
+        mention = CorefMention(words=[head], head=head, entity=self)
         if words:
             mention.words = words
         if span:
@@ -353,7 +353,7 @@ class CorefCluster(object):
 #   from dataclasses import dataclass
 #   @dataclass
 #   class DataClassCard:
-#      target: CorefCluster
+#      target: CorefEntity
 #      relation: str
 class BridgingLink:
     __slots__ = ['target', 'relation']
@@ -374,9 +374,9 @@ class BridgingLinks(collections.abc.MutableSequence):
     Example usage:
     >>> bl = BridgingLinks(src_mention)                                   # empty links
     >>> bl = BridgingLinks(src_mention, [(c12, 'part'), (c56, 'subset')]) # from a list of tuples
-    >>> (bl8, bl9) = BridgingLinks.from_string('c12<c8:part,c56<c8:subset,c5<c9', clusters)
-    >>> for cluster, relation in bl:
-    >>>     print(f"{bl.src_mention} ->{relation}-> {cluster.cluster_id}")
+    >>> (bl8, bl9) = BridgingLinks.from_string('c12<c8:part,c56<c8:subset,c5<c9', entities)
+    >>> for entity, relation in bl:
+    >>>     print(f"{bl.src_mention} ->{relation}-> {entity.eid}")
     >>> print(str(bl)) # c12<c8:part,c56<c8:subset
     >>> bl('part').targets == [c12]
     >>> bl('part|subset').targets == [c12, c56]
@@ -384,9 +384,9 @@ class BridgingLinks(collections.abc.MutableSequence):
     """
 
     @classmethod
-    def from_string(cls, string, clusters, node, strict=True, tree2docid=None):
+    def from_string(cls, string, entities, node, strict=True, tree2docid=None):
         """Return a sequence of BridgingLink objects representing a given string serialization.
-        The bridging links are also added to the mentions (`mention.bridging`) in the supplied `clusters`,
+        The bridging links are also added to the mentions (`mention.bridging`) in the supplied `entities`,
         so the returned sequence can be usually ignored.
         If `tree2docid` parameter is provided (mapping trees to document IDs used as prefixes in eid),
         the entity IDs in the provided string are interpreted as "GRP", i.e. as document-wide IDs,
@@ -403,17 +403,17 @@ class BridgingLinks(collections.abc.MutableSequence):
             if ':' in src_str:
                 src_str, relation = src_str.split(':', 1)
             if trg_str == src_str:
-                _error(f"Bridge cannot self-reference the same cluster {trg_str} at {node}", strict)
+                _error(f"Bridge cannot self-reference the same entity {trg_str} at {node}", strict)
             if tree2docid:
                 src_str = tree2docid[node.root] + src_str
                 trg_str = tree2docid[node.root] + trg_str
             bl = src_str2bl.get(src_str)
             if not bl:
-                bl = clusters[src_str].mentions[-1].bridging
+                bl = entities[src_str].mentions[-1].bridging
                 src_str2bl[src_str] = bl
-            if trg_str not in clusters:
-                clusters[trg_str] = CorefCluster(trg_str)
-            bl._data.append(BridgingLink(clusters[trg_str], relation))
+            if trg_str not in entities:
+                entities[trg_str] = CorefEntity(trg_str)
+            bl._data.append(BridgingLink(entities[trg_str], relation))
         return src_str2bl.values()
 
     def __init__(self, src_mention, value=None, strict=True):
@@ -423,8 +423,8 @@ class BridgingLinks(collections.abc.MutableSequence):
         if value is not None:
             if isinstance(value, collections.abc.Sequence):
                 for v in value:
-                    if v[0] is src_mention._cluster:
-                        _error("Bridging cannot self-reference the same cluster: " + v[0].cluster_id, strict)
+                    if v[0] is src_mention._entity:
+                        _error("Bridging cannot self-reference the same entity: " + v[0].eid, strict)
                     self._data.append(BridgingLink(v[0], v[1]))
             else:
                 raise ValueError(f"Unknown value type: {type(value)}")
@@ -439,21 +439,21 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     # TODO delete backlinks of old links, dtto for SplitAnte
     def __setitem__(self, key, new_value):
-        if new_value[0] is self.src_mention._cluster:
-            _error("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id, self.strict)
+        if new_value[0] is self.src_mention._entity:
+            _error("Bridging cannot self-reference the same entity: " + new_value[0].eid, self.strict)
         self._data[key] = BridgingLink(new_value[0], new_value[1])
 
     def __delitem__(self, key):
         del self._data[key]
 
     def insert(self, key, new_value):
-        if new_value[0] is self.src_mention._cluster:
-            _error("Bridging cannot self-reference the same cluster: " + new_value[0].cluster_id, self.strict)
+        if new_value[0] is self.src_mention._entity:
+            _error("Bridging cannot self-reference the same entity: " + new_value[0].eid, self.strict)
         self._data.insert(key, BridgingLink(new_value[0], new_value[1]))
 
     def __str__(self):
         # TODO in future link.relation should never be None, 0 nor "_", so we could delete the <not in (None, "_", "")> below.
-        return ','.join(f'{l.target.eid_or_grp}<{self.src_mention.cluster.eid_or_grp}{":" + l.relation if l.relation not in (None, "_", "") else ""}' for l in sorted(self._data))
+        return ','.join(f'{l.target.eid_or_grp}<{self.src_mention.entity.eid_or_grp}{":" + l.relation if l.relation not in (None, "_", "") else ""}' for l in sorted(self._data))
 
     def __call__(self, relations_re=None):
         """Return a subset of links contained in this list as specified by the args.
@@ -466,14 +466,14 @@ class BridgingLinks(collections.abc.MutableSequence):
 
     @property
     def targets(self):
-        """Return a list of the target clusters (without relations)."""
+        """Return a list of the target entities (without relations)."""
         return [link.target for link in self._data]
 
     def _delete_targets_without_mentions(self, warn=True):
         for link in self._data:
             if not link.target.mentions:
                 if warn:
-                    logging.warning(f"Cluster {link.target.cluster_id} has no mentions, but is referred to in bridging of {self.src_mention.cluster.cluster_id}")
+                    logging.warning(f"Entity {link.target.eid} has no mentions, but is referred to in bridging of {self.src_mention.entity.eid}")
                 self._data.remove(link)
 
 
@@ -492,7 +492,7 @@ highest_doc_n = 0
 
 def load_coref_from_misc(doc, strict=True):
     global highest_doc_n
-    clusters = {}
+    entities = {}
     unfinished_mentions = collections.defaultdict(list)
     discontinuous_mentions = collections.defaultdict(list)
     global_entity = doc.meta.get('global.Entity')
@@ -573,12 +573,12 @@ def load_coref_from_misc(doc, strict=True):
                     try:
                         mention.head = mention.words[head_idx - 1]
                     except IndexError as err:
-                        _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
+                        _error(f"Invalid head_idx={head_idx} for {mention.entity.eid} "
                                 f"closed at {node} with words={mention.words}", 1)
                 if subspan_idx and subspan_idx == total_subspans:
                     m = discontinuous_mentions[eid].pop()
                     if m is not mention:
-                        _error(f"Closing mention {mention.cluster.cluster_id} at {node}, but it has unfinished nested mentions ({m.words})", 1)
+                        _error(f"Closing mention {mention.entity.eid} at {node}, but it has unfinished nested mentions ({m.words})", 1)
 
             # 3. opening or single-word
             else:
@@ -615,18 +615,18 @@ def load_coref_from_misc(doc, strict=True):
                     else:
                         eid, subspan_idx, total_subspans = m.group(1, 2, 3)
 
-                cluster = clusters.get(eid)
-                if cluster is None:
+                entity = entities.get(eid)
+                if entity is None:
                     if subspan_idx and subspan_idx != '1':
                         _error(f'Non-first subspan of a discontinuous mention {eid} at {node} does not have any previous mention.', 1)
-                    cluster = CorefCluster(eid)
-                    clusters[eid] = cluster
-                    cluster.cluster_type = etype
-                elif etype and cluster.cluster_type and cluster.cluster_type != etype:
-                    logging.warning(f"etype mismatch in {node}: {cluster.cluster_type} != {etype}")
-                # CorefCluster could be created first with "Bridge=" without any type
-                elif etype and cluster.cluster_type is None:
-                    cluster.cluster_type = etype
+                    entity = CorefEntity(eid)
+                    entities[eid] = entity
+                    entity.etype = etype
+                elif etype and entity.etype and entity.etype != etype:
+                    logging.warning(f"etype mismatch in {node}: {entity.etype} != {etype}")
+                # CorefEntity could be created first with "Bridge=" without any type
+                elif etype and entity.etype is None:
+                    entity.etype = etype
 
                 if subspan_idx and subspan_idx != '1':
                     opened = [pair[0] for pair in unfinished_mentions[eid]]
@@ -635,14 +635,14 @@ def load_coref_from_misc(doc, strict=True):
                     if closing and subspan_idx == total_subspans:
                         m = discontinuous_mentions[eid].pop()
                         if m is not mention:
-                            _error(f"{node}: closing mention {mention.cluster.cluster_id} ({mention.words}), but it has an unfinished nested mention ({m.words})", 1)
+                            _error(f"{node}: closing mention {mention.entity.eid} ({mention.words}), but it has an unfinished nested mention ({m.words})", 1)
                         try:
                             mention.head = mention._words[head_idx - 1]
                         except IndexError as err:
-                            _error(f"Invalid head_idx={head_idx} for {mention.cluster.cluster_id} "
+                            _error(f"Invalid head_idx={head_idx} for {mention.entity.eid} "
                                     f"closed at {node} with words={mention._words}", 1)
                 else:
-                    mention = CorefMention(words=[node], cluster=cluster)
+                    mention = CorefMention(words=[node], entity=entity)
                     if other:
                         mention._other = other
                     if subspan_idx:
@@ -657,7 +657,7 @@ def load_coref_from_misc(doc, strict=True):
         # or with relations Bridge=e173<c188:subset,e174<e188:part
         misc_bridge = node.misc['Bridge']
         if misc_bridge:
-            BridgingLinks.from_string(misc_bridge, clusters, node, strict, tree2docid)
+            BridgingLinks.from_string(misc_bridge, entities, node, strict, tree2docid)
 
         # SplitAnte, e.g. Entity=(e11-person(e12-person)|SplitAnte=e3<e11,e4<e11,e6<e12,e7<e12
         # which means that both e11 and e12 have split antecedents (e11=e3+e4, e12=e6+e7).
@@ -665,44 +665,44 @@ def load_coref_from_misc(doc, strict=True):
         if not misc_split and 'Split' in node.misc:
             misc_split = node.misc.pop('Split')
         if misc_split:
-            ante_clusters = []
+            ante_entities = []
             for x in misc_split.split(','):
                 ante_str, this_str = x.split('<')
                 if ante_str == this_str:
-                    _error("SplitAnte cannot self-reference the same cluster: " + this_str, strict)
+                    _error("SplitAnte cannot self-reference the same entity: " + this_str, strict)
                 if tree2docid:
                     ante_str = tree2docid[node.root] + ante_str
                     this_str = tree2docid[node.root] + this_str
                 # split cataphora, e.g. "We, that is you and me..."
-                if ante_str not in clusters:
-                    clusters[ante_str] = CorefCluster(ante_str)
-                clusters[this_str].split_ante.append(clusters[ante_str])
+                if ante_str not in entities:
+                    entities[ante_str] = CorefEntity(ante_str)
+                entities[this_str].split_ante.append(entities[ante_str])
 
-    for cluster_name, mentions in unfinished_mentions.items():
+    for entity_name, mentions in unfinished_mentions.items():
         for mention in mentions:
-            logging.warning(f"Mention {cluster_name} opened at {mention.head}, but not closed. Deleting.")
-            cluster = mention.cluster
+            logging.warning(f"Mention {entity_name} opened at {mention.head}, but not closed. Deleting.")
+            entity = mention.entity
             mention.words = []
-            cluster._mentions.remove(mention)
-            if not cluster._mentions:
-                del clusters[name]
+            entity._mentions.remove(mention)
+            if not entity._mentions:
+                del entities[name]
 
-    # c=doc.coref_clusters should be sorted, so that c[0] < c[1] etc.
-    # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
-    # not by the keys (cluster_id).
+    # c=doc.coref_entities should be sorted, so that c[0] < c[1] etc.
+    # In other words, the dict should be sorted by the values (according to CorefEntity.__lt__),
+    # not by the keys (eid).
     # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
-    for cluster in clusters.values():
-        if not cluster._mentions:
-            _error(f"Cluster {cluster.cluster_id} referenced in SplitAnte or Bridge, but not defined with Entity", strict)
-        cluster._mentions.sort()
-        for mention in cluster._mentions:
+    for entity in entities.values():
+        if not entity._mentions:
+            _error(f"Entity {entity.eid} referenced in SplitAnte or Bridge, but not defined with Entity", strict)
+        entity._mentions.sort()
+        for mention in entity._mentions:
             for node in mention._words:
                 node._mentions.sort()
-    doc._coref_clusters = {c._cluster_id: c for c in sorted(clusters.values())}
+    doc._eid_to_entity = {c._eid: c for c in sorted(entities.values())}
 
 
 def store_coref_to_misc(doc):
-    if not doc._coref_clusters:
+    if not doc._eid_to_entity:
         return
 
     tree2docid = doc.meta.get('tree2docid')
@@ -731,18 +731,18 @@ def store_coref_to_misc(doc):
         if ',' not in mention.span:
             doc_mentions.append(mention)
         else:
-            cluster = mention.cluster
+            entity = mention.entity
             head_str = str(mention.words.index(mention.head) + 1)
             subspans = mention.span.split(',')
             root = mention.words[0].root
             for idx,subspan in enumerate(subspans, 1):
-                eid = cluster.cluster_id
+                eid = entity.eid
                 if tree2docid and 'GRP' in fields:
-                    eid = re.sub(r'^d\d+\.', '', eid) # TODO or "eid = cluster.eid_or_grp"?
+                    eid = re.sub(r'^d\d+\.', '', eid) # TODO or "eid = entity.eid_or_grp"?
                 subspan_eid = f'{eid}[{idx}/{len(subspans)}]'
                 subspan_words = span_to_nodes(root, subspan)
-                fake_cluster = CorefCluster(subspan_eid, cluster.cluster_type)
-                fake_mention = CorefMention(subspan_words, head_str, fake_cluster, add_word_backlinks=False)
+                fake_entity = CorefEntity(subspan_eid, entity.etype)
+                fake_mention = CorefMention(subspan_words, head_str, fake_entity, add_word_backlinks=False)
                 if mention._other:
                     fake_mention._other = mention._other
                 if mention._bridging and idx == 1:
@@ -751,11 +751,11 @@ def store_coref_to_misc(doc):
     doc_mentions.sort()
 
     for mention in doc_mentions:
-        cluster = mention.cluster
+        entity = mention.entity
         values = []
         for field in fields:
             if field == 'eid' or field == 'GRP':
-                eid = cluster.cluster_id
+                eid = entity.eid
                 if field == 'GRP':
                     eid = re.sub(r'^d\d+\.', '', eid)
                 if any(x in eid for x in CHARS_FORBIDDEN_IN_ID):
@@ -764,10 +764,10 @@ def store_coref_to_misc(doc):
                         eid = eid.replace(c, '')
                 values.append(eid)
             elif field == 'etype' or field == 'entity':
-                if not cluster.cluster_type:
+                if not entity.etype:
                     values.append('')
                 else:
-                    values.append(cluster.cluster_type)
+                    values.append(entity.etype)
             elif field == 'head':
                 if isinstance(mention.head, str):
                     values.append(mention.head) # fake mention for discontinuous spans
@@ -818,7 +818,7 @@ def store_coref_to_misc(doc):
         # Second, multi-word mentions. Opening brackets should follow closing brackets.
         else:
             firstword.misc['Entity'] += mention_str
-            eid = cluster.cluster_id
+            eid = entity.eid
             if tree2docid and 'GRP' in fields:
                 eid = re.sub(r'^d\d+\.', '', eid)
             mention.words[-1].misc['Entity'] = eid + ')' + mention.words[-1].misc['Entity']
@@ -832,20 +832,20 @@ def store_coref_to_misc(doc):
             firstword.misc['Bridge'] = str_bridge
 
     # SplitAnte=e5<e61,e10<e61
-    for cluster in doc.coref_clusters.values():
-        if cluster.split_ante:
-            for ante_entity in cluster.split_ante:
+    for entity in doc.coref_entities:
+        if entity.split_ante:
+            for ante_entity in entity.split_ante:
                 if not ante_entity.mentions:
-                    logging.warning(f"Cluster {ante_entity.cluster_id} has no mentions, but is referred to in SplitAnte of {cluster.cluster_id}")
-                    cluster.split_ante.remove(ante_entity)
-            if not cluster.split_ante or len(cluster.split_ante) < 2:
-                logging.warning(f"SplitAnte of {cluster.cluster_id} has less than two antecedents, omitting")
+                    logging.warning(f"Entity {ante_entity.eid} has no mentions, but is referred to in SplitAnte of {entity.eid}")
+                    entity.split_ante.remove(ante_entity)
+            if not entity.split_ante or len(entity.split_ante) < 2:
+                logging.warning(f"SplitAnte of {entity.eid} has less than two antecedents, omitting")
                 continue
-            first_word = cluster.mentions[0].words[0]
+            first_word = entity.mentions[0].words[0]
             if tree2docid:
-                strs = ','.join(f'{sa.eid_or_grp}<{cluster.eid_or_grp}' for sa in cluster.split_ante)
+                strs = ','.join(f'{sa.eid_or_grp}<{entity.eid_or_grp}' for sa in entity.split_ante)
             else:
-                strs = ','.join(f'{sa.cluster_id}<{cluster.cluster_id}' for sa in cluster.split_ante)
+                strs = ','.join(f'{sa.eid}<{entity.eid}' for sa in entity.split_ante)
             if first_word.misc['SplitAnte']:
                 strs = first_word.misc['SplitAnte'] + ',' + strs
             first_word.misc['SplitAnte'] = strs

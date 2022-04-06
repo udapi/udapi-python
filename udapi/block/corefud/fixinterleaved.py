@@ -5,10 +5,10 @@ import itertools
 class FixInterleaved(Block):
     """Fix mentions with interleaved or crossing spans."""
 
-    def __init__(self, same_cluster_only=True, both_discontinuous=False,
+    def __init__(self, same_entity_only=True, both_discontinuous=False,
                  crossing_only=False, nested_same_subspan=True, **kwargs):
         super().__init__(**kwargs)
-        self.same_cluster_only = same_cluster_only
+        self.same_entity_only = same_entity_only
         self.both_discontinuous = both_discontinuous
         self.crossing_only = crossing_only
         self.nested_same_subspan = nested_same_subspan
@@ -22,7 +22,7 @@ class FixInterleaved(Block):
         for mA, mB in itertools.combinations(mentions, 2):
             if mA in deleted or mB in deleted:
                 continue
-            if self.same_cluster_only and mA.cluster != mB.cluster:
+            if self.same_entity_only and mA.entity != mB.entity:
                 continue
 
             # Fully nested spans are OK, expect for same-subspan
@@ -53,7 +53,7 @@ class FixInterleaved(Block):
                 except ValueError:
                     pass
             try:
-                mB.cluster.mentions.remove(mB)
+                mB.entity.mentions.remove(mB)
             except ValueError:
                 pass
             deleted.add(mB)
@@ -75,7 +75,7 @@ class FixInterleaved(Block):
                     except ValueError:
                         pass
                 try:
-                    mA.cluster.mentions.remove(mA)
+                    mA.entity.mentions.remove(mA)
                 except ValueError:
                     pass
                 break

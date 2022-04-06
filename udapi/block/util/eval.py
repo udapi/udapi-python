@@ -29,7 +29,7 @@ class Eval(Block):
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, doc=None, bundle=None, tree=None, node=None, start=None, end=None,
                  before_doc=None, after_doc=None, before_bundle=None, after_bundle=None,
-                 coref_mention=None, coref_cluster=None,
+                 coref_mention=None, coref_entity=None,
                  expand_code=True, **kwargs):
         super().__init__(**kwargs)
         self.doc = doc
@@ -43,7 +43,7 @@ class Eval(Block):
         self.before_bundle = before_bundle
         self.after_bundle = after_bundle
         self.coref_mention = coref_mention
-        self.coref_cluster = coref_cluster
+        self.coref_entity = coref_entity
         self.expand_code = expand_code
         self.count = collections.Counter()
 
@@ -74,13 +74,13 @@ class Eval(Block):
                 # TODO if self._should_process_bundle(bundle):
                 self.process_bundle(bundle)
 
-        if self.coref_cluster or self.coref_mention:
-            for cluster in doc.coref_clusters.values():
-                if self.coref_cluster:
-                    this = cluster
-                    exec(self.expand_eval_code(self.coref_cluster))
+        if self.coref_entity or self.coref_mention:
+            for entity in doc.coref_entities:
+                if self.coref_entity:
+                    this = entity
+                    exec(self.expand_eval_code(self.coref_entity))
                 if self.coref_mention:
-                    for mention in cluster.mentions:
+                    for mention in entity.mentions:
                         this = mention
                         exec(self.expand_eval_code(self.coref_mention))
 

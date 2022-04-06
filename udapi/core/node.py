@@ -917,16 +917,16 @@ class Node(object):
         return self._mentions
 
     @property
-    def coref_clusters(self):
+    def coref_entities(self):
         self._root.bundle.document._load_coref()
-        return [m.cluster for m in self._mentions if m.cluster is not None]
+        return [m.entity for m in self._mentions if m.entity is not None]
 
     # TODO: is this method useful?
-    def create_coref_cluster(self, cluster_id=None, cluster_type=None, **kwargs):
+    def create_coref_entity(self, eid=None, etype=None, **kwargs):
         doc = self._root.bundle.document
-        cluster = doc.create_coref_cluster(cluster_id, cluster_type)
-        cluster.create_mention(head=self, **kwargs)
-        return cluster
+        entity = doc.create_coref_entity(eid, etype)
+        entity.create_mention(head=self, **kwargs)
+        return entity
 
 
 class CycleError(Exception):

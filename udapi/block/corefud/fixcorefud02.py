@@ -20,32 +20,32 @@ class FixCorefUD02(Block):
         if doc.meta['global.Entity'] == 'entity-GRP-infstat-MIN-coref_type-identity':
             doc.meta['global.Entity'] = 'eid-etype-head-other-infstat-minspan-identity'
 
-        for cluster in doc.coref_clusters.values():
-            if cluster.cluster_type:
+        for entity in doc.coref_entities:
+            if entity.etype:
                 # Harmonize etype.
                 # If gen/spec is distinguished, store it in all mentions' other['gstype'].
-                etype = cluster.cluster_type.lower()
+                etype = entity.etype.lower()
                 if etype.startswith('spec') or etype.startswith('gen'):
                     gstype = 'gen' if etype.startswith('gen') else 'spec'
-                    for m in cluster.mentions:
+                    for m in entity.mentions:
                         m.other['gstype'] = gstype
                     if etype == 'spec':
                         etype = 'other'
                     etype = etype.replace('gen', '').replace('spec', '').replace('.', '')
                 etype = NEW_ETYPE.get(etype, etype)
                 
-                # cluster_type="APPOS" is used only in NONPUBL-CorefUD_English-OntoNotes.
-                # Apposition is a mention-based rather than cluster-based attribute.
+                # etype="APPOS" is used only in NONPUBL-CorefUD_English-OntoNotes.
+                # Apposition is a mention-based rather than entity-based attribute.
                 # We don't know which of the mentions it should be assigned, but let's expect all non-first.
                 # UD marks appositions with deprel appos, so once someone checks it is really redunant,
                 # TODO we can delete the appos mention attribute.
                 if etype == 'appos':
                     etype = ''
-                    for mention in cluster.mentions[1:]:
+                    for mention in entity.mentions[1:]:
                         mention.other['appos'] = '1'
-                cluster.cluster_type = etype
+                entity.etype = etype
 
-            for mention in cluster.mentions:
+            for mention in entity.mentions:
                 # Harmonize bridge relation labels
                 for bridge in mention.bridging:
                     rel = bridge.relation.lower()

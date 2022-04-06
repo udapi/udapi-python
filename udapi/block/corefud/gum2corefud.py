@@ -8,7 +8,7 @@ class Gum2CorefUD(Block):
     def process_tree(self, tree):
         docname = tree.bundle.document.meta['docname'] + '_'
 
-        clusters = tree.bundle.document.coref_clusters
+        eid_to_entity = tree.bundle.document._eid_to_entity
         unfinished_mentions = defaultdict(list)
         for node in tree.descendants:
             misc_entity = node.misc['Entity']
@@ -47,15 +47,15 @@ class Gum2CorefUD(Block):
                     else:
                         raise ValueError(f"Less than 5 attributes in {entity} at {node}")
                     name = docname + grp
-                    cluster = clusters.get(name)
-                    if cluster is None:
-                        cluster = node.create_coref_cluster(cluster_id=name, cluster_type=etype)
-                        mention = cluster.mentions[0]
+                    entity = eid_to_entity.get(name)
+                    if entity is None:
+                        entity = node.create_coref_entity(eid=name, etype=etype)
+                        mention = entity.mentions[0]
                         mention.misc = f"Infstat:{infstat},MinSpan:{minspan},CorefType:{ctype}"
                         if wiki:
                             mention.misc += ',Wikification:' + wiki  #.replace(',', '%2C')
                     else:
-                        mention = cluster.create_mention(head=node)
+                        mention = entity.create_mention(head=node)
                     if closing:
                         mention.words = [node]
                     else:
@@ -71,23 +71,23 @@ class Gum2CorefUD(Block):
                     except ValueError as err:
                         raise ValueError(f"{node}: {misc_bridge} {err}")
                     try:
-                        trg_cluster = clusters[trg_str]
-                        src_cluster = clusters[src_str]
+                        trg_entity = eid_to_entity[trg_str]
+                        src_entity = eid_to_entity[src_str]
                     except KeyError as err:
-                        logging.warning(f"{node}: Cannot find cluster {err}")
+                        logging.warning(f"{node}: Cannot find entity {err}")
                     else:
-                        mention = src_cluster.mentions[-1]
+                        mention = src_entity.mentions[-1]
                         # TODO: what relation should we choose for Bridging?
                         # relation = f"{src_str.split('-')[0]}-{trg_str.split('-')[0]}"
                         relation = '_'
-                        mention.bridging.append((trg_cluster, relation))
+                        mention.bridging.append((trg_entity, relation))
                 del node.misc['Bridge']
 
             misc_split = node.misc['Split']
             if misc_split:
                 # E.g. Entity=(person-54)|Split=4<54,9<54
                 src_str = docname + misc_split.split('<')[-1]
-                ante_clusters = []
+                ante_entities = []
                 for x in misc_split.split(','):
                     ante_str, this_str = [docname + grp for grp in x.split('<')]
                     if this_str != src_str:
@@ -96,16 +96,16 @@ class Gum2CorefUD(Block):
                         # There are just three such cases in GUM and all are bugs,
                         # so let's ignore them entirely (the `else` clause will be skipped if exiting `for` w/ `break`).
                         # break
-                    ante_clusters.append(clusters[ante_str])
+                    ante_entities.append(eid_to_entity[ante_str])
                 else:
-                    clusters[src_str].split_ante = ante_clusters
+                    eid_to_entity[src_str].split_ante = ante_entities
                 del node.misc['Split']
 
-        for cluster_name, mentions in unfinished_mentions.items():
+        for entity_name, mentions in unfinished_mentions.items():
             for mention in mentions:
                 logging.warning(f"Mention {name} opened at {mention.head}, but not closed in the same tree. Deleting.")
-                cluster = mention.cluster
+                entity = mention.entity
                 mention.words = []
-                cluster._mentions.remove(mention)
-                if not cluster._mentions:
-                    del clusters[name]
+                entity._mentions.remove(mention)
+                if not entity._mentions:
+                    del eid_to_entity[name]
