@@ -14,11 +14,11 @@ class ConcatMentionMisc(Block):
                     index = matchObj.group(2)
 
                     finalattr = 'MentionMisc'+index
-                    value = node.misc[attrname]
-                
+                    value = node.misc[attrname].replace(",", "%2C")
+
                     if finalattr not in node.misc:
                         node.misc[finalattr] = f'{innerattrib}:{value}'
                     else:
-                        node.misc[finalattr] += f' {innerattrib}:{value}'
+                        node.misc[finalattr] += f',{innerattrib}:{value}'
                     del node.misc[attrname]
 
