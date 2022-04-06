@@ -99,9 +99,9 @@ class PrintMentions(Block):
 
     def process_document(self, doc):
         mentions = []
-        for cluster in doc.coref_clusters.values():
-            if self._ok(len(cluster.mentions) == 1, self.singleton):
-                mentions.extend(cluster.mentions)
+        for entity in doc.coref_entities:
+            if self._ok(len(entity.mentions) == 1, self.singleton):
+                mentions.extend(entity.mentions)
         if self.shuffle:
             random.shuffle(mentions)
         else:
@@ -146,7 +146,7 @@ class PrintMentions(Block):
                 print("# Mention = " + this_form)
                 if self.print_other_forms:
                     counter = Counter()
-                    for m in mention.cluster.mentions:
+                    for m in mention.entity.mentions:
                         forms = ' '.join([w.form for w in m.words])
                         if forms != this_form:
                             counter[forms] += 1

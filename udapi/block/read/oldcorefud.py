@@ -2,7 +2,7 @@
 import re
 import logging
 import udapi.block.read.conllu
-from udapi.core.coref import CorefCluster, CorefMention, BridgingLinks
+from udapi.core.coref import CorefEntity, CorefMention, BridgingLinks
 
 class OldCorefUD(udapi.block.read.conllu.Conllu):
 
@@ -11,7 +11,7 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
 
         Args:
         substitute_hyphen_in_id_for: string to use as a replacement for hyphens in ClusterId
-          The new format does not allow hyphens in eid (IDs of entity clusters),
+          The new format does not allow hyphens in eid (IDs of entity entities),
           so we need to replace them.
         """
         super().__init__(**kwargs)
@@ -36,7 +36,7 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
     def process_document(self, doc, strict=True):
         super().process_document(doc)
 
-        clusters = {}
+        eid_to_entity = {}
         for node in doc.nodes_and_empty:
             index, index_str = 0, ""
             eid = node.misc["ClusterId"]
@@ -45,18 +45,18 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                 eid = node.misc["ClusterId[1]"]
             eid = self._fix_id(eid)
             while eid:
-                cluster = clusters.get(eid)
-                if cluster is None:
-                    cluster = CorefCluster(eid)
-                    clusters[eid] = cluster
-                mention = CorefMention(words=[node], cluster=cluster)
+                entity = eid_to_entity.get(eid)
+                if entity is None:
+                    entity = CorefEntity(eid)
+                    eid_to_entity[eid] = entity
+                mention = CorefMention(words=[node], entity=entity)
                 if node.misc["MentionSpan" + index_str]:
                     mention.span = node.misc["MentionSpan" + index_str]
                 etype = node.misc["ClusterType" + index_str]
                 if etype:
-                    if cluster.etype is not None and etype != cluster.etype:
-                        logging.warning(f"etype mismatch in {node}: {cluster.etype} != {etype}")
-                    cluster.etype = etype
+                    if entity.etype is not None and etype != entity.etype:
+                        logging.warning(f"etype mismatch in {node}: {entity.etype} != {etype}")
+                    entity.etype = etype
 
                 bridging_str = node.misc["Bridging" + index_str]
                 if bridging_str:
@@ -65,10 +65,10 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                         target, relation = link_str.split(':')
                         target = self._fix_id(target)
                         if target == eid:
-                            _error("Bridging cannot self-reference the same cluster: " + target, strict)
-                        if target not in clusters:
-                            clusters[target] = CorefCluster(target)
-                        mention._bridging.append((clusters[target], relation))
+                            _error("Bridging cannot self-reference the same entity: " + target, strict)
+                        if target not in eid_to_entity:
+                            eid_to_entity[target] = CorefEntity(target)
+                        mention._bridging.append((eid_to_entity[target], relation))
 
                 split_ante_str = node.misc["SplitAnte" + index_str]
                 if split_ante_str:
@@ -77,16 +77,16 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                     # We can delete `.replace('+', ',')` once there are no more data with the legacy plus separator.
                     for ante_str in split_ante_str.replace('+', ',').split(','):
                         ante_str = self._fix_id(ante_str)
-                        if ante_str in clusters:
+                        if ante_str in eid_to_entity:
                             if ante_str == eid:
-                                _error("SplitAnte cannot self-reference the same cluster: " + eid, strict)
-                            split_antes.append(clusters[ante_str])
+                                _error("SplitAnte cannot self-reference the same entity: " + eid, strict)
+                            split_antes.append(eid_to_entity[ante_str])
                         else:
                             # split cataphora, e.g. "We, that is you and me..."
-                            ante_cl = CorefCluster(ante_str)
-                            clusters[ante_str] = ante_cl
+                            ante_cl = CorefEntity(ante_str)
+                            eid_to_entity[ante_str] = ante_cl
                             split_antes.append(ante_cl)
-                    cluster.split_ante = sorted(split_antes)
+                    entity.split_ante = sorted(split_antes)
 
                 # Some CorefUD 0.2 datasets (e.g. ARRAU) separate key-value pairs with spaces instead of commas.
                 # We also need to escape forbidden characters.
@@ -95,15 +95,15 @@ class OldCorefUD(udapi.block.read.conllu.Conllu):
                 index += 1
                 index_str = f"[{index}]"
                 eid = self._fix_id(node.misc["ClusterId" + index_str])
-        # c=doc.coref_clusters should be sorted, so that c[0] < c[1] etc.
-        # In other words, the dict should be sorted by the values (according to CorefCluster.__lt__),
+        # c=doc.coref_entities should be sorted, so that c[0] < c[1] etc.
+        # In other words, the dict should be sorted by the values (according to CorefEntity.__lt__),
         # not by the keys (eid).
         # In Python 3.7+ (3.6+ in CPython), dicts are guaranteed to be insertion order.
-        for cluster in clusters.values():
-            if not cluster._mentions:
-                _error(f"Cluster {cluster.eid} referenced in SplitAnte or Bridging, but not defined with ClusterId", strict)
-            cluster._mentions.sort()
-        doc._coref_clusters = {c._eid: c for c in sorted(clusters.values())}
+        for entity in eid_to_entity.values():
+            if not entity._mentions:
+                _error(f"Entity {entity.eid} referenced in SplitAnte or Bridging, but not defined with ClusterId", strict)
+            entity._mentions.sort()
+        doc._eid_to_entity = {c._eid: c for c in sorted(eid_to_entity.values())}
 
         # Delete all old-style attributes from MISC (so when converting old to new style, the old attributes are deleted).
         attrs = "ClusterId MentionSpan ClusterType Bridging SplitAnte MentionMisc".split()

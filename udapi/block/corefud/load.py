@@ -8,5 +8,5 @@ class Load(Block):
         self.strict = strict
 
     def process_document(self, doc):
-        if doc._coref_clusters is None:
+        if doc._eid_to_entity is None:
             udapi.core.coref.load_coref_from_misc(doc, self.strict)

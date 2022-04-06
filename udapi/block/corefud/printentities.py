@@ -3,20 +3,20 @@ import os.path
 from udapi.core.block import Block
 from collections import Counter, defaultdict
 
-class PrintClusters(Block):
-    """Block corefud.PrintClusters prints all mentions of a given cluster."""
+class PrintEntities(Block):
+    """Block corefud.PrintEntities prints all mentions of a given entity."""
 
-    def __init__(self, id_re=None, min_mentions=0, print_ranges=True, mark_head=True,
+    def __init__(self, eid_re=None, min_mentions=0, print_ranges=True, mark_head=True,
                  aggregate_mentions=True, **kwargs):
         """Params:
-        id_re: regular expression constraining ClusterId of the clusters to be printed
-        min_mentions: print only clusters with with at least N mentions
+        eid_re: regular expression constraining ID of the entities to be printed
+        min_mentions: print only entities with with at least N mentions
         print_ranges: print also addressess of all mentions
                       (compactly, using the longest common prefix of sent_id)
         mark_head: mark the head (e.g. as "red **car**")
         """
         super().__init__(**kwargs)
-        self.id_re = re.compile(str(id_re)) if id_re else None
+        self.eid_re = re.compile(str(eid_re)) if eid_re else None
         self.min_mentions = min_mentions
         self.print_ranges = print_ranges
         self.mark_head = mark_head
@@ -24,17 +24,17 @@ class PrintClusters(Block):
 
     def process_document(self, doc):
         if 'docname' in doc.meta:
-            print(f"Coref clusters in document {doc.meta['docname']}:")
-        for cluster in doc.coref_clusters.values():
-            if self.id_re and not self.id_re.match(cluster.eid):
+            print(f"Coref entities in document {doc.meta['docname']}:")
+        for entity in doc.coref_entities:
+            if self.eid_re and not self.eid_re.match(entity.eid):
                 continue
-            if len(cluster.mentions) < self.min_mentions:
+            if len(entity.mentions) < self.min_mentions:
                 continue
-            print(f" {cluster.eid} has {len(cluster.mentions)} mentions:")
+            print(f" {entity.eid} has {len(entity.mentions)} mentions:")
             if self.aggregate_mentions:
                 counter = Counter()
                 ranges = defaultdict(list)
-                for mention in cluster.mentions:
+                for mention in entity.mentions:
                     forms = ' '.join([f"**{w.form}**" if self.mark_head and w is mention.head else w.form for w in mention.words])
                     counter[forms] += 1
                     if self.print_ranges:
@@ -48,7 +48,7 @@ class PrintClusters(Block):
                             prefix = os.path.commonprefix(ranges[form])
                             print(f'        {prefix} ({" ".join(f[len(prefix):] for f in ranges[form])})')
             else:
-                for mention in cluster.mentions:
+                for mention in entity.mentions:
                     forms = ' '.join([f"**{w.form}**" if self.mark_head and w is mention.head else w.form for w in mention.words])
                     print('   ' + forms)
                     if self.print_ranges:

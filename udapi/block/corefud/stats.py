@@ -4,14 +4,14 @@ from collections import Counter
 class Stats(Block):
     """Block corefud.Stats prints various coreference-related statistics."""
 
-    def __init__(self, m_len_max=5, c_len_max=5, report_mentions=True, report_clusters=True,
+    def __init__(self, m_len_max=5, c_len_max=5, report_mentions=True, report_entities=True,
                  report_details=True, selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human', **kwargs):
         super().__init__(**kwargs)
         self.m_len_max = m_len_max
         self.c_len_max = c_len_max
         self.report_mentions = report_mentions
-        self.report_clusters = report_clusters
+        self.report_entities = report_entities
         self.report_details = report_details
         self.exclude_singletons = exclude_singletons
         self.exclude_nonsingletons = exclude_nonsingletons
@@ -21,29 +21,29 @@ class Stats(Block):
 
         self.counter = Counter()
         self.mentions = 0
-        self.clusters = 0
+        self.entities = 0
         self.total_nodes = 0
         self.longest_mention = 0
-        self.longest_cluster = 0
+        self.longest_entity = 0
         self.m_words = 0
         self.selected_upos = None if selected_upos == 'all' else selected_upos.split()
 
     def process_document(self, doc):
         self.total_nodes += len(list(doc.nodes))
-        for cluster in doc.coref_clusters.values():
-            len_mentions = len(cluster.mentions)
+        for entity in doc.coref_entities:
+            len_mentions = len(entity.mentions)
             if len_mentions == 1 and self.exclude_singletons:
                 continue
             elif len_mentions > 1 and self.exclude_nonsingletons:
                 continue
-            self.longest_cluster = max(len_mentions, self.longest_cluster)
+            self.longest_entity = max(len_mentions, self.longest_entity)
             self.counter['c_total_len'] += len_mentions
             self.counter[f"c_len_{min(len_mentions, self.c_len_max)}"] += 1
 
-            self.clusters += 1
+            self.entities += 1
             if not self.report_mentions and not self.report_details:
                 continue
-            for mention in cluster.mentions:
+            for mention in entity.mentions:
                 self.mentions += 1
                 all_words = len(mention.words)
                 non_empty = len([w for w in mention.words if not w.is_empty()])
@@ -68,17 +68,17 @@ class Stats(Block):
 
     def process_end(self):
         mentions_nonzero = 1 if self.mentions == 0 else self.mentions
-        clusters_nonzero = 1 if self.clusters == 0 else self.clusters
+        entities_nonzero = 1 if self.entities == 0 else self.entities
         total_nodes_nonzero = 1 if self.total_nodes == 0 else self.total_nodes
 
         columns =[ ]
-        if self.report_clusters:
-            columns += [('clusters', f"{self.clusters:7,}"),
-                        ('clusters_per1k', f"{1000 * self.clusters / total_nodes_nonzero:6.0f}"),
-                        ('longest_cluster', f"{self.longest_cluster:6}"),
-                        ('avg_cluster', f"{self.counter['c_total_len'] / clusters_nonzero:5.1f}")]
+        if self.report_entities:
+            columns += [('entities', f"{self.entities:7,}"),
+                        ('entities_per1k', f"{1000 * self.entities / total_nodes_nonzero:6.0f}"),
+                        ('longest_entity', f"{self.longest_entity:6}"),
+                        ('avg_entity', f"{self.counter['c_total_len'] / entities_nonzero:5.1f}")]
             for i in range(1, self.c_len_max + 1):
-                percent = 100 * self.counter[f"c_len_{i}"] / clusters_nonzero
+                percent = 100 * self.counter[f"c_len_{i}"] / entities_nonzero
                 columns.append((f"c_len_{i}{'' if i < self.c_len_max else '+'}", f"{percent:5.1f}"))
         if self.report_mentions:
             columns += [('mentions', f"{self.mentions:7,}"),

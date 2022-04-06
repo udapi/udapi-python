@@ -5,10 +5,10 @@ import itertools
 class MarkNested(Block):
     """Find nested mentions."""
 
-    def __init__(self, same_cluster_only=True, both_discontinuous=False, multiword_only=False,
+    def __init__(self, same_entity_only=True, both_discontinuous=False, multiword_only=False,
                  print_form=False, log=True, mark=True, **kwargs):
         super().__init__(**kwargs)
-        self.same_cluster_only = same_cluster_only
+        self.same_entity_only = same_entity_only
         self.both_discontinuous = both_discontinuous
         self.multiword_only = multiword_only
         self.print_form = print_form
@@ -17,9 +17,9 @@ class MarkNested(Block):
 
     def _print(self, mention):
         if self.print_form:
-            return mention.cluster.eid + ':' + ' '.join([w.form for w in mention.words])
+            return mention.entity.eid + ':' + ' '.join([w.form for w in mention.words])
         else:
-            return mention.cluster.eid + ':' + mention.span
+            return mention.entity.eid + ':' + mention.span
 
     def process_tree(self, tree):
         mentions = set()
@@ -27,7 +27,7 @@ class MarkNested(Block):
             for m in node.coref_mentions:
                 mentions.add(m)
         for mA, mB in itertools.combinations(mentions, 2):
-            if self.same_cluster_only and mA.cluster != mB.cluster:
+            if self.same_entity_only and mA.entity != mB.entity:
                 continue
             if self.both_discontinuous and (',' not in mA.span or ',' not in mB.span):
                 continue

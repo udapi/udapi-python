@@ -3,10 +3,10 @@ from udapi.core.block import Block
 
 
 class IndexClusters(Block):
-    """Re-index the coreference cluster IDs. The final cluster IDs are of the "e<ID>" form,
+    """Re-index the coreference entity IDs (eid). The final entity IDs are of the "e<ID>" form,
        where <ID> are ordinal numbers starting from the one specified by the `start` parameter.
        This block can be applied on multiple documents within one udapy call.
-       For example, to re-index ClusterId in all conllu files in the current directory
+       For example, to re-index eid in all conllu files in the current directory
        (keeping the IDs unique across all the files), use:
        `udapy read.Conllu files='!*.conllu' corefud.IndexClusters write.Conllu overwrite=1`
 
@@ -23,14 +23,13 @@ class IndexClusters(Block):
         self.prefix = prefix
 
     def process_document(self, doc):
-        clusters = doc.coref_clusters
-        if not clusters:
+        entities = doc.coref_entities
+        if not entities:
             return
-        new_clusters = {}
-        for idx, cid in enumerate(clusters, self.start):
-            cluster = clusters[cid]
-            new_cid = self.prefix + str(idx)
-            cluster.eid = new_cid
-            new_clusters[new_cid] = cluster
+        new_eid_to_entity = {}
+        for idx, entity in enumerate(entities, self.start):
+            new_eid = self.prefix + str(idx)
+            entity.eid = new_eid
+            new_eid_to_entity[new_eid] = entity
         self.start = idx + 1
-        doc._coref_clusters = new_clusters
+        doc._eid_to_entity = new_eid_to_entity

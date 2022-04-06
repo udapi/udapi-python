@@ -6,7 +6,7 @@ import udapi.block.write.conllu
 class OldCorefUD(udapi.block.write.conllu.Conllu):
 
     def process_document(self, doc):
-        if not doc.coref_clusters:
+        if not doc.coref_entities:
             logging.warning("Using write.OldCorefUD on a document without any coreference annotation")
 
         # Delete both new-style (GUM-style) and old-style (CorefUD 0.1) coreference annotations from MISC.
@@ -17,19 +17,19 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
                     del node.misc[key]
         del doc.meta['global.Entity']
 
-        # doc._coref_clusters is a dict, which is insertion ordered in Python 3.7+.
-        # The insertion order is sorted according to CorefCluster.__lt__ (see few lines above).
-        # However, new clusters could be added meanwhile or some clusters edited,
-        # so we need to sort the clusters again before storing to MISC.
-        # We also need to mare sure cluster.mentions are sorted in each cluster
-        # because the ordering of clusters is defined by the first mention in each cluster.
-        # Ordering of mentions within a cluster can be changed when e.g. changing the span
+        # doc._eid_to_entity is a dict, which is insertion ordered in Python 3.7+.
+        # The insertion order is sorted according to CorefEntity.__lt__ (see few lines above).
+        # However, new entities could be added meanwhile or some entities edited,
+        # so we need to sort the entities again before storing to MISC.
+        # We also need to mare sure entity.mentions are sorted in each entity
+        # because the ordering of entities is defined by the first mention in each entity.
+        # Ordering of mentions within a entity can be changed when e.g. changing the span
         # of a given mention or reordering words within a sentence and in such events
-        # Udapi currently does not automatically update the ordering of clusters.
-        for cluster in doc._coref_clusters.values():
-            cluster._mentions.sort()
-        for cluster in sorted(doc._coref_clusters.values()):
-            for mention in cluster.mentions:
+        # Udapi currently does not automatically update the ordering of entities.
+        for entity in doc.coref_entities:
+            entity._mentions.sort()
+        for entity in sorted(doc.coref_entities):
+            for mention in entity.mentions:
                 head = mention.head
                 if head.misc["ClusterId"]:
                     for a in attrs:
@@ -44,13 +44,13 @@ class OldCorefUD(udapi.block.write.conllu.Conllu):
                         index_str = f"[{index}]"
                     if index == 1:
                         index_str = ""
-                head.misc["ClusterId" + index_str] = cluster.eid
+                head.misc["ClusterId" + index_str] = entity.eid
                 head.misc["MentionSpan" + index_str] = mention.span
-                head.misc["ClusterType" + index_str] = cluster.etype
+                head.misc["ClusterType" + index_str] = entity.etype
                 if mention._bridging:
                     head.misc["Bridging" + index_str] = ','.join(f'{l.target.eid}:{l.relation}' for l in sorted(mention.bridging))
-                if cluster.split_ante:
-                    serialized = ','.join((c.eid for c in sorted(cluster.split_ante)))
+                if entity.split_ante:
+                    serialized = ','.join((c.eid for c in sorted(entity.split_ante)))
                     head.misc["SplitAnte" + index_str] = serialized
                 if mention.other:
                     head.misc["MentionMisc" + index_str] = str(mention.other).replace('%2D', '-')
