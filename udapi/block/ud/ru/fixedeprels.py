@@ -21,6 +21,7 @@ class FixEdeprels(Block):
         'раз':     [],
         'словно':  [],
         'так_что': [],
+        'хоть':    [],
         'чем':     []
     }
 
@@ -40,19 +41,25 @@ class FixEdeprels(Block):
         'возле':            'возле:gen',
         'вплоть_до':        'вплоть_до:gen',
         'до':               'до:gen',
+        'из':               'из:gen',
         'к':                'к:dat',
         'несмотря_на':      'несмотря_на:acc',
+        'около':            'около:gen',
         'относительно':     'относительно:gen',
         'по_мера':          'по_мере:gen',
+        'по_мера_то_как':   'по_мере_того_как',
         'по_отношение_ко?': 'по_отношению_к:dat',
         'по_повод':         'по_поводу:gen',
         'по_сравнение_с':   'по_сравнению_с:ins',
         'помимо':           'помимо:gen',
+        'порядка':          'порядка:gen',
         'при_помощь':       'при_помощи:gen',
         'с_помощь':         'с_помощью:gen',
+        'с_тот_пора_как':   'с_тех_пор_как',
         'со_сторона':       'со_стороны:gen',
         'согласно':         'согласно:dat',
         'спустя':           'спустя:acc',
+        'у':                'у:gen',
         'через':            'через:acc'
     }
 
@@ -125,6 +132,15 @@ class FixEdeprels(Block):
                     else:
                         # Accusative or instrumental are possible. Pick accusative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                    continue
+                m = re.match(r'^(obl(?::arg)?|nmod):(по)(?::(?:nom|gen|voc|ins))?$', edep['deprel'])
+                if m:
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
+                    else:
+                        # Dative, accusative or locative are possible. Pick dative.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':dat'
                     continue
                 m = re.match(r'^(obl(?::arg)?|nmod):(с)(?::(?:nom|dat|acc|voc|loc))?$', edep['deprel'])
                 if m:
