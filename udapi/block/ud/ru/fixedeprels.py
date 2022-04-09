@@ -22,7 +22,8 @@ class FixEdeprels(Block):
         'словно':  [],
         'так_что': [],
         'хоть':    [],
-        'чем':     []
+        'чем':     [],
+        'что':     []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -35,16 +36,21 @@ class FixEdeprels(Block):
         'в_качество':       'в_качестве:gen',
         'в_отношение':      'в_отношении:gen',
         'в_связь_с':        'в_связи_с:ins',
+        'в_случай_если':    'в_случае_если',
         'в_соответствие_с': 'в_соответствии_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
         'возле':            'возле:gen',
         'вплоть_до':        'вплоть_до:gen',
+        'вроде':            'вроде:gen',
+        'для':              'для:gen',
         'до':               'до:gen',
+        'за_исключение':    'за_исключением:gen',
         'из':               'из:gen',
         'к':                'к:dat',
         'несмотря_на':      'несмотря_на:acc',
         'около':            'около:gen',
+        'от':               'от:gen',
         'относительно':     'относительно:gen',
         'по_мера':          'по_мере:gen',
         'по_мера_то_как':   'по_мере_того_как',
@@ -87,6 +93,10 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
+                # If the case marker starts with 'столько', remove this part.
+                # It occurs in the expressions of the type 'сколько...столько' but the real case marker of the modifier is something else.
+                # Similarly, 'то' occurs in 'то...то' and should be removed.
+                edep['deprel'] = re.sub(r':(столько|то|точно)[_:]', ':', edep['deprel'])
                 # If one of the following expressions occurs followed by another preposition
                 # or by morphological case, remove the additional case marking. For example,
                 # 'словно_у' becomes just 'словно'.
@@ -124,7 +134,7 @@ class FixEdeprels(Block):
                         # Accusative or locative are possible. Pick locative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
                     continue
-                m = re.match(r'^(obl(?::arg)?|nmod):(за)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(за|между|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
