@@ -40,11 +40,14 @@ class FixEdeprels(Block):
         'в_соответствие_с': 'в_соответствии_с:ins',
         'в_течение':        'в_течение:gen',
         'в_ход':            'в_ходе:gen',
+        'во_глава':         'во_главе_с:ins',
+        'во_глава_с':       'во_главе_с:ins',
         'возле':            'возле:gen',
         'вплоть_до':        'вплоть_до:gen',
         'вроде':            'вроде:gen',
         'для':              'для:gen',
         'до':               'до:gen',
+        'до_то_как':        'до:gen', # до того, как ...
         'за_исключение':    'за_исключением:gen',
         'из':               'из:gen',
         'к':                'к:dat',
@@ -62,6 +65,7 @@ class FixEdeprels(Block):
         'при_помощь':       'при_помощи:gen',
         'с_помощь':         'с_помощью:gen',
         'с_тот_пора_как':   'с_тех_пор_как',
+        'свыше':            'свыше:gen',
         'со_сторона':       'со_стороны:gen',
         'согласно':         'согласно:dat',
         'спустя':           'спустя:acc',
@@ -125,7 +129,7 @@ class FixEdeprels(Block):
                 # Both "на" and "в" also occur with genitive. However, this
                 # is only because there are numerals in the phrase ("в 9 случаев из 10")
                 # and the whole phrase should not be analyzed as genitive.
-                m = re.match(r'^(obl(?::arg)?|nmod):(в|на)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(в|на|о)(?::(?:nom|gen|dat|voc|ins))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
