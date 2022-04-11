@@ -18,6 +18,7 @@ class FixEdeprels(Block):
         'как':     ['как_только'],
         'нежели':  [],
         'плюс':    [],
+        'пусть':   [],
         'раз':     [],
         'словно':  [],
         'так_что': [],
@@ -62,6 +63,7 @@ class FixEdeprels(Block):
         'по_сравнение_с':   'по_сравнению_с:ins',
         'помимо':           'помимо:gen',
         'порядка':          'порядка:gen',
+        'после':            'после:gen',
         'при_помощь':       'при_помощи:gen',
         'с_помощь':         'с_помощью:gen',
         'с_тот_пора_как':   'с_тех_пор_как',
@@ -70,7 +72,8 @@ class FixEdeprels(Block):
         'согласно':         'согласно:dat',
         'спустя':           'спустя:acc',
         'у':                'у:gen',
-        'через':            'через:acc'
+        'через':            'через:acc',
+        'чтоб':             'чтобы'
     }
 
     def copy_case_from_adposition(self, node, adposition):
@@ -138,7 +141,7 @@ class FixEdeprels(Block):
                         # Accusative or locative are possible. Pick locative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
                     continue
-                m = re.match(r'^(obl(?::arg)?|nmod):(за|между|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(за|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
@@ -146,6 +149,15 @@ class FixEdeprels(Block):
                     else:
                         # Accusative or instrumental are possible. Pick accusative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                    continue
+                m = re.match(r'^(obl(?::arg)?|nmod):(между)(?::(?:nom|dat|acc|voc|loc))?$', edep['deprel'])
+                if m:
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
+                    else:
+                        # Genitive or instrumental are possible. Pick genitive.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':gen'
                     continue
                 m = re.match(r'^(obl(?::arg)?|nmod):(по)(?::(?:nom|gen|voc|ins))?$', edep['deprel'])
                 if m:
