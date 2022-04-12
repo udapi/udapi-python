@@ -190,7 +190,7 @@ class FixEdeprels(Block):
                         edep['deprel'] = m.group(1)+':'+adpcase
                     else:
                         # Genitive or instrumental are possible. Pick instrumental.
-                        edep['deprel'] = m.group(1)+':'+m.group(2)+':acc'
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':ins'
                     continue
             if re.match(r'^(nmod|obl):', edep['deprel']):
                 if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
