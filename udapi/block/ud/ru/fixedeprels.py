@@ -24,6 +24,7 @@ class FixEdeprels(Block):
         'словно':    [],
         'так_что':   [],
         'хоть':      [],
+        'хотя':      [],
         'чем':       [],
         'что':       []
     }
@@ -44,19 +45,23 @@ class FixEdeprels(Block):
         'в_течение':        'в_течение:gen',
         'в_тот_время_как':  'в_то_время_как',
         'в_ход':            'в_ходе:gen',
+        'вместо':           'вместо:gen',
         'во_глава':         'во_главе_с:ins',
         'во_глава_с':       'во_главе_с:ins',
         'во_избежание':     'во_избежание:gen',
         'возле':            'возле:gen',
         'вплоть_до':        'вплоть_до:gen',
         'вроде':            'вроде:gen',
+        'выше':             'выше:gen',
         'для':              'для:gen',
         'до':               'до:gen',
         'до_то_как':        'до:gen', # до того, как ...
         'за_исключение':    'за_исключением:gen',
         'из':               'из:gen',
         'к':                'к:dat',
+        'ко':               'ко:dat',
         'несмотря_на':      'несмотря_на:acc',
+        'ниже':             'ниже:gen',
         'около':            'около:gen',
         'от':               'от:gen',
         'относительно':     'относительно:gen',
@@ -106,6 +111,10 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
+                # If the marker is 'быть', discard it. It represents the phrase 'то есть', which should not be analyzed as introducing a subordinate clause.
+                edep['deprel'] = re.sub(r':быть.*', '', edep['deprel'])
+                # Some markers should be discarded only if they occur as clause markers (acl, advcl).
+                edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
                 # If the case marker starts with 'столько', remove this part.
                 # It occurs in the expressions of the type 'сколько...столько' but the real case marker of the modifier is something else.
                 # Similarly, 'то' occurs in 'то...то' and should be removed.
