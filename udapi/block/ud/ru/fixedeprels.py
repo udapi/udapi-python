@@ -112,7 +112,7 @@ class FixEdeprels(Block):
                 bdeprel = m.group(1)
                 solved = False
                 # If the marker is 'быть', discard it. It represents the phrase 'то есть', which should not be analyzed as introducing a subordinate clause.
-                edep['deprel'] = re.sub(r':быть.*', '', edep['deprel'])
+                edep['deprel'] = re.sub(r':(быть|столько).*', '', edep['deprel'])
                 # Some markers should be discarded only if they occur as clause markers (acl, advcl).
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
                 # If the case marker starts with 'столько', remove this part.
