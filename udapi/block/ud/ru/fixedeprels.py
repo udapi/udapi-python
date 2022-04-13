@@ -65,6 +65,7 @@ class FixEdeprels(Block):
         'к':                'к:dat',
         'ко':               'ко:dat',
         'кроме':            'кроме:gen',
+        'над':              'над:ins', # at least I have not encountered any genuine example of accusative
         'несмотря_на':      'несмотря_на:acc',
         'ниже':             'ниже:gen',
         'около':            'около:gen',
@@ -163,7 +164,8 @@ class FixEdeprels(Block):
                         # Accusative or locative are possible. Pick locative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
                     continue
-                m = re.match(r'^(obl(?::arg)?|nmod):(за|над|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                # Unlike in Czech, 'над' seems to allow only instrumental and not accusative.
+                m = re.match(r'^(obl(?::arg)?|nmod):(за|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
