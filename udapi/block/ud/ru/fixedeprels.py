@@ -12,21 +12,23 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
-        'более_чем': [],
-        'будто':     [],
-        'ведь':      [],
-        'если':      [],
-        'как':       ['как_только'],
-        'нежели':    [],
-        'плюс':      [],
-        'пусть':     [],
-        'раз':       [],
-        'словно':    [],
-        'так_что':   [],
-        'хоть':      [],
-        'хотя':      [],
-        'чем':       [],
-        'что':       []
+        'более_чем':  [],
+        'будто':      [],
+        'ведь':       [],
+        'если':       [],
+        'как':        ['как_только'],
+        'когда':      [],
+        'нежели':     [],
+        'плюс':       [],
+        'потому_что': [],
+        'пусть':      [],
+        'раз':        [],
+        'словно':     [],
+        'так_что':    [],
+        'хоть':       [],
+        'хотя':       [],
+        'чем':        [],
+        'что':        []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -45,11 +47,13 @@ class FixEdeprels(Block):
         'в_течение':        'в_течение:gen',
         'в_тот_время_как':  'в_то_время_как',
         'в_ход':            'в_ходе:gen',
+        'вблизи':           'вблизи:gen',
         'вместо':           'вместо:gen',
         'во_глава':         'во_главе_с:ins',
         'во_глава_с':       'во_главе_с:ins',
         'во_избежание':     'во_избежание:gen',
         'возле':            'возле:gen',
+        'вокруг':           'вокруг:gen',
         'вплоть_до':        'вплоть_до:gen',
         'вроде':            'вроде:gen',
         'выше':             'выше:gen',
@@ -60,6 +64,7 @@ class FixEdeprels(Block):
         'из':               'из:gen',
         'к':                'к:dat',
         'ко':               'ко:dat',
+        'кроме':            'кроме:gen',
         'несмотря_на':      'несмотря_на:acc',
         'ниже':             'ниже:gen',
         'около':            'около:gen',
@@ -73,8 +78,10 @@ class FixEdeprels(Block):
         'помимо':           'помимо:gen',
         'порядка':          'порядка:gen',
         'после':            'после:gen',
+        'при':              'при:loc',
         'при_помощь':       'при_помощи:gen',
         'при_условие_что':  'при_условии_что',
+        'про':              'про:acc',
         'против':           'против:gen',
         'с_помощь':         'с_помощью:gen',
         'с_тот_пора_как':   'с_тех_пор_как',
@@ -147,7 +154,7 @@ class FixEdeprels(Block):
                 # Both "на" and "в" also occur with genitive. However, this
                 # is only because there are numerals in the phrase ("в 9 случаев из 10")
                 # and the whole phrase should not be analyzed as genitive.
-                m = re.match(r'^(obl(?::arg)?|nmod):(в|на|о)(?::(?:nom|gen|dat|voc|ins))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(в|во|на|о)(?::(?:nom|gen|dat|voc|ins))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
@@ -156,7 +163,7 @@ class FixEdeprels(Block):
                         # Accusative or locative are possible. Pick locative.
                         edep['deprel'] = m.group(1)+':'+m.group(2)+':loc'
                     continue
-                m = re.match(r'^(obl(?::arg)?|nmod):(за|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(за|над|под)(?::(?:nom|gen|dat|voc|loc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase:
