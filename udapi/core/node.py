@@ -622,7 +622,7 @@ class Node(object):
         self._shift_before_ord(reference_node._ord + 1, without_children=without_children)
 
     def shift_before_node(self, reference_node, without_children=False, skip_if_descendant=False):
-        """Shift this node after the reference_node."""
+        """Shift this node before the reference_node."""
         if not without_children and reference_node.is_descendant_of(self):
             if skip_if_descendant:
                 return
