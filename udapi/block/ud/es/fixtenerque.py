@@ -28,6 +28,6 @@ class FixTenerQue(Block):
                         c.parent = node
                 # On the other hand, the conjunction 'que' may have been wrongly attached as 'fixed' to 'tener'.
                 for c in node.children:
-                    if c.form.lower() eq 'que' and c.ord > node.ord and c.ord < mainverb.ord:
+                    if c.form.lower() == 'que' and c.ord > node.ord and c.ord < mainverb.ord:
                         c.parent = mainverb
                         c.deprel = 'mark'
