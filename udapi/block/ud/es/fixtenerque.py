@@ -24,7 +24,7 @@ class FixTenerQue(Block):
                 # Some children of the former main verb should be reattached to 'tener'.
                 # Others (especially a direct object) should stay with the former main verb.
                 for c in mainverb.children:
-                    if not re.match(r'^(obj|iobj|obl|conj|list|flat|fixed|goeswith|reparandum)$', c.udeprel):
+                    if not re.match(r'^(obj|iobj|obl|ccomp|xcomp|conj|list|compound|flat|fixed|goeswith|reparandum)$', c.udeprel):
                         self.reattach(c, node, c.deprel)
                 # On the other hand, the conjunction 'que' may have been wrongly attached as 'fixed' to 'tener'.
                 for c in node.children:
