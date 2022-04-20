@@ -10,8 +10,10 @@ class FixTenerQue(Block):
         Some Spanish treebanks treat the verb 'tener' in constructions such as
         'tener que comer' as auxiliary. This is wrong and the validator will
         flag it as an error. This block fixes such annotations.
+
+        EDIT: 'ir a comer' is processed the same way.
         """
-        if node.lemma == 'tener' and node.upos == 'AUX':
+        if re.match(r'^(tener|ir)$', node.lemma) and node.upos == 'AUX':
             node.upos = 'VERB'
             # In rare cases the auxiliary may have been promoted due to ellipsis.
             # Most of the time however, it is attached as 'aux' to the main verb.
@@ -26,7 +28,7 @@ class FixTenerQue(Block):
                         self.reattach(c, node, c.deprel)
                 # On the other hand, the conjunction 'que' may have been wrongly attached as 'fixed' to 'tener'.
                 for c in node.children:
-                    if c.form.lower() == 'que' and c.ord > node.ord and c.ord < mainverb.ord:
+                    if re.match(r'^(que|a)$', c.form.lower()) and c.ord > node.ord and c.ord < mainverb.ord:
                         self.reattach(c, mainverb, 'mark')
 
     def reattach(self, node, parent, deprel):
