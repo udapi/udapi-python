@@ -17,17 +17,29 @@ class FixTenerQue(Block):
             # Most of the time however, it is attached as 'aux' to the main verb.
             if node.udeprel == 'aux':
                 mainverb = node.parent
-                node.parent = mainverb.parent
-                node.deprel = mainverb.deprel
-                mainverb.parent = node
-                mainverb.deprel = 'xcomp'
+                self.reattach(node, mainverb.parent, mainverb.deprel)
+                self.reattach(mainverb, node, 'xcomp')
                 # Some children of the former main verb should be reattached to 'tener'.
                 # Others (especially a direct object) should stay with the former main verb.
                 for c in mainverb.children:
                     if not re.match(r'^(obj|iobj|obl|conj|list|flat|fixed|goeswith|reparandum)$', c.udeprel):
-                        c.parent = node
+                        self.reattach(c, node, c.deprel)
                 # On the other hand, the conjunction 'que' may have been wrongly attached as 'fixed' to 'tener'.
                 for c in node.children:
                     if c.form.lower() == 'que' and c.ord > node.ord and c.ord < mainverb.ord:
-                        c.parent = mainverb
-                        c.deprel = 'mark'
+                        self.reattach(c, mainverb, 'mark')
+
+    def reattach(self, node, parent, deprel):
+        """
+        Changes the incoming dependency relation to a node. Makes sure that the
+        same change is done in the basic tree and in the enhanced graph.
+        """
+        if node.deps:
+            # If the enhanced graph contains the current basic relation, remove it.
+            orig_n_deps = len(node.deps)
+            node.deps = [x for x in node.deps if x['parent'] != node.parent or re.sub(r':.*', '', x['deprel']) != node.udeprel]
+            # Add the new basic relation to the enhanced graph only if the original one was there.
+            if len(node.deps) < orig_n_deps:
+                node.deps.append({'parent': parent, 'deprel': deprel})
+        node.parent = parent
+        node.deprel = deprel
