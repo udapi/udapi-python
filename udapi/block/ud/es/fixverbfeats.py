@@ -23,3 +23,16 @@ class FixVerbFeats(Block):
                     # The lemma is not always straightforward but we have fixed it manually.
                     node.feats = {}
                     node.feats['VerbForm'] = 'Ger'
+            elif re.search(r'(d|biert|dich|fech|hech|muert|puest|vist)[oa]s?$', node.form, re.IGNORECASE):
+                # The (past) participle has always Gender and Number.
+                # It can be VERB/AUX (infinitive is the lemma) or ADJ (masculine singular is the lemma).
+                # As a verb, it also has Tense=Past. As an adjective it does not have this feature (in AnCora; but why not?)
+                gender = node.feats['Gender']
+                number = node.feats['Number']
+                node.feats = {}
+                node.feats['VerbForm'] = 'Part'
+                node.feats['Tense'] = 'Past'
+                node.feats['Gender'] = gender
+                node.feats['Number'] = number
+                if re.search(r'ad[oa]s?$', node.form, re.IGNORECASE):
+                    node.lemma = re.sub(r'd[os]s?$', 'r', node.form.lower())
