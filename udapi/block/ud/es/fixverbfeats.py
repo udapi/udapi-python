@@ -17,3 +17,9 @@ class FixVerbFeats(Block):
                 node.feats = {}
                 node.feats['VerbForm'] = 'Inf'
                 node.lemma = node.form.lower()
+            elif re.search(r'ndo$', node.form, re.IGNORECASE):
+                if node.form.lower() != 'entiendo':
+                    # The gerund has no features other than VerbForm.
+                    # The lemma is not always straightforward but we have fixed it manually.
+                    node.feats = {}
+                    node.feats['VerbForm'] = 'Ger'
