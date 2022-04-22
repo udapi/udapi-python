@@ -35,4 +35,4 @@ class FixVerbFeats(Block):
                 node.feats['Gender'] = gender
                 node.feats['Number'] = number
                 if re.search(r'ad[oa]s?$', node.form, re.IGNORECASE):
-                    node.lemma = re.sub(r'd[os]s?$', 'r', node.form.lower())
+                    node.lemma = re.sub(r'd[oa]s?$', 'r', node.form.lower())
