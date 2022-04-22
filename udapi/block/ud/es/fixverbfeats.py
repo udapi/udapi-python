@@ -27,8 +27,8 @@ class FixVerbFeats(Block):
                 # The (past) participle has always Gender and Number.
                 # It can be VERB/AUX (infinitive is the lemma) or ADJ (masculine singular is the lemma).
                 # As a verb, it also has Tense=Past. As an adjective it does not have this feature (in AnCora; but why not?)
-                gender = node.feats['Gender'] ? node.feats['Gender'] : re.search(r'os?$', node.form, re.IGNORECASE) ? 'Masc' : 'Fem'
-                number = node.feats['Number'] ? node.feats['Number'] : re.search(r's$', node.form, re.IGNORECASE) ? 'Plur' : 'Sing'
+                gender = node.feats['Gender'] if node.feats['Gender'] else ('Masc' if re.search(r'os?$', node.form, re.IGNORECASE) else 'Fem')
+                number = node.feats['Number'] if node.feats['Number'] else ('Plur' if re.search(r's$', node.form, re.IGNORECASE) else 'Sing')
                 node.feats = {}
                 node.feats['VerbForm'] = 'Part'
                 node.feats['Tense'] = 'Past'
