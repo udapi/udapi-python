@@ -18,6 +18,7 @@ class FixEdeprels(Block):
         'если':       [],
         'как':        ['как_только'],
         'когда':      [],
+        'минус':      [],
         'нежели':     [],
         'плюс':       [],
         'потому_что': [],
@@ -42,11 +43,13 @@ class FixEdeprels(Block):
         'в_вид':            'в_виде:gen',
         'в_качество':       'в_качестве:gen',
         'в_отношение':      'в_отношении:gen',
+        'в_с':              'в:loc', # annotation error: 'в партнерстве с ACCELS' lacks the second level
         'в_связь_с':        'в_связи_с:ins',
         'в_случай_если':    'в_случае_если',
         'в_соответствие_с': 'в_соответствии_с:ins',
         'в_течение':        'в_течение:gen',
         'в_тот_время_как':  'в_то_время_как',
+        'в_угода':          'в_угоду:dat',
         'в_ход':            'в_ходе:gen',
         'вблизи':           'вблизи:gen',
         'вместо':           'вместо:gen',
@@ -72,6 +75,7 @@ class FixEdeprels(Block):
         'около':            'около:gen',
         'от':               'от:gen',
         'относительно':     'относительно:gen',
+        'перед':            'перед:ins',
         'по_мера':          'по_мере:gen',
         'по_мера_то_как':   'по_мере_того_как',
         'по_отношение_ко?': 'по_отношению_к:dat',
@@ -124,6 +128,9 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r':(быть|столько).*', '', edep['deprel'])
                 # Some markers should be discarded only if they occur as clause markers (acl, advcl).
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
+                # Some markers should not occur as clause markers (acl, advcl) and should be instead considered nominal markers (nmod, obl).
+                edep['deprel'] = re.sub(r'^advcl:перед', r'obl:перед', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(acl(?::relcl)?):перед', r'nmod:перед', edep['deprel'])
                 # If the case marker starts with 'столько', remove this part.
                 # It occurs in the expressions of the type 'сколько...столько' but the real case marker of the modifier is something else.
                 # Similarly, 'то' occurs in 'то...то' and should be removed.
