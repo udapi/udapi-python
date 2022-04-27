@@ -642,7 +642,7 @@ def load_coref_from_misc(doc, strict=True):
                             _error(f"Invalid head_idx={head_idx} for {mention.entity.eid} "
                                     f"closed at {node} with words={mention._words}", 1)
                 else:
-                    mention = CorefMention(words=[node], entity=entity)
+                    mention = CorefMention(words=[node], entity=entity, add_word_backlinks=False)
                     if other:
                         mention._other = other
                     if subspan_idx:
