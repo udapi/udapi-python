@@ -18,9 +18,11 @@ class FixEdeprels(Block):
         'если':       [],
         'как':        ['как_только'],
         'когда':      [],
+        'менее_чем':  [],
         'минус':      [],
         'нежели':     [],
         'плюс':       [],
+        'пока':       [],
         'потому_что': [],
         'пусть':      [],
         'равно_как':  [],
@@ -39,8 +41,10 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'versus':           'версус:nom',
         'loc':              'в:loc',
         'в_вид':            'в_виде:gen',
+        'в_во_глава':       'в:acc', # annotation error: 'входил в группу во главе с геологом'
         'в_качество':       'в_качестве:gen',
         'в_отношение':      'в_отношении:gen',
         'в_с':              'в:loc', # annotation error: 'в партнерстве с ACCELS' lacks the second level
@@ -52,6 +56,7 @@ class FixEdeprels(Block):
         'в_угода':          'в_угоду:dat',
         'в_ход':            'в_ходе:gen',
         'вблизи':           'вблизи:gen',
+        'взамен':           'взамен:gen',
         'вместо':           'вместо:gen',
         'во_глава':         'во_главе_с:ins',
         'во_глава_с':       'во_главе_с:ins',
@@ -69,7 +74,9 @@ class FixEdeprels(Block):
         'к':                'к:dat',
         'ко':               'ко:dat',
         'кроме':            'кроме:gen',
+        'между_во_глава':   'между:ins', # annotation error: 'между делегацией Минобороны во главе с замминистра Владимиром Исаковым и лидером Приднестровья Игорем Смирновым'
         'над':              'над:ins', # at least I have not encountered any genuine example of accusative
+        'насчет':           'насчет:gen',
         'несмотря_на':      'несмотря_на:acc',
         'ниже':             'ниже:gen',
         'около':            'около:gen',
@@ -84,6 +91,7 @@ class FixEdeprels(Block):
         'помимо':           'помимо:gen',
         'порядка':          'порядка:gen',
         'после':            'после:gen',
+        'посредством_как':  'посредством:gen',
         'при':              'при:loc',
         'при_помощь':       'при_помощи:gen',
         'при_условие_что':  'при_условии_что',
@@ -125,11 +133,11 @@ class FixEdeprels(Block):
                 bdeprel = m.group(1)
                 solved = False
                 # If the marker is 'быть', discard it. It represents the phrase 'то есть', which should not be analyzed as introducing a subordinate clause.
-                edep['deprel'] = re.sub(r':(быть|столько).*', '', edep['deprel'])
+                edep['deprel'] = re.sub(r':(быть|сколь|столько).*', '', edep['deprel'])
                 # Some markers should be discarded only if they occur as clause markers (acl, advcl).
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
                 # Some markers should not occur as clause markers (acl, advcl) and should be instead considered nominal markers (nmod, obl).
-                edep['deprel'] = re.sub(r'^advcl:перед', r'obl:перед', edep['deprel'])
+                edep['deprel'] = re.sub(r'^advcl:(взамен|на|насчет|перед|по|с|среди)', r'obl:\1', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl(?::relcl)?):перед', r'nmod:перед', edep['deprel'])
                 # If the case marker starts with 'столько', remove this part.
                 # It occurs in the expressions of the type 'сколько...столько' but the real case marker of the modifier is something else.
