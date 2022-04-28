@@ -19,11 +19,13 @@ class FixEdeprels(Block):
         'если':       [],
         'как':        ['как_только'],
         'когда':      [],
+        'кроме_как':  [],
         'менее_чем':  [],
         'минус':      [],
         'нежели':     [],
         'плюс':       [],
         'пока':       [],
+        'поскольку':  [],
         'потому_что': [],
         'пусть':      [],
         'равно_как':  [],
@@ -33,7 +35,9 @@ class FixEdeprels(Block):
         'хоть':       [],
         'хотя':       [],
         'чем':        [],
-        'что':        []
+        'что':        [],
+        'чтобы':      [],
+        'яко':        []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -79,14 +83,19 @@ class FixEdeprels(Block):
         'из_более_чем':     'из:gen',
         'к':                'к:dat',
         'ко':               'ко:dat',
+        'коли_скоро':       'коль_скоро',
         'кроме':            'кроме:gen',
         'между_во_глава':   'между:ins', # annotation error: 'между делегацией Минобороны во главе с замминистра Владимиром Исаковым и лидером Приднестровья Игорем Смирновым'
+        'на_вперед':        'на:acc',
         'над':              'над:ins', # at least I have not encountered any genuine example of accusative
         'насчет':           'насчет:gen',
         'несмотря_на':      'несмотря_на:acc',
         'ниже':             'ниже:gen',
         'около':            'около:gen',
         'от':               'от:gen',
+        'от_до':            'от:gen',
+        'от_от':            'от:gen',
+        'от_с':             'от:gen',
         'относительно':     'относительно:gen',
         'перед':            'перед:ins',
         'по_мера':          'по_мере:gen',
@@ -103,14 +112,23 @@ class FixEdeprels(Block):
         'при_условие_что':  'при_условии_что',
         'про':              'про:acc',
         'против':           'против:gen',
+        'с_более_чем':      'с:gen',
+        'с_во_глава':       'с:ins',
+        'с_на':             'с:par',
         'с_помощь':         'с_помощью:gen',
+        'с_тем':            'с:ins',
         'с_тот_пора_как':   'с_тех_пор_как',
+        'с_что':            'с:ins',
         'свыше':            'свыше:gen',
         'со_сторона':       'со_стороны:gen',
         'согласно':         'согласно:dat',
         'спустя':           'спустя:acc',
         'среди':            'среди:gen',
+        'среди_в':          'среди:gen',
+        'так_чтобы':        'чтобы',
+        'тем_между':        'между:ins',
         'у':                'у:gen',
+        'у_без':            'у:gen',
         'через':            'через:acc',
         'чтоб':             'чтобы'
     }
@@ -140,7 +158,7 @@ class FixEdeprels(Block):
                 bdeprel = m.group(1)
                 solved = False
                 # If the marker is 'быть', discard it. It represents the phrase 'то есть', which should not be analyzed as introducing a subordinate clause.
-                edep['deprel'] = re.sub(r':(быть|сколь|столько).*', '', edep['deprel'])
+                edep['deprel'] = re.sub(r':(быть|сколь|столько|типа).*', '', edep['deprel'])
                 # Some markers should be discarded only if they occur as clause markers (acl, advcl).
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
                 # Some markers should not occur as clause markers (acl, advcl) and should be instead considered nominal markers (nmod, obl).
