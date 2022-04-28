@@ -17,6 +17,10 @@ class TestCoref(unittest.TestCase):
         coref_entities = docs[-1].coref_entities
         self.assertEqual(len(coref_entities), 1)
         self.assertEqual(coref_entities[0].eid, 'e36781')
+        node = next(docs[-1].nodes)
+        self.assertEqual(len(node.coref_entities), 1)
+        self.assertEqual(len(node.coref_mentions), 1)
+        self.assertEqual(node.coref_entities[0], coref_entities[0])
 
     def test_edits(self):
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'fr-democrat-dev-sample.conllu')
