@@ -153,6 +153,8 @@ class FixEdeprels(Block):
         abbreviation and its morphological case is unknown.
         """
         for edep in node.deps:
+            # Although in theory allowed by the EUD guidelines, Russian does not enhance the ccomp relation with case markers.
+            edep['deprel'] = re.sub(r'^ccomp:чтобы$', r'ccomp', edep['deprel'])
             m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):', edep['deprel'])
             if m:
                 bdeprel = m.group(1)
@@ -161,7 +163,6 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r':(быть|сколь|столько|типа).*', '', edep['deprel'])
                 # Some markers should be discarded only if they occur as clause markers (acl, advcl).
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^ccomp:чтобы$', r'ccomp', edep['deprel'])
                 # Some markers should not occur as clause markers (acl, advcl) and should be instead considered nominal markers (nmod, obl).
                 edep['deprel'] = re.sub(r'^advcl:(взамен|для|до|из|на|насчет|от|перед|по|после|с|среди|у)(:|$)', r'obl:\1\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^acl(?::relcl)?:(взамен|для|до|из|на|насчет|от|перед|по|после|с|среди|у)(:|$)', r'nmod:\1\2', edep['deprel'])
@@ -184,7 +185,7 @@ class FixEdeprels(Block):
                 for x in self.unambiguous:
                     # All secondary prepositions have only one fixed morphological case
                     # they appear with, so we can replace whatever case we encounter with the correct one.
-                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
+                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'(?::(?:nom|gen|par|dat|acc|voc|loc|ins))?$', edep['deprel'])
                     if m:
                         edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
                         solved = True
