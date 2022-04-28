@@ -163,7 +163,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(advcl|acl(?::relcl)?):(в|вместо|при)$', r'\1', edep['deprel'])
                 # Some markers should not occur as clause markers (acl, advcl) and should be instead considered nominal markers (nmod, obl).
                 edep['deprel'] = re.sub(r'^advcl:(взамен|для|до|на|насчет|от|перед|по|с|среди)(:|$)', r'obl:\1\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl(?::relcl)?):(взамен|для|до|на|насчет|от|перед|по|с|среди)(:|$)', r'nmod:\1\2', edep['deprel'])
+                edep['deprel'] = re.sub(r'^acl(?::relcl)?:(взамен|для|до|на|насчет|от|перед|по|с|среди)(:|$)', r'nmod:\1\2', edep['deprel'])
                 # If the case marker starts with 'столько', remove this part.
                 # It occurs in the expressions of the type 'сколько...столько' but the real case marker of the modifier is something else.
                 # Similarly, 'то' occurs in 'то...то' and should be removed.
