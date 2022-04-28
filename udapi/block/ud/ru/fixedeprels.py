@@ -76,10 +76,8 @@ class FixEdeprels(Block):
         'выше':             'выше:gen',
         'для':              'для:gen',
         'для_в':            'для:gen',
-        'до':               'до:gen',
         'до_то_как':        'до:gen', # до того, как ...
         'за_исключение':    'за_исключением:gen',
-        'из':               'из:gen',
         'из_более_чем':     'из:gen',
         'к':                'к:dat',
         'ко':               'ко:dat',
@@ -92,7 +90,6 @@ class FixEdeprels(Block):
         'несмотря_на':      'несмотря_на:acc',
         'ниже':             'ниже:gen',
         'около':            'около:gen',
-        'от':               'от:gen',
         'от_до':            'от:gen',
         'от_от':            'от:gen',
         'от_с':             'от:gen',
@@ -193,8 +190,16 @@ class FixEdeprels(Block):
                 if solved:
                     continue
                 # The following prepositions have more than one morphological case
-                # available. Thanks to the Case feature on prepositions, we can
-                # identify the correct one.
+                # available.
+                m = re.match(r'^(obl(?::arg)?|nmod):(до|из|от)(?::(?:nom|dat|acc|voc|loc|ins))?$', edep['deprel'])
+                if m:
+                    adpcase = self.copy_case_from_adposition(node, m.group(2))
+                    if adpcase:
+                        edep['deprel'] = m.group(1)+':'+adpcase
+                    else:
+                        # Genitive or partitive are possible. Pick genitive.
+                        edep['deprel'] = m.group(1)+':'+m.group(2)+':gen'
+                    continue
                 # Both "на" and "в" also occur with genitive. However, this
                 # is only because there are numerals in the phrase ("в 9 случаев из 10")
                 # and the whole phrase should not be analyzed as genitive.
