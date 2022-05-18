@@ -39,7 +39,8 @@ class Tikz(BaseWriter):
     """
 
     def __init__(self, print_sent_id=True, print_text=True, print_preambule=True,
-                 attributes=None, as_tree=False, comment_attribute=None, **kwargs):
+                 attributes=None, as_tree=False, comment_attribute=None,
+                 enhanced=False, **kwargs):
         """Create the Tikz block object.
 
         Args:
@@ -50,6 +51,7 @@ class Tikz(BaseWriter):
         attributes: comma-separated list of node attributes to print (each on a separate line).
         as_tree: boolean - should print it as a 2D tree?
         comment_attribute: which attribute to print as a string under each graph (e.g. text_en)
+        enhanced: boolean - print the enhanced graph below the sentence, too?
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
@@ -63,6 +65,9 @@ class Tikz(BaseWriter):
             self.node_attributes = 'form,upos'.split(',')
         self.as_tree = as_tree
         self.comment_attribute = comment_attribute
+        if as_tree and enhanced:
+            raise ValueError("The enhanced graph cannot be printed as a tree")
+        self.enhanced = enhanced
 
     def before_process_document(self, doc):
         super().before_process_document(doc)
@@ -140,6 +145,12 @@ class Tikz(BaseWriter):
                     print(r'\deproot{%d}{root}' % node.ord)
                 else:
                     print(r'\depedge{%d}{%d}{%s}' % (node.parent.ord, node.ord, node.deprel))
+                if self.enhanced:
+                    for dep in node.deps:
+                        if dep['parent'].is_root():
+                            print(r'\deproot[edge below]{%d}{root}' % node.ord)
+                        else:
+                            print(r'\depedge[edge below]{%d}{%d}{%s}' % (dep['parent'].ord, node.ord, dep['deprel']))
         if self.comment_attribute and tree.comment:
             start_pos = tree.comment.find(self.comment_attribute + ' = ')
             if start_pos != -1:
