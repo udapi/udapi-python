@@ -441,65 +441,180 @@ class MarkFeatsBugs(Block):
                 })
             elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(to)?)?$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
-                self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]'])
-                self.check_allowed_features(node, {
-                    'PronType': ['Prs', 'Rel'],
-                    'Poss': ['Yes'],
-                    'Person': ['3'],
-                    'Number[psor]': ['Sing'],
-                    'Gender[psor]': ['Fem'],
-                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'],
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-                })
+                # Congruent gender is annotated only in singular. Masculine and
+                # neuter are merged even in nominative. Feminine singular does
+                # not distinguish case in PDT but we need it in Old Czech at
+                # least for 'jejiej'.
+                if node.feats['Number'] == 'Sing':
+                    self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Prs', 'Rel'],
+                        'Poss': ['Yes'],
+                        'Person': ['3'],
+                        'Number[psor]': ['Sing'],
+                        'Gender[psor]': ['Fem'],
+                        'Gender': ['Masc,Neut', 'Fem'],
+                        'Number': ['Sing'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
+                else:
+                    self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Prs', 'Rel'],
+                        'Poss': ['Yes'],
+                        'Person': ['3'],
+                        'Number[psor]': ['Sing'],
+                        'Gender[psor]': ['Fem'],
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
             elif node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
                 # Gender is annotated in all cases in singular (můj, má, mé)
-                # but only in nominative (and vocative) in plural (mí, mé, má);
-                # neuter is also different in accusative (mé, má).
-                # Animacy is distinguished only in nom/voc plural masculine (mí, mé).
-                # Other cases in plural are gender-less (mých, mým, mé, mými).
+                # but only in nominative, accusative, and vocative in plural
+                # (Nom/Voc mí, mé, má; Acc mé, má). Animacy is distinguished
+                # in plural if gender is distinguished and masculine; in
+                # singular it is distinguished only in accusative (mého, můj).
+                # Other cases in plural are gender-less (mých, mým, mými).
                 # Note that this is not consistent with adjectives, where we
                 # disambiguate gender in all cases in plural.
-                self.check_required_features(node, ['PronType', 'Poss', 'Number', 'Case'])
-                self.check_allowed_features(node, {
-                    'PronType': ['Prs'],
-                    'Poss': ['Yes'],
-                    'Reflex': ['Yes'],
-                    'Person': ['1', '2'], # only if not reflexive
-                    'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
-                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'],
-                    'Animacy': ['Anim', 'Inan'],
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-                })
+                if node.feats['Number'] == 'Sing':
+                    self.check_required_features(node, ['PronType', 'Poss', 'Gender', 'Number', 'Case'])
+                    if node.feats['Gender'] == 'Masc' and node.feats['Case'] == 'Acc':
+                        self.check_required_features(node, ['Animacy'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Prs'],
+                            'Poss': ['Yes'],
+                            'Reflex': ['Yes'],
+                            'Person': ['1', '2'], # only if not reflexive
+                            'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
+                            'Gender': ['Masc'],
+                            'Animacy': ['Anim', 'Inan'],
+                            'Number': ['Sing'],
+                            'Case': ['Acc']
+                        })
+                    else:
+                        self.check_allowed_features(node, {
+                            'PronType': ['Prs'],
+                            'Poss': ['Yes'],
+                            'Reflex': ['Yes'],
+                            'Person': ['1', '2'], # only if not reflexive
+                            'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
+                            'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'],
+                            'Number': ['Sing'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                elif re.match(r'^(Nom|Acc|Voc)$', node.feats['Case']):
+                    self.check_required_features(node, ['PronType', 'Poss', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Prs'],
+                        'Poss': ['Yes'],
+                        'Reflex': ['Yes'],
+                        'Person': ['1', '2'], # only if not reflexive
+                        'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Nom', 'Acc', 'Voc']
+                    })
+                else:
+                    self.check_required_features(node, ['PronType', 'Poss', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Prs'],
+                        'Poss': ['Yes'],
+                        'Reflex': ['Yes'],
+                        'Person': ['1', '2'], # only if not reflexive
+                        'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Gen', 'Dat', 'Loc', 'Ins']
+                    })
             else:
                 # Gender is annotated in all cases in singular (ten, ta, to)
-                # but only in nominative (and vocative) in plural (ti, ty, ta);
-                # neuter is also different in accusative (ty, ta).
-                # Animacy is distinguished only in nom/voc plural masculine (ti, ty).
-                # Other cases in plural are gender-less (těch, těm, ty, těmi).
+                # but only in nominative, accusative, and vocative in plural
+                # (Nom/Voc ti, ty, ta; Acc ty, ta). Animacy is distinguished
+                # in plural if gender is distinguished and masculine; in
+                # singular it is distinguished only in accusative (toho, ten).
+                # Other cases in plural are gender-less (těch, těm, těmi).
                 # Note that this is not consistent with adjectives, where we
                 # disambiguate gender in all cases in plural.
-                self.check_required_features(node, ['PronType', 'Number', 'Case'])
-                self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
-                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # non-nominative forms of Masc and Neut are merged; Fem,Neut is e.g. 'vaše' in singular
-                    'Animacy': ['Anim', 'Inan'],
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-                })
+                if node.feats['Number'] == 'Sing':
+                    self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case'])
+                    if node.feats['Gender'] == 'Masc' and node.feats['Case'] == 'Acc':
+                        self.check_required_features(node, ['Animacy'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
+                            'Gender': ['Masc'],
+                            'Animacy': ['Anim', 'Inan'],
+                            'Number': ['Sing'],
+                            'Case': ['Acc']
+                        })
+                    else:
+                        self.check_allowed_features(node, {
+                            'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
+                            'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # non-nominative forms of Masc and Neut are merged; Fem,Neut is e.g. 'vaše' in singular
+                            'Number': ['Sing'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                elif re.match(r'^(Nom|Acc|Voc)$', node.feats['Case']):
+                    self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Nom', 'Acc', 'Voc']
+                    })
+                else:
+                    self.check_required_features(node, ['PronType', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Gen', 'Dat', 'Loc', 'Ins']
+                    })
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
             self.check_required_features(node, ['NumType', 'NumForm'])
-            self.check_allowed_features(node, {
-                'NumType': ['Card'],
-                'NumForm': ['Word', 'Digit', 'Roman'],
-                'NumValue': ['1,2,3'],
-                'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
-                'Animacy': ['Anim', 'Inan'],
-                'Number': ['Sing', 'Dual', 'Plur'],
-                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-            })
+            # Arabic digits and Roman numerals do not have inflection features.
+            if re.match(r'^(Digit|Roman)$', node.feats['NumForm']):
+                self.check_allowed_features(node, {
+                    'NumType': ['Card'],
+                    'NumForm': ['Digit', 'Roman']
+                })
+            else:
+                ###!!! Somehow the NumValue feature from PDT via Interset is useless.
+                # 'jeden' has Gender, Animacy, Number, Case: jeden, jedna, jedno, jednoho, jednomu, jednom, jedním, jedné, jednu, jednou, jedni, jedny, jedněch, jedněm, jedněmi.
+                # 'dva', 'oba' have Gender, Number=Dual(Plur in modern Czech), Case: dva, dvě, dvou, dvěma.
+                # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
+                # 'pět' and more have Number=Plur, Case: pět, pěti.
+                if node.lemma == 'jeden':
+                    self.check_required_features(node, ['NumType', 'NumForm', 'NumValue', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'NumForm': ['Word'],
+                        'NumValue': ['1,2,3'],
+                        'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
+                elif re.match(r'^(dva|oba)$', node.lemma):
+                    self.check_required_features(node, ['NumType', 'NumForm', 'NumValue', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'NumForm': ['Word'],
+                        'NumValue': ['1,2,3'],
+                        'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
+                else:
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'NumForm': ['Word'],
+                        'NumValue': ['1,2,3'],
+                        'Number': ['Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
         # VERBS AND AUXILIARIES ################################################
         elif re.match(r'^(VERB|AUX)$', node.upos):
             self.check_required_features(node, ['Aspect', 'VerbForm'])
@@ -575,11 +690,22 @@ class MarkFeatsBugs(Block):
                 })
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
-            self.check_allowed_features(node, {
-                'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot'],
-                'Degree': ['Pos', 'Cmp', 'Sup'],
-                'Polarity': ['Pos', 'Neg']
-            })
+            if node.feats['PronType'] != '':
+                # Pronominal adverbs are neither compared nor negated.
+                self.check_allowed_features(node, {
+                    'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot']
+                })
+            elif node.feats['Degree'] != '':
+                # Adverbs that are compared can also be negated.
+                self.check_required_features(node, ['Degree', 'Polarity'])
+                self.check_allowed_features(node, {
+                    'Degree': ['Pos', 'Cmp', 'Sup'],
+                    'Polarity': ['Pos', 'Neg']
+                })
+            else:
+                # The remaining adverbs are neither pronominal, nor compared or
+                # negated.
+                self.check_allowed_features(node, {})
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
             self.check_required_features(node, ['AdpType', 'Case'])
