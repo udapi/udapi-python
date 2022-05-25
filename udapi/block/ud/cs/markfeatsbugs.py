@@ -319,28 +319,118 @@ class MarkFeatsBugs(Block):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                             'Variant': ['Short']
                         })
-            else: # PronType není Prs
-                # Int,Rel ... kdo, co
-                # Rel ... kdož, což, jenž, ješto, jenžto, an
-                # Ind ... něco
-                # Neg ... nic, nicož
-                # kdo, kdož, někdo, nikdo ... Gender=Masc, Animacy=Anim, Case (but no Number; it could be used in the context of any number)
-                # jehožto, něhožto, jemužto, němužto ... Gender=Masc,Neut (similarly to non-nominative forms of personal pronoun 'on')
-                ###!!! We could make the requirements more precise if we look at the lemma.
+            elif re.search(r'k[dt]o', node.lemma): # kdo (kto), kdož, někdo, nikdo
+                # There is no Number. Někdo and nikdo behave like singular;
+                # kdo is by default singular as well but it also occurs as a subject
+                # of plural verbs.
+                self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Case'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Int,Rel', 'Rel', 'Ind', 'Neg'],
+                    'Gender': ['Masc'],
+                    'Animacy': ['Anim'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
+                })
+            elif re.match(r'^(co|což|něco|nicož)$', node.lemma):
+                # Although these pronouns behave by default as neuter singular,
+                # no Gender and Number is annotated. However, quite unusually,
+                # there is Animacy=Inan without Gender.
+                ###!!! This should probably be fixed in all Czech treebanks and
+                ###!!! in Interset. The pronoun should get Gender=Neut and no
+                ###!!! animacy. For now, let's at least make animacy an optional
+                ###!!! feature (I see that we already do not fill it in the Old
+                ###!!! Czech data).
                 self.check_required_features(node, ['PronType', 'Case'])
                 self.check_allowed_features(node, {
                     'PronType': ['Int,Rel', 'Rel', 'Ind', 'Neg'],
-                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Neut'],
-                    'Animacy': ['Anim'],
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'PrepCase': ['Npr', 'Pre']
+                    'Animacy': ['Inan'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
+            elif node.lemma == 'ješto':
+                # Unlike 'jenžto', this relative pronoun does not inflect, it
+                # always occurs in a nominative position, but the context can
+                # be any gender and number.
+                self.check_required_features(node, ['PronType', 'Case'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Rel'],
+                    'Case': ['Nom']
+                })
+            elif re.match(r'^(jenž|jenžto)$', node.lemma):
+                # The relative pronouns 'jenž', 'jenžto' inflect for gender;
+                # while we normally take this as a sign of DET (instead of PRON),
+                # these can never act as real DET because they never modify a
+                # nominal.
+                # Similarly to the personal pronoun 'on', animacy is only
+                # annotated for masculine nominative plural, non-nominative
+                # forms are merged for masculine and neuter (jehož, jemuž), and
+                # non-singular gender is only annotated in nominative (while
+                # these cases are common for all genders: jichž, jimž, jimiž).
+                # Unlike 'on', 'jenž' has the feature PrepCase everywhere, even
+                # in the nominative, although there is no prepositional counter-
+                # part (but similarly the locative has no prepositionless form).
+                if node.feats['Case'] == 'Nom':
+                    if node.feats['Gender'] == 'Masc' and node.feats['Number'] == 'Plur':
+                        self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Number', 'Case', 'PrepCase'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Gender': ['Masc'],
+                            'Animacy': ['Anim', 'Inan'],
+                            'Number': ['Plur'],
+                            'Case': ['Nom'],
+                            'PrepCase': ['Npr', 'Pre']
+                        })
+                    else: # not Masc Plur
+                        self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case', 'PrepCase'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Gender': ['Masc', 'Fem', 'Neut'],
+                            'Number': ['Sing', 'Dual', 'Plur'],
+                            'Case': ['Nom'],
+                            'PrepCase': ['Npr', 'Pre']
+                        })
+                else: # not Case=Nom
+                    if node.feats['Number'] == 'Sing':
+                        self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case', 'PrepCase'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Gender': ['Masc,Neut', 'Fem'],
+                            'Number': ['Sing'],
+                            'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins'],
+                            'PrepCase': ['Npr', 'Pre']
+                        })
+                    else: # non-nominative dual or plural: jichž, nichž, jimž, nimž, jež, něž, jimiž, nimiž
+                        self.check_required_features(node, ['PronType', 'Number', 'Case', 'PrepCase'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Number': ['Dual', 'Plur'],
+                            'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins'],
+                            'PrepCase': ['Npr', 'Pre']
+                        })
+            else:
+                # What remains is the relative pronoun 'an'. It behaves similarly
+                # to 'jenž' but it does not have the PrepCase feature and it
+                # only occurs in the nominative.
+                if node.feats['Gender'] == 'Masc' and node.feats['Number'] == 'Plur': # ani
+                    self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Rel'],
+                        'Gender': ['Masc'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Plur'],
+                        'Case': ['Nom']
+                    })
+                else: # not Masc Plur: an, ana, ano, any
+                    self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Rel'],
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Case': ['Nom']
+                    })
         # DETERMINERS ##########################################################
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(jeho|jejich|jich|jehož|jejichž|jichž|jehožto|jejichžto|jichžto)$', node.form.lower()):
+            if re.match(r'^(jeho|jejich|jich)(ž(to)?)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Prs', 'Rel'],
@@ -349,21 +439,50 @@ class MarkFeatsBugs(Block):
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
                     'Gender[psor]': ['Masc,Neut']
                 })
-            else:
-                # Gender is annotated in all cases in singular, but only in
-                # nominative, accusative (and theoretically vocative) in plural.
-                # Other cases (Gen, Dat, Loc, Ins) are gender-less: 'těch', 'svým', ...
+            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(to)?)?$', node.form.lower()):
+                # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
+                self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Prs', 'Rel'],
+                    'Poss': ['Yes'],
+                    'Person': ['3'],
+                    'Number[psor]': ['Sing'],
+                    'Gender[psor]': ['Fem'],
+                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'],
+                    'Number': ['Sing', 'Dual', 'Plur'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                })
+            elif node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
+                # Gender is annotated in all cases in singular (můj, má, mé)
+                # but only in nominative (and vocative) in plural (mí, mé, má);
+                # neuter is also different in accusative (mé, má).
+                # Animacy is distinguished only in nom/voc plural masculine (mí, mé).
+                # Other cases in plural are gender-less (mých, mým, mé, mými).
                 # Note that this is not consistent with adjectives, where we
                 # disambiguate gender in all cases in plural.
-                # Same for animacy (which implies masculine gender).
-                self.check_required_features(node, ['PronType', 'Number', 'Case'])
+                self.check_required_features(node, ['PronType', 'Poss', 'Number', 'Case'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Prs', 'Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
+                    'PronType': ['Prs'],
                     'Poss': ['Yes'],
                     'Reflex': ['Yes'],
-                    'Person': ['1', '2', '3'],
-                    'Number[psor]': ['Sing', 'Dual', 'Plur'],
-                    'Gender[psor]': ['Masc,Neut', 'Fem'],
+                    'Person': ['1', '2'], # only if not reflexive
+                    'Number[psor]': ['Sing', 'Plur'], # only if not reflexive
+                    'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'],
+                    'Animacy': ['Anim', 'Inan'],
+                    'Number': ['Sing', 'Dual', 'Plur'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                })
+            else:
+                # Gender is annotated in all cases in singular (ten, ta, to)
+                # but only in nominative (and vocative) in plural (ti, ty, ta);
+                # neuter is also different in accusative (ty, ta).
+                # Animacy is distinguished only in nom/voc plural masculine (ti, ty).
+                # Other cases in plural are gender-less (těch, těm, ty, těmi).
+                # Note that this is not consistent with adjectives, where we
+                # disambiguate gender in all cases in plural.
+                self.check_required_features(node, ['PronType', 'Number', 'Case'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
                     'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # non-nominative forms of Masc and Neut are merged; Fem,Neut is e.g. 'vaše' in singular
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
@@ -457,12 +576,13 @@ class MarkFeatsBugs(Block):
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
             self.check_allowed_features(node, {
-                'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg'],
+                'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot'],
                 'Degree': ['Pos', 'Cmp', 'Sup'],
                 'Polarity': ['Pos', 'Neg']
             })
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
+            self.check_required_features(node, ['AdpType', 'Case'])
             self.check_allowed_features(node, {
                 'AdpType': ['Prep', 'Voc'],
                 'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins']
