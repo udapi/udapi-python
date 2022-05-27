@@ -22,3 +22,6 @@ class FixSpuriousAux(Block):
                 for c in lexverb.children:
                     if re.match(r'^(nsubj|csubj|obl|advmod|advcl|vocative|discourse|parataxis|punct)$', c.udeprel):
                         c.parent = node
+                # The lexical verb becomes an xcomp of the auxiliary.
+                lexverb.parent = node
+                lexverb.deprel = 'xcomp'
