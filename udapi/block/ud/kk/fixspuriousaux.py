@@ -12,7 +12,7 @@ class FixSpuriousAux(Block):
         """
         if node.upos == 'AUX' and node.udeprel == 'aux':
             # баста = start
-            if re.match(r'^(баста)$', node.lemma):
+            if re.match(r'^(баста|кет)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
