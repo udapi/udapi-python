@@ -20,7 +20,7 @@ class AddFormsInMwt(Block):
             # the possessed entity.
             if len(mwt.words) == 2 and mwt.words[1].upos == 'ADP':
                 if mwt.words[1].lemma == 'चा':
-                    m = re.match(r'^(.+)(चा|चे)$', mwt.form)
+                    m = re.match(r'^(.+)(चा|चे|च्या)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
