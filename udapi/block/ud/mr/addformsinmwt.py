@@ -18,7 +18,7 @@ class AddFormsInMwt(Block):
             # may have a form different from its lemma. It happens with possessive
             # postpositions चा, चे, which distinguish the gender and number of
             # the possessed entity.
-            if len(mwt.words) == 2 and mwt.words[1].upos == 'ADP':
+            if len(mwt.words) == 2 and re.match(r'^(ADP|PART)$', mwt.words[1].upos):
                 if mwt.words[1].lemma == 'चा':
                     m = re.match(r'^(.+)(चा|चे|च्या|ची)$', mwt.form)
                     if m:
