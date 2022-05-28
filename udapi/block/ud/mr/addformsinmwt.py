@@ -20,12 +20,25 @@ class AddFormsInMwt(Block):
             # the possessed entity.
             if len(mwt.words) == 2 and re.match(r'^(ADP|PART)$', mwt.words[1].upos):
                 if mwt.words[1].lemma == 'चा':
-                    m = re.match(r'^(.+)(चा|चे|च्या|ची)$', mwt.form)
+                    # चा (cā) ... Masc Sing
+                    # ची (cī) ... Fem Sing, Neut Plur
+                    # चे (ce) ... Neut Sing, Masc Plur
+                    # च्या (cyā) ... Fem Plur
+                    m = re.match(r'^(.+)(चा|ची|चे|च्या)$', mwt.form)
+                    # The resulting form is different with personal pronouns.
+                    # माझा (mājhā), माझी (mājhī), माझे (mājhe), माझ्या (mājhyā)
+                    # तुझी (tujhī), तुझे (tujhe)
+                    m2 = re.match(r'^(माझ|तुझ)(ा|ी|े|्या)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
                         else:
                             node.form = m.group(2)
+                    elif m2:
+                        if node == mwt.words[0]:
+                            node.form = m.group(1)
+                        else:
+                            node.form = 'च' + m.group(2)
                     else:
                         logging.info("Cannot decompose %s+ADP multiword token '%s'. Part lemmas are '%s' and '%s'." % (mwt.words[0].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma))
                 else: # not the possessive 'ca'
