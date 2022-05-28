@@ -24,10 +24,12 @@ class AddFormsInMwt(Block):
                     # ची (cī) ... Fem Sing, Neut Plur
                     # चे (ce) ... Neut Sing, Masc Plur
                     # च्या (cyā) ... Fem Plur
-                    m = re.match(r'^(.+)(चा|ची|चे|च्या)$', mwt.form)
+                    # चं (caṁ) ... ?
+                    m = re.match(r'^(.+)(चा|ची|चे|च्या|चं)$', mwt.form)
                     # The resulting form is different with personal pronouns.
                     # माझा (mājhā), माझी (mājhī), माझे (mājhe), माझ्या (mājhyā)
                     # तुझी (tujhī), तुझे (tujhe)
+                    # त्याचं (tyācaṁ)
                     m2 = re.match(r'^(माझ|तुझ)(ा|ी|े|्या)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
