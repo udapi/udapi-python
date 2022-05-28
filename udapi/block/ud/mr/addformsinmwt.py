@@ -47,12 +47,12 @@ class AddFormsInMwt(Block):
                     else:
                         logging.info("Cannot decompose %s+ADP multiword token '%s'. Part lemmas are '%s' and '%s'." % (mwt.words[0].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma))
                 elif mwt.words[1].lemma == 'वरती':
-                    m = re.match(r'^(.+)वर$', mwt.form)
+                    m = re.match(r'^(.+)(वर(?:ती)?)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
                         else:
-                            node.form = 'वर'
+                            node.form = m.group(2)
                     else:
                         logging.info("Cannot decompose %s+ADP multiword token '%s'. Part lemmas are '%s' and '%s'." % (mwt.words[0].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma))
                 else: # not the possessive 'चा'
