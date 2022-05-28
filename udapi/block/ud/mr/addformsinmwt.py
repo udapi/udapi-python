@@ -19,7 +19,9 @@ class AddFormsInMwt(Block):
             # postpositions चा, चे, which distinguish the gender and number of
             # the possessed entity.
             if len(mwt.words) == 2 and re.match(r'^(ADP|PART)$', mwt.words[1].upos):
-                if mwt.words[1].lemma == 'चा':
+                # Occasionally the lemma of the possessive postposition is mistakenly 'ची' instead of 'चा'.
+                if mwt.words[1].lemma == 'चा' or mwt.words[1].lemma == 'ची':
+                    mwt.words[1].lemma = 'चा'
                     # चा (cā) ... Masc Sing
                     # ची (cī) ... Fem Sing, Neut Plur
                     # चे (ce) ... Neut Sing, Masc Plur
