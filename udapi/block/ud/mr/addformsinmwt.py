@@ -31,8 +31,9 @@ class AddFormsInMwt(Block):
                     # The resulting form is different with personal pronouns.
                     # माझा (mājhā), माझी (mājhī), माझे (mājhe), माझ्या (mājhyā)
                     # तुझी (tujhī), तुझे (tujhe)
+                    # आपला (āpalā), आपली (āpalī), आपल्या (āpalyā)
                     # त्याचं (tyācaṁ)
-                    m2 = re.match(r'^(माझ|तुझ)(ा|ी|े|्या)$', mwt.form)
+                    m2 = re.match(r'^(माझ|तुझ|आपल)(ा|ी|े|्या)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
@@ -58,7 +59,7 @@ class AddFormsInMwt(Block):
                 # Compound postpositions where the middle word is the possessive 'चा'.
                 if mwt.words[1].lemma == 'चा':
                     m = re.match(r'^(.+)(चा|ची|चे|च्या|चं)(.+)$', mwt.form)
-                    m2 = re.match(r'^(माझ|तुझ)(ा|ी|े|्या)(.+)$', mwt.form)
+                    m2 = re.match(r'^(माझ|तुझ|आपल)(ा|ी|े|्या)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
