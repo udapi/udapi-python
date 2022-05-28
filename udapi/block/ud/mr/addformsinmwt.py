@@ -59,7 +59,7 @@ class AddFormsInMwt(Block):
                 # Compound postpositions where the middle word is the possessive 'चा'.
                 if mwt.words[1].lemma == 'चा':
                     m = re.match(r'^(.+)(चा|ची|चे|च्या|चं)(.+)$', mwt.form)
-                    m2 = re.match(r'^(माझ|तुझ|आपल)(ा|ी|े|्या)$', mwt.form)
+                    m2 = re.match(r'^(माझ|तुझ|आपल)(ा|ी|े|्या)(.+)$', mwt.form)
                     if m:
                         if node == mwt.words[0]:
                             node.form = m.group(1)
