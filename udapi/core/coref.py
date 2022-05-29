@@ -192,9 +192,10 @@ class CorefMention(object):
     @entity.setter
     def entity(self, new_entity):
         if self._entity is not None:
-            raise NotImplementedError('changing the entity of a mention not supported yet')
+            original_entity = self._entity
+            original_entity._mentions.remove(mention)
         self._entity = new_entity
-        new_entity._mentions.append(new_entity)
+        new_entity._mentions.append(self)
 
     @property
     def bridging(self):
