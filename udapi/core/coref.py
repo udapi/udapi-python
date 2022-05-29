@@ -103,6 +103,7 @@ import collections
 import collections.abc
 import copy
 import logging
+import bisect
 
 @functools.total_ordering
 class CorefMention(object):
@@ -195,8 +196,12 @@ class CorefMention(object):
             original_entity = self._entity
             original_entity._mentions.remove(mention)
         self._entity = new_entity
-        new_entity._mentions.append(self)
+        bisect.insort(new_entity._mentions, self)
+n returns the sorted list after inserting number in appropriate position, if the element is already present in the list, the element is inserted at the rightmost possible position. This function takes 4 arguments, list which has to be worked with, number to insert, starting position in list to consider, ending position which has to be considered.
 
+5. insort_left(list, num, beg, end) :- This function returns the sorted list after inserting number in appropriate position, if the element is already present in the list, the element is inserted at the leftmost possible position. This function takes 4 arguments, list which has to be worked with, number to insert, starting position in list to consider, ending position which has to be considered.
+
+6. insort_right(list, num, beg, end) :- This function wor
     @property
     def bridging(self):
         if not self._bridging:
