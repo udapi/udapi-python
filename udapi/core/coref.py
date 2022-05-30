@@ -194,7 +194,7 @@ class CorefMention(object):
     def entity(self, new_entity):
         if self._entity is not None:
             original_entity = self._entity
-            original_entity._mentions.remove(mention)
+            original_entity._mentions.remove(self)
         self._entity = new_entity
         bisect.insort(new_entity._mentions, self)
 
