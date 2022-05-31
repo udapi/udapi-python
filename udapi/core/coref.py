@@ -195,6 +195,8 @@ class CorefMention(object):
         if self._entity is not None:
             original_entity = self._entity
             original_entity._mentions.remove(self)
+            if  not original_entity._mentions:
+                logging.warning(f"Original entity {original_entity.eid} is now empty.")
         self._entity = new_entity
         bisect.insort(new_entity._mentions, self)
 
