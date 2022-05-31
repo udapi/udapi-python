@@ -48,6 +48,11 @@ class TestCoref(unittest.TestCase):
         self.assertEqual(new_entity.mentions[1], m1)
         self.assertTrue(m2 < m1)
         self.assertEqual(m2.words, [first_node, second_node, second_node.next_node])
+        entity2 = doc.create_coref_entity()
+        m1.entity = entity2
+        self.assertEqual(m1.entity.eid, entity2.eid)
+        m2.entity = entity2
+        self.assertEqual(m2.entity.eid, entity2.eid)
 
 
 if __name__ == "__main__":
