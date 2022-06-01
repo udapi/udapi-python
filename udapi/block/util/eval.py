@@ -29,7 +29,7 @@ class Eval(Block):
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(self, doc=None, bundle=None, tree=None, node=None, start=None, end=None,
                  before_doc=None, after_doc=None, before_bundle=None, after_bundle=None,
-                 coref_mention=None, coref_entity=None,
+                 coref_mention=None, coref_entity=None, empty_nodes=False,
                  expand_code=True, **kwargs):
         super().__init__(**kwargs)
         self.doc = doc
@@ -44,6 +44,7 @@ class Eval(Block):
         self.after_bundle = after_bundle
         self.coref_mention = coref_mention
         self.coref_entity = coref_entity
+        self.empty_nodes = empty_nodes
         self.expand_code = expand_code
         self.count = collections.Counter()
 
@@ -115,7 +116,8 @@ class Eval(Block):
             exec(self.expand_eval_code(self.tree))
 
         if self.node:
-            for node in tree.descendants():
+            nodes = tree.descendants_and_empty if self.empty_nodes else tree.descendants
+            for node in nodes:
                 this = node
                 exec(self.expand_eval_code(self.node))
 
