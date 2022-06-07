@@ -692,6 +692,8 @@ class Node(object):
             return self._ord < node._ord
         if self._root._zone != node._root._zone:
             raise ValueError(f"Cannot compare word order across zones: {self} {node}")
+        if self._root._bundle._document is not node._root._bundle._document:
+            raise ValueError(f"Cannot compare word order across documents: {self} {node}")
         return self._root._bundle.number < node._root._bundle.number
 
     def is_leaf(self):
