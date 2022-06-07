@@ -103,6 +103,7 @@ import collections
 import collections.abc
 import copy
 import logging
+import bisect
 
 @functools.total_ordering
 class CorefMention(object):
@@ -192,9 +193,12 @@ class CorefMention(object):
     @entity.setter
     def entity(self, new_entity):
         if self._entity is not None:
-            raise NotImplementedError('changing the entity of a mention not supported yet')
+            original_entity = self._entity
+            original_entity._mentions.remove(self)
+            if  not original_entity._mentions:
+                logging.warning(f"Original entity {original_entity.eid} is now empty.")
         self._entity = new_entity
-        new_entity._mentions.append(new_entity)
+        bisect.insort(new_entity._mentions, self)
 
     @property
     def bridging(self):
