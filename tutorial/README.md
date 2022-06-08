@@ -6,4 +6,4 @@ Don't display the tutorial `ipynb` files on GitHub because it cannot render the 
 If you don't have Jupyter installed, you can display the tutorial with https://nbviewer.jupyter.org, using the following links:
 
 - [01-visualizing.ipynb](https://nbviewer.jupyter.org/github/udapi/udapi-python/blob/master/tutorial/01-visualizing.ipynb)
-- [02-blocks.ipynb](https://nbviewer.jupyter.org/github/udapi/udapi-python/blob/master/tutorial/01-blocks.ipynb)
+- 02-blocks.ipynb (not finished yet)
