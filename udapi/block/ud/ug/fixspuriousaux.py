@@ -13,7 +13,8 @@ class FixSpuriousAux(Block):
         if node.upos == 'AUX' and node.udeprel == 'aux':
             # بەر = give (used with actions done for the benefit of somebody)
             # چىق = go out
-            if re.match(r'^(بەر|چىق)$', node.lemma):
+            # يۈر = walk (the equivalent in Kazakh is considered to be a progressive auxiliary but it does not seem to be the case in Uyghur)
+            if re.match(r'^(بەر|چىق|يۈر)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
