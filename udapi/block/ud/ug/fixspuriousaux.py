@@ -12,7 +12,8 @@ class FixSpuriousAux(Block):
         """
         if node.upos == 'AUX' and node.udeprel == 'aux':
             # بەر = give (used with actions done for the benefit of somebody)
-            if re.match(r'^(بەر)$', node.lemma):
+            # چىق = go out
+            if re.match(r'^(بەر|چىق)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
