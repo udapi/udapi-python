@@ -10,7 +10,9 @@ class FixSpuriousAux(Block):
         Some verbs that are called auxiliary by the traditional grammar, should
         be analyzed in UD as VERB + non-finite xcomp.
         """
-        if node.upos == 'AUX' and node.udeprel == 'aux':
+        # Sometimes there is a double error: it should not be auxiliary, it is
+        # attached as aux but it is not tagged AUX. So we only look at the deprel.
+        if node.udeprel == 'aux':
             # بەر = give (used with actions done for the benefit of somebody)
             # چىق = go out
             # يۈر = walk (the equivalent in Kazakh is considered to be a progressive auxiliary but it does not seem to be the case in Uyghur)
