@@ -22,7 +22,7 @@ class FixSpuriousAux(Block):
             # كۆرۈش = see
             # باشلى = start
             # _ ... some putative auxiliaries do not even have a lemma
-            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق|ئۆت|_|كۆرۈش)$', node.lemma):
+            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق|ئۆت|_|كۆرۈش|باشلى)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
