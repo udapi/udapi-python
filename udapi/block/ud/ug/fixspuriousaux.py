@@ -18,7 +18,9 @@ class FixSpuriousAux(Block):
             # يۈر = walk (the equivalent in Kazakh is considered to be a progressive auxiliary but it does not seem to be the case in Uyghur)
             # ئولتۇر = sit (the equivalent in Kazakh is considered to be a progressive auxiliary but it does not seem to be the case in Uyghur)
             # باق = to do ever?
-            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق)$', node.lemma):
+            # ئۆت = pass
+            # _ ... some putative auxiliaries do not even have a lemma
+            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق|ئۆت|_)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
