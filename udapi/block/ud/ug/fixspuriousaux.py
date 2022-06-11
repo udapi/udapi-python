@@ -23,8 +23,9 @@ class FixSpuriousAux(Block):
             # باشلى = start
             # يەت = be enough
             # قايت = return
+            # چۈش = fall down
             # _ ... some putative auxiliaries do not even have a lemma
-            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق|ئۆت|_|كۆرۈش|باشلى|يەت|قايت)$', node.lemma):
+            if re.match(r'^(بەر|چىق|يۈر|ئولتۇر|باق|ئۆت|_|كۆرۈش|باشلى|يەت|قايت|چۈش)$', node.lemma):
                 node.upos = 'VERB'
                 # The auxiliary inherits the incoming relation of its original parent.
                 lexverb = node.parent
