@@ -177,6 +177,7 @@ class BaseReader(Block):
                 if root.newdoc and root.newdoc is not True:
                     document.meta["docname"] = root.newdoc
                 document.meta['global.Entity'] = self._global_entity
+                document.meta['loaded_from'] = self.filename
 
             filehandle = self.filehandle
             if filehandle is None:

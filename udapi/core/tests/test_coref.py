@@ -21,6 +21,7 @@ class TestCoref(unittest.TestCase):
         self.assertEqual(len(node.coref_entities), 1)
         self.assertEqual(len(node.coref_mentions), 1)
         self.assertEqual(node.coref_entities[0], coref_entities[0])
+        self.assertEqual(docs[-1].meta["loaded_from"], data_filename)
 
     def test_edits(self):
         data_filename = os.path.join(os.path.dirname(__file__), 'data', 'fr-democrat-dev-sample.conllu')
