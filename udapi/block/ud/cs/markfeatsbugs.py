@@ -9,36 +9,6 @@ import re
 
 class MarkFeatsBugs(Block):
 
-    allowed = {
-        'NOUN': {'Gender': ['Masc', 'Fem', 'Neut'],
-                 'Animacy': ['Anim', 'Inan'],
-                 'Number': ['Sing', 'Dual', 'Plur'],
-                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                 'Polarity': ['Pos', 'Neg'],
-                 'Foreign': ['Yes']},
-        'ADJ':  {'Gender': ['Masc', 'Fem', 'Neut'],
-                 'Animacy': ['Anim', 'Inan'],
-                 'Number': ['Sing', 'Dual', 'Plur'],
-                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                 'Degree': ['Pos', 'Cmp', 'Sup'],
-                 'Polarity': ['Pos', 'Neg'],
-                 'Variant': ['Short'],
-                 'Poss': ['Yes'],
-                 'Gender[psor]': ['Masc', 'Fem'],
-                 'NameType': ['Giv', 'Sur'], # for possessive adjectives derived from personal names
-                 'NumType': ['Ord'],
-                 'VerbForm': ['Part'],
-                 'Aspect': ['Imp', 'Perf'],
-                 'Tense': ['Pres', 'Past'],
-                 'Voice': ['Act', 'Pass'],
-                 'Foreign': ['Yes']}
-    }
-
-    required = {
-        'NOUN': ['Gender', 'Number', 'Case', 'Polarity'],
-        'ADJ': ['Gender', 'Number', 'Case', 'Degree', 'Polarity']
-    }
-
     def bug(self, node, bugstring):
         bugs = []
         if node.misc['Bug']:
