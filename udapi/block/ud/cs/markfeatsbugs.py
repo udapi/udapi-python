@@ -386,13 +386,19 @@ class MarkFeatsBugs(Block):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             elif node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
-                self.check_adjective_like(node, ['PronType', 'Poss'], {
-                    'PronType': ['Prs'],
-                    'Poss': ['Yes'],
-                    'Reflex': ['Yes'],
-                    'Person': ['1', '2'], # only if not reflexive
-                    'Number[psor]': ['Sing', 'Plur'] # only if not reflexive
-                })
+                if node.feats['Reflex'] == 'Yes':
+                    self.check_adjective_like(node, ['PronType', 'Poss', 'Reflex'], {
+                        'PronType': ['Prs'],
+                        'Poss': ['Yes'],
+                        'Reflex': ['Yes']
+                    })
+                else:
+                    self.check_adjective_like(node, ['PronType', 'Poss', 'Person', 'Number[psor]'], {
+                        'PronType': ['Prs'],
+                        'Poss': ['Yes'],
+                        'Person': ['1', '2'],
+                        'Number[psor]': ['Sing', 'Plur']
+                    })
             else:
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp']})
         # NUMERALS #############################################################
