@@ -508,24 +508,36 @@ class MarkFeatsBugs(Block):
                         'Variant': ['Short', 'Long'] # distinguishes sigmatic (Long) and asigmatic (Short) aorist
                     })
             elif node.feats['VerbForm'] == 'Part': # only l-participle; the others are ADJ, not VERB
-                self.check_required_features(node, ['Tense', 'Gender', 'Number', 'Voice', 'Polarity'])
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf'],
-                    'VerbForm': ['Part'],
-                    'Tense': ['Past'],
-                    'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Gender': ['Masc', 'Fem', 'Neut'],
-                    'Animacy': ['Anim', 'Inan'],
-                    'Polarity': ['Pos', 'Neg']
-                })
+                if node.feats['Gender'] == 'Masc':
+                    self.check_required_features(node, ['Tense', 'Gender', 'Animacy', 'Number', 'Voice', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf'],
+                        'VerbForm': ['Part'],
+                        'Tense': ['Past'],
+                        'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Gender': ['Masc'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
+                else:
+                    self.check_required_features(node, ['Tense', 'Gender', 'Number', 'Voice', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf'],
+                        'VerbForm': ['Part'],
+                        'Tense': ['Past'],
+                        'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Gender': ['Fem', 'Neut'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
             else: # converb
                 self.check_required_features(node, ['Tense', 'Number', 'Voice', 'Polarity'])
                 self.check_allowed_features(node, {
                     'Aspect': ['Imp', 'Perf'],
                     'VerbForm': ['Conv'],
                     'Tense': ['Past', 'Pres'],
-                    'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
+                    'Voice': ['Act'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Gender': ['Masc', 'Fem', 'Neut'], # annotated only in singular, and no animacy
                     'Polarity': ['Pos', 'Neg']
