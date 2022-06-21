@@ -2,6 +2,7 @@
 import logging
 import urllib.request
 import os
+from os.path import expanduser
 
 BASEURL = 'http://ufallab.ms.mff.cuni.cz/tectomt/share/data/'
 
@@ -11,9 +12,9 @@ def require_file(path):
         if not os.path.isfile(path):
             raise IOError(path + " does not exist")
         return os.path.abspath(path)
-    udapi_data = os.environ.get('UDAPI_DATA', os.environ.get('HOME'))
+    udapi_data = os.environ.get('UDAPI_DATA', expanduser('~'))
     if udapi_data is None:
-        raise IOError(f"Empty environment vars: UDAPI_DATA={os.environ.get('UDAPI_DATA')} HOME={os.environ.get('HOME')}")
+        raise IOError(f"Empty environment vars: UDAPI_DATA={os.environ.get('UDAPI_DATA')} HOME={expanduser('~')}")
     full_path = os.path.join(udapi_data, path)
     if not os.path.isfile(full_path):
         logging.info('Downloading %s to %s', BASEURL + path, full_path)
