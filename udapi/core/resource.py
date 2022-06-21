@@ -12,7 +12,9 @@ def require_file(path):
             raise IOError(path + " does not exist")
         return os.path.abspath(path)
     udapi_data = os.environ.get('UDAPI_DATA', os.environ.get('HOME'))
-    full_path = udapi_data + '/' + path
+    if udapi_data is None:
+        raise IOError(f"Empty environment vars: UDAPI_DATA={os.environ.get('UDAPI_DATA')} HOME={os.environ.get('HOME')}")
+    full_path = os.path.join(udapi_data, path)
     if not os.path.isfile(full_path):
         logging.info('Downloading %s to %s', BASEURL + path, full_path)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
