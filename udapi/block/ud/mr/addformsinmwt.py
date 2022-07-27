@@ -66,7 +66,8 @@ class AddFormsInMwt(Block):
                         logging.info("Cannot decompose %s+ADP multiword token '%s'. Part lemmas are '%s' and '%s'." % (mwt.words[0].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma))
             elif len(mwt.words) == 3 and re.match(r'^(ADP|PART)$', mwt.words[1].upos) and re.match(r'^(ADP|PART)$', mwt.words[2].upos):
                 # Compound postpositions where the middle word is the possessive 'चा'.
-                if mwt.words[1].lemma == 'चा':
+                # The lemma of the middle word should be 'चा' but sometimes it is 'च्या'.
+                if re.match(r'^(चा|च्या)$', mwt.words[1].lemma):
                     m = re.match(r'^(.+)(चा|ची|चे|च्या|चं)(.+)$', mwt.form)
                     m2 = re.match(r'^(माझ|तुझ|आपल)(ा|ी|े|्या)(.+)$', mwt.form)
                     if m:
@@ -74,6 +75,7 @@ class AddFormsInMwt(Block):
                             node.form = m.group(1)
                         elif node == mwt.words[1]:
                             node.form = m.group(2)
+                            node.lemma = 'चा'
                         else:
                             node.form = m.group(3)
                     elif m2:
@@ -81,9 +83,12 @@ class AddFormsInMwt(Block):
                             node.form = m2.group(1)
                         elif node == mwt.words[1]:
                             node.form = 'च' + m2.group(2)
+                            node.lemma = 'चा'
                         else:
                             node.form = m2.group(3)
                     else:
                         logging.info("Cannot decompose %s+%s+%s multiword token '%s'. Part lemmas are '%s', '%s', and '%s'." % (mwt.words[0].upos, mwt.words[1].upos, mwt.words[2].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma, mwt.words[1].lemma))
+                else:
+                    logging.info("Cannot decompose %s+%s+%s multiword token '%s'. Part lemmas are '%s', '%s', and '%s'." % (mwt.words[0].upos, mwt.words[1].upos, mwt.words[2].upos, mwt.form, mwt.words[0].lemma, mwt.words[1].lemma, mwt.words[1].lemma))
             else:
                 logging.info("Cannot decompose multiword token '%s' of %d parts: %s" % (mwt.form, len(mwt.words), str([x.lemma + '/' + x.upos for x in mwt.words])))
