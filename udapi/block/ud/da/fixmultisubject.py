@@ -55,7 +55,7 @@ class FixMultiSubject(Block):
             elif len(subjects) == 2 and len(advclchildren) == 1:
                 advclnode = advclchildren[0]
                 dn = [dist(node, x) for x in subjects]
-                dx = [dist(xcompnode, x) for x in subjects]
+                dx = [dist(advclnode, x) for x in subjects]
                 # Is the first subject closer to advcl than it is to the current node?
                 # At the same time, is the second subject closer to the current node than it is to advcl?
                 if dx[0] < dn[0] and dn[1] < dx[1]:
