@@ -22,36 +22,38 @@ class FixMultiSubject(Block):
             # Pattern 2: Similar to pattern 1, but advcl instead of xcomp, and
             # possibly not so many other mis-attached dependents.
             advclchildren = [x for x in node.children if x.udeprel == 'advcl']
-            if len(subjects) == 2 and len(xcompchildren) == 1:
-                xcompnode = xcompchildren[0]
-                dn = [dist(node, x) for x in subjects]
-                dx = [dist(xcompnode, x) for x in subjects]
-                # Is the first subject closer to xcomp than it is to the current node?
-                # At the same time, is the second subject closer to the current node than it is to xcomp?
-                if dx[0] < dn[0] and dn[1] < dx[1]:
-                    # The first subject should be re-attached to the xcomp node.
-                    subjects[0].parent = xcompnode
-                    # There are typically other dependents that should belong to the xcomp node.
-                    for c in node.children:
-                        if c != xcompnode and dist(xcompnode, c) < dist(node, c):
-                            c.parent = xcompnode
-                    # The xcompnode should probably be attached as something else
-                    # than xcomp, perhaps even the direction of the relation should
-                    # be reversed, but one would have to resolve this manually.
-                    xcompnode.misc['ToDo'] = 'check-xcomp'
-                # Is the second subject closer to xcomp than it is to the current node?
-                # At the same time, is the first subject closer to the current node than it is to xcomp?
-                elif dx[1] < dn[1] and dn[0] < dx[0]:
-                    # The second subject should be re-attached to the xcomp node.
-                    subjects[1].parent = xcompnode
-                    # There are typically other dependents that should belong to the xcomp node.
-                    for c in node.children:
-                        if c != xcompnode and dist(xcompnode, c) < dist(node, c):
-                            c.parent = xcompnode
-                    # The xcompnode should probably be attached as something else
-                    # than xcomp, perhaps even the direction of the relation should
-                    # be reversed, but one would have to resolve this manually.
-                    xcompnode.misc['ToDo'] = 'check-xcomp'
+            if len(subjects) == 2 and len(xcompchildren) > 0:
+                for xcompnode in xcompchildren:
+                    dn = [dist(node, x) for x in subjects]
+                    dx = [dist(xcompnode, x) for x in subjects]
+                    # Is the first subject closer to xcomp than it is to the current node?
+                    # At the same time, is the second subject closer to the current node than it is to xcomp?
+                    if dx[0] <= dn[0] and dn[1] <= dx[1]:
+                        # The first subject should be re-attached to the xcomp node.
+                        subjects[0].parent = xcompnode
+                        # There are typically other dependents that should belong to the xcomp node.
+                        for c in node.children:
+                            if c != xcompnode and dist(xcompnode, c) < dist(node, c):
+                                c.parent = xcompnode
+                        # The xcompnode should probably be attached as something else
+                        # than xcomp, perhaps even the direction of the relation should
+                        # be reversed, but one would have to resolve this manually.
+                        xcompnode.misc['ToDo'] = 'check-xcomp'
+                        break
+                    # Is the second subject closer to xcomp than it is to the current node?
+                    # At the same time, is the first subject closer to the current node than it is to xcomp?
+                    elif dx[1] <= dn[1] and dn[0] <= dx[0]:
+                        # The second subject should be re-attached to the xcomp node.
+                        subjects[1].parent = xcompnode
+                        # There are typically other dependents that should belong to the xcomp node.
+                        for c in node.children:
+                            if c != xcompnode and dist(xcompnode, c) < dist(node, c):
+                                c.parent = xcompnode
+                        # The xcompnode should probably be attached as something else
+                        # than xcomp, perhaps even the direction of the relation should
+                        # be reversed, but one would have to resolve this manually.
+                        xcompnode.misc['ToDo'] = 'check-xcomp'
+                        break
             elif len(subjects) == 2 and len(advclchildren) > 0:
                 for advclnode in advclchildren:
                     dn = [dist(node, x) for x in subjects]
