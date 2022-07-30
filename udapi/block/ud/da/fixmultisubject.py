@@ -24,8 +24,9 @@ class FixMultiSubject(Block):
             advclchildren = [x for x in node.children if x.udeprel == 'advcl']
             # Pattern 3: Instead of xcomp or advcl, there is a simple amod
             # (under a verb!), in fact an adjective with a copula that should
-            # have been advcl.
-            amodchildren = [x for x in node.children if x.udeprel == 'amod']
+            # have been advcl. Alternatively, the nonverbal clause is headed
+            # by a noun, and the deprel is obl instead of amod.
+            amodchildren = [x for x in node.children if re.match(r'^(amod|obl)$', x.udeprel)]
             if len(subjects) == 2 and len(xcompchildren) > 0:
                 for xcompnode in xcompchildren:
                     dn = [dist(node, x) for x in subjects]
@@ -76,30 +77,31 @@ class FixMultiSubject(Block):
                         break
             elif len(subjects) == 2 and len(amodchildren) > 0:
                 for amodnode in amodchildren:
-                    dn = [dist(node, x) for x in subjects]
-                    dx = [dist(amodnode, x) for x in subjects]
-                    # Is the first subject closer to amod than it is to the current node?
-                    # At the same time, is the second subject closer to the current node than it is to amod?
-                    if dx[0] < dn[0] and dn[1] < dx[1]:
-                        # The first subject should be re-attached to the advcl node.
-                        subjects[0].parent = amodnode
-                        amodnode.deprel = 'advcl'
-                        # There are typically other dependents that should belong to the amod node.
-                        for c in node.children:
-                            if c != amodnode and dist(amodnode, c) < dist(node, c):
-                                c.parent = amodnode
-                        break
-                    # Is the second subject closer to amod than it is to the current node?
-                    # At the same time, is the first subject closer to the current node than it is to amod?
-                    elif dx[1] < dn[1] and dn[0] < dx[0]:
-                        # The second subject should be re-attached to the xcomp node.
-                        subjects[1].parent = amodnode
-                        amodnode.deprel = 'advcl'
-                        # There are typically other dependents that should belong to the amod node.
-                        for c in node.children:
-                            if c != amodnode and dist(amodnode, c) < dist(node, c):
-                                c.parent = amodnode
-                        break
+                    if len([x for x in amodnode.children if x.udeprel == 'cop']) > 0:
+                        dn = [dist(node, x) for x in subjects]
+                        dx = [dist(amodnode, x) for x in subjects]
+                        # Is the first subject closer to amod than it is to the current node?
+                        # At the same time, is the second subject closer to the current node than it is to amod?
+                        if dx[0] < dn[0] and dn[1] < dx[1]:
+                            # The first subject should be re-attached to the advcl node.
+                            subjects[0].parent = amodnode
+                            amodnode.deprel = 'advcl'
+                            # There are typically other dependents that should belong to the amod node.
+                            for c in node.children:
+                                if c != amodnode and dist(amodnode, c) < dist(node, c):
+                                    c.parent = amodnode
+                            break
+                        # Is the second subject closer to amod than it is to the current node?
+                        # At the same time, is the first subject closer to the current node than it is to amod?
+                        elif dx[1] < dn[1] and dn[0] < dx[0]:
+                            # The second subject should be re-attached to the xcomp node.
+                            subjects[1].parent = amodnode
+                            amodnode.deprel = 'advcl'
+                            # There are typically other dependents that should belong to the amod node.
+                            for c in node.children:
+                                if c != amodnode and dist(amodnode, c) < dist(node, c):
+                                    c.parent = amodnode
+                            break
 
 def dist(x, y):
     if x.ord < y.ord:
