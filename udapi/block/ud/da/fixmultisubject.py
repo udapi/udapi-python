@@ -72,7 +72,20 @@ class FixMultiSubject(Block):
                         break
 
 def dist(x, y):
-    d = x.ord - y.ord
-    if d < 0:
-        d = -d
+    if x.ord < y.ord:
+        a = x
+        b = y
+    else:
+        a = y
+        b = x
+    d = b.ord - a.ord
+    # Count the commas between the two nodes. A comma should be seen as increasing
+    # the distance of the nodes, that is, decreasing the probability that they
+    # are in the same clause.
+    nc = 0
+    for i in a.root.descendants:
+        if i.ord > a.ord and i.ord < b.ord:
+            if i.form == ',':
+                nc += 1
+    d += nc * 10
     return d
