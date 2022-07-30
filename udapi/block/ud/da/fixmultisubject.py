@@ -52,20 +52,22 @@ class FixMultiSubject(Block):
                     # than xcomp, perhaps even the direction of the relation should
                     # be reversed, but one would have to resolve this manually.
                     xcompnode.misc['ToDo'] = 'check-xcomp'
-            elif len(subjects) == 2 and len(advclchildren) == 1:
-                advclnode = advclchildren[0]
-                dn = [dist(node, x) for x in subjects]
-                dx = [dist(advclnode, x) for x in subjects]
-                # Is the first subject closer to advcl than it is to the current node?
-                # At the same time, is the second subject closer to the current node than it is to advcl?
-                if dx[0] < dn[0] and dn[1] < dx[1]:
-                    # The first subject should be re-attached to the advcl node.
-                    subjects[0].parent = advclnode
-                # Is the second subject closer to advcl than it is to the current node?
-                # At the same time, is the first subject closer to the current node than it is to advcl?
-                elif dx[1] < dn[1] and dn[0] < dx[0]:
-                    # The second subject should be re-attached to the xcomp node.
-                    subjects[1].parent = advclnode
+            elif len(subjects) == 2 and len(advclchildren) > 0:
+                for advclnode in advclchildren:
+                    dn = [dist(node, x) for x in subjects]
+                    dx = [dist(advclnode, x) for x in subjects]
+                    # Is the first subject closer to advcl than it is to the current node?
+                    # At the same time, is the second subject closer to the current node than it is to advcl?
+                    if dx[0] < dn[0] and dn[1] < dx[1]:
+                        # The first subject should be re-attached to the advcl node.
+                        subjects[0].parent = advclnode
+                        break
+                    # Is the second subject closer to advcl than it is to the current node?
+                    # At the same time, is the first subject closer to the current node than it is to advcl?
+                    elif dx[1] < dn[1] and dn[0] < dx[0]:
+                        # The second subject should be re-attached to the xcomp node.
+                        subjects[1].parent = advclnode
+                        break
 
 def dist(x, y):
     d = x.ord - y.ord
