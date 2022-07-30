@@ -30,7 +30,7 @@ class FixMultiSubject(Block):
                     subjects[0].parent = xcompnode
                     # There are typically other dependents that should belong to the xcomp node.
                     for c in node.children:
-                        if dist(xcompnode, c) < dist(node, c):
+                        if c != xcompnode and dist(xcompnode, c) < dist(node, c):
                             c.parent = xcompnode
                     # The xcompnode should probably be attached as something else
                     # than xcomp, perhaps even the direction of the relation should
@@ -43,7 +43,7 @@ class FixMultiSubject(Block):
                     subjects[1].parent = xcompnode
                     # There are typically other dependents that should belong to the xcomp node.
                     for c in node.children:
-                        if dist(xcompnode, c) < dist(node, c):
+                        if c != xcompnode and dist(xcompnode, c) < dist(node, c):
                             c.parent = xcompnode
                     # The xcompnode should probably be attached as something else
                     # than xcomp, perhaps even the direction of the relation should
