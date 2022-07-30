@@ -3,6 +3,7 @@ Block ud.da.FixMultiSubject tries to fix some systemic instances of predicates
 that have more than one subject dependent.
 """
 from udapi.core.block import Block
+import re
 
 class FixMultiSubject(Block):
     """
