@@ -66,7 +66,7 @@ class BaseWriter(Block):
                     logging.info('Writing to file %s.', docname)
                     sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
                 else:
-                    logging.warning('overwrite=1 but documet.meta["loaded_from"] is None')
+                    logging.warning('overwrite=1 but document.meta["loaded_from"] is None')
             else:
                 sys.stdout = self.orig_stdout
         else:
