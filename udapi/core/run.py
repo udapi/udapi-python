@@ -176,4 +176,4 @@ class Run(object):
 def create_block(block, **kwargs):
     """A factory function for creating new block instances (handy for IPython)."""
     blocks = _import_blocks([block], [kwargs])
-    return blocks[0]
+    return blocks[0][1]
