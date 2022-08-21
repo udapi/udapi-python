@@ -16,7 +16,7 @@ class FixAux(Block):
         # are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ']
-        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'رکھ', 'آ']
+        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
@@ -69,6 +69,9 @@ class FixAux(Block):
         must be fixed.
         """
         if node.upos == 'AUX':
+            # اٹھنا “to rise, get up”
+            if node.lemma == 'اٹھا':
+                node.lemma = 'اٹھ'
             # بنانا बनाना “make, create, produce, cause to be/become”
             # (I don't know why in some instances بنا was used as lemma for کر “to do”.)
             if node.form == 'کر' and node.lemma == 'بنا':
