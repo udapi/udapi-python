@@ -82,6 +82,12 @@ class FixAux(Block):
             # چکا is a perfective participle of چکنا (cuknā) “to be finished”
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
+            # گا, گی, گے denote the future tense. They are written as separate
+            # words in Urdu (while they are just suffixes in Hindi). However,
+            # when written as a separate auxiliary, all these forms should share
+            # the same lemma.
+            if node.lemma == 'گی' or node.lemma = 'گے':
+                node.lemma = 'گا'
             # گیا is a perfective participle of جانا‎ (jānā) “to go”
             if node.lemma == 'گیا':
                 node.lemma = 'جا'
