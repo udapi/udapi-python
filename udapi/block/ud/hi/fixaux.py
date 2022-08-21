@@ -11,12 +11,12 @@ class FixAux(Block):
     def process_node(self, node):
         self.fix_lemma(node)
         # The following verbs appear in verb-verb compounds as the semantically
-        # less salient element: le (to take), de (to give), ḍāla (to throw),
+        # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come). There
         # are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ']
-        urcompound = ['لے', 'دے', 'بیٹھ', 'رکھ', 'آ']
+        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'رکھ', 'آ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
