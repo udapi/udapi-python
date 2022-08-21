@@ -79,6 +79,9 @@ class FixAux(Block):
             if node.form == 'چاہئیں':
                 node.lemma = 'چاہئے'
                 node.feats['Number'] = 'Plur'
+            # چکا is a perfective participle of چکنا (cuknā) “to be finished”
+            if node.lemma == 'چکا':
+                node.lemma = 'چک'
             # گیا is a perfective participle of جانا‎ (jānā) “to go”
             if node.lemma == 'گیا':
                 node.lemma = 'جا'
