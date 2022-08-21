@@ -63,7 +63,10 @@ class FixAux(Block):
             if node.form == 'چاہئیں':
                 node.lemma = 'چاہئے'
                 node.feats['Number'] = 'Plur'
-            # لگا is a perfective participle of لگنا (lagnā) "to seem, to appear"
+            # گیا is a perfective participle of جانا‎ (jānā) “to go”
+            if node.lemma == 'گیا':
+                node.lemma = 'جا'
+            # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
             # The postposition ke after a verbal stem is not an auxiliary.
