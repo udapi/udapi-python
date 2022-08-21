@@ -19,10 +19,11 @@ class FixAux(Block):
         urcompound = ['لے', 'دے', 'بیٹھ', 'رکھ', 'آ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
-        # چاہنا चाहना (cāhnā) "to want, to wish" is a control verb but not an auxiliary.
-        # Its form چاہیئے (cāhie) "should, ought to" (literally "is wanted"?) is treated as a separate, derived word, and it is a modal auxiliary.
-        hiphase = ['लग', 'चुक', 'चाह']
-        urphase = ['لگ', 'چک', 'چاہ']
+        # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
+        # Its form چاہیئے (cāhie) “should, ought to” (literally "is wanted"?) is treated as a separate, derived word, and it is a modal auxiliary.
+        # دکھانا दिखाना (dikhānā) “to show”
+        hiphase = ['लग', 'चुक', 'चाह', 'दिखा']
+        urphase = ['لگ', 'چک', 'چاہ', 'دکھا']
         rephase = r'^(' + '|'.join(hiphase + urphase) + r')$'
         if re.match(recompound, node.lemma) and node.upos == 'AUX' and node.udeprel == 'aux':
             node.deprel = 'compound'
