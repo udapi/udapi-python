@@ -69,6 +69,10 @@ class FixAux(Block):
         must be fixed.
         """
         if node.upos == 'AUX':
+            # بنانا बनाना “make, create, produce, cause to be/become”
+            # (I don't know why in some instances بنا was used as lemma for کر “to do”.)
+            if node.form == 'کر' and node.lemma == 'بنا':
+                node.lemma = 'کر'
             # چاہئے (cāhie) “should, ought to” occurs with alternative spellings (should they also be labeled as typos?)
             if node.form == 'چاہئے' or node.form == 'چاہیئے' or node.form == 'چاہیے':
                 node.lemma = 'چاہئے'
