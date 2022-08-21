@@ -54,6 +54,12 @@ class FixAux(Block):
         must be fixed.
         """
         if node.upos == 'AUX':
+            # چاہ is a wrong lemmatization of چاہتی, which is a wrong spelling of چاہیئے (cāhie) "should"
+            if node.lemma == 'چاہ':
+                node.lemma = 'چاہیئے'
+                if node.form == 'چاہتی':
+                    node.feats['Typo'] = 'Yes'
+                    node.misc['CorrectForm'] = 'چاہیئے'
             # لگا is a perfective participle of لگنا (lagnā) "to seem, to appear"
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
