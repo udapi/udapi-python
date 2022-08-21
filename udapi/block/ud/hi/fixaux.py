@@ -94,6 +94,10 @@ class FixAux(Block):
             # sakna to be able to
             if node.lemma == 'سکے':
                 node.lemma = 'سک'
+            # The compound part vālā is not an auxiliary. We handle it in process_node()
+            # but it must be lemmatized properly.
+            if node.lemma == 'والی':
+                node.lemma = 'والا'
             # The postposition ke after a verbal stem is not an auxiliary.
             # Example: علحدہ علحدہ کیس رجسٹر کر کے “by registering separate cases”
             if node.lemma == 'کا' and node.form == 'کے':
