@@ -60,3 +60,8 @@ class FixAux(Block):
             # لگا is a perfective participle of لگنا (lagnā) "to seem, to appear"
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
+            # The postposition ke after a verbal stem is not an auxiliary.
+            # Example: علحدہ علحدہ کیس رجسٹر کر کے “by registering separate cases”
+            if node.lemma == 'کا' and node.form == 'کے':
+                node.upos = 'ADP'
+                node.deprel = 'mark'
