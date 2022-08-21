@@ -38,6 +38,8 @@ class FixAux(Block):
         elif node.lemma == 'वाला' or node.lemma == 'والا':
             node.upos = 'ADJ'
             node.feats['AdpType'] = ''
+            node.feats['VerbForm'] = ''
+            node.feats['Aspect'] = ''
             node.deprel = 'compound'
         elif re.match(rephase, node.lemma) and node.upos == 'AUX' and node.udeprel == 'aux':
             secpred = node.parent
