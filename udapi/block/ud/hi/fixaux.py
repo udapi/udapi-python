@@ -9,6 +9,7 @@ import re
 class FixAux(Block):
 
     def process_node(self, node):
+        self.fix_lemma(node)
         # The following verbs appear in verb-verb compounds as the semantically
         # less salient element: le (to take), de (to give), ḍāla (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come). There
@@ -17,6 +18,7 @@ class FixAux(Block):
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ']
         urcompound = ['لے', 'دے', 'بیٹھ', 'رکھ', 'آ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
+        # Control and raising verbs.
         hiphase = ['लग', 'चुक']
         urphase = ['لگ', 'چک']
         rephase = r'^(' + '|'.join(hiphase + urphase) + r')$'
@@ -43,3 +45,15 @@ class FixAux(Block):
                 # occurs with pseudocopulas: "I declare him handsome."
                 if re.match("(nsubj|csubj|advmod|advcl|obj|iobj|obl|aux|mark|punct|cc|expl|dislocated|vocative|discourse|parataxis)", c.udeprel):
                     c.parent = node
+
+    def fix_lemma(self, node):
+        """
+        Some verbal forms have wrong lemmas in the Hindi/Urdu treebanks. If they
+        are tagged AUX, it means that either the validator fails to recognize a
+        correct auxiliary, or we fail here to recognize a spurious auxiliary that
+        must be fixed.
+        """
+        if node.upos == 'AUX':
+            # لگا is a perfective participle of لگنا (lagnā) "to seem, to appear"
+            if node.lemma == 'لگا':
+                node.lemma = 'لگ'
