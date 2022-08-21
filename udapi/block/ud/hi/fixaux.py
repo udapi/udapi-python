@@ -57,6 +57,9 @@ class FixAux(Block):
         must be fixed.
         """
         if node.upos == 'AUX':
+            # چاہئے (cāhie) “should, ought to” occurs with alternative spellings (should they also be labeled as typos?)
+            if node.form == 'چاہئے' or node.form == 'چاہیئے' or node.form == 'چاہیے':
+                node.lemma = 'چاہئے'
             # لگا is a perfective participle of لگنا (lagnā) "to seem, to appear"
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
