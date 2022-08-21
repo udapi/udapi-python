@@ -29,12 +29,15 @@ class FixAux(Block):
             node.deprel = 'compound'
             # The word is no longer treated as an auxiliary, so it should be VERB rather than AUX.
             node.upos = "VERB"
-        # والا (vālā) with infinitive is annotated as auxiliary but it should not.
+        # वाला والا (vālā) with infinitive is annotated as auxiliary but it should not.
         # It is not even a verb (it does not have a verbal paradigm); it is more
         # like an adjective morphologically, and like a noun syntactically. It means
         # “the one who does the action of the content verb infinitive.”
+        # Some occurrences in the original annotation are case or mark, so we do not
+        # check AUX/aux here.
         elif node.lemma == 'वाला' or node.lemma == 'والا':
             node.upos = 'ADJ'
+            node.feats['AdpType'] = ''
             node.deprel = 'compound'
         elif re.match(rephase, node.lemma) and node.upos == 'AUX' and node.udeprel == 'aux':
             secpred = node.parent
