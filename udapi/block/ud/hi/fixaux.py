@@ -127,7 +127,9 @@ class FixAux(Block):
                 node.lemma = 'ले'
             if node.lemma == 'لیا' or node.form == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی' or node.lemma == 'لیجیے':
                 node.lemma = 'لے'
-            # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
+            # लगा لگا is a perfective participle of लगना لگنا (lagnā) “to seem, to appear”
+            if node.lemma == 'लगा':
+                node.lemma = 'लग'
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
             # پڑے is a perfective participle of پڑنا (paṛnā) “to fall”
