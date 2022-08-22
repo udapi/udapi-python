@@ -12,11 +12,12 @@ class FixAux(Block):
         self.fix_lemma(node)
         # The following verbs appear in verb-verb compounds as the semantically
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
-        # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring).
+        # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
+        # pahuñc (to reach).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ']
-        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا']
+        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
+        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
@@ -102,7 +103,7 @@ class FixAux(Block):
             if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ':
                 node.lemma = 'جا'
             # لیا is a perfective participle of لینا (lenā) “to take”
-            if node.lemma == 'لیا':
+            if node.lemma == 'لیا' or node.lemma == 'لو':
                 node.lemma = 'لے'
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
