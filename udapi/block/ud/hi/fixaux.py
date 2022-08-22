@@ -106,10 +106,12 @@ class FixAux(Block):
             if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ' or node.lemma == 'جائی' or node.lemma == 'جاتے' or node.lemma == 'جات':
                 node.lemma = 'جا'
             # Wrongly lemmatized present forms of “to be”.
-            if node.lemma == 'ہوں' or node.lemma == 'ہوا':
+            # In one instance, ہے had a lemma from a neighboring verb, so we also look at the form.
+            if node.lemma == 'ہوں' or node.lemma == 'ہوا' or node.form == 'ہے':
                 node.lemma = 'ہے'
             # لیا is a perfective participle of لینا (lenā) “to take”
-            if node.lemma == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی' or node.lemma == 'لیجیے':
+            # In one instance, لیا had a lemma from a neighboring verb, so we also look at the form.
+            if node.lemma == 'لیا' or node.form == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی' or node.lemma == 'لیجیے':
                 node.lemma = 'لے'
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
