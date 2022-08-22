@@ -14,10 +14,10 @@ class FixAux(Block):
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
         # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk),
-        # caṛh (to climb), saṛ (to rot).
+        # caṛh (to climb), saṛ (to rot), nikāl (to remove).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल']
+        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
@@ -95,7 +95,9 @@ class FixAux(Block):
                 node.lemma = 'चुक'
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
-            # دیا is a perfective participle of دینا (denā) “to give”
+            # दिया دیا is a perfective participle of देना دینا (denā) “to give”
+            if node.lemma == 'दिया':
+                node.lemma = 'दे'
             if node.lemma == 'دیا' or node.lemma == 'دی' or node.lemma == 'دیت':
                 node.lemma = 'دے'
             # دکھائیں (dikhānā) “to show”
@@ -117,8 +119,10 @@ class FixAux(Block):
                 node.lemma = 'है'
             if node.lemma == 'ہوں' or node.lemma == 'ہوا' or node.form == 'ہے':
                 node.lemma = 'ہے'
-            # لیا is a perfective participle of لینا (lenā) “to take”
+            # लिया لیا is a perfective participle of लेना لینا (lenā) “to take”
             # In one instance, لیا had a lemma from a neighboring verb, so we also look at the form.
+            if node.lemma == 'लिया':
+                node.lemma = 'ले'
             if node.lemma == 'لیا' or node.form == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی' or node.lemma == 'لیجیے':
                 node.lemma = 'لے'
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
