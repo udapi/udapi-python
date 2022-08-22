@@ -95,7 +95,8 @@ class FixAux(Block):
             if node.lemma == 'گی' or node.lemma == 'گے':
                 node.lemma = 'گا'
             # گیا is a perfective participle of جانا‎ (jānā) “to go”
-            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی':
+            # جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
+            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان':
                 node.lemma = 'جا'
             # لیا is a perfective participle of لینا (lenā) “to take”
             if node.lemma == 'لیا':
