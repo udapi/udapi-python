@@ -16,10 +16,10 @@ class FixAux(Block):
         # pahuñca (to reach), dekha (to look), phara (to return), cala (to walk),
         # caṛha (to climb), saṛa (to rot), nikala (to get out), nikāla (to remove), girā (to drop),
         # samā (to encounter), dhamaka (to bully), khaḍā (to stand), daboca (to catch),
-        # gujara (to pass).
+        # gujara (to pass), ghera (to surround), baca (to escape).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'फेंक', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकल', 'निकाल', 'गिरा', 'समा', 'धमक', 'खडा', 'दबोच', 'गुजर']
+        hicompound = ['ले', 'दे', 'डाल', 'फेंक', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकल', 'निकाल', 'गिरा', 'समा', 'धमक', 'खडा', 'दबोच', 'गुजर', 'फूंक', 'घेर', 'बच']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
@@ -27,7 +27,7 @@ class FixAux(Block):
         # Its form چاہیئے (cāhie) “should, ought to” (literally "is wanted"?) is treated as a separate, derived word, and it is a modal auxiliary.
         # दिखाना دکھانا (dikhānā) “to show”
         # बनना بننا (bananā) “to become”
-        hiphase = ['लग', 'चुक', 'चाह', 'दिखा', 'बन']
+        hiphase = ['लग', 'चुक', 'चाह', 'दिखा', 'बन', 'करा']
         urphase = ['لگ', 'چک', 'چاہ', 'دکھا', 'بن']
         rephase = r'^(' + '|'.join(hiphase + urphase) + r')$'
         if re.match(recompound, node.lemma) and node.upos == 'AUX' and node.udeprel == 'aux':
