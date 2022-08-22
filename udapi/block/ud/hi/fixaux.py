@@ -82,6 +82,9 @@ class FixAux(Block):
             if node.form == 'چاہئیں':
                 node.lemma = 'چاہئے'
                 node.feats['Number'] = 'Plur'
+            # چاہے seems to be a wrong lemma of چاہیں_گے “would like”
+            if node.lemma == 'چاہے':
+                node.lemma = 'چاہ'
             # چکا is a perfective participle of چکنا (cuknā) “to be finished”
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
@@ -108,7 +111,7 @@ class FixAux(Block):
             if node.lemma == 'رہا':
                 node.lemma = 'رہ'
             # sakna to be able to
-            if node.lemma == 'سکے':
+            if node.lemma == 'سکے' or node.lemma == 'سکی':
                 node.lemma = 'سک'
             # The compound part vālā is not an auxiliary. We handle it in process_node()
             # but it must be lemmatized properly.
