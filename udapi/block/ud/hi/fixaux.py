@@ -13,11 +13,11 @@ class FixAux(Block):
         # The following verbs appear in verb-verb compounds as the semantically
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
-        # pahuñc (to reach), dekh (to look).
+        # pahuñc (to reach), dekh (to look), phar (to return).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
-        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ']
+        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
@@ -117,6 +117,9 @@ class FixAux(Block):
             # پڑے is a perfective participle of پڑنا (paṛnā) “to fall”
             if node.lemma == 'پڑے':
                 node.lemma = 'پڑ'
+            # پھرے is a perfective participle of پھرنا (pharnā) “to return”
+            if node.lemma == 'پھرے':
+                node.lemma = 'پھر'
             # رہا is a perfective participle of رہنا (rahnā) “to stay”
             if node.lemma == 'رہا' or node.lemma == 'رہی' or node.lemma == 'رہے':
                 node.lemma = 'رہ'
