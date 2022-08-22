@@ -17,7 +17,7 @@ class FixAux(Block):
         # caṛh (to climb), saṛ (to rot).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
+        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
@@ -90,7 +90,9 @@ class FixAux(Block):
             # چاہے seems to be a wrong lemma of چاہیں_گے “would like”
             if node.lemma == 'چاہے':
                 node.lemma = 'چاہ'
-            # چکا is a perfective participle of چکنا (cuknā) “to be finished”
+            # चुका چکا is a perfective participle of चुकना چکنا (cuknā) “to be finished”
+            if node.lemma == 'चुका':
+                node.lemma = 'चुक'
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
             # دیا is a perfective participle of دینا (denā) “to give”
@@ -111,6 +113,8 @@ class FixAux(Block):
                 node.lemma = 'جا'
             # Wrongly lemmatized present forms of “to be”.
             # In one instance, ہے had a lemma from a neighboring verb, so we also look at the form.
+            if node.lemma == 'हों':
+                node.lemma = 'है'
             if node.lemma == 'ہوں' or node.lemma == 'ہوا' or node.form == 'ہے':
                 node.lemma = 'ہے'
             # لیا is a perfective participle of لینا (lenā) “to take”
