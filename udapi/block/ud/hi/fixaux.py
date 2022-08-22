@@ -109,8 +109,10 @@ class FixAux(Block):
             # the same lemma.
             if node.lemma == 'گی' or node.lemma == 'گے':
                 node.lemma = 'گا'
-            # گیا is a perfective participle of جانا‎ (jānā) “to go”
-            # جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
+            # گیا is a perfective participle of जाना جانا‎ (jānā) “to go”
+            # जान جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
+            if node.lemma == 'जाना' or node.lemma == 'जान':
+                node.lemma = 'जा'
             if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ' or node.lemma == 'جائی' or node.lemma == 'جاتے' or node.lemma == 'جات':
                 node.lemma = 'جا'
             # Wrongly lemmatized present forms of “to be”.
