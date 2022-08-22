@@ -70,6 +70,9 @@ class FixAux(Block):
         must be fixed.
         """
         if node.upos == 'AUX':
+            # آنے is the oblique infinitive form of “to come”
+            if node.lemma == 'آنہ':
+                node.lemma = 'آ'
             # اٹھنا “to rise, get up”
             if node.lemma == 'اٹھا':
                 node.lemma = 'اٹھ'
@@ -90,7 +93,7 @@ class FixAux(Block):
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
             # دیا is a perfective participle of دینا (denā) “to give”
-            if node.lemma == 'دیا' or node.lemma == 'دی':
+            if node.lemma == 'دیا' or node.lemma == 'دی' or node.lemma == 'دیت':
                 node.lemma = 'دے'
             # گا, گی, گے denote the future tense. They are written as separate
             # words in Urdu (while they are just suffixes in Hindi). However,
