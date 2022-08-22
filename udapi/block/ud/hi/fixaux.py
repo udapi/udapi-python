@@ -74,9 +74,6 @@ class FixAux(Block):
             # آنے is the oblique infinitive form of “to come”
             if node.lemma == 'آنہ':
                 node.lemma = 'آ'
-            # اٹھنا “to rise, get up”
-            if node.lemma == 'اٹھا':
-                node.lemma = 'اٹھ'
             # بنانا बनाना “make, create, produce, cause to be/become”
             # (I don't know why in some instances بنا was used as lemma for کر “to do”.)
             if node.form == 'کر' and node.lemma == 'بنا':
@@ -151,6 +148,11 @@ class FixAux(Block):
                 node.lemma = 'था'
             if node.lemma == 'تھ' or node.lemma == 'تھے' or node.lemma == 'تھیں':
                 node.lemma = 'تھا'
+            # उठा اٹھا is a perfective participle of उठना اٹھنا (uṭhnā) “to rise, get up”
+            if node.lemma == 'उठा':
+                node.lemma = 'उठ'
+            if node.lemma == 'اٹھا':
+                node.lemma = 'اٹھ'
             # The compound part vālā is not an auxiliary. We handle it in process_node()
             # but it must be lemmatized properly.
             if node.lemma == 'والی':
