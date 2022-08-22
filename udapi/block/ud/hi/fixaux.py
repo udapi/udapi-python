@@ -13,11 +13,12 @@ class FixAux(Block):
         # The following verbs appear in verb-verb compounds as the semantically
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
-        # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk).
+        # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk),
+        # caṛh (to climb), saṛ (to rot).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
-        urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل']
+        urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
