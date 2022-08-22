@@ -111,8 +111,11 @@ class FixAux(Block):
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
+            # پڑے is a perfective participle of پڑنا (paṛnā) “to fall”
+            if node.lemma == 'پڑے':
+                node.lemma = 'پڑ'
             # رہا is a perfective participle of رہنا (rahnā) “to stay”
-            if node.lemma == 'رہا' or node.lemma == 'رہے':
+            if node.lemma == 'رہا' or node.lemma == 'رہی' or node.lemma == 'رہے':
                 node.lemma = 'رہ'
             # sakna to be able to
             if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا':
