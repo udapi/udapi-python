@@ -11,14 +11,15 @@ class FixAux(Block):
     def process_node(self, node):
         self.fix_lemma(node)
         # The following verbs appear in verb-verb compounds as the semantically
-        # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
+        # less salient element: le (to take), de (to give), ḍāla / phenka (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
-        # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk),
-        # caṛh (to climb), saṛ (to rot), nikāl (to remove), girā (to drop), samā
-        # (to encounter), dhamaka (to bully).
+        # pahuñca (to reach), dekha (to look), phara (to return), cala (to walk),
+        # caṛha (to climb), saṛa (to rot), nikala (to get out), nikāla (to remove), girā (to drop),
+        # samā (to encounter), dhamaka (to bully), khaḍā (to stand), daboca (to catch),
+        # gujara (to pass).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'फेंक', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल', 'गिरा', 'समा', 'धमक']
+        hicompound = ['ले', 'दे', 'डाल', 'फेंक', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकल', 'निकाल', 'गिरा', 'समा', 'धमक', 'खडा', 'दबोच', 'गुजर']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
@@ -116,7 +117,7 @@ class FixAux(Block):
                 node.lemma = 'جا'
             # Wrongly lemmatized present forms of “to be”.
             # In one instance, ہے had a lemma from a neighboring verb, so we also look at the form.
-            if node.lemma == 'हों':
+            if node.lemma == 'हों' or node.lemma == 'है.':
                 node.lemma = 'है'
             if node.lemma == 'ہوں' or node.lemma == 'ہوا' or node.form == 'ہے':
                 node.lemma = 'ہے'
