@@ -17,7 +17,7 @@ class FixAux(Block):
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
-        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل']
+        urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
@@ -124,7 +124,7 @@ class FixAux(Block):
             if node.lemma == 'رہا' or node.lemma == 'رہی' or node.lemma == 'رہے':
                 node.lemma = 'رہ'
             # sakna to be able to
-            if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا':
+            if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا' or node.lemma == 'سکت':
                 node.lemma = 'سک'
             # Wrongly lemmatized past forms of “to be”.
             if node.lemma == 'تھ' or node.lemma == 'تھے' or node.lemma == 'تھیں':
