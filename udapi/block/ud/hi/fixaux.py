@@ -95,6 +95,9 @@ class FixAux(Block):
             # دیا is a perfective participle of دینا (denā) “to give”
             if node.lemma == 'دیا' or node.lemma == 'دی' or node.lemma == 'دیت':
                 node.lemma = 'دے'
+            # دکھائیں (dikhānā) “to show”
+            if node.form == 'دکھائیں':
+                node.lemma = 'دکھا'
             # گا, گی, گے denote the future tense. They are written as separate
             # words in Urdu (while they are just suffixes in Hindi). However,
             # when written as a separate auxiliary, all these forms should share
