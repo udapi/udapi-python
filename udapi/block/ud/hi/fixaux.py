@@ -86,7 +86,7 @@ class FixAux(Block):
             if node.lemma == 'چکا':
                 node.lemma = 'چک'
             # دیا is a perfective participle of دینا (denā) “to give”
-            if node.lemma == 'دیا':
+            if node.lemma == 'دیا' or node.lemma == 'دی':
                 node.lemma = 'دے'
             # گا, گی, گے denote the future tense. They are written as separate
             # words in Urdu (while they are just suffixes in Hindi). However,
