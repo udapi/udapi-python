@@ -132,6 +132,9 @@ class FixAux(Block):
                 node.lemma = 'लग'
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
+            # पहुंचा پہنچا is a perfective participle of पहुंचना پہنچنا (pahuñcnā) “to reach”
+            if node.lemma == 'पहुंचा' or node.lemma == 'पहुँच':
+                node.lemma = 'पहुंच'
             # پڑے is a perfective participle of پڑنا (paṛnā) “to fall”
             if node.lemma == 'پڑے':
                 node.lemma = 'پڑ'
