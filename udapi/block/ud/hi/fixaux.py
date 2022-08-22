@@ -102,8 +102,11 @@ class FixAux(Block):
             # جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
             if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ':
                 node.lemma = 'جا'
+            # Wrongly lemmatized present forms of “to be”.
+            if node.lemma == 'ہوں' or node.lemma == 'ہوا':
+                node.lemma = 'ہے'
             # لیا is a perfective participle of لینا (lenā) “to take”
-            if node.lemma == 'لیا' or node.lemma == 'لو':
+            if node.lemma == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی':
                 node.lemma = 'لے'
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
