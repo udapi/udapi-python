@@ -14,10 +14,10 @@ class FixAux(Block):
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
         # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk),
-        # caṛh (to climb), saṛ (to rot), nikāl (to remove).
+        # caṛh (to climb), saṛ (to rot), nikāl (to remove), girā (to drop).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल']
+        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल', 'गिरा']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
@@ -136,13 +136,17 @@ class FixAux(Block):
             # پھرے is a perfective participle of پھرنا (pharnā) “to return”
             if node.lemma == 'پھرے':
                 node.lemma = 'پھر'
-            # رہا is a perfective participle of رہنا (rahnā) “to stay”
+            # रहा رہا is a perfective participle of रहना رہنا (rahnā) “to stay”
+            if node.lemma == 'रहा' or node.lemma == 'रहूं':
+                node.lemma = 'रह'
             if node.lemma == 'رہا' or node.lemma == 'رہی' or node.lemma == 'رہے':
                 node.lemma = 'رہ'
             # sakna to be able to
             if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا' or node.lemma == 'سکت':
                 node.lemma = 'سک'
             # Wrongly lemmatized past forms of “to be”.
+            if node.lemma == 'थी':
+                node.lemma = 'था'
             if node.lemma == 'تھ' or node.lemma == 'تھے' or node.lemma == 'تھیں':
                 node.lemma = 'تھا'
             # The compound part vālā is not an auxiliary. We handle it in process_node()
