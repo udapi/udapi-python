@@ -14,18 +14,20 @@ class FixAux(Block):
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
         # pahuñc (to reach), dekh (to look), phar (to return), cal (to walk),
-        # caṛh (to climb), saṛ (to rot), nikāl (to remove), girā (to drop).
+        # caṛh (to climb), saṛ (to rot), nikāl (to remove), girā (to drop), samā
+        # (to encounter), dhamaka (to bully).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
-        hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल', 'गिरा']
+        hicompound = ['ले', 'दे', 'डाल', 'फेंक', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच', 'चल', 'निकाल', 'गिरा', 'समा', 'धमक']
         urcompound = ['لے', 'دے', 'ڈال', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ', 'پھر', 'چل', 'چڑھ', 'سڑ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
-        # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
+        # चाहना چاہنا (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
         # Its form چاہیئے (cāhie) “should, ought to” (literally "is wanted"?) is treated as a separate, derived word, and it is a modal auxiliary.
-        # دکھانا दिखाना (dikhānā) “to show”
-        hiphase = ['लग', 'चुक', 'चाह', 'दिखा']
-        urphase = ['لگ', 'چک', 'چاہ', 'دکھا']
+        # दिखाना دکھانا (dikhānā) “to show”
+        # बनना بننا (bananā) “to become”
+        hiphase = ['लग', 'चुक', 'चाह', 'दिखा', 'बन']
+        urphase = ['لگ', 'چک', 'چاہ', 'دکھا', 'بن']
         rephase = r'^(' + '|'.join(hiphase + urphase) + r')$'
         if re.match(recompound, node.lemma) and node.upos == 'AUX' and node.udeprel == 'aux':
             node.deprel = 'compound'
