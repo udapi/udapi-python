@@ -99,7 +99,7 @@ class FixAux(Block):
                 node.lemma = 'گا'
             # گیا is a perfective participle of جانا‎ (jānā) “to go”
             # جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
-            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان':
+            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا':
                 node.lemma = 'جا'
             # لیا is a perfective participle of لینا (lenā) “to take”
             if node.lemma == 'لیا':
@@ -108,10 +108,10 @@ class FixAux(Block):
             if node.lemma == 'لگا':
                 node.lemma = 'لگ'
             # رہا is a perfective participle of رہنا (rahnā) “to stay”
-            if node.lemma == 'رہا':
+            if node.lemma == 'رہا' or node.lemma == 'رہے':
                 node.lemma = 'رہ'
             # sakna to be able to
-            if node.lemma == 'سکے' or node.lemma == 'سکی':
+            if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا':
                 node.lemma = 'سک'
             # The compound part vālā is not an auxiliary. We handle it in process_node()
             # but it must be lemmatized properly.
