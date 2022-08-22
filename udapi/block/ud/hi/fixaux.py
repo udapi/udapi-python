@@ -13,11 +13,11 @@ class FixAux(Block):
         # The following verbs appear in verb-verb compounds as the semantically
         # less salient element: le (to take), de (to give), ḍāla / phenk (to throw),
         # baiṭha (to sit), uṭha (to rise), rakha (to keep), ā (to come), lā (to bring),
-        # pahuñc (to reach).
+        # pahuñc (to reach), dekh (to look).
         # There are also jā (to go) and paṛa (to fall) but we do not list them here
         # because they can also act as genuine auxiliaries.
         hicompound = ['ले', 'दे', 'डाल', 'बैठ', 'उठ', 'रख', 'आ', 'पहुंच']
-        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ']
+        urcompound = ['لے', 'دے', 'پھینک', 'بیٹھ', 'اٹھ', 'رکھ', 'آ', 'لا', 'پہنچ', 'دیکھ']
         recompound = r'^(' + '|'.join(hicompound + urcompound) + r')$'
         # Control and raising verbs.
         # چاہنا चाहना (cāhnā) “to want, to wish” is a control verb but not an auxiliary.
@@ -100,13 +100,13 @@ class FixAux(Block):
                 node.lemma = 'گا'
             # گیا is a perfective participle of جانا‎ (jānā) “to go”
             # جان is nonsense. It occurs with forms like جانی, which is a feminine form of the infinitive جانا‎.
-            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ':
+            if node.lemma == 'گیا' or node.lemma == 'جائے' or node.lemma == 'جاتا' or node.lemma == 'جاتی' or node.lemma == 'جان' or node.lemma == 'جانا' or node.lemma == 'جاؤ' or node.lemma == 'جائی':
                 node.lemma = 'جا'
             # Wrongly lemmatized present forms of “to be”.
             if node.lemma == 'ہوں' or node.lemma == 'ہوا':
                 node.lemma = 'ہے'
             # لیا is a perfective participle of لینا (lenā) “to take”
-            if node.lemma == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی':
+            if node.lemma == 'لیا' or node.lemma == 'لو' or node.lemma == 'لی' or node.lemma == 'لیجیے':
                 node.lemma = 'لے'
             # لگا is a perfective participle of لگنا (lagnā) “to seem, to appear”
             if node.lemma == 'لگا':
