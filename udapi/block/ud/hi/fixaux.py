@@ -120,6 +120,9 @@ class FixAux(Block):
             # sakna to be able to
             if node.lemma == 'سکے' or node.lemma == 'سکی' or node.lemma == 'سکتا':
                 node.lemma = 'سک'
+            # Wrongly lemmatized past forms of “to be”.
+            if node.lemma == 'تھ' or node.lemma == 'تھے' or node.lemma == 'تھیں':
+                node.lemma = 'تھا'
             # The compound part vālā is not an auxiliary. We handle it in process_node()
             # but it must be lemmatized properly.
             if node.lemma == 'والی':
