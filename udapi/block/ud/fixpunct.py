@@ -27,15 +27,15 @@ PAIRED_PUNCT = {
     '{': '}',
     '"': '"',   # ASCII double quotes
     "'": "'",   # ASCII single quotes
-    '“': '”',   # quotation marks used in English,...
-    '„': '“',   # Czech, German, Russian,...
-    '«': '»',   # French, Russian, Spanish,...
+    '“': '”',   # quotation marks used in English, ...
+    '„': '“',   # Czech, German, Russian, ...
+    '«': '»',   # French, Russian, Spanish, ...
     '‹': '›',   # dtto
     '《': '》',  # Korean, Chinese
     '「': '」',  # Chinese, Japanese
-    '『': '』',  # dtto
-    '¿': '?',   # Spanish question quotation marks
-    '¡': '!',   # Spanish exclamation quotation marks
+    '『': '』',  # ditto
+    '¿': '?',   # Spanish paired question marks
+    '¡': '!',   # Spanish paired exclamation marks
     }
 
 FINAL_PUNCT = '.?!'
@@ -65,7 +65,7 @@ class FixPunct(Block):
         # This may introduce multiple subroots, which will be fixed later on
         # (preventing to temporarily create multiple subroots here would prevent fixing some errors).
         for node in root.descendants:
-            while node.parent.upos == "PUNCT":
+            while node.parent.upos == 'PUNCT':
                 node.parent = node.parent.parent
 
         # Second, fix paired punctuations: quotes and brackets, marking them in _punct_type.
@@ -83,9 +83,8 @@ class FixPunct(Block):
 
         # Third, fix subordinate punctuation (i.e. any punctuation not marked in _punct_type).
         for node in root.descendants:
-            if node.upos == "PUNCT" and not self._punct_type[node.ord]:
+            if node.upos == 'PUNCT' and not self._punct_type[node.ord]:
                 self._fix_subord_punct(node)
-
 
         # UD requires "exactly one word is the head of the sentence, dependent on a notional ROOT", i.e. a single "subroot".
         # This seems to be a stronger rule than no-PUNCT-children because it is checked by the validator.
@@ -107,7 +106,7 @@ class FixPunct(Block):
         # TODO: This block changes parents not only for PUNCT nodes. These should be reflected into enhanced deps as well.
         if self.copy_to_enhanced:
             for node in root.descendants:
-                if node.upos == "PUNCT":
+                if node.upos == 'PUNCT':
                     node.deps = [{'parent': node.parent, 'deprel': 'punct'}]
 
     def _fix_subord_punct(self, node):
@@ -131,12 +130,12 @@ class FixPunct(Block):
         l_cand, r_cand = node.prev_node, node.next_node
         if node.form in FINAL_PUNCT:
             r_cand = None
-        while l_cand.ord > 0 and l_cand.upos == "PUNCT":
+        while l_cand.ord > 0 and l_cand.upos == 'PUNCT':
             if self._punct_type[l_cand.ord] == 'opening' and l_cand.parent != node:
                 l_cand = None
                 break
             l_cand = l_cand.prev_node
-        while r_cand is not None and r_cand.upos == "PUNCT":
+        while r_cand is not None and r_cand.upos == 'PUNCT':
             if self._punct_type[r_cand.ord] == 'closing' and r_cand.parent != node:
                 r_cand = None
                 break
@@ -193,7 +192,7 @@ class FixPunct(Block):
         # We try to be conservative and keep the parent, unless we are sure it is wrong.
         if node.parent not in path:
             node.parent = cand
-        node.deprel = "punct"
+        node.deprel = 'punct'
 
     def _will_be_projective(self, node, cand):
         node.parent = cand
@@ -206,7 +205,6 @@ class FixPunct(Block):
         if (self.check_paired_punct_upos
             or opening_node.form == "'") and opening_node.upos != 'PUNCT':
             return
-
         nested_level = 0
         for node in root.descendants[opening_node.ord:]:
             if node.form == closing_punct:
@@ -219,14 +217,31 @@ class FixPunct(Block):
                 nested_level += 1
 
     def _fix_pair(self, root, opening_node, closing_node):
+        # Ideally, paired punctuation symbols should be attached to the single
+        # head of the subtree inside. Provided the inside segment is a single
+        # subtree.
         heads = []
         punct_heads = []
-        for node in root.descendants[opening_node.ord: closing_node.ord - 1]:
-            if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
-                if node.upos == 'PUNCT':
-                    punct_heads.append(node)
-                else:
-                    heads.append(node)
+        for node in root.descendants:
+            if node == opening_node or node == closing_node:
+                continue
+            # If this is a node inside of the pair, is its parent outside?
+            if opening_node.precedes(node) and node.precedes(closing_node):
+                if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
+                    if node.upos == 'PUNCT':
+                        punct_heads.append(node)
+                    else:
+                        heads.append(node)
+            # Not only the punctuation symbols must not be attached non-projectively,
+            # they also must not cause non-projectivity of other relations. This could
+            # happen if an outside node is attached to an inside node. To account for
+            # this, mark the inside parent as a head, too.
+            else:
+                if opening_node.precedes(node.parent) and node.parent.precedes(closing_node):
+                    if node.parent.upos == 'PUNCT':
+                        punct_heads.append(node.parent)
+                    else:
+                        heads.append(node.parent)
 
         # Punctuation should not have children, but if there is no other head candidate,
         # let's break this rule.
@@ -246,6 +261,9 @@ class FixPunct(Block):
             # However, this means that the paired punctuation will be attached non-projectively,
             # which is forbidden by the UD guidelines.
             # Thus, we will choose the nearest head, which is the only way how to prevent non-projectivities.
+            # Sort the heads by their ords (this is not guaranteed because we were adding a mixture of
+            # inside heads and inside parents of outside nodes).
+            heads.sort(key=lambda x: x.ord)
             opening_node.parent = heads[0]
             closing_node.parent = heads[-1]
 
