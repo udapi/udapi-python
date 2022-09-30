@@ -8,11 +8,11 @@ import re
 
 class FixLeaf(Block):
     """
-    Make sure that aux and cop dependents are leaves unless one of the known
-    exceptions applies.
+    Make sure that function words are leaves unless one of the known exceptions
+    applies.
     """
 
-    def __init__(self, deprels='aux,cop,cc', **kwargs):
+    def __init__(self, deprels='aux,cop,case,mark,cc', **kwargs):
         """
         Args:
         deprels: comma-separated list of deprels to be fixed. Default = aux,cop,case,mark,cc.
