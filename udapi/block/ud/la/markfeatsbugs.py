@@ -1,10 +1,10 @@
 """
-Block to identify missing or ill-valued features in Czech. Any bugs that it
+Block to identify missing or ill-valued features in Latin. Any bugs that it
 finds will be saved in the MISC column as a Bug attribute, which can be later
 used in filters and highlighted in text output.
 
-Usage: cat *.conllu | udapy -HAM ud.cs.MarkFeatsBugs > bugs.html
-Windows: python udapy read.Conllu files="a.conllu,b.conllu" ud.cs.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
+Usage: cat *.conllu | udapy -HAM ud.la.MarkFeatsBugs > bugs.html
+Windows: python udapy read.Conllu files="a.conllu,b.conllu" ud.la.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
 """
 import udapi.block.ud.markfeatsbugs
 import logging
@@ -12,22 +12,10 @@ import re
 
 class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
 
-    # The convention used in PDT is not consistent. Adjectives are fully disambiguated
-    # (three genders, two animacies, three numbers, seven cases), even though some
-    # forms are shared among many feature combinations. On the other hand, pronouns
-    # and determiners omit some features in the context of certain values of other
-    # features (e.g., gender and animacy are not distinguished in plural if the case
-    # is genitive, dative, locative or instrumental).
-    # In contrast, ČNK (CNC) fully disambiguates pronouns and determiners just like
-    # adjectives.
-    # Here we can trigger one of the two conventions. It should become a block parameter
-    # in the future.
-    pdt20 = False # True = like in PDT 2.0; False = like in ČNK
-
     def process_node(self, node):
         # NOUNS ################################################################
         if node.upos == 'NOUN':
-            self.check_required_features(node, ['Gender', 'Number', 'Case', 'Polarity'])
+            self.check_required_features(node, ['Gender', 'Number', 'Case'])
             if node.feats['Gender'] == 'Masc':
                 self.check_required_features(node, ['Animacy'])
                 self.check_allowed_features(node, {
@@ -35,14 +23,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'Foreign': ['Yes']})
             else:
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'Foreign': ['Yes']})
         # PROPER NOUNS #########################################################
         elif node.upos == 'PROPN':
