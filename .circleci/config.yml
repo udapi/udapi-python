@@ -35,7 +35,7 @@ jobs:
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
           name: Install Udapi
-          command: pip install --use-feature=in-tree-build ".[test]"
+          command: pip install ".[test]"
       - run:
           name: Run pytest tests
           # This assumes pytest is installed via the install-package step above
