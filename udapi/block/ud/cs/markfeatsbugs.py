@@ -3,7 +3,7 @@ Block to identify missing or ill-valued features in Czech. Any bugs that it
 finds will be saved in the MISC column as a Bug attribute, which can be later
 used in filters and highlighted in text output.
 
-Usage: cat *.conllu | udapy -HAM ud.cs.MarkFeatsBugs > bugs.html
+Usage: cat *.conllu | udapy -HAMX layout=compact ud.cs.MarkFeatsBugs > bugs.html
 Windows: python udapy read.Conllu files="a.conllu,b.conllu" ud.cs.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
 """
 import udapi.block.ud.markfeatsbugs

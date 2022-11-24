@@ -5,7 +5,7 @@ used in filters and highlighted in text output. This is a base block that only
 implements service methods. A language-specific block must be derived from this
 one and define the actual rules valid in that language.
 
-Usage (Czech example): cat *.conllu | udapy -HAM ud.cs.MarkFeatsBugs > bugs.html
+Usage (Czech example): cat *.conllu | udapy -HAMX layout=compact ud.cs.MarkFeatsBugs > bugs.html
 """
 from udapi.core.block import Block
 import logging
