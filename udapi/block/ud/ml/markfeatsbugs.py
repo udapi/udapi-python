@@ -65,6 +65,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Number': ['Sing', 'Plur'],
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
                         })
+            else: # not personal
+                self.check_required_features(node, ['PronType', 'Case'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Dem', 'Int'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                })
         # DETERMINERS ##########################################################
         elif node.upos == 'DET':
             if node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
