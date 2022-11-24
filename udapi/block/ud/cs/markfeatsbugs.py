@@ -2,12 +2,15 @@
 Block to identify missing or ill-valued features in Czech. Any bugs that it
 finds will be saved in the MISC column as a Bug attribute, which can be later
 used in filters and highlighted in text output.
+
+Usage: cat *.conllu | udapy -HAM ud.cs.MarkFeatsBugs > bugs.html
+Windows: python udapy read.Conllu files="a.conllu,b.conllu" ud.cs.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 attributes=form,lemma,upos,xpos,feats,deprel,misc
 """
-from udapi.core.block import Block
+import udapi.block.ud.markfeatsbugs
 import logging
 import re
 
-class MarkFeatsBugs(Block):
+class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
 
     # The convention used in PDT is not consistent. Adjectives are fully disambiguated
     # (three genders, two animacies, three numbers, seven cases), even though some
@@ -20,36 +23,6 @@ class MarkFeatsBugs(Block):
     # Here we can trigger one of the two conventions. It should become a block parameter
     # in the future.
     pdt20 = False # True = like in PDT 2.0; False = like in ČNK
-
-    def bug(self, node, bugstring):
-        bugs = []
-        if node.misc['Bug']:
-            bugs = node.misc['Bug'].split('+')
-        if not bugstring in bugs:
-            bugs.append(bugstring)
-        node.misc['Bug'] = '+'.join(bugs)
-
-    def check_allowed_features(self, node, allowed):
-        """
-        We need a dictionary indexed by feature names that are allowed; for each
-        feature name, there is a list of allowed values.
-        """
-        # Check for features that are not allowed but the node has them.
-        # For features that are allowed, check that their values are allowed.
-        for f in node.feats:
-            if f in allowed:
-                if not node.feats[f] in allowed[f]:
-                    self.bug(node, 'Feat' + f + 'Value' + node.feats[f] + 'NotAllowed')
-            else:
-                self.bug(node, 'Feat' + f + 'NotAllowed')
-
-    def check_required_features(self, node, required):
-        """
-        We need a list of names of features whose values must not be empty.
-        """
-        for f in required:
-            if not f in node.feats:
-                self.bug(node, 'Feat' + f + 'Missing')
 
     def process_node(self, node):
         # NOUNS ################################################################
