@@ -73,23 +73,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
         # DETERMINERS ##########################################################
         elif node.upos == 'DET':
-            if node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
-                self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Gender', 'Number', 'Case'])
+            if node.feats['PronType'] == 'Art':
+                self.check_required_features(node, ['PronType', 'Definite'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Prs'],
-                    'Poss': ['Yes'],
-                    'Person': ['1', '2', '3'],
-                    'Gender': ['Masc', 'Fem', 'Neut'],
-                    'Number': ['Sing', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                    'PronType': ['Art'],
+                    'Definite': ['Ind']
                 })
             else:
-                self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case'])
+                self.check_required_features(node, ['PronType'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
-                    'Gender': ['Masc', 'Fem', 'Neut'],
-                    'Number': ['Sing', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot']
                 })
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
