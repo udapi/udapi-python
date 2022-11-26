@@ -5,6 +5,20 @@ import re
 
 class Lemmatize(Block):
 
+    def __init__(self, rewrite='empty', **kwargs):
+        """
+        Create the ud.zh.Lemmatize block instance.
+
+        Args:
+        rewrite=empty: set the lemma if it was empty so far; do not touch the rest
+        rewrite=form: set the lemma if it was empty or equal to form; do not touch the rest
+        rewrite=all: set the lemma regardless of what it was previously
+        """
+        super().__init__(**kwargs)
+        if not re.match(r'^(empty|form|all)$', rewrite):
+            raise ValueError("Unexpected value of parameter 'rewrite'")
+        self.rewrite = rewrite
+
     # dictionary: form --> lemma
     lemma = {
         # The plural suffix -men.
@@ -27,8 +41,11 @@ class Lemmatize(Block):
         of Sino-Tibetan languages is pretty straightforward most of the time,
         as the lemma typically equals to the actual word form.
         """
-        if node.lemma == '' or node.lemma == '_' and node.form != '_' and node.feats['Typo'] != 'Yes':
-            if node.form in self.lemma:
-                node.lemma = self.lemma[node.form]
-            else:
-                node.lemma = node.form
+        if self.rewrite == 'empty' and not (node.lemma == '' or node.lemma == '_' and node.form != '_' and node.feats['Typo'] != 'Yes'):
+            return
+        elif self.rewrite == 'form' and not (node.lemma == node.form or node.lemma == '' or node.lemma == '_' and node.form != '_' and node.feats['Typo'] != 'Yes'):
+            return
+        if node.form in self.lemma:
+            node.lemma = self.lemma[node.form]
+        else:
+            node.lemma = node.form
