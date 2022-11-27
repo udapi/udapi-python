@@ -13,7 +13,7 @@ class BaseReader(Block):
 
     # pylint: disable=too-many-arguments
     def __init__(self, files='-', filehandle=None, zone='keep', bundles_per_doc=0, encoding='utf-8-sig',
-                 sent_id_filter=None, split_docs=False, ignore_sent_id=False, **kwargs):
+                 sent_id_filter=None, split_docs=False, ignore_sent_id=False, merge=False, **kwargs):
         super().__init__(**kwargs)
         if filehandle is not None:
             files = None
@@ -28,6 +28,7 @@ class BaseReader(Block):
             logging.debug('Using sent_id_filter=%s', sent_id_filter)
         self.split_docs = split_docs
         self.ignore_sent_id = ignore_sent_id
+        self.merge = merge
         # `global.Entity` is a header stored in a comment before the first tree of each document in a given CoNLL-U file.
         # In Udapi, it is stored in `document.meta['global.Entity']`, but for technical reasons, we need to temporarily store it in here, the reader.
         # The reason is that `read.Conllu` uses a fast loading interface with `read_trees()`,
@@ -111,43 +112,48 @@ class BaseReader(Block):
             if filehandle is None:
                 self.finished = True
                 return True
-        try:
-            trees = self.read_trees()
-        except NotImplementedError:
-            return False
 
-        document.meta['loaded_from'] = self.filename
-        document.meta['global.Entity'] = self._global_entity
-        if trees and trees[0].newdoc and trees[0].newdoc is not True:
-            document.meta["docname"] = trees[0].newdoc
+        while True:
+            try:
+                trees = self.read_trees()
+            except NotImplementedError:
+                return False
 
-        bundle, last_bundle_id = None, ''
-        for root in trees:
-            add_to_the_last_bundle = False
+            document.meta['loaded_from'] = self.filename
+            document.meta['global.Entity'] = self._global_entity
+            if trees and trees[0].newdoc and trees[0].newdoc is not True:
+                document.meta["docname"] = trees[0].newdoc
 
-            if self.ignore_sent_id:
-                root._sent_id = None
-            elif root._sent_id is not None:
-                parts = root._sent_id.split('/', 1)
-                bundle_id = parts[0]
-                if len(parts) == 2:
-                    root.zone = parts[1]
-                add_to_the_last_bundle = bundle_id == last_bundle_id
-                last_bundle_id = bundle_id
-            if self.zone != 'keep':
-                root.zone = self.zone
+            bundle, last_bundle_id = None, ''
+            for root in trees:
+                add_to_the_last_bundle = False
 
-            # assign new/next bundle to `bundle` if needed
-            if not bundle or not add_to_the_last_bundle:
-                bundle = document.create_bundle()
-                if last_bundle_id != '':
-                    bundle.bundle_id = last_bundle_id
+                if self.ignore_sent_id:
+                    root._sent_id = None
+                elif root._sent_id is not None:
+                    parts = root._sent_id.split('/', 1)
+                    bundle_id = parts[0]
+                    if len(parts) == 2:
+                        root.zone = parts[1]
+                    add_to_the_last_bundle = bundle_id == last_bundle_id
+                    last_bundle_id = bundle_id
+                if self.zone != 'keep':
+                    root.zone = self.zone
 
-            bundle.add_tree(root)
+                # assign new/next bundle to `bundle` if needed
+                if not bundle or not add_to_the_last_bundle:
+                    bundle = document.create_bundle()
+                    if last_bundle_id != '':
+                        bundle.bundle_id = last_bundle_id
 
-        self.next_filehandle()
-        if self.filehandle is None:
-            self.finished = True
+                bundle.add_tree(root)
+
+            self.next_filehandle()
+            if self.filehandle is None:
+                self.finished = True
+                return True
+            if not self.merge:
+                return True
         return True
 
     # pylint: disable=too-many-branches,too-many-statements
@@ -190,7 +196,7 @@ class BaseReader(Block):
             while True:
                 root = self.filtered_read_tree()
                 if root is None:
-                    if trees_loaded == 0 and self.files.has_next_file():
+                    if (trees_loaded == 0 or self.merge) and self.files.has_next_file():
                         filehandle = self.next_filehandle()
                         continue
                     self.finished = not self.files.has_next_file()
