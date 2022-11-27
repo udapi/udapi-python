@@ -60,7 +60,7 @@ class Lemmatize(Block):
             m1 = re.match(r'^(不|没)(.+)$', node.form)
             m2 = re.search(r'([是爲為为])', node.form)
             if m1:
-                node.lemma = m1.group(1)
+                node.lemma = m1.group(2)
                 node.feats['Polarity'] = 'Neg'
             elif m2:
                 node.lemma = m2.group(1)
