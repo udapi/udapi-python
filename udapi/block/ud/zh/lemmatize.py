@@ -45,6 +45,9 @@ class Lemmatize(Block):
             return
         elif self.rewrite == 'form' and not (node.lemma == node.form or node.lemma == '' or node.lemma == '_' and node.form != '_' and node.feats['Typo'] != 'Yes'):
             return
+        # Lemmatize negated verbs to their affirmative forms.
+        # 不是 bùshì = not be
+        # 没有 méiyǒu = not exist
         # Verbs that are derived from the copula and tagged as the copula need
         # to have the lemma of the copula (是 shì 爲 為 为 wèi/wéi).
         # 亦為 亦为 Yì wèi také
@@ -53,13 +56,16 @@ class Lemmatize(Block):
         # 認為 认为 Rènwéi myslet, věřit
         # 以為 以为 Yǐwéi myslet, věřit
         # 以爲 以为 Yǐwéi myslet, věřit
-        m = re.search(r'([是爲為为])', node.form)
-        if m and re.match(r'^(AUX|VERB)$', node.upos):
-            node.lemma = m.group(1)
-            if node.lemma == '爲':
-                node.lemma = '為'
-            if node.form == '不是':
+        if re.match(r'^(AUX|VERB)$', node.upos):
+            m1 = re.match(r'^(不|没)(.+)$', node.form)
+            m2 = re.search(r'([是爲為为])', node.form)
+            if m1:
+                node.lemma = m1.group(1)
                 node.feats['Polarity'] = 'Neg'
+            elif m2:
+                node.lemma = m2.group(1)
+                if node.lemma == '爲':
+                    node.lemma = '為'
         elif node.form in self.lemma:
             node.lemma = self.lemma[node.form]
         else:
