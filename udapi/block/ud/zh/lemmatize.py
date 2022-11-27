@@ -48,6 +48,7 @@ class Lemmatize(Block):
         # Lemmatize negated verbs to their affirmative forms.
         # 不是 bùshì = not be
         # 没有 méiyǒu = not exist
+        # 未能 wèinéng = cannot
         # Verbs that are derived from the copula and tagged as the copula need
         # to have the lemma of the copula (是 shì 爲 為 为 wèi/wéi).
         # 亦為 亦为 Yì wèi také
@@ -57,7 +58,7 @@ class Lemmatize(Block):
         # 以為 以为 Yǐwéi myslet, věřit
         # 以爲 以为 Yǐwéi myslet, věřit
         if re.match(r'^(AUX|VERB)$', node.upos):
-            m1 = re.match(r'^(不|没)(.+)$', node.form)
+            m1 = re.match(r'^([不没未])(.+)$', node.form)
             m2 = re.search(r'([是爲為为])', node.form)
             if m1:
                 node.lemma = m1.group(2)
