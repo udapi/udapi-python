@@ -13,6 +13,7 @@ class Wc(Block):
         """
         super().__init__(**kwargs)
         self.trees, self.words, self.mwts, self.tokens, self.empty = 0, 0, 0, 0, 0
+        self.docs, self.paragraphs = 0, 0
         self.tsv = tsv
 
     def process_tree(self, tree):
@@ -22,13 +23,21 @@ class Wc(Block):
         self.mwts += mwtoks
         self.tokens += len(tree.token_descendants) if mwtoks else len(tree.descendants)
         self.empty += len(tree.empty_nodes)
+        if tree.newdoc:
+            self.docs += 1
+        if tree.newpar:
+            self.paragraphs += 1
 
     def process_end(self):
         if self.tsv:
-            print('\t'.join(map(str, (self.trees, self.words, self.tokens, self.mwts, self.empty))))
+            print('\t'.join(map(str, (self.trees, self.words, self.tokens, self.mwts, self.empty, self.docs, self.paragraphs))))
         else:
             print('%8d trees\n%8d words' % (self.trees, self.words))
             if self.mwts:
                 print('%8d multi-word tokens\n%8d tokens' % (self.mwts, self.tokens))
             if self.empty:
                 print('%8d empty nodes' % self.empty)
+            if self.docs:
+                print('%8d documents' % self.docs)
+            if self.paragraphs:
+                print('%8d paragraphs' % self.paragraphs)
