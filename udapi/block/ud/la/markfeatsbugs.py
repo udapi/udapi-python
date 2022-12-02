@@ -12,15 +12,32 @@ import re
 
 class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
 
+    def __init__(self, flavio=False, **kwargs):
+        """
+        Create the ud.la.MarkFeatsBugs block instance.
+
+        Args:
+        flavio=1: Accept features as defined by Flavio for treebanks he
+            maintains. By default, a more conservative set of features and
+            values is expected.
+        """
+        super().__init__(**kwargs)
+        self.flavio = flavio
+
     def process_node(self, node):
         # NOUNS ################################################################
         if node.upos == 'NOUN':
-            self.check_required_features(node, ['Gender', 'Number', 'Case'])
-            self.check_allowed_features(node, {
+            rf = ['Gender', 'Number', 'Case']
+            af = {
                 'Gender': ['Masc', 'Fem', 'Neut'],
                 'Number': ['Sing', 'Plur'],
                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl'],
-                'Foreign': ['Yes']})
+                'Foreign': ['Yes']}
+            if self.flavio:
+                rf.append('InflClass')
+                af['InflClass'] = ['IndEurA', 'IndEurO', 'IndEurX']
+            self.check_required_features(node, rf)
+            self.check_allowed_features(node, af)
         # PROPER NOUNS #########################################################
         elif node.upos == 'PROPN':
             self.check_required_features(node, ['Gender', 'Number', 'Case'])
@@ -32,13 +49,20 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Foreign': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
-            self.check_required_features(node, ['Gender', 'Number', 'Case', 'Degree'])
-            self.check_allowed_features(node, {
+            rf = ['Gender', 'Number', 'Case', 'Degree']
+            af = {
                 'Gender': ['Masc', 'Fem', 'Neut'],
                 'Number': ['Sing', 'Plur'],
                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl'],
-                'Degree': ['Pos', 'Cmp', 'Sup'],
-                'Foreign': ['Yes']})
+                'Degree': ['Pos', 'Cmp', 'Sup', 'Abs'],
+                'Foreign': ['Yes']}
+            if self.flavio:
+                # Flavio does not use Degree=Pos, hence Degree is not required.
+                rf = [f for f in rf if f != 'Degree']
+                rf.append('InflClass')
+                af['InflClass'] = ['IndEurA', 'IndEurO', 'IndEurX']
+            self.check_required_features(node, rf)
+            self.check_allowed_features(node, af)
         # PRONOUNS #############################################################
         elif node.upos == 'PRON':
             self.check_required_features(node, ['PronType'])
@@ -81,13 +105,19 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']
                 })
             else:
-                self.check_required_features(node, ['PronType', 'Gender', 'Number', 'Case'])
-                self.check_allowed_features(node, {
+                rf = ['PronType', 'Gender', 'Number', 'Case']
+                af = {
                     'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp'],
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']
-                })
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']}
+                if self.flavio:
+                    rf.append('InflClass')
+                    af['PronType'].append('Con')
+                    af['InflClass'] = ['LatPron']
+                    af['Form'] = ['Emp']
+                self.check_required_features(node, rf)
+                self.check_allowed_features(node, af)
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
             self.check_required_features(node, ['NumType', 'NumForm'])
@@ -98,73 +128,52 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumForm': ['Digit', 'Roman']
                 })
             else:
-                self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                self.check_required_features(node, ['NumType', 'NumForm'])
                 self.check_allowed_features(node, {
                     'NumType': ['Card'],
-                    'NumForm': ['Word'],
-                    'Number': ['Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']
+                    'NumForm': ['Word']
                 })
         # VERBS AND AUXILIARIES ################################################
         elif re.match(r'^(VERB|AUX)$', node.upos):
-            self.check_required_features(node, ['Aspect', 'VerbForm'])
-            if node.feats['VerbForm'] == 'Inf':
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf', 'Prosp'],
-                    'VerbForm': ['Inf'],
-                    'Polarity': ['Pos', 'Neg']
-                })
-            elif node.feats['VerbForm'] == 'Fin':
-                if node.feats['Mood'] == 'Imp':
-                    self.check_required_features(node, ['Mood', 'Person', 'Number'])
-                    self.check_allowed_features(node, {
-                        'Aspect': ['Imp', 'Perf', 'Prosp'],
-                        'VerbForm': ['Fin'],
-                        'Mood': ['Imp'],
-                        'Person': ['1', '2', '3'],
-                        'Number': ['Sing', 'Plur'],
-                        'Polarity': ['Pos', 'Neg']
-                    })
-                else: # indicative or subjunctive
-                    self.check_required_features(node, ['Mood', 'Voice', 'Tense', 'Person', 'Number'])
-                    self.check_allowed_features(node, {
-                        'Aspect': ['Imp', 'Perf', 'Prosp'],
-                        'VerbForm': ['Fin'],
-                        'Mood': ['Ind', 'Sub'],
-                        'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
-                        'Voice': ['Act'],
-                        'Person': ['1', '2', '3'],
-                        'Number': ['Sing', 'Plur'],
-                        'Polarity': ['Pos', 'Neg']
-                    })
+            rf = ['Aspect', 'VerbForm']
+            af = {
+                'Aspect': ['Imp', 'Perf', 'Prosp'],
+                'VerbForm': ['Inf', 'Fin', 'Part', 'Vnoun'],
+                'Polarity': ['Pos', 'Neg']}
+            if node.feats['VerbForm'] == 'Fin':
+                rf.extend(['Mood', 'Person', 'Number'])
+                af['Mood'] = ['Ind', 'Sub', 'Imp']
+                af['Person'] = ['1', '2', '3']
+                af['Number'] = ['Sing', 'Plur']
+                if re.match(r'^(Ind|Sub)$', node.feats['Mood']): # indicative or subjunctive
+                    rf.extend(['Voice', 'Tense'])
+                    af['Voice'] = ['Act', 'Pass']
+                    af['Tense'] = ['Past', 'Imp', 'Pres', 'Fut']
             elif node.feats['VerbForm'] == 'Part':
-                self.check_required_features(node, ['Tense', 'Gender', 'Number', 'Voice'])
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf', 'Prosp'],
-                    'VerbForm': ['Part'],
-                    'Tense': ['Past'],
-                    'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
-                    'Number': ['Sing', 'Plur'],
-                    'Gender': ['Masc', 'Fem', 'Neut'],
-                    'Polarity': ['Pos', 'Neg']
-                })
+                rf.extend(['Tense', 'Gender', 'Number', 'Voice'])
+                af['Tense'] = ['Past']
+                af['Voice'] = ['Act']
+                af['Number'] = ['Sing', 'Plur']
+                af['Gender'] = ['Masc', 'Fem', 'Neut']
             else: # verbal noun
-                self.check_required_features(node, ['Tense', 'Number', 'Voice'])
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf', 'Prosp'],
-                    'VerbForm': ['Vnoun'],
-                    'Tense': ['Past', 'Pres'],
-                    'Voice': ['Act'],
-                    'Number': ['Sing', 'Plur'],
-                    'Gender': ['Masc', 'Fem', 'Neut'], # annotated only in singular
-                    'Polarity': ['Pos', 'Neg']
-                })
+                rf.extend(['Tense', 'Voice'])
+                af['Tense'] = ['Past', 'Pres']
+                af['Voice'] = ['Act']
+                af['Gender'] = ['Masc', 'Fem', 'Neut']
+            if self.flavio:
+                # Flavio has killed Tense in his treebanks.
+                rf = [f for f in rf if f != 'Tense']
+                # Flavio added InflClass but not everywhere, so it is not required.
+                af['InflClass'] = ['LatA', 'LatAnom', 'LatE', 'LatI2', 'LatX']
+            self.check_required_features(node, rf)
+            self.check_allowed_features(node, af)
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
             if node.feats['PronType'] != '':
                 # Pronominal adverbs are neither compared nor negated.
                 self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot'],
+                    'AdvType': ['Loc']
                 })
             else:
                 # The remaining adverbs are neither pronominal, nor compared or
