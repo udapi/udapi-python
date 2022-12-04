@@ -27,50 +27,38 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Foreign': ['Yes']})
         # PRONOUNS #############################################################
         elif node.upos == 'PRON':
-            self.check_required_features(node, ['PronType'])
+            rf = ['PronType', 'Case']
+            af = {
+                'PronType': ['Prs', 'Int'], # demonstrative pronouns are treated as third person personal pronouns
+                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+            }
             if node.feats['PronType'] == 'Prs':
+                af['Reflex'] = ['Yes']
                 if node.feats['Reflex'] == 'Yes':
-                    self.check_required_features(node, ['PronType', 'Reflex', 'Case'])
-                    self.check_allowed_features(node, {
-                        'PronType': ['Prs'],
-                        'Reflex': ['Yes'],
-                        'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Abl', 'Ins', 'Cmp']
-                    })
+                    af['Case'] = [c for c in af['Case'] if c != 'Nom' and c != 'Voc']
                 else: # not reflexive
-                    if node.feats['Person'] == '3': # അവൻ avan, അവൾ avaḷ, അത് at, അവർ avaṟ
+                    rf.extend(['Person', 'Number'])
+                    af['Person'] = ['1', '2', '3']
+                    af['Number'] = ['Sing', 'Plur']
+                    # 1st and 2nd person do not have gender: ഞാൻ ñān, നീ nī; or 3rd person താൻ tān̕
+                    if node.feats['Person'] == '3' and not node.lemma == 'താൻ': # അവൻ avan, അവൾ avaḷ, അത് at, അവർ avaṟ; but not താൻ tān̕
+                        rf.append('Deixis')
+                        af['Deixis'] = ['Prox', 'Remt']
                         if node.feats['Number'] == 'Sing':
-                            self.check_required_features(node, ['PronType', 'Person', 'Deixis', 'Gender', 'Number', 'Case'])
-                            self.check_allowed_features(node, {
-                                'PronType': ['Prs'],
-                                'Person': ['3'],
-                                'Deixis': ['Prox', 'Remt'],
-                                'Gender': ['Masc', 'Fem', 'Neut'],
-                                'Number': ['Sing'],
-                                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
-                            })
-                        else: # plural pronouns do not distinguish gender
-                            self.check_required_features(node, ['PronType', 'Person', 'Deixis', 'Number', 'Case'])
-                            self.check_allowed_features(node, {
-                                'PronType': ['Prs'],
-                                'Person': ['3'],
-                                'Deixis': ['Prox', 'Remt'],
-                                'Number': ['Plur'],
-                                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
-                            })
-                    else: # 1st and 2nd person do not have gender: ഞാൻ ñān, നീ nī
-                        self.check_required_features(node, ['PronType', 'Person', 'Number', 'Case'])
-                        self.check_allowed_features(node, {
-                            'PronType': ['Prs'],
-                            'Person': ['1', '2'],
-                            'Number': ['Sing', 'Plur'],
-                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
-                        })
-            else: # not personal
-                self.check_required_features(node, ['PronType', 'Case'])
-                self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
-                })
+                            rf.append('Gender')
+                            af['Gender'] = ['Masc', 'Fem', 'Neut']
+                            # third person singular neuter pronouns also distinguish animacy (animate neuter are animals and plants, they have a different accusative form)
+                            if node.feats['Gender'] == 'Neut':
+                                rf.append('Animacy')
+                                af['Animacy'] = ['Anim', 'Inan']
+                        else: # plural pronouns do not distinguish gender but they do distinguish animacy
+                            rf.append('Animacy')
+                            af['Animacy'] = ['Anim', 'Inan']
+                    elif node.feats['Person'] == '1' and node.feats['Number'] == 'Plur':
+                        rf.append('Clusivity')
+                        af['Clusivity'] = ['In', 'Ex']
+            self.check_required_features(node, rf)
+            self.check_allowed_features(node, af)
         # DETERMINERS ##########################################################
         elif node.upos == 'DET':
             if node.feats['PronType'] == 'Art':
@@ -82,7 +70,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             else:
                 self.check_required_features(node, ['PronType'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot'],
+                    'Deixis': ['Prox', 'Remt']
                 })
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
