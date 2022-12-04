@@ -57,6 +57,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     elif node.feats['Person'] == '1' and node.feats['Number'] == 'Plur':
                         rf.append('Clusivity')
                         af['Clusivity'] = ['In', 'Ex']
+            # Interrogative pronouns, too, can be case-marked. Therefore, the
+            # base form must have Case=Nom.
+            # ആര് ār "who" (Nom) എന്ത് ent "what" (Nom, Acc.Inan)
+            # ആരെ āre "who" (Acc) എന്തെ ente "what" (Acc.Anim) എന്തിനെ entine "what" (Acc.Anim or maybe Inan but optional)
+            # ആരുടെ āruṭe "who" (Gen) എന്തിന് entin "what" (Gen) or "why"
+            # ആരൊക്കെ ārokke "who" (Dat?) എന്തൊക്കെ entokke "what" (Dat?)
+            elif node.feats['PronType'] == 'Int':
+                rf.append('Animacy')
+                af['Animacy'] = ['Anim', 'Inan']
             self.check_required_features(node, rf)
             self.check_allowed_features(node, af)
         # DETERMINERS ##########################################################
@@ -101,13 +110,18 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
             elif node.feats['VerbForm'] == 'Fin':
                 if node.feats['Mood'] == 'Imp':
-                    self.check_required_features(node, ['Mood', 'Voice'])
+                    # Unlike other forms, the imperative distinguishes politeness.
+                    # The verb stem serves as an informal imperative: തുറ tuṟa "open"
+                    # The citation form may serve as a formal imperative: തുറക്കുക tuṟakkūka "open"
+                    # Finally, there is another formal imperative with -kkū: തുറക്കൂ tuṟakkū "open"
+                    self.check_required_features(node, ['Mood', 'Voice', 'Polite'])
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf', 'Prog'],
                         'VerbForm': ['Fin'],
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
-                        'Voice': ['Act', 'Pass', 'Cau']
+                        'Voice': ['Act', 'Pass', 'Cau'],
+                        'Polite': ['Infm', 'Form']
                     })
                 else:
                     self.check_required_features(node, ['Mood', 'Tense', 'Voice'])
