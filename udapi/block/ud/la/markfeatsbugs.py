@@ -4,7 +4,7 @@ finds will be saved in the MISC column as a Bug attribute, which can be later
 used in filters and highlighted in text output.
 
 Usage: cat *.conllu | udapy -HAMX layout=compact ud.la.MarkFeatsBugs > bugs.html
-Windows: python udapy read.Conllu files="a.conllu,b.conllu" ud.la.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
+Windows: python udapy read.Conllu files="a.conllu,b.conllu" merge=1 ud.la.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
 """
 import udapi.block.ud.markfeatsbugs
 import logging
