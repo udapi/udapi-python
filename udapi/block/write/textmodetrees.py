@@ -1,4 +1,5 @@
 """An ASCII pretty printer of dependency trees."""
+import os
 import re
 import sys
 
@@ -344,8 +345,12 @@ class TextModeTrees(BaseWriter):
         super().before_process_document(document)
         if self.color == 'auto':
             self.color = sys.stdout.isatty()
-            if self.color:
-                colorama.init()
+        if self.color:
+            colorama.just_fix_windows_console()
+            # termcolor since 2.1 also autodetects whether sys.stdout.isatty()
+            # and if not, it disables the colors, so `cat i.conllu | udapy -T | less -R"
+            # does not work. We need to turn off termcolor's autodetection with FORCE_COLOR.
+            os.environ["FORCE_COLOR"] = "1"
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
                 print('%s = %s' % (key, value))
