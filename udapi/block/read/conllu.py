@@ -73,7 +73,7 @@ class Conllu(BaseReader):
         if entity_match is not None:
             global_entity = entity_match.group(1)
             if self._global_entity and self._global_entity != global_entity:
-                logging.warning("Mismatch in global.Entity: %s != %s", (self._global_entity, global_entity))
+                logging.warning(f"Mismatch in global.Entity: {self._global_entity} != {global_entity}")
             self._global_entity = global_entity
             root.comment += '$GLOBAL.ENTITY\n'
             return
