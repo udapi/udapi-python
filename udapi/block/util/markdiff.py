@@ -9,7 +9,7 @@ class MarkDiff(Block):
     """Mark differences between parallel trees."""
 
     def __init__(self, gold_zone, attributes='form,lemma,upos,xpos,deprel,feats,misc',
-                 mark=1, add=False, print_stats=0, **kwargs):
+                 mark=1, add=False, print_stats=0, ignore_parent=False, **kwargs):
         """Create the Mark block object.
         Params:
         gold_zone: Which of the zones should be treated as gold?
@@ -20,6 +20,7 @@ class MarkDiff(Block):
         add: If False, node.misc attributes Mark, ToDo and Bug will be deleted before running this block,
             so that the marked_only option (e.g. via `udapy -TM`) prints only nodes marked by this block.
         print_stats: How many lines of statistics should be printed? -1 means all.
+        ignore_parent: ignore differences in dependency parents
         """
         super().__init__(**kwargs)
         self.gold_zone = gold_zone
@@ -27,6 +28,7 @@ class MarkDiff(Block):
         self.mark = mark
         self.add = add
         self.print_stats = print_stats
+        self.ignore_parent = ignore_parent
         self.stats = collections.Counter()
 
     def process_tree(self, tree):
@@ -60,7 +62,7 @@ class MarkDiff(Block):
             edit, pred_lo, pred_hi, gold_lo, gold_hi = diff
             if edit == 'equal':
                 for p_node, g_node in zip(pred_nodes[pred_lo:pred_hi], gold_nodes[gold_lo:gold_hi]):
-                    if alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
+                    if not self.ignore_parent and alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
                         p_node.misc['Mark'] = self.mark
                         g_node.misc['Mark'] = self.mark
                         self.stats['ONLY-PARENT-CHANGED'] += 1
@@ -76,7 +78,7 @@ class MarkDiff(Block):
                                 p_value, g_value = p_node._get_attr(attr), g_node._get_attr(attr)
                                 if p_value != g_value:
                                     self.stats[f'{attr.upper()}: {p_value} -> {g_value}'] += 1
-                            if alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
+                            if not self.ignore_parent and alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
                                 self.stats['PARENT-CHANGED'] += 1
                         pred_lo, gold_lo = pred_lo + n, gold_lo + n
                     for node in gold_nodes[gold_lo:gold_hi]:
