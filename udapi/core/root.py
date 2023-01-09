@@ -95,12 +95,13 @@ class Root(Node):
         if self._bundle:
             self._bundle.check_zone(zone)
         self._zone = zone
+        slashzone = '/' + zone if zone else ''
         if self._bundle is not None:
-            self._sent_id = self._bundle.address() + '/' + zone
+            self._sent_id = self._bundle.address() + slashzone
         elif self._sent_id:
-            self._sent_id = self._sent_id.split('/', 1)[0] + '/' + zone
+            self._sent_id = self._sent_id.split('/', 1)[0] + slashzone
         else:
-            self._sent_id = '?/' + zone
+            self._sent_id = '?' + slashzone
 
     @property
     def parent(self):
