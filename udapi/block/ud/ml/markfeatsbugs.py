@@ -19,7 +19,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             self.check_allowed_features(node, {
                 'Animacy': ['Anim', 'Inan'],
                 'Number': ['Sing', 'Plur'],
-                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp'],
+                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp'],
                 'Foreign': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
@@ -30,7 +30,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             rf = ['PronType', 'Case']
             af = {
                 'PronType': ['Prs', 'Int'], # demonstrative pronouns are treated as third person personal pronouns
-                'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
             }
             if node.feats['PronType'] == 'Prs':
                 af['Reflex'] = ['Yes']
@@ -97,7 +97,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumType': ['Card'],
                     'NumForm': ['Word'],
                     'Number': ['Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                    'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
                 })
         # VERBS ################################################################
         elif node.upos == 'VERB':
