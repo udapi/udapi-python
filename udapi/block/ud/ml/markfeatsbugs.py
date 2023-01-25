@@ -193,7 +193,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'VerbForm': ['Fin'],
                     'Mood': ['Ind', 'Sub'],
                     'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
-                    'Polarity': ['Pos', 'Neg']
+                    'Polarity': ['Pos', 'Neg'],
                     'Typo': ['Yes']
                 })
         # ADVERBS ##############################################################
