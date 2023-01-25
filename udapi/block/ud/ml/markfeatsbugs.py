@@ -174,28 +174,45 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
+                    # We only annotate case of verbal nouns if it is not Nom, i.e., there is an actual case suffix.
+                    'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
                     'Typo': ['Yes']
                 })
         # AUXILIARIES ##########################################################
         elif node.upos == 'AUX':
             self.check_required_features(node, ['VerbForm'])
-            if node.feats['Mood'] == 'Imp':
-                self.check_required_features(node, ['Mood'])
+            if node.feats['VerbForm'] == 'Fin':
+                if node.feats['Mood'] == 'Imp':
+                    self.check_required_features(node, ['Mood'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf', 'Prog'],
+                        'VerbForm': ['Fin'],
+                        'Mood': ['Imp'],
+                        'Polarity': ['Pos', 'Neg'],
+                        'Typo': ['Yes']
+                    })
+                else: # indicative or subjunctive
+                    self.check_required_features(node, ['Mood', 'Tense'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf', 'Prog'],
+                        'VerbForm': ['Fin'],
+                        'Mood': ['Ind', 'Sub'],
+                        'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
+                        'Polarity': ['Pos', 'Neg'],
+                        'Typo': ['Yes']
+                    })
+            else: # verbal noun
+                # The "actual Malayalam verbal noun" (unlike the "nominalized form") does not inflect for Tense and Voice.
+                # Currently both forms are VerbForm=Vnoun.
+                #self.check_required_features(node, ['Tense', 'Voice'])
                 self.check_allowed_features(node, {
                     'Aspect': ['Imp', 'Perf', 'Prog'],
-                    'VerbForm': ['Fin'],
-                    'Mood': ['Imp'],
+                    'VerbForm': ['Vnoun'],
+                    'Tense': ['Past', 'Pres'],
+                    'Gender': ['Masc', 'Fem', 'Neut'],
                     'Polarity': ['Pos', 'Neg'],
-                    'Typo': ['Yes']
-                })
-            else: # indicative or subjunctive
-                self.check_required_features(node, ['Mood', 'Tense'])
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf', 'Prog'],
-                    'VerbForm': ['Fin'],
-                    'Mood': ['Ind', 'Sub'],
-                    'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
-                    'Polarity': ['Pos', 'Neg'],
+                    # We only annotate case of verbal nouns if it is not Nom, i.e., there is an actual case suffix.
+                    'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
                     'Typo': ['Yes']
                 })
         # ADVERBS ##############################################################
