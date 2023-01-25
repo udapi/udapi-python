@@ -202,7 +202,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf', 'Prog'],
                         'VerbForm': ['Fin'],
-                        'Mood': ['Ind', 'Sub'],
+                        'Mood': ['Ind', 'Sub', 'Cnd'],
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
                         'Typo': ['Yes']
