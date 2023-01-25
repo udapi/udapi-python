@@ -86,12 +86,22 @@ class TextModeTreesHtml(TextModeTrees):
 
     def process_bundle(self, bundle):
         if self.zones_in_rows:
-            print("<table><tr>")
+            # Don't print <table><tr></tr></table> if no tree will be printed in this bundle.
+            marked_trees = []
             for tree in bundle:
                 if self._should_process_tree(tree):
+                    if self.print_empty:
+                        allnodes = [tree] + tree.descendants_and_empty
+                    else:
+                        allnodes = tree.descendants(add_self=1)
+                if self.should_print_tree(tree, allnodes):
+                    marked_trees.append(tree)
+            if marked_trees:
+                print("<table><tr>")
+                for tree in marked_trees:
                     print("<td>")
                     self.process_tree(tree)
                     print("</td>")
-            print("</tr></table>")
+                print("</tr></table>")
         else:
             super().process_bundle(bundle)
