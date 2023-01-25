@@ -25,6 +25,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
             self.check_allowed_features(node, {
+                'VerbForm': ['Part'],
                 'Foreign': ['Yes'],
                 'Typo': ['Yes']})
         # PRONOUNS #############################################################
@@ -66,9 +67,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             # ആരെ āre "who" (Acc) എന്തെ ente "what" (Acc.Anim) എന്തിനെ entine "what" (Acc.Anim or maybe Inan but optional)
             # ആരുടെ āruṭe "who" (Gen) എന്തിന് entin "what" (Gen) or "why"
             # ആരൊക്കെ ārokke "who" (Dat?) എന്തൊക്കെ entokke "what" (Dat?)
-            elif node.feats['PronType'] == 'Int':
-                rf.append('Animacy')
-                af['Animacy'] = ['Anim', 'Inan']
+            #elif node.feats['PronType'] == 'Int':
+            #    rf.append('Animacy')
+            #    af['Animacy'] = ['Anim', 'Inan']
             self.check_required_features(node, rf)
             self.check_allowed_features(node, af)
         # DETERMINERS ##########################################################
@@ -122,13 +123,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # The verb stem serves as an informal imperative: തുറ tuṟa "open"
                     # The citation form may serve as a formal imperative: തുറക്കുക tuṟakkūka "open"
                     # Finally, there is another formal imperative with -kkū: തുറക്കൂ tuṟakkū "open"
-                    self.check_required_features(node, ['Mood', 'Voice', 'Polite'])
+                    self.check_required_features(node, ['Mood', 'Polite'])
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf', 'Prog'],
                         'VerbForm': ['Fin'],
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
-                        'Voice': ['Act', 'Pass', 'Cau'],
                         'Polite': ['Infm', 'Form'],
                         'Typo': ['Yes']
                     })
@@ -164,7 +164,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Typo': ['Yes']
                 })
             else: # verbal noun
-                self.check_required_features(node, ['Tense', 'Voice'])
+                # The "actual Malayalam verbal noun" (unlike the "nominalized form") does not inflect for Tense and Voice.
+                # Currently both forms are VerbForm=Vnoun.
+                #self.check_required_features(node, ['Tense', 'Voice'])
                 self.check_allowed_features(node, {
                     'Aspect': ['Imp', 'Perf', 'Prog'],
                     'VerbForm': ['Vnoun'],
