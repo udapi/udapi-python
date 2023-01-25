@@ -115,6 +115,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'VerbForm': ['Inf'],
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
+                    'Foreign': ['Yes'],
                     'Typo': ['Yes']
                 })
             elif node.feats['VerbForm'] == 'Fin':
@@ -130,6 +131,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
                         'Polite': ['Infm', 'Form'],
+                        'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
                 elif node.feats['Mood'] == 'Nec':
@@ -140,6 +142,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Nec'],
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
+                        'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
                 else:
@@ -151,6 +154,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
+                        'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
             elif node.feats['VerbForm'] == 'Part':
@@ -161,6 +165,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Tense': ['Past'],
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
+                    'Foreign': ['Yes'],
                     'Typo': ['Yes']
                 })
             else: # verbal noun
@@ -176,6 +181,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Voice': ['Act', 'Pass', 'Cau'],
                     # We only annotate case of verbal nouns if it is not Nom, i.e., there is an actual case suffix.
                     'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                    'Foreign': ['Yes'],
                     'Typo': ['Yes']
                 })
         # AUXILIARIES ##########################################################
