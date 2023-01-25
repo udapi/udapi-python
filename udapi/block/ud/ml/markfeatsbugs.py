@@ -32,7 +32,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'PRON':
             rf = ['PronType', 'Case']
             af = {
-                'PronType': ['Prs', 'Int'], # demonstrative pronouns are treated as third person personal pronouns
+                'PronType': ['Prs', 'Int', 'Ind'], # demonstrative pronouns are treated as third person personal pronouns
                 'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
                 'Typo': ['Yes']
             }
@@ -150,7 +150,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf', 'Prog'],
                         'VerbForm': ['Fin'],
-                        'Mood': ['Ind', 'Pot'],
+                        'Mood': ['Ind', 'Pot', 'Cnd'],
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
