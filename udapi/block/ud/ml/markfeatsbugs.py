@@ -19,18 +19,21 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             self.check_allowed_features(node, {
                 'Animacy': ['Anim', 'Inan'],
                 'Number': ['Sing', 'Plur'],
-                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp'],
-                'Foreign': ['Yes']})
+                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Foreign': ['Yes'],
+                'Typo': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
             self.check_allowed_features(node, {
-                'Foreign': ['Yes']})
+                'Foreign': ['Yes'],
+                'Typo': ['Yes']})
         # PRONOUNS #############################################################
         elif node.upos == 'PRON':
             rf = ['PronType', 'Case']
             af = {
                 'PronType': ['Prs', 'Int'], # demonstrative pronouns are treated as third person personal pronouns
-                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Typo': ['Yes']
             }
             if node.feats['PronType'] == 'Prs':
                 af['Reflex'] = ['Yes']
@@ -74,13 +77,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_required_features(node, ['PronType', 'Definite'])
                 self.check_allowed_features(node, {
                     'PronType': ['Art'],
-                    'Definite': ['Ind']
+                    'Definite': ['Ind'],
+                    'Typo': ['Yes']
                 })
             else:
                 self.check_required_features(node, ['PronType'])
                 self.check_allowed_features(node, {
                     'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot'],
-                    'Deixis': ['Prox', 'Remt']
+                    'Deixis': ['Prox', 'Remt'],
+                    'Typo': ['Yes']
                 })
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
@@ -89,24 +94,27 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             if re.match(r'^(Digit|Roman)$', node.feats['NumForm']):
                 self.check_allowed_features(node, {
                     'NumType': ['Card'],
-                    'NumForm': ['Digit', 'Roman']
+                    'NumForm': ['Digit', 'Roman'],
+                    'Typo': ['Yes']
                 })
             else:
-                self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                self.check_required_features(node, ['NumType', 'NumForm', 'Case'])
                 self.check_allowed_features(node, {
                     'NumType': ['Card'],
                     'NumForm': ['Word'],
                     'Number': ['Plur'],
-                    'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp']
+                    'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                    'Typo': ['Yes']
                 })
         # VERBS ################################################################
         elif node.upos == 'VERB':
-            self.check_required_features(node, ['VerbForm', 'Voice'])
+            self.check_required_features(node, ['VerbForm'])
             if node.feats['VerbForm'] == 'Inf':
                 self.check_allowed_features(node, {
                     'VerbForm': ['Inf'],
                     'Polarity': ['Pos', 'Neg'],
-                    'Voice': ['Act', 'Pass', 'Cau']
+                    'Voice': ['Act', 'Pass', 'Cau'],
+                    'Typo': ['Yes']
                 })
             elif node.feats['VerbForm'] == 'Fin':
                 if node.feats['Mood'] == 'Imp':
@@ -121,26 +129,39 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
-                        'Polite': ['Infm', 'Form']
+                        'Polite': ['Infm', 'Form'],
+                        'Typo': ['Yes']
+                    })
+                elif node.feats['Mood'] == 'Nec':
+                    self.check_required_features(node, ['Mood', 'Voice'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf', 'Prog'],
+                        'VerbForm': ['Fin'],
+                        'Mood': ['Nec'],
+                        'Polarity': ['Pos', 'Neg'],
+                        'Voice': ['Act', 'Pass', 'Cau'],
+                        'Typo': ['Yes']
                     })
                 else:
                     self.check_required_features(node, ['Mood', 'Tense', 'Voice'])
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf', 'Prog'],
                         'VerbForm': ['Fin'],
-                        'Mood': ['Ind', 'Nec'],
+                        'Mood': ['Ind', 'Pot'],
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
-                        'Voice': ['Act', 'Pass', 'Cau']
+                        'Voice': ['Act', 'Pass', 'Cau'],
+                        'Typo': ['Yes']
                     })
             elif node.feats['VerbForm'] == 'Part':
-                self.check_required_features(node, ['Tense', 'Voice'])
+                self.check_required_features(node, ['Tense'])
                 self.check_allowed_features(node, {
                     'Aspect': ['Imp', 'Perf', 'Prog'],
                     'VerbForm': ['Part'],
                     'Tense': ['Past'],
                     'Polarity': ['Pos', 'Neg'],
-                    'Voice': ['Act', 'Pass', 'Cau']
+                    'Voice': ['Act', 'Pass', 'Cau'],
+                    'Typo': ['Yes']
                 })
             else: # verbal noun
                 self.check_required_features(node, ['Tense', 'Voice'])
@@ -151,6 +172,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
+                    'Typo': ['Yes']
                 })
         # AUXILIARIES ##########################################################
         elif node.upos == 'AUX':
@@ -161,7 +183,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Aspect': ['Imp', 'Perf', 'Prog'],
                     'VerbForm': ['Fin'],
                     'Mood': ['Imp'],
-                    'Polarity': ['Pos', 'Neg']
+                    'Polarity': ['Pos', 'Neg'],
+                    'Typo': ['Yes']
                 })
             else: # indicative or subjunctive
                 self.check_required_features(node, ['Mood', 'Tense'])
@@ -171,23 +194,26 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Mood': ['Ind', 'Sub'],
                     'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                     'Polarity': ['Pos', 'Neg']
+                    'Typo': ['Yes']
                 })
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
             if node.feats['PronType'] != '':
                 # Pronominal adverbs are neither compared nor negated.
                 self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot'],
+                    'Typo': ['Yes']
                 })
             else:
                 # The remaining adverbs are neither pronominal, nor compared or
                 # negated.
-                self.check_allowed_features(node, {})
+                self.check_allowed_features(node, {'Typo': ['Yes']})
         # PARTICLES ############################################################
         elif node.upos == 'PART':
             self.check_allowed_features(node, {
-                'Polarity': ['Neg']
+                'Polarity': ['Neg'],
+                'Typo': ['Yes']
             })
         # THE REST: NO FEATURES ################################################
         else:
-            self.check_allowed_features(node, {})
+            self.check_allowed_features(node, {'Typo': ['Yes']})
