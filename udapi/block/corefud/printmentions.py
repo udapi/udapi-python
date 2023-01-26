@@ -10,7 +10,7 @@ class PrintMentions(Block):
     def __init__(self, continuous='include', almost_continuous='include', treelet='include',
                  forest='include', almost_forest='include', oneword='include', singleton='include',
                  empty='include', max_trees=0, html=False, shuffle=True, print_other_forms=5,
-                 print_total=True,
+                 print_total=True, print_should=True,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color=True, attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
@@ -33,6 +33,7 @@ class PrintMentions(Block):
             random.seed(42)
         self.print_other_forms = print_other_forms
         self.print_total = print_total,
+        self.print_should = print_should,
         print_class = TextModeTreesHtml if html else TextModeTrees
         self.print_block = print_class(
                 print_sent_id=print_sent_id, print_text=print_text, add_empty_line=add_empty_line, indent=indent,
@@ -61,7 +62,9 @@ class PrintMentions(Block):
         return (condition and value == 'only') or (not condition and value=='exclude')
 
     def _is_auxiliary_etc(self, node):
-        if node.udeprel in {'case', 'cc', 'punct', 'conj', 'mark', 'appos', 'vocative'}:
+        if node.udeprel in {'case', 'cc', 'conj', 'mark', 'appos', 'vocative', 'discourse'}:
+            return True
+        if node.deprel == 'advmod:emph':
             return True
         if node.udeprel == 'dep' and node.upos in {'ADP', 'SCONJ', 'CCONJ', 'PUNCT'}:
             return True
@@ -79,8 +82,25 @@ class PrintMentions(Block):
             for ch in w.children:
                 if ch not in mwords:
                     if not almost:
+                        if self.print_should:
+                            ch.misc["ShouldBeInSpanOf"] = mention.entity.eid
                         return False
+                    # Punctuation before or after the mention span can depend on any of the mwords
+                    # without breaking the almost_forest property.
+                    # According to the UD guidelines, it should depend on the highest node within the phrase,
+                    # i.e. on the mention head, but it is not our goal now to check UD punctuation guidelines.
+                    if ch.udeprel == 'punct' and (ch < mention.words[0] or ch > mention.words[-1]):
+                        continue
+                    # Some auxiliary words (e.g. prepositions) may be excluded from the mention span
+                    # without breaking the almost_forest property, but they need to depend
+                    # on the mention head (or if the mention is not a catena, they need to depend
+                    # on one of the potential heads, i.e. a node from mwords whose parent is not in mwords).
+                    # For example: "A gift for (e1 John)" is almost_forest ("for" depends on "John" which is the mention head),
+                    # but          "(e1[1/2] John) with (e1[2/2]) Mary" is not almost_forest
+                    # because "with" depends on "Mary", which is not the mention head (nor a potential mention head).
                     if not (w.parent and w.parent not in mwords and self._is_auxiliary_etc(ch)):
+                        if self.print_should:
+                            ch.misc["ShouldBeInSpanOf"] = mention.entity.eid
                         return False
         return True
 
