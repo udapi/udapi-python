@@ -13,8 +13,17 @@ import re
 class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
 
     def process_node(self, node):
+        # FOREIGN WORDS ########################################################
+        # Do not put any restrictions on words that have Foreign=Yes. These may
+        # also have Lang=xx in MISC, which would mean that the official
+        # validator would judge them by the rules for language [xx]. But even
+        # if they are not fully code-switched (e.g. because they are written in
+        # the Malayalam script, like the English verb പ്ലാന്റ് plānṟ "plant"),
+        # they still may not have the regular features of Malayalam morphology.
+        if node.feats['Foreign'] == 'Yes':
+            pass
         # NOUNS AND PROPER NOUNS ###############################################
-        if re.match(r'^(NOUN|PROPN)$', node.upos):
+        elif re.match(r'^(NOUN|PROPN)$', node.upos):
             self.check_required_features(node, ['Animacy', 'Number', 'Case'])
             self.check_allowed_features(node, {
                 'Animacy': ['Anim', 'Inan'],
