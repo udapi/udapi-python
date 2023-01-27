@@ -242,6 +242,13 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # The remaining adverbs are neither pronominal, nor compared or
                 # negated.
                 self.check_allowed_features(node, {'Typo': ['Yes']})
+        # ADPOSITIONS ##########################################################
+        elif node.upos == 'ADP':
+            self.check_allowed_features(node, {
+                # Case suffixes after numbers are separate tokens, they are attached
+                # via the 'case' relation and they bear the Case feature (the number does not).
+                'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Typo': ['Yes']})
         # PARTICLES ############################################################
         elif node.upos == 'PART':
             self.check_allowed_features(node, {
