@@ -18,7 +18,8 @@ class CorefHtml(BaseWriter):
         #print('<link rel="stylesheet" href="coref.css">')
         print('<style>\n'
               'span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}\n'
-              '.empty {color: gray;}\n.singleton {color: rgb(0,0,100);}\n'
+              '.empty {color: gray;}\n.singleton {border-style: dotted;}\n'
+              '.crossing:before {content: "!"; display: block; background: #ffd500;}\n'
               '.active {border: 1px solid red;}\n.selected {background: red !important;}\n'
               '.other {background: hsl(0, 0%, 85%);}')
         for i, etype in enumerate(ETYPES):
@@ -45,6 +46,22 @@ class CorefHtml(BaseWriter):
               ');\n</script>')
         print('</body></html>')
 
+    def _start_subspan(self, subspan, mention_ids, crossing=False):
+        m = subspan.mention
+        e = m.entity
+        classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"}'
+        title = f'eid={subspan.subspan_eid}\ntype={e.etype}\nhead={m.head.form}'
+        if all(w.is_empty() for w in subspan.words):
+            classes += ' empty'
+        if len(e.mentions) == 1:
+            classes += ' singleton'
+        if crossing:
+            classes += ' crossing'
+            title += '\ncrossing'
+        if m.other:
+            title += f'\n{m.other}'
+        print(f'<span class="{classes}" title="{title}">', end='') #data-eid="{e.eid}"
+
     def process_tree(self, tree, mention_ids):
         mentions = set()
         nodes_and_empty = tree.descendants_and_empty
@@ -62,19 +79,7 @@ class CorefHtml(BaseWriter):
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
-                m = subspan.mention
-                e = m.entity
-                classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"}'
-                if all(w.is_empty() for w in subspan.words):
-                    classes += ' empty'
-                if len(e.mentions) == 1:
-                    classes += ' singleton'
-
-                title = f'eid={subspan.subspan_eid}\ntype={e.etype}\nhead={m.head.form}'
-                if m.other:
-                    title += f'\n{m.other}'
-                print(f'<span class="{classes}" title="{title}">', end='') #data-eid="{e.eid}"
-
+                self._start_subspan(subspan, mention_ids)
                 opened.append(subspan)
             
             is_head = self._is_head(node)
@@ -91,6 +96,29 @@ class CorefHtml(BaseWriter):
             while opened and opened[-1].words[-1] == node:
                 print('</span>', end='')
                 opened.pop()
+
+            # Two mentions are crossing iff their spans have non-zero intersection,
+            # but neither is a subset of the other, e.g. (e1 ... (e2 ... e1) ... e2).
+            # Let's visualize this (simplified) as
+            # <span class=e1>...<span class=e2>...</span></span><span class="e2 crossing">...</span>
+            # i.e. let's split mention e2 into two subspans which are next to each other.
+            # Unfortunatelly, we cannot mark now both crossing mentions using html class "crossing"
+            # (opening tags are already printed), so we'll mark only the second part of the second mention.
+            endings = [x for x in opened if x.words[-1] == node]
+            if endings:
+                new_opened, brokens, found_crossing = [], [], False
+                for subspan in opened:
+                    if subspan.words[-1] == node:
+                        found_crossing = True
+                    elif found_crossing:
+                        brokens.append(subspan)
+                    else:
+                        new_opened.append(subspan)
+                opened = new_opened
+                print('</span>' * (len(endings) + len(brokens)), end='')
+                for broken in brokens:
+                    self._start_subspan(broken, mention_ids, True)
+                    opened.append(subspan)
 
             if not node.no_space_after:
                 print(' ', end='')
