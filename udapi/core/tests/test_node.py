@@ -119,7 +119,7 @@ class TestDocument(unittest.TestCase):
             sys.stdout = sys.__stdout__  # pylint: disable=redefined-variable-type
 
     def test_feats(self):
-        """Test the morphological featrues."""
+        """Test the morphological features."""
         node = Node(root=None)
         self.assertEqual(str(node.feats), '_')
         node.feats = ''
@@ -144,6 +144,29 @@ class TestDocument(unittest.TestCase):
         node.feats = '_'
         self.assertEqual(str(node.feats), '_')
         self.assertEqual(node.feats, {})
+
+    def test_deprel(self):
+        """Test getting setting the dependency relation."""
+        node = Node(root=None, deprel='acl:relcl')
+        self.assertEqual(node.deprel, 'acl:relcl')
+        self.assertEqual(node.udeprel, 'acl')
+        self.assertEqual(node.sdeprel, 'relcl')
+        node.udeprel = 'advcl'
+        self.assertEqual(node.deprel, 'advcl:relcl')
+        node.sdeprel = 'tcl'
+        self.assertEqual(node.deprel, 'advcl:tcl')
+        node.sdeprel = ''
+        self.assertEqual(node.deprel, 'advcl')
+        self.assertEqual(node.udeprel, 'advcl')
+        self.assertEqual(node.sdeprel, '')
+        node.udeprel = 'nsubj'
+        self.assertEqual(node.deprel, 'nsubj')
+        self.assertEqual(node.udeprel, 'nsubj')
+        self.assertEqual(node.sdeprel, '')
+        node.udeprel = 'nsubj:pass:outer'
+        self.assertEqual(node.deprel, 'nsubj:pass:outer')
+        self.assertEqual(node.udeprel, 'nsubj')
+        self.assertEqual(node.sdeprel, 'pass:outer')
 
     def test_deps_getter(self):
         """Test enhanced dependencies."""

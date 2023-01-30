@@ -166,6 +166,14 @@ class Node(object):
             return parts[1]
         return ''
 
+    @sdeprel.setter
+    def sdeprel(self, value):
+        udeprel = self.udeprel
+        if value is not None and value != '':
+            self.deprel = udeprel + ':' + value
+        else:
+            self.deprel = udeprel
+
     @property
     def feats(self):
         """Property for morphological features stored as a `Feats` object.
