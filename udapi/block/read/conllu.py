@@ -193,7 +193,11 @@ class Conllu(BaseReader):
 
         # Create multi-word tokens.
         for fields in mwts:
-            range_start, range_end = fields[0].split('-')
+            try:
+                range_start, range_end = fields[0].split('-')
+            except ValueError:
+                logging.warning(f"Wrong MWT range in\n{fields[0]}\n\n{lines}")
+                raise
             words = nodes[int(range_start):int(range_end) + 1]
             root.create_multiword_token(words, form=fields[1], misc=fields[-1])
 
