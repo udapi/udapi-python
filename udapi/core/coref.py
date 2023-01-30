@@ -128,6 +128,17 @@ class CorefMention(object):
                     new_word._mentions.append(self)
                     new_word._mentions.sort()
 
+    def _subspans(self):
+        mspan = self.span
+        if ',' not in mspan:
+            return [CorefMentionSubspan(self._words, self, '')]
+        root = self._words[0].root
+        subspans = mspan.split(',')
+        result = []
+        for idx,subspan in enumerate(subspans, 1):
+            result.append(CorefMentionSubspan(span_to_nodes(root, subspan), self, f'[{idx}/{len(subspans)}]'))
+        return result
+
     def __lt__(self, another):
         """Does this mention precedes (word-order wise) `another` mention?
 
@@ -245,6 +256,32 @@ class CorefMention(object):
     @span.setter
     def span(self, new_span):
         self.words = span_to_nodes(self._head.root, new_span)
+
+
+@functools.total_ordering
+class CorefMentionSubspan(object):
+    """Helper class for representing a continuous subspan of a mention."""
+    __slots__ = ['words', 'mention', 'subspan_id']
+
+    def __init__(self, words, mention, subspan_id):
+        if not words:
+            raise ValueError("mention.words must be non-empty")
+        self.words = sorted(words)
+        self.mention = mention
+        self.subspan_id = subspan_id
+
+    def __lt__(self, another):
+        if self.words[0] is another.words[0]:
+            if len(self.words) > len(another.words):
+                return True
+            if  len(self.words) < len(another.words):
+                return False
+            assert False
+        return self.words[0].precedes(another.words[0])
+
+    @property
+    def subspan_eid(self):
+        return self.mention._entity.eid + self.subspan_id
 
 
 CHARS_FORBIDDEN_IN_ID = "-=| \t()"
@@ -886,7 +923,7 @@ def nodes_to_span(nodes):
     Note that empty nodes may form gaps in the span, so if a given tree contains
     an empty node with ord 5.1, but only nodes with ords 3, 4, 5, 6, 7.1 and 7.2
     are provided as `nodes`, the resulting string will be "3-5,6,7.1-7.2".
-    This means that the implementation needs to iterate of all nodes
+    This means that the implementation needs to iterate over all nodes
     in a given tree (root.descendants_and_empty) to check for such gaps.
     """
     if not nodes:

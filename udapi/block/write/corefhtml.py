@@ -44,44 +44,30 @@ class CorefHtml(BaseWriter):
             for m in node.coref_mentions:
                 mentions.add(m)
 
-        sent_mentions = []
+        subspans = []
         for mention in mentions:
-            mspan = mention.span
-            if ',' not in mspan:
-                sent_mentions.append(mention)
-            else:
-                entity = mention.entity
-                head_str = str(mention.words.index(mention.head) + 1)
-                subspans = mspan.split(',')
-                for idx,subspan in enumerate(subspans, 1):
-                    subspan_eid = f'{entity.eid}[{idx}/{len(subspans)}]'
-                    subspan_words = span_to_nodes(tree, subspan)
-                    fake_entity = CorefEntity(subspan_eid, entity.etype)
-                    fake_mention = CorefMention(subspan_words, head_str, fake_entity, add_word_backlinks=False)
-                    if mention._other:
-                        fake_mention._other = mention._other
-                    if mention._bridging and idx == 1:
-                        fake_mention._bridging = mention._bridging
-                    sent_mentions.append(fake_mention)
-        sent_mentions.sort(reverse=True)
+            subspans.extend(mention._subspans())
+        subspans.sort(reverse=True)
 
         opened = []
         print('<p>')
         for node in nodes_and_empty:
-            while sent_mentions and sent_mentions[-1].words[0] == node:
-                m = sent_mentions.pop()
+            while subspans and subspans[-1].words[0] == node:
+                subspan = subspans.pop()
+                m = subspan.mention
                 e = m.entity
                 classes = f'{e.eid} {e.etype or "other"}'
-                if all(w.is_empty() for w in m.words):
+                if all(w.is_empty() for w in subspan.words):
                     classes += ' empty'
                 if len(e.mentions) == 1:
                     classes += ' singleton'
-                title = f'eid={e.eid}\ntype={e.etype}\nhead={m.head.form}'
-                print(f'<span class="{classes}" data-eid="{e.eid}" title="{title}"', end='')
+
+                title = f'eid={subspan.subspan_eid}\ntype={e.etype}\nhead={m.head.form}'
                 if m.other:
-                    print(f'\n{m.other}', end='')
-                print('">', end='')
-                opened.append(m)
+                    title += f'\n{m.other}'
+                print(f'<span class="{classes}" title="{title}">', end='') #data-eid="{e.eid}"
+
+                opened.append(subspan)
             
             is_head = self._is_head(node)
             if is_head:
