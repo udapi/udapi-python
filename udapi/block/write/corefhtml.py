@@ -18,26 +18,34 @@ class CorefHtml(BaseWriter):
         #print('<link rel="stylesheet" href="coref.css">')
         print('<style>\n'
               'span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}\n'
-              '.empty {color: gray;}\n'
-              '.singleton {color: rgb(0,0,100);}\n'
-              '.selected {background: red !important;}\n'
-              '.other{ background: hsl(0, 0%, 85%);}')
+              '.empty {color: gray;}\n.singleton {color: rgb(0,0,100);}\n'
+              '.active {border: 1px solid red;}\n.selected {background: red !important;}\n'
+              '.other {background: hsl(0, 0%, 85%);}')
         for i, etype in enumerate(ETYPES):
-            print(f'.{etype}{{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
+            print(f'.{etype} {{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
         print('</style>')
         print('</head>\n<body>')
 
+        mention_ids = {}
+        for entity in doc.coref_entities:
+            for idx, mention in enumerate(entity.mentions, 1):
+                mention_ids[mention] = f'{entity.eid}e{idx}'
+
         for tree in doc.trees:
-            self.process_tree(tree)
+            self.process_tree(tree, mention_ids)
 
         print('<script>\n$("span").click(function(e) {\n'
               ' let was_selected = $(this).hasClass("selected");\n'
               ' $("span").removeClass("selected");\n'
               ' if (!was_selected){$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}\n'
-              ' e.stopPropagation();\n});\n</script>')
+              ' e.stopPropagation();\n});\n'
+              '$("span").hover(\n'
+              ' function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},\n'
+              ' function(e) {$("span").removeClass("active");}\n'
+              ');\n</script>')
         print('</body></html>')
 
-    def process_tree(self, tree):
+    def process_tree(self, tree, mention_ids):
         mentions = set()
         nodes_and_empty = tree.descendants_and_empty
         for node in nodes_and_empty:
@@ -56,7 +64,7 @@ class CorefHtml(BaseWriter):
                 subspan = subspans.pop()
                 m = subspan.mention
                 e = m.entity
-                classes = f'{e.eid} {e.etype or "other"}'
+                classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"}'
                 if all(w.is_empty() for w in subspan.words):
                     classes += ' empty'
                 if len(e.mentions) == 1:
