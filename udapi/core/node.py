@@ -324,6 +324,8 @@ class Node(object):
         # Check for None new_parent and cycles.
         if new_parent is None:
             raise ValueError(f'Cannot set None as parent: {self}')
+        if new_parent.is_empty():
+            raise ValueError(f'Cannot set EmptyNode as parent in basic dependencies: {self}')
         if self is new_parent:
             raise CycleError('Cannot set a node as its own parent (cycle are forbidden): %s', self)
         if self._children and new_parent.is_descendant_of(self):
