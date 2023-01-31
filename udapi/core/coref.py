@@ -276,7 +276,7 @@ class CorefMentionSubspan(object):
                 return True
             if  len(self.words) < len(another.words):
                 return False
-            assert False
+            return self.mention < another.mention
         return self.words[0].precedes(another.words[0])
 
     @property
