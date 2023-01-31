@@ -1,27 +1,66 @@
 """CorefHtml class is a writer for HTML+JavaScript visualization of coreference."""
 from udapi.core.basewriter import BaseWriter
 from udapi.core.coref import span_to_nodes, CorefEntity, CorefMention
+import udapi.block.write.html
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
+CSS = '''
+.sentence span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
+.showtree {float:left; margin: 5px;}
+.close{float:right; font-weight: 900; font-size: 30px; width: 36px; height: 36px; padding: 2px}
+.empty {color: gray;}
+.singleton {border-style: dotted;}
+.crossing:before {content: "!"; display: block; background: #ffd500;}
+.active {border: 1px solid red !important;}
+.selected {background: red !important;}
+.other {background: hsl(0, 0%, 85%);}
+'''
+
+SCRIPT_BASE = '''
+$("span").click(function(e) {
+ let was_selected = $(this).hasClass("selected");
+ $("span").removeClass("selected");
+ if (!was_selected){$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
+ e.stopPropagation();
+});
+
+$("span").hover(
+ function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
+ function(e) {$("span").removeClass("active");}
+);
+'''
+
+SCRIPT_SHOWTREE = '''
+$(".sentence").each(function(index){
+  var sent_id = this.id;
+  $(this).before(
+    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", function() {
+      var tree_div = $("#tree-"+sent_id);
+      if (tree_div.length == 0){
+        var tdiv = $("<div>", {id:"tree-"+sent_id}).insertBefore($(this));
+        tdiv.treexView([data[index]]);
+        $("<button>",{append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
+        $('#button-'+sent_id).attr('title', 'hide dependency tree');
+      } else {tree_div.remove();}
+    })
+  );
+});
+'''
+
 class CorefHtml(BaseWriter):
 
-    def __init__(self, path_to_js='web', **kwargs):
+    def __init__(self, show_trees=True, **kwargs):
         super().__init__(**kwargs)
-        self.path_to_js = path_to_js
+        self.show_trees = show_trees
 
     def process_document(self, doc):
         print('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">')
         print('<title>Udapi CorefUD viewer</title>')
         print('<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>')
-        #print('<script src="coref.js"></script>') #$(window).on("load", function() {...}
-        #print('<link rel="stylesheet" href="coref.css">')
-        print('<style>\n'
-              'span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}\n'
-              '.empty {color: gray;}\n.singleton {border-style: dotted;}\n'
-              '.crossing:before {content: "!"; display: block; background: #ffd500;}\n'
-              '.active {border: 1px solid red;}\n.selected {background: red !important;}\n'
-              '.other {background: hsl(0, 0%, 85%);}')
+        if self.show_trees:
+            print('<script src="https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js"></script>')
+        print('<style>' + CSS)
         for i, etype in enumerate(ETYPES):
             print(f'.{etype} {{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
         print('</style>')
@@ -35,15 +74,37 @@ class CorefHtml(BaseWriter):
         for tree in doc.trees:
             self.process_tree(tree, mention_ids)
 
-        print('<script>\n$("span").click(function(e) {\n'
-              ' let was_selected = $(this).hasClass("selected");\n'
-              ' $("span").removeClass("selected");\n'
-              ' if (!was_selected){$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}\n'
-              ' e.stopPropagation();\n});\n'
-              '$("span").hover(\n'
-              ' function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},\n'
-              ' function(e) {$("span").removeClass("active");}\n'
-              ');\n</script>')
+        print('<script>')
+        print(SCRIPT_BASE)
+        if self.show_trees:
+            print('data=[')
+            for (bundle_number, bundle) in enumerate(doc, 1):
+                if bundle_number != 1:
+                    print(',', end='')
+                print('{"zones":{', end='')
+                first_zone = True
+                desc = ''
+                for tree in bundle.trees:
+                    zone = tree.zone
+                    if first_zone:
+                        first_zone = False
+                    else:
+                        print(',', end='')
+                    print('"%s":{"sentence":"%s",' % (zone, _esc(tree.text)), end='')
+                    print('"trees":{"a":{"language":"%s","nodes":[' % zone)
+                    print('{"id":%s,"parent":null,' % _id(tree), end='')
+                    print('"firstson":' + _id(tree.children[0] if tree.children else None), end=',')
+                    print('"labels":["zone=%s","id=%s"]}' % (zone, tree.address()))
+                    desc += ',["[%s]","label"],[" ","space"]' % zone
+                    for node in tree.descendants:
+                        desc += udapi.block.write.html.Html.print_node(node)
+                    desc += r',["\n","newline"]'
+                    print(']}}}')
+                # print desc without the extra starting comma
+                print('},"desc":[%s]}' % desc[1:])
+            print('];')
+            print(SCRIPT_SHOWTREE)
+        print('</script>')
         print('</body></html>')
 
     def _start_subspan(self, subspan, mention_ids, crossing=False):
@@ -74,8 +135,10 @@ class CorefHtml(BaseWriter):
             subspans.extend(mention._subspans())
         subspans.sort(reverse=True)
 
+        if tree.newpar:
+            print('<hr>')
         opened = []
-        print('<p>')
+        print(f'<p class="sentence" id={_id(tree)}>')
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
