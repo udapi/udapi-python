@@ -20,12 +20,12 @@ class Normalize(Block):
     util.Eval node='node.misc["NonExistentAttribute"] = None'
     """
 
-    def __init__(self, feats=True, misc=True, sent_id=True, start_sent_id=1, **kwargs):
+    def __init__(self, feats=True, misc=True, sent_id=False, start_sent_id=1, **kwargs):
         """
         Args:
         `feats`: normalize the ordering of FEATS. Default=True.
         `misc`: normalize the ordering of MISC. Default=True.
-        `sent_id`: normalize sent_id so it forms a sequence of integers
+        `sent_id`: normalize sent_id so it forms a sequence of integers. Default=False.
         `start_sent_id`: the first sent_id number
         """
         super().__init__(**kwargs)
