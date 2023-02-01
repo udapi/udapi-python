@@ -20,16 +20,33 @@ class Normalize(Block):
     util.Eval node='node.misc["NonExistentAttribute"] = None'
     """
 
-    def __init__(self, feats=True, misc=True, **kwargs):
+    def __init__(self, feats=True, misc=True, sent_id=True, start_sent_id=1, **kwargs):
         """
         Args:
         `feats`: normalize the ordering of FEATS. Default=True.
         `misc`: normalize the ordering of MISC. Default=True.
+        `sent_id`: normalize sent_id so it forms a sequence of integers
+        `start_sent_id`: the first sent_id number
         """
         super().__init__(**kwargs)
         self.feats = feats
         self.misc = misc
-        # TODO: normalize also standardized comments like text, sent_id,...
+        self.sent_id = sent_id
+        self.next_sent_id = start_sent_id
+        # TODO: normalize also the order of standardized comments like text, sent_id,...
+
+    def process_bundle(self, bundle):
+        if self.sent_id:
+            bundle.bundle_id = str(self.next_sent_id)
+            self.next_sent_id += 1
+
+        for tree in bundle:
+            if self._should_process_tree(tree):
+                self.process_tree(tree)
+
+    def process_tree(self, tree):
+        for node in tree.descendants:
+            self.process_node(node)
 
     def process_node(self, node):
         if self.feats:
