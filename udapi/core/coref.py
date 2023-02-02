@@ -665,6 +665,7 @@ def load_coref_from_misc(doc, strict=True):
                     entity.etype = etype
                 elif etype and entity.etype and entity.etype != etype:
                     logging.warning(f"etype mismatch in {node}: {entity.etype} != {etype}")
+                    other["orig_etype"] = etype
                 # CorefEntity could be created first with "Bridge=" without any type
                 elif etype and entity.etype is None:
                     entity.etype = etype
