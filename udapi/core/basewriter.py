@@ -30,6 +30,9 @@ class BaseWriter(Block):
             raise ValueError("overwrite=1 is not compatible with files=" + files)
         if overwrite and docname_as_file:
             raise ValueError("overwrite=1 is not compatible with docname_as_file=1")
+        # interpret path=my_dir/my_subdir as path=my_dir/my_subdir/
+        if path and path[-1] != os.sep and '*' not in path:
+            path += os.sep
         self.path = path
 
     @property
