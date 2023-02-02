@@ -66,11 +66,21 @@ class BaseWriter(Block):
                 docname = document.meta.get('loaded_from', None)
                 if docname is not None:
                     if self.path:
-                        docname = os.path.join(self.path, os.path.split(docname)[1])
+                        old_dir, old_filename = os.path.split(docname)
+                        new_dir, new_filename = os.path.split(self.path)
+                        old_file, old_ext = os.path.splitext(old_filename)
+                        new_file, new_ext = os.path.splitext(new_filename)
+                        if new_dir in ('', '*'):
+                            new_dir = old_dir
+                        if new_file in ('', '*'):
+                            new_file = old_file
+                        if new_ext in ('', '*'):
+                            new_ext = old_ext
+                        docname = os.path.join(new_dir, new_file + new_ext)
                     logging.info('Writing to file %s.', docname)
                     sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
                 else:
-                    logging.warning('overwrite=1 but document.meta["loaded_from"] is None')
+                    logging.warning('using overwrite or path but document.meta["loaded_from"] is None')
             else:
                 sys.stdout = self.orig_stdout
         else:
