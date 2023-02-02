@@ -1,6 +1,7 @@
 """BaseWriter is the base class for all writer blocks."""
 import sys
 import logging
+import os
 
 import udapi.core.coref
 from udapi.core.block import Block
@@ -11,7 +12,7 @@ class BaseWriter(Block):
     """Base class for all reader blocks."""
 
     def __init__(self, files='-', filehandle=None, docname_as_file=False, encoding='utf-8',
-                 newline='\n', overwrite=False, **kwargs):
+                 newline='\n', overwrite=False, path=None, **kwargs):
         super().__init__(**kwargs)
         self.orig_files = files
         self.orig_stdout = sys.stdout
@@ -29,6 +30,7 @@ class BaseWriter(Block):
             raise ValueError("overwrite=1 is not compatible with files=" + files)
         if overwrite and docname_as_file:
             raise ValueError("overwrite=1 is not compatible with docname_as_file=1")
+        self.path = path
 
     @property
     def filename(self):
@@ -60,9 +62,11 @@ class BaseWriter(Block):
                     sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
                 else:
                     logging.warning('docname_as_file=1 but the document contains no docname')
-            elif self.overwrite:
+            elif self.overwrite or self.path:
                 docname = document.meta.get('loaded_from', None)
                 if docname is not None:
+                    if self.path:
+                        docname = os.path.join(self.path, os.path.split(docname)[1])
                     logging.info('Writing to file %s.', docname)
                     sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
                 else:
