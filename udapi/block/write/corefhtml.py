@@ -1,19 +1,21 @@
 """CorefHtml class is a writer for HTML+JavaScript visualization of coreference."""
 from udapi.core.basewriter import BaseWriter
 from udapi.core.coref import span_to_nodes, CorefEntity, CorefMention
+from collections import Counter
 import udapi.block.write.html
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
 CSS = '''
 .sentence span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
+.sentence span .eid {display:block; font-size: 10px;}
 .showtree {float:left; margin: 5px;}
 .close{float:right; font-weight: 900; font-size: 30px; width: 36px; height: 36px; padding: 2px}
 .empty {color: gray;}
-.singleton {border-style: dotted;}
+.sentence .singleton {border-style: dotted;}
 .crossing:before {content: "!"; display: block; background: #ffd500;}
 .active {border: 1px solid red !important;}
-.selected {background: red !important;}
+.selected {background: red !important; text-shadow: 1px 1px 4px white, -1px 1px 4px white, 1px -1px 4px white, -1px -1px 4px white;}
 .other {background: hsl(0, 0%, 85%);}
 '''
 
@@ -50,9 +52,11 @@ $(".sentence").each(function(index){
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, show_trees=True, **kwargs):
+    def __init__(self, show_trees=True, show_eid=True, colors=7, **kwargs):
         super().__init__(**kwargs)
         self.show_trees = show_trees
+        self.show_eid = show_eid
+        self.colors = colors
 
     def process_document(self, doc):
         print('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">')
@@ -63,16 +67,25 @@ class CorefHtml(BaseWriter):
         print('<style>' + CSS)
         for i, etype in enumerate(ETYPES):
             print(f'.{etype} {{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
+        if self.colors:
+            for i in range(self.colors):
+                print(f'.c{i} {{color: hsl({int(i * 360/self.colors)}, 100%, 30%);}}')
         print('</style>')
         print('</head>\n<body>')
 
         mention_ids = {}
+        entity_colors = {}
+        entities_of_type = Counter()
         for entity in doc.coref_entities:
+            if self.colors:
+                count = entities_of_type[entity.etype]
+                entities_of_type[entity.etype] = count + 1
+                entity_colors[entity] = f'c{count % self.colors}'
             for idx, mention in enumerate(entity.mentions, 1):
                 mention_ids[mention] = f'{entity.eid}e{idx}'
 
         for tree in doc.trees:
-            self.process_tree(tree, mention_ids)
+            self.process_tree(tree, mention_ids, entity_colors)
 
         print('<script>')
         print(SCRIPT_BASE)
@@ -107,11 +120,13 @@ class CorefHtml(BaseWriter):
         print('</script>')
         print('</body></html>')
 
-    def _start_subspan(self, subspan, mention_ids, crossing=False):
+    def _start_subspan(self, subspan, mention_ids, entity_colors, crossing=False):
         m = subspan.mention
         e = m.entity
         classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"}'
-        title = f'eid={subspan.subspan_eid}\ntype={e.etype}\nhead={m.head.form}'
+        title = f'eid={subspan.subspan_eid}\ntype={e.etype} ({entity_colors[e]})\nhead={m.head.form}'
+        if self.colors:
+            classes += f' {entity_colors[e]}'
         if all(w.is_empty() for w in subspan.words):
             classes += ' empty'
         if len(e.mentions) == 1:
@@ -121,9 +136,11 @@ class CorefHtml(BaseWriter):
             title += '\ncrossing'
         if m.other:
             title += f'\n{m.other}'
-        print(f'<span class="{classes}" title="{title}">', end='') #data-eid="{e.eid}"
+        print(f'<span class="{classes}" title="{title}">', end='')
+        if self.show_eid:
+            print(f'<b class="eid">{subspan.subspan_eid}</b>', end='')
 
-    def process_tree(self, tree, mention_ids):
+    def process_tree(self, tree, mention_ids, entity_colors):
         mentions = set()
         nodes_and_empty = tree.descendants_and_empty
         for node in nodes_and_empty:
@@ -135,14 +152,16 @@ class CorefHtml(BaseWriter):
             subspans.extend(mention._subspans())
         subspans.sort(reverse=True)
 
-        if tree.newpar:
+        if tree.newdoc:
+            print(f'<hr><h1>{tree.newdoc if tree.newdoc is not True else ""}</h1><hr>')
+        elif tree.newpar:
             print('<hr>')
         opened = []
         print(f'<p class="sentence" id={_id(tree)}>')
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
-                self._start_subspan(subspan, mention_ids)
+                self._start_subspan(subspan, mention_ids, entity_colors)
                 opened.append(subspan)
             
             is_head = self._is_head(node)
@@ -180,7 +199,7 @@ class CorefHtml(BaseWriter):
                 opened = new_opened
                 print('</span>' * (len(endings) + len(brokens)), end='')
                 for broken in brokens:
-                    self._start_subspan(broken, mention_ids, True)
+                    self._start_subspan(broken, mention_ids, entity_colors, True)
                     opened.append(subspan)
 
             if not node.no_space_after:
