@@ -6,7 +6,25 @@ import udapi.block.write.html
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
+HEADER = '''
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>Udapi CorefUD viewer</title>
+<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+'''
+# I use a pure CSS-3 solution: #overiew {resize: horizontal; overflow: auto;}
+# so that the width of #overview can be changed by dragging the bottom right corner.
+# The following lines would make the whole right border draggable:
+#<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+#<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+#<script>$( function() {$( "#overview" ).resizable({handles: "e"});} );</script>
+#<div id="overview" class="ui-widget-content">
 CSS = '''
+#wrap {display: flex; align-items: flex-start;}
+#main {width: 100%; padding: 5px; background: white; z-index:100;}
+#overview { position: sticky; top: 0; overflow-y: scroll; height:95vh; resize:horizontal;
+            display: grid; border-right: double;
+            padding: 5px; width: 20em; background: #ddd; border-radius: 5px;
+}
 .sentence span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
 .sentence span .eid {display:block; font-size: 10px;}
 .showtree {float:left; margin: 5px;}
@@ -23,9 +41,15 @@ SCRIPT_BASE = '''
 $("span").click(function(e) {
  let was_selected = $(this).hasClass("selected");
  $("span").removeClass("selected");
- if (!was_selected){$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
+ if (!was_selected) {$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
  e.stopPropagation();
 });
+
+window.onhashchange = function() {
+ $("span").removeClass("selected");
+ var fragment = window.location.hash.substring(1);
+ if (fragment) {$("." + fragment).addClass("selected");}
+}
 
 $("span").hover(
  function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
@@ -60,10 +84,18 @@ class CorefHtml(BaseWriter):
         self.show_eid = show_eid
         self.colors = colors
 
+    def _representative_word(self, entity):
+        # return the first PROPN or NOUN. Or the most frequent one?
+        heads = [m.head for m in entity.mentions]
+        lemma_or_form = lambda n: n.lemma if n.lemma else n.form
+        for upos in ('PROPN', 'NOUN'):
+            nodes = [n for n in heads if n.upos == upos]
+            if nodes:
+                return lemma_or_form(nodes[0])
+        return lemma_or_form(heads[0])
+
     def process_document(self, doc):
-        print('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">')
-        print('<title>Udapi CorefUD viewer</title>')
-        print('<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>')
+        print(HEADER)
         if self.show_trees:
             print('<script src="https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js"></script>')
         print('<style>' + CSS)
@@ -73,7 +105,7 @@ class CorefHtml(BaseWriter):
             for i in range(self.colors):
                 print(f'.c{i} {{color: hsl({int(i * 360/self.colors)}, 100%, 30%);}}')
         print('</style>')
-        print('</head>\n<body>')
+        print('</head>\n<body>\n<div id="wrap">')
 
         mention_ids = {}
         entity_colors = {}
@@ -86,8 +118,21 @@ class CorefHtml(BaseWriter):
             for idx, mention in enumerate(entity.mentions, 1):
                 mention_ids[mention] = f'{entity.eid}e{idx}'
 
+        print('<div id="overview">')
+        print('<table><thead><tr><th title="entity id">eid</th>'
+              '<th title="number of mentions">#m</th>'
+              '<th title="a word best representing the entity">word</th></tr></thead>\n<tbody>')
+        for entity in doc.coref_entities:
+            print(f'<tr><td><a href="#{entity.eid}">{entity.eid}</a></td>'
+                  f'<td>{len(entity.mentions)}</td>'
+                  f'<td>{self._representative_word(entity)}</td></tr>')
+        print('</tbody></table>')
+        print('</div>')
+
+        print('<div id="main">')
         for tree in doc.trees:
             self.process_tree(tree, mention_ids, entity_colors)
+        print('</div>')
 
         print('<script>')
         print(SCRIPT_BASE)
@@ -95,7 +140,7 @@ class CorefHtml(BaseWriter):
             WRITE_HTML.print_doc_json(doc)
             print(SCRIPT_SHOWTREE)
         print('</script>')
-        print('</body></html>')
+        print('</div></body></html>')
 
     def _start_subspan(self, subspan, mention_ids, entity_colors, crossing=False):
         m = subspan.mention
@@ -113,7 +158,10 @@ class CorefHtml(BaseWriter):
             title += '\ncrossing'
         if m.other:
             title += f'\n{m.other}'
-        print(f'<span class="{classes}" title="{title}">', end='')
+        span_id = ''
+        if (subspan.subspan_id == '' or subspan.subspan_id.startswith('[1/')) and e.mentions[0] == m:
+            span_id = f'id="{e.eid}" '
+        print(f'<span {span_id}class="{classes}" title="{title}">', end='')
         if self.show_eid:
             print(f'<b class="eid">{subspan.subspan_eid}</b>', end='')
 
