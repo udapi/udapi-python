@@ -50,6 +50,8 @@ $(".sentence").each(function(index){
 });
 '''
 
+WRITE_HTML = udapi.block.write.html.Html()
+
 class CorefHtml(BaseWriter):
 
     def __init__(self, show_trees=True, show_eid=True, colors=7, **kwargs):
@@ -90,32 +92,7 @@ class CorefHtml(BaseWriter):
         print('<script>')
         print(SCRIPT_BASE)
         if self.show_trees:
-            print('data=[')
-            for (bundle_number, bundle) in enumerate(doc, 1):
-                if bundle_number != 1:
-                    print(',', end='')
-                print('{"zones":{', end='')
-                first_zone = True
-                desc = ''
-                for tree in bundle.trees:
-                    zone = tree.zone
-                    if first_zone:
-                        first_zone = False
-                    else:
-                        print(',', end='')
-                    print('"%s":{"sentence":"%s",' % (zone, _esc(tree.text)), end='')
-                    print('"trees":{"a":{"language":"%s","nodes":[' % zone)
-                    print('{"id":%s,"parent":null,' % _id(tree), end='')
-                    print('"firstson":' + _id(tree.children[0] if tree.children else None), end=',')
-                    print('"labels":["zone=%s","id=%s"]}' % (zone, tree.address()))
-                    desc += ',["[%s]","label"],[" ","space"]' % zone
-                    for node in tree.descendants:
-                        desc += udapi.block.write.html.Html.print_node(node)
-                    desc += r',["\n","newline"]'
-                    print(']}}}')
-                # print desc without the extra starting comma
-                print('},"desc":[%s]}' % desc[1:])
-            print('];')
+            WRITE_HTML.print_doc_json(doc)
             print(SCRIPT_SHOWTREE)
         print('</script>')
         print('</body></html>')
