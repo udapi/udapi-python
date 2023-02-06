@@ -81,8 +81,26 @@ class Conllu(BaseReader):
         root.comment += line[1:] + "\n"
 
     def read_trees(self):
-        return [self.read_tree_from_lines(s.split('\n')) for s in
-                self.filehandle.read().split('\n\n') if s]
+        if not self.max_docs:
+            return [self.read_tree_from_lines(s.split('\n')) for s in
+                    self.filehandle.read().split('\n\n') if s]
+        # udapi.core.basereader takes care about the max_docs parameter.
+        # However, we can make the loading much faster by not reading
+        # the whole file if the user wants just first N documents.
+        trees, lines, loaded_docs = [], [], 0
+        for line in self.filehandle:
+            line = line.rstrip()
+            if line == '':
+               tree = self.read_tree_from_lines(lines)
+               lines = []
+               if tree.newdoc:
+                   if loaded_docs == self.max_docs:
+                       return trees
+                   loaded_docs += 1
+               trees.append(tree)
+            else:
+                lines.append(line)
+        return
 
     def read_tree(self):
         if self.filehandle is None:

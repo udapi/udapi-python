@@ -13,7 +13,8 @@ class BaseReader(Block):
 
     # pylint: disable=too-many-arguments
     def __init__(self, files='-', filehandle=None, zone='keep', bundles_per_doc=0, encoding='utf-8-sig',
-                 sent_id_filter=None, split_docs=False, ignore_sent_id=False, merge=False, **kwargs):
+                 sent_id_filter=None, split_docs=False, ignore_sent_id=False, merge=False,
+                 max_docs=0, **kwargs):
         super().__init__(**kwargs)
         if filehandle is not None:
             files = None
@@ -29,6 +30,8 @@ class BaseReader(Block):
         self.split_docs = split_docs
         self.ignore_sent_id = ignore_sent_id
         self.merge = merge
+        self.max_docs = max_docs
+        self._docs_loaded = 0
         # `global.Entity` is a header stored in a comment before the first tree of each document in a given CoNLL-U file.
         # In Udapi, it is stored in `document.meta['global.Entity']`, but for technical reasons, we need to temporarily store it in here, the reader.
         # The reason is that `read.Conllu` uses a fast loading interface with `read_trees()`,
@@ -126,6 +129,11 @@ class BaseReader(Block):
 
             bundle, last_bundle_id = None, ''
             for root in trees:
+                if root.newdoc:
+                    if self.max_docs and self._docs_loaded >= self.max_docs:
+                        self.finished = True
+                        return True
+                    self._docs_loaded += 1
                 add_to_the_last_bundle = False
 
                 if self.ignore_sent_id:
@@ -180,8 +188,10 @@ class BaseReader(Block):
                     if root._sent_id is not None:
                         bundle.bundle_id = root._sent_id.split('/', 1)[0]
                 bundle.add_tree(root)
-                if root.newdoc and root.newdoc is not True:
-                    document.meta["docname"] = root.newdoc
+                if root.newdoc:
+                    self._docs_loaded += 1
+                    if root.newdoc is not True:
+                        document.meta["docname"] = root.newdoc
                 document.meta['global.Entity'] = self._global_entity
                 document.meta['loaded_from'] = self.filename
 
@@ -204,6 +214,17 @@ class BaseReader(Block):
                 if trees_loaded == 0:
                     document.meta['loaded_from'] = self.filename
                     document.meta['global.Entity'] = self._global_entity
+                    # Parameter max_docs is primarily aimed for counting UD docs, ie. trees with newdoc.
+                    # However, it could be useful even when working with files without the newdoc annotations,
+                    # e.g. when using files='!*.conllu' or bundles_per_doc, in which case we count the Udapi documents
+                    # so even if the first tree in udapi.Document does not have newdoc, we count it as a new document.
+                    # The cases where newdoc is used are checked further below.
+                    if not root.newdoc:
+                        if self.max_docs and self._docs_loaded >= self.max_docs:
+                            self.finished = True
+                            return
+                        self._docs_loaded += 1
+
                 add_to_the_last_bundle = False
                 trees_loaded += 1
 
@@ -222,6 +243,9 @@ class BaseReader(Block):
 
                 # The `# newdoc` comment in CoNLL-U marks a start of a new document.
                 if root.newdoc:
+                    if self.max_docs and self._docs_loaded >= self.max_docs:
+                        self.finished = True
+                        return
                     if not bundle and root.newdoc is not True:
                         document.meta["docname"] = root.newdoc
                     if bundle and self.split_docs:
@@ -231,6 +255,7 @@ class BaseReader(Block):
                                             len(orig_bundles))
                         self.finished = False
                         return
+                    self._docs_loaded += 1
 
                 # assign new/next bundle to `bundle` if needed
                 if not bundle or not add_to_the_last_bundle:
