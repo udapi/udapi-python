@@ -34,7 +34,7 @@ class ComplyWithText(Block):
     """Adapt the nodes to comply with the text."""
 
     def __init__(self, fix_text=True, prefer_mwt=True, allow_goeswith=True, max_mwt_length=4,
-                 **kwargs):
+                 previous_form_attr='CorrectForm', **kwargs):
         """Args:
         fix_text: After all heuristics are applied, the token forms may still not match the text.
             Should we edit the text to match the token forms (as a last resort)? Default=True.
@@ -54,24 +54,33 @@ class ComplyWithText(Block):
             Default=True (i.e. add the goeswith nodes if applicable).
         max_mwt_length - Maximum length of newly created multi-word tokens (in syntactic words).
             Default=4.
+        previous_form_attr - when changing node.form, we store the previous value
+            in node.misc[previous_form_attr] (so no information is lost).
+            Default="CorrectForm" because we expect that the previous value
+            (i.e. the value of node.form before applying this block)
+            contained the corrected spelling, while root.text contains
+            the original spelling with typos as found in the raw text.
+            CorrectForm is defined in https://universaldependencies.org/u/overview/typos.html
+            When setting this parameter to an empty string, no values will be stored to node.misc.
         """
         super().__init__(**kwargs)
         self.fix_text = fix_text
         self.prefer_mwt = prefer_mwt
         self.allow_goeswith = allow_goeswith
         self.max_mwt_length = max_mwt_length
+        self.allow_add_punct = allow_add_punct
+        self.allow_delete_punct = allow_delete_punct
+        self.previous_form_attr = previous_form_attr
 
     @staticmethod
     def allow_space(form):
         """Is space allowed within this token form?"""
         return re.fullmatch('[0-9 ]+([,.][0-9]+)?', form)
 
-    @staticmethod
-    def store_orig_form(node, new_form):
-        """Store the original form of this node into MISC, unless the change is common&expected."""
-        _ = new_form
+    def store_previous_form(self, node):
+        """Store the previous form of this node into MISC, unless the change is common&expected."""
         if node.form not in ("''", "``"):
-            node.misc['OrigForm'] = node.form
+            node.misc[self.previous_form_attr] = node.form
 
     def process_tree(self, root):
         text = root.text
@@ -203,7 +212,7 @@ class ComplyWithText(Block):
         if ' ' in form:
             if len(nodes) == 1 and node.form == form.replace(' ', ''):
                 if self.allow_space(form):
-                    self.store_orig_form(node, form)
+                    self.store_previous_form(node)
                     node.form = form
                 elif self.allow_goeswith:
                     forms = form.split()
@@ -235,7 +244,7 @@ class ComplyWithText(Block):
 
         # Third, solve the 1-1 cases.
         else:
-            self.store_orig_form(node, form)
+            self.store_previous_form(node)
             node.form = form
 
 
