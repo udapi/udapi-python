@@ -58,14 +58,6 @@ class Files(object):
         or commas. For specifying files with spaces or commas in filenames, you need to use
         wildcard patterns or '@' filelist. (But preferably don't use such filenames.)
         """
-        # "!" means glob pattern which can contain {dir1,dir2}
-        # so it cannot be combined with separating tokens with comma.
-        if string[0] == '!':
-            pattern = string[1:]
-            filenames = glob.glob(pattern)
-            if not filenames:
-                raise RuntimeError('No filenames matched "%s" pattern' % pattern)
-            return filenames
         return list(itertools.chain.from_iterable(self._token_to_filenames(tok)
                                                   for tok in string.replace(',', ' ').split()))
 
