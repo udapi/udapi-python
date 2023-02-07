@@ -121,7 +121,7 @@ class ComplyWithText(Block):
                     node.misc['SpaceAfter'] = 'No'
             else:
                 logging.warning('Node %s does not match text "%s"', node, tmp_text[:20])
-                return
+                break
 
         # Edit root.text if needed.
         if self.fix_text:
