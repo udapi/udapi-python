@@ -67,6 +67,26 @@ def _parse_command_line_arguments(scenario):
     return block_names, block_args
 
 
+def _blocks_in_a_package(package_name):
+    import importlib.util, pkgutil
+
+    if not importlib.util.find_spec(package_name):
+        return []
+    try:
+        package = __import__(package_name, fromlist="dummy")
+        submodule_names = [m.name for m in pkgutil.iter_modules(package.__path__)]
+        pname = package_name
+        if pname.startswith("udapi.block."):
+            pname = pname[12:]
+        blocks = []
+        for sname in submodule_names:
+            module =  __import__(f"{package_name}.{sname}", fromlist="dummy")
+            bname = [c for c in dir(module) if c.lower() == sname][0]
+            blocks.append(f"{pname}.{bname}")
+        return blocks
+    except:
+            return []
+
 def _import_blocks(block_names, block_args):
     """
     Parse block names, import particular packages and call the constructor for each object.
@@ -92,8 +112,17 @@ def _import_blocks(block_names, block_args):
             command = "from " + module + " import " + class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
             exec(command)  # pylint: disable=exec-used
-        except Exception:
-            logging.warning("Error when trying import the block %s", block_name)
+        except ModuleNotFoundError as err:
+            package_name = ".".join(module.split(".")[:-1])
+            blocks = _blocks_in_a_package(package_name)
+            if not blocks:
+                raise
+            raise ModuleNotFoundError(
+                f"Cannot find block {block_name} (i.e. class {module}.{class_name})\n"
+                f"Available block in {package_name} are:\n"
+                + "\n".join(_blocks_in_a_package(package_name))) from err
+        except Exception as ex:
+            logging.warning(f"Cannot import block {block_name} (i.e. class {module}.{class_name})")
             raise
 
         # Run the imported module.
