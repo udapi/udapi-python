@@ -65,7 +65,7 @@ class Files(object):
     def _token_to_filenames(token):
         if token[0] == '!':
             pattern = token[1:]
-            filenames = glob.glob(pattern)
+            filenames = sorted(glob.glob(pattern))
             if not filenames:
                 raise RuntimeError('No filenames matched "%s" pattern' % pattern)
         elif token[0] == '@':
