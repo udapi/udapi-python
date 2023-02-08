@@ -29,7 +29,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         af = {}
         # NOUNS ################################################################
         if node.upos == 'NOUN':
-            if not node.feats['Abbr'] == 'Yes' or node.feats['Case']: # abbreviated or indeclinable nouns
+            if node.feats['Case'] and not node.feats['Abbr'] == 'Yes': # abbreviated or indeclinable nouns
                 rf = ['Gender', 'Number', 'Case']
             af = {
                 'Gender': ['Masc', 'Fem', 'Neut'],
@@ -37,11 +37,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl'],
                 'Degree': ['Dim'],
                 'Abbr': ['Yes'],
-                'Foreign': ['Yes']}
+                'Foreign': ['Yes'],
+                'VerbForm': ['Part']}
             if self.flavio:
                 # Flavio added InflClass but not everywhere, so it is not required.
                 af['InflClass'] = ['IndEurA', 'IndEurE', 'IndEurI', 'IndEurO', 'IndEurU', 'IndEurX']
-                af['VerbForm'] = ['Part']
                 af['Proper'] = ['Yes']
                 af['Compound'] = ['Yes']
                 af['NameType'] = ['Ast', 'Cal', 'Com', 'Geo', 'Giv', 'Let', 'Lit', 'Met', 'Nat', 'Rel', 'Sur', 'Oth']
@@ -76,14 +76,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Degree': ['Cmp', 'Sup', 'Abs'],
                 'Abbr': ['Yes'],
                 'Foreign': ['Yes'],
-                'Polarity': ['Neg']}
+                'Polarity': ['Neg'],
+                'VerbForm': ['Part']}
             if self.flavio:
-                # Flavio does not use Degree=Pos, hence Degree is not required.
-                # rf = [f for f in rf if f != 'Degree']
                 # Flavio added InflClass but not everywhere, so it is not required.
                 af['InflClass'] = ['IndEurA', 'IndEurE', 'IndEurI', 'IndEurO', 'IndEurU', 'IndEurX']
                 af['Compound'] = ['Yes']
-                af['VerbForm'] = ['Part']
                 af['Proper'] = ['Yes']
                 af['Degree'].append('Dim')
                 af['NameType'] = ['Ast', 'Cal', 'Com', 'Geo', 'Giv', 'Let', 'Lit', 'Met', 'Nat', 'Rel', 'Sur', 'Oth']
@@ -93,15 +91,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'PRON':
             rf = ['PronType', 'Case']
             af = {
-                'PronType': ['Prs', 'Rel', 'Ind', 'Int', 'Rcp'],
-                'Case':     ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']
+               'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl'],
+               'Proper': ['Yes'],
+               'Compound': ['Yes'],
+               'Polarity': ['Neg']
             }
             if node.feats['PronType'] == 'Prs':
                 af['Reflex'] = ['Yes']
                 if node.feats['Reflex'] == 'Yes': # seipsum, se
                     rf.extend(['Person'])
                     # seipsum has gender and number but se does not, so it is not required
-                    # TODO: seipsum in ITTB, but why lemma seipsum instead of seipse?
                     af['Gender'] = ['Masc', 'Fem', 'Neut']
                     af['Number'] = ['Sing', 'Plur']
                     af['Person'] = ['3']
@@ -122,6 +121,19 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 rf = [f for f in rf if f != 'Case']
                 af['Gender'] = ['Masc', 'Fem', 'Neut']
                 af['Number'] = ['Sing', 'Plur']
+            # lexical check of PronTypes
+            af['PronType'] = []
+            if node.lemma in ['is', 'ego', 'tu', 'sui', 'seipsum', 'nos', 'uos', 'vos', 'tumetipse', 'nosmetipse']:
+                af['PronType'].append('Prs')
+            elif node.lemma in ['quis', 'aliquis', 'nihil', 'nemo', 'quivis']:
+                af['PronType'].append('Ind')
+            elif node.lemma in ['inuicem', 'invicem']:
+                af['PronType'].append('Rcp')
+                rf.remove('Case')
+            elif node.lemma in ['quicumque', 'qui', 'quisquis']:
+                af['PronType'].append('Rel')
+            if node.lemma in ['qui', 'quis', 'quisnam', 'ecquis']:
+                af['PronType'].append('Int')
             if self.flavio:
                 # Flavio added InflClass but not everywhere, so it is not required.
                 af['InflClass'] = ['LatAnom', 'LatPron']
@@ -140,7 +152,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Number': ['Sing', 'Plur'],
                 'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl'],
                 'Degree': ['Cmp', 'Abs', 'Sup'],
-                'Polarity': ['Neg']
+                'Polarity': ['Neg'],
+                'Proper': ['Yes'],
+                'PronType': []
                 }
             if node.feats['Poss'] == 'Yes': # 'meus', 'tuus', 'suus', 'noster'
                 rf.extend(['Poss', 'Person[psor]'])
@@ -152,8 +166,24 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 if node.feats['Person[psor]'] != '3':
                     rf.append('Number[psor]')
                     af['Number[psor]'] = ['Sing', 'Plur']
-            else:
-                af['PronType'] = ['Dem', 'Rel', 'Ind', 'Int', 'Tot', 'Con']
+            if node.feats['PronType'] == 'Ind':
+                af['NumType'] = ['Card']
+            # lexical check of PronTypes
+            if node.lemma in ['suus', 'meus', 'noster', 'tuus', 'uester', 'vester', 'voster']:
+                if not af['PronType'] == ['Prs']:
+                    af['PronType'].append('Prs')
+            elif node.lemma in ['aliquot', 'quidam', 'quispiam', 'quivis', 'nullus', 'nonnullus', 'aliqui', 'qui', 'quilibet', 'quantuslibet', 'unus', 'uterque', 'ullus', 'multus', 'quisque', 'paucus', 'complures', 'quamplures', 'quicumque', 'reliquus', 'plerusque', 'aliqualis', 'quisquam', 'qualiscumque']:
+                af['PronType'].append('Ind')
+            elif node.lemma in ['omnis', 'totus', 'ambo', 'cunctus', 'unusquisque', 'uniuersus']:
+                af['PronType'].append('Tot')
+            if node.lemma in ['quantus', 'qualis', 'quicumque', 'quot', 'quotus']:
+                af['PronType'].append('Rel')
+            elif node.lemma in ['qui', 'quantus', 'quot']:
+                af['PronType'].append('Int')
+            elif node.lemma in ['hic', 'ipse', 'ille', 'tantus', 'talis', 'is', 'iste', 'eiusmodi', 'huiusmodi', 'idem', 'totidem', 'tot']:
+                af['PronType'].append('Dem')
+            elif node.lemma in ['alius', 'alter', 'solus', 'ceterus', 'alteruter', 'neuter', 'uter']:
+                af['PronType'].append('Con')
             if self.flavio:
                 # Flavio added InflClass but not everywhere, so it is not required.
                 af['InflClass'] = ['IndEurA', 'IndEurI', 'IndEurO', 'IndEurX', 'LatPron']
@@ -170,8 +200,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             rf = ['NumType', 'NumForm']
             af = {
                 'NumType': ['Card'],
-                'NumForm': ['Word', 'Roman', 'Digit']
-            }
+                'NumForm': ['Word', 'Roman', 'Digit'],
+                'Proper': ['Yes']}
             # Arabic digits and Roman numerals do not have inflection features.
             if not re.match(r'^(Digit|Roman)$', node.feats['NumForm']):
                 af['Gender'] = ['Masc', 'Fem', 'Neut']
@@ -186,40 +216,40 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif re.match(r'^(VERB|AUX)$', node.upos):
             rf = ['VerbForm', 'Aspect']
             af = {
-                'VerbForm': ['Inf', 'Fin', 'Part'],
+                'VerbForm': ['Inf', 'Fin', 'Part', 'Conv'],
                 'Aspect': ['Imp', 'Inch', 'Perf', 'Prosp'],
-                'Polarity': ['Neg']
+                'Polarity': ['Neg'],
+                'Typo': ['Yes']
                 }
-            if not re.match(r'^(Ger|Gdv)$', node.feats['VerbForm']):
+            if node.feats['VerbForm'] not in ['Part', 'Conv']:
                 rf.append('Tense')
-                af['Tense'] = ['Pres', 'Fut']
-            if node.upos == 'VERB': # and not node.lemma.endswith('sum'): # compounds of sum
+                af['Tense'] = ['Past', 'Pqp', 'Pres', 'Fut']
+            if node.upos == 'VERB':
                 rf.append('Voice')
                 af['Voice'] = ['Act', 'Pass']
-            # Main verbs have aspect but auxiliaries don't.
-            # TODO: apparently, apparently AUXs have aspect as well
-            # if node.upos == 'VERB':
-            #    rf.append('Aspect')
-            #    af['Aspect'] = ['Imp', 'Inch', 'Perf', 'Prosp']
             if node.feats['VerbForm'] == 'Fin': # imperative, indicative or subjunctive
                 rf.extend(['Mood', 'Person', 'Number'])
-                af['Tense'].extend(['Past', 'Pqp'])
                 af['Mood'] = ['Ind', 'Sub', 'Imp']
                 af['Person'] = ['1', '2', '3']
                 af['Number'] = ['Sing', 'Plur']
             elif node.feats['VerbForm'] == 'Part':
                 rf.extend(['Gender', 'Number', 'Case'])
-                af['Number'] = ['Sing', 'Plur']
-                af['Gender'] = ['Masc', 'Fem', 'Neut']
+                af['Number'] = ['Sing', 'Plur'] if node.misc['TraditionalMood'] != 'Gerundium' else ['Sing']
+                af['Gender'] = ['Masc', 'Fem', 'Neut'] if node.misc['TraditionalMood'] != 'Gerundium' else ['Neut']
                 af['Case'] = ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Abl']
                 af['Degree'] = ['Abs', 'Cmp']
-                af['Gender'] = ['Masc', 'Fem', 'Neut']
-                af['Tense'].append('Past')
-            # else: nothing to be added for VerbForm=Inf
+                if node.misc['TraditionalMood'].startswith('Gerundi'):
+                    af['Voice'] = ['Pass']
+                    af['Aspect'] = 'Prosp'
+            elif node.feats['VerbForm'] == 'Conv':
+                rf.extend(['Case', 'Gender', 'Number'])
+                af['Case'] = ['Abl', 'Acc']
+                af['Gender'] = ['Masc']
+                af['Number'] = ['Sing']
+                af['Voice'] = ['Act']
+            elif node.feats['VerbForm'] == 'Inf':
+                af['Tense'].remove('Pqp')
             if self.flavio:
-                # Flavio has killed Tense in his treebanks.
-                rf = [f for f in rf if f != 'Tense']
-                af['VerbForm'].append('Vnoun')
                 # Flavio added InflClass but not everywhere, so it is not required.
                 af['InflClass'] = ['LatA', 'LatAnom', 'LatE', 'LatI', 'LatI2', 'LatX']
                 if 'Degree' in af:
@@ -228,23 +258,22 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     af['Degree'] = ['Dim']
                 af['Compound'] = ['Yes']
                 af['Proper'] = ['Yes']
-                if re.match(r'^(Part|Vnoun)$', node.feats['VerbForm']):
-                    af['InflClass[nominal]'] = ['IndEurA', 'IndEurI', 'IndEurO']
-                af['VerbForm'].append('Vnoun')
+                if re.match(r'^(Part|Conv)$', node.feats['VerbForm']):
+                    af['InflClass[nominal]'] = ['IndEurA', 'IndEurI', 'IndEurO', 'IndEurU']
             self.check_required_features(node, rf)
             self.check_allowed_features(node, af)
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
             af = {
-                'AdvType':  ['Loc', 'Tim'],
+                'AdvType': ['Loc', 'Tim'],
                 'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot', 'Con'],
-                'Degree':   ['Pos', 'Cmp', 'Sup', 'Abs'],
+                'Degree': ['Pos', 'Cmp', 'Sup', 'Abs'],
+                'NumType': ['Card', 'Ord'], # e.g., primum
                 'Polarity': ['Neg']
             }
             if self.flavio:
                 af['Compound'] = ['Yes']
                 af['Form'] = ['Emp']
-                af['NumType'] = ['Card', 'Ord'] # e.g., primum
                 af['VerbForm'] = ['Part']
                 af['Degree'].append('Dim')
             self.check_allowed_features(node, af)
@@ -262,7 +291,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif re.match(r'^[CS]CONJ$', node.upos):
             af = {
             'PronType': ['Rel', 'Con'],
-            'Polarity': ['Neg']}
+            'Polarity': ['Neg'],
+            'Compound': ['Yes']}
             if self.flavio:
                 af['Compound'] = ['Yes']
                 af['Form'] = ['Emp']
@@ -271,10 +301,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             self.check_allowed_features(node, af)
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
+            rf = ['AdpType']
+            af = {
+                'AdpType': ['Prep', 'Post'],
+                'Abbr': ['Yes']
+            }
             if self.flavio:
-                af = {
-                'VerbForm': ['Part'],
-                'Proper': ['Yes']}
+                af['VerbForm'] = ['Part'],
+                af['Proper'] = ['Yes']
             self.check_allowed_features(node, af)
         # THE REST: NO FEATURES ################################################
         else:
