@@ -109,9 +109,13 @@ class ComplyWithText(Block):
         if text is None:
             raise ValueError('Tree %s has no text, cannot use ud.ComplyWithText' % root)
 
-        # Normalize the stored text (double space -> single space)
+        # Normalize the stored text (e.g. double space or no-break space -> single space)
         # and skip sentences which are already ok.
         text = ' '.join(text.split())
+        if root.text != text and self.fix_text:
+            if self.previous_text_label:
+                root.add_comment(f'{self.previous_text_label} = {root.text}')
+            root.text = text
         if text == root.compute_text():
             return
 
