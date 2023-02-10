@@ -12,7 +12,7 @@ class PrintMentions(Block):
                  empty='include', max_trees=0, html=False, shuffle=True, print_other_forms=5,
                  print_total=True, print_should=True,
                  print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
-                 minimize_cross=True, color=True, attributes='form,upos,deprel',
+                 minimize_cross=True, color=True, attributes='ord,form,upos,deprel,misc',
                  print_undef_as='_', print_doc_meta=True, print_comments=False,
                  mark='(Mark)', hints=True, layout='classic',
                  **kwargs):
