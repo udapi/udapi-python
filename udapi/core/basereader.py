@@ -97,13 +97,19 @@ class BaseReader(Block):
         tree = self.read_tree()
         if self.sent_id_filter is None:
             return tree
+
+        skipped_newdoc = None
         while True:
             if tree is None:
                 return None
             if self.sent_id_filter.match(tree.sent_id) is not None:
+                if skipped_newdoc and not tree.newdoc:
+                    tree.newdoc = skipped_newdoc
                 return tree
             logging.debug('Skipping sentence %s as it does not match the sent_id_filter %s.',
                           tree.sent_id, self.sent_id_filter)
+            if tree.newdoc:
+                skipped_newdoc = tree.newdoc
             tree = self.read_tree()
 
     def try_fast_load(self, document):
