@@ -35,7 +35,7 @@ class ComplyWithText(Block):
 
     def __init__(self, fix_text=True, prefer_mwt=True, allow_goeswith=True, max_mwt_length=4,
                  allow_add_punct=True, allow_delete_punct=True, allow_hyphen_goeswith=True,
-                 previous_form_label='CorrectForm', previous_text_label='CorrectText',
+                 previous_form_label='CorrectForm', previous_text_label='OrigText',
                  added_label='Added', **kwargs):
         """Args:
         fix_text: After all heuristics are applied, the token forms may still not match the text.
@@ -74,8 +74,8 @@ class ComplyWithText(Block):
             When setting this parameter to an empty string, no values will be stored to node.misc.
             When keeping the default name CorrectForm, node.feats["Typo"] = "Yes" will be filled as well.
         previous_text_label - when we are not able to adapt the annotation to match root.text
-            and fix_text is True, we store the previous root.text in a CoNLL-U comment with this label.
-            Default="CorrectText". When setting this parameter to an empty string,
+            and fix_text is True, we store the previous root.text value in a CoNLL-U comment with this label.
+            Default="OrigText". When setting this parameter to an empty string,
             no values will be stored to root.comment.
         added_label - when creating new nodes because allow_add_punct=True, we mark these nodes
             as new_node.misc[added_label] = 1. Default="Added".
