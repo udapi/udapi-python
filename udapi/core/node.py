@@ -516,6 +516,7 @@ class Node(object):
             `rehang_warn` means to rehang and warn:-).
         """
         self._parent._children.remove(self)
+        empty_follows = None
         if children is not None and self._children:
             if children.startswith('rehang'):
                 for child in self._children:
@@ -523,6 +524,16 @@ class Node(object):
                 self._parent._children.extend(self._children)
                 self._parent._children.sort()
                 self._children.clear()
+            elif self._root.empty_nodes:
+                will_be_removed = self.descendants(add_self=1)
+                prev_nonempty = self._root
+                empty_follows = {}
+                for node in self._root.descendants_and_empty:
+                    if node.empty:
+                        empty_follows[node] = prev_nonempty
+                    elif node not in will_be_removed:
+                        prev_nonempty = node
+
             if children.endswith('warn'):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
@@ -536,14 +547,29 @@ class Node(object):
                 self._root._descendants.remove(self)
             except ValueError:
                 pass # self may be an already deleted node e.g. if n.remove() called twice
-            for (new_ord, node) in enumerate(self._root._descendants[self._ord - 1:], self._ord):
-                node.ord = new_ord
+            else:
+                for (new_ord, node) in enumerate(self._root._descendants[self._ord - 1:], self._ord):
+                    node.ord = new_ord
+                for empty in self._root.empty_nodes:
+                    if empty > self:
+                        empty.ord = round(empty.ord - 1, 1)
         else:
             # TODO nodes_to_remove = self.unordered_descendants()
             # and mark all nodes as deleted, remove them from MWT and coref mentions
             self._root._descendants = sorted(self._root.unordered_descendants())
             for (new_ord, node) in enumerate(self._root._descendants, 1):
                 node.ord = new_ord
+            # Decrease ord of empty nodes (keep their fractional part)
+            # Make sure that e.g. after deleting node with ord=2
+            # ords "1 1.1 1.2 2 2.1" will become "1 1.1 1.2 1.3".
+            if empty_follows:
+                last_ord = 0
+                for empty in self._root.empty_nodes:
+                    prev_nonempty = empty_follows[empty]
+                    new_ord = round(prev_nonempty.ord + (empty.ord % 1), 1)
+                    while new_ord <= last_ord:
+                        new_ord = round(new_ord + 0.1, 1)
+                    last_ord, empty.ord = new_ord, new_ord
 
     def _shift_before_ord(self, reference_ord, without_children=False):
         """Internal method for changing word order."""
