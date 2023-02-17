@@ -300,7 +300,7 @@ class CorefEntity(object):
         self.split_ante = []
 
     def __lt__(self, another):
-        """Does this CorefEntity precedes (word-order wise) `another` entity?
+        """Does this CorefEntity precede (word-order wise) `another` entity?
 
         This method defines a total ordering of all entities
         by the first mention of each entity (see `CorefMention.__lt__`).
