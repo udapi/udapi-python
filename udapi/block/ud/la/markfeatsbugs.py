@@ -27,8 +27,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
     def process_node(self, node):
         rf = []
         af = {}
+        # PROIEL-specific: greek words without features
+        if node.lemma == 'greek.expression':
+            pass
         # NOUNS ################################################################
-        if node.upos == 'NOUN':
+        elif node.upos == 'NOUN':
             if node.feats['Case'] and not node.feats['Abbr'] == 'Yes': # abbreviated or indeclinable nouns
                 rf = ['Gender', 'Number', 'Case']
             af = {
@@ -125,14 +128,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             af['PronType'] = []
             if node.lemma in ['is', 'ego', 'tu', 'sui', 'seipsum', 'nos', 'uos', 'vos', 'tumetipse', 'nosmetipse']:
                 af['PronType'].append('Prs')
-            elif node.lemma in ['quis', 'aliquis', 'nihil', 'nemo', 'quivis']:
+            elif node.lemma in ['quis', 'aliquis', 'nihil', 'nemo', 'quivis', 'qui']:
                 af['PronType'].append('Ind')
             elif node.lemma in ['inuicem', 'invicem']:
                 af['PronType'].append('Rcp')
                 rf.remove('Case')
-            elif node.lemma in ['quicumque', 'qui', 'quisquis']:
+            if node.lemma in ['quicumque', 'qui', 'quisquis']:
                 af['PronType'].append('Rel')
-            if node.lemma in ['qui', 'quis', 'quisnam', 'ecquis']:
+            if node.lemma in ['qui', 'quis', 'quisnam', 'ecquis', 'ecqui']:
                 af['PronType'].append('Int')
             if self.flavio:
                 # Flavio added InflClass but not everywhere, so it is not required.
@@ -176,7 +179,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 af['PronType'].append('Ind')
             elif node.lemma in ['omnis', 'totus', 'ambo', 'cunctus', 'unusquisque', 'uniuersus']:
                 af['PronType'].append('Tot')
-            if node.lemma in ['quantus', 'qualis', 'quicumque', 'quot', 'quotus']:
+            if node.lemma in ['quantus', 'qualis', 'quicumque', 'quot', 'quotus', 'quotquot']:
                 af['PronType'].append('Rel')
             elif node.lemma in ['qui', 'quantus', 'quot']:
                 af['PronType'].append('Int')
