@@ -18,4 +18,4 @@ class RemoveNoCorefEntities(Block):
         entities = doc.coref_entities
         if not entities:
             return
-        doc.coref_entities = [e for e in entities if not re.match(r'^NOCOREF', e.eid)]
+        doc._eid_to_entity = {e._eid: e for e in entities if not re.match(r'^NOCOREF', e.eid)}
