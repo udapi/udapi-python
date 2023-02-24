@@ -11,7 +11,7 @@ HEADER = '''
 <title>Udapi CorefUD viewer</title>
 <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 '''
-# I use a pure CSS-3 solution: #overiew {resize: horizontal; overflow: auto;}
+# I use a pure CSS-3 solution: #overview {resize: horizontal; overflow: auto;}
 # so that the width of #overview can be changed by dragging the bottom right corner.
 # The following lines would make the whole right border draggable:
 #<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
@@ -25,9 +25,19 @@ CSS = '''
             display: grid; border-right: double;
             padding: 5px; width: 20em; background: #ddd; border-radius: 5px;
 }
+#main-menu {position:fixed; z-index:150; top: 4px; right:4px; display:none;
+            padding: 5px 55px 5px 5px; background-color:gray; border-radius: 5px;}
+#menubtn {position: fixed; right: 8px; top: 8px; z-index: 200;}
+#menubtn div {width: 30px; height: 4px; background-color: black; margin: 5px 0; transition: 0.4s;}
+.change .b1 {transform: translate(0, 9px) rotate(-45deg);}
+.change .b2 {opacity: 0;}
+.change .b3 {transform: translate(0, -9px) rotate(45deg);}
+
 .sentence span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
+.sentence .tree span {border: none; padding: 0; display:inline;}
 .sentence span .eid {display:block; font-size: 10px;}
-.showtree {float:left; margin: 5px;}
+.showtree {margin: 5px; user-select: none;}
+.display-inline {display: inline;}
 .close{float:right; font-weight: 900; font-size: 30px; width: 36px; height: 36px; padding: 2px}
 .empty {color: gray;}
 .sentence .singleton {border-style: dotted;}
@@ -55,16 +65,22 @@ $("span").hover(
  function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
  function(e) {$("span").removeClass("active");}
 );
+
+function menuclick(x) {
+  x.classList.toggle("change");
+  $("#main-menu").toggle();
+}
+
 '''
 
 SCRIPT_SHOWTREE = '''
 $(".sentence").each(function(index){
   var sent_id = this.id;
-  $(this).before(
+  $(this).prepend(
     $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
-        var tdiv = $("<div>", {id:"tree-"+sent_id}).insertBefore($(this));
+        var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(this));
         tdiv.treexView([data[index]]);
         $("<button>",{append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
@@ -130,6 +146,13 @@ class CorefHtml(BaseWriter):
         print('</div>')
 
         print('<div id="main">')
+        print('<div id="main-menu"><div id="menu-show">Show<br>\n'
+              ' <input id="show-eid" type="checkbox" checked onclick="$(\'.eid\').toggle();"><label for="show-eid">eid</label><br>\n'
+              ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle();"><label for="show-trees">trees</label><br>\n'
+              ' <input id="show-breaks" type="checkbox" checked onclick="$(\'.sentence\').toggleClass(\'display-inline\');"><label for="show-breaks">line breaks</label><br>\n'
+              ' <input id="show-pars" type="checkbox" checked onclick="$(\'.par\').toggle();"><label for="show-pars">paragraphs</label><br>\n'
+              '</div></div>\n'
+              '<button id="menubtn" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
         for tree in doc.trees:
             self.process_tree(tree, mention_ids, entity_colors)
         print('</div>')
@@ -180,7 +203,7 @@ class CorefHtml(BaseWriter):
         if tree.newdoc:
             print(f'<hr><h1>{tree.newdoc if tree.newdoc is not True else ""}</h1><hr>')
         elif tree.newpar:
-            print('<hr>')
+            print('<hr class="par">')
         opened = []
         print(f'<p class="sentence" id={_id(tree)}>')
         for node in nodes_and_empty:
@@ -188,7 +211,7 @@ class CorefHtml(BaseWriter):
                 subspan = subspans.pop()
                 self._start_subspan(subspan, mention_ids, entity_colors)
                 opened.append(subspan)
-            
+
             is_head = self._is_head(node)
             if is_head:
                 print('<b>', end='')
@@ -199,7 +222,7 @@ class CorefHtml(BaseWriter):
                 print('</i>', end='')
             if is_head:
                 print('</b>', end='')
-            
+
             while opened and opened[-1].words[-1] == node:
                 print('</span>', end='')
                 opened.pop()
@@ -229,7 +252,7 @@ class CorefHtml(BaseWriter):
 
             if not node.no_space_after:
                 print(' ', end='')
-                
+
         print('</p>')
 
     def _is_head(self, node):
