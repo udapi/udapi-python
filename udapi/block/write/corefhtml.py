@@ -11,13 +11,7 @@ HEADER = '''
 <title>Udapi CorefUD viewer</title>
 <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
 '''
-# I use a pure CSS-3 solution: #overiew {resize: horizontal; overflow: auto;}
-# so that the width of #overview can be changed by dragging the bottom right corner.
-# The following lines would make the whole right border draggable:
-#<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-#<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-#<script>$( function() {$( "#overview" ).resizable({handles: "e"});} );</script>
-#<div id="overview" class="ui-widget-content">
+
 CSS = '''
 #wrap {display: flex; align-items: flex-start;}
 #main {width: 100%; padding: 5px; background: white; z-index:100;}
@@ -25,9 +19,23 @@ CSS = '''
             display: grid; border-right: double;
             padding: 5px; width: 20em; background: #ddd; border-radius: 5px;
 }
-.sentence span {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
-.sentence span .eid {display:block; font-size: 10px;}
-.showtree {float:left; margin: 5px;}
+#main-menu {position:fixed; z-index:150; top: 4px; right:4px; display:none;
+            padding: 5px 55px 5px 5px; background-color:gray; border-radius: 5px;}
+#main-menu div {display: inline-block;}
+#menubtn {position: fixed; right: 8px; top: 8px; z-index: 200;}
+#menubtn div {width: 30px; height: 4px; background-color: black; margin: 5px 0; transition: 0.4s;}
+.change .b1 {transform: translate(0, 9px) rotate(-45deg);}
+.change .b2 {opacity: 0;}
+.change .b3 {transform: translate(0, -9px) rotate(45deg);}
+
+.m {border: 1px solid black; border-radius: 5px; padding: 2px; display:inline-block;}
+.nobox {border:1px solid transparent; padding:0; background: transparent !important; display: inline}
+.nobox .labels {display: inline;}
+.nocolor {color: black !important;}
+.nobold {font-weight: normal;}
+.labels {display: block; font-size: 10px;}
+.showtree {margin: 5px; user-select: none;}
+.display-inline {display: inline;}
 .close{float:right; font-weight: 900; font-size: 30px; width: 36px; height: 36px; padding: 2px}
 .empty {color: gray;}
 .sentence .singleton {border-style: dotted;}
@@ -38,33 +46,39 @@ CSS = '''
 '''
 
 SCRIPT_BASE = '''
-$("span").click(function(e) {
+$(".m").click(function(e) {
  let was_selected = $(this).hasClass("selected");
- $("span").removeClass("selected");
+ $(".m").removeClass("selected");
  if (!was_selected) {$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
  e.stopPropagation();
 });
 
 window.onhashchange = function() {
- $("span").removeClass("selected");
+ $(".m").removeClass("selected");
  var fragment = window.location.hash.substring(1);
  if (fragment) {$("." + fragment).addClass("selected");}
 }
 
-$("span").hover(
- function(e) {$("span").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
- function(e) {$("span").removeClass("active");}
+$(".m").hover(
+ function(e) {$(".m").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
+ function(e) {$(".m").removeClass("active");}
 );
+
+function menuclick(x) {
+  x.classList.toggle("change");
+  $("#main-menu").toggle();
+}
+
 '''
 
 SCRIPT_SHOWTREE = '''
 $(".sentence").each(function(index){
   var sent_id = this.id;
-  $(this).before(
+  $(this).prepend(
     $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
-        var tdiv = $("<div>", {id:"tree-"+sent_id}).insertBefore($(this));
+        var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(this));
         tdiv.treexView([data[index]]);
         $("<button>",{append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
@@ -78,10 +92,11 @@ WRITE_HTML = udapi.block.write.html.Html()
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, show_trees=True, show_eid=True, colors=7, **kwargs):
+    def __init__(self, show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
         super().__init__(**kwargs)
         self.show_trees = show_trees
         self.show_eid = show_eid
+        self.show_etype = show_etype
         self.colors = colors
 
     def _representative_word(self, entity):
@@ -104,6 +119,10 @@ class CorefHtml(BaseWriter):
         if self.colors:
             for i in range(self.colors):
                 print(f'.c{i} {{color: hsl({int(i * 360/self.colors)}, 100%, 30%);}}')
+        if not self.show_eid:
+            print('.eid {display: none;}')
+        if not self.show_etype:
+            print('.etype {display: none;}')
         print('</style>')
         print('</head>\n<body>\n<div id="wrap">')
 
@@ -130,6 +149,19 @@ class CorefHtml(BaseWriter):
         print('</div>')
 
         print('<div id="main">')
+        print('<div id="main-menu">Show<br><div>\n'
+              f' <input id="show-eid" type="checkbox" {"checked" if self.show_eid else ""} onclick="$(\'.eid\').toggle();"><label for="show-eid">eid</label><br>\n'
+              f' <input id="show-etype" type="checkbox" {"checked" if self.show_etype else ""} onclick="$(\'.etype\').toggle();"><label for="show-etype">etype</label><br>\n'
+              ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle();"><label for="show-trees">trees</label><br>\n'
+              ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\');"><label for="show-color">colors</label><br>\n'
+              ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\');"><label for="show-boxes">boxes</label></div><div>\n'
+              ' <input id="show-heads" type="checkbox" checked onclick="$(\'.head\').toggleClass(\'nobold\');"><label for="show-heads">heads in bold</label><br>\n'
+              ' <input id="show-empty" type="checkbox" checked onclick="$(\'.empty\').toggle();"><label for="show-empty">empty words</label><br>\n'
+              ' <input id="show-breaks" type="checkbox" checked onclick="$(\'.sentence\').toggleClass(\'display-inline\');"><label for="show-breaks">sentence per line</label><br>\n'
+              ' <input id="show-pars" type="checkbox" checked onclick="$(\'.par\').toggle();"><label for="show-pars">paragraphs</label><br>\n'
+              ' <input id="show-docs" type="checkbox" checked onclick="$(\'h1\').toggle();"><label for="show-docs">document names</label><br>\n'
+              '</div></div>\n'
+              '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
         for tree in doc.trees:
             self.process_tree(tree, mention_ids, entity_colors)
         print('</div>')
@@ -145,8 +177,8 @@ class CorefHtml(BaseWriter):
     def _start_subspan(self, subspan, mention_ids, entity_colors, crossing=False):
         m = subspan.mention
         e = m.entity
-        classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"}'
-        title = f'eid={subspan.subspan_eid}\ntype={e.etype} ({entity_colors[e]})\nhead={m.head.form}'
+        classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"} m'
+        title = f'eid={subspan.subspan_eid}\netype={e.etype}\nhead={m.head.form}'
         if self.colors:
             classes += f' {entity_colors[e]}'
         if all(w.is_empty() for w in subspan.words):
@@ -161,9 +193,9 @@ class CorefHtml(BaseWriter):
         span_id = ''
         if (subspan.subspan_id == '' or subspan.subspan_id.startswith('[1/')) and e.mentions[0] == m:
             span_id = f'id="{e.eid}" '
-        print(f'<span {span_id}class="{classes}" title="{title}">', end='')
-        if self.show_eid:
-            print(f'<b class="eid">{subspan.subspan_eid}</b>', end='')
+        print(f'<span {span_id}class="{classes}" title="{title}">'
+              f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
+              f' <i class="etype">{e.etype}</i></span>', end='')
 
     def process_tree(self, tree, mention_ids, entity_colors):
         mentions = set()
@@ -180,7 +212,7 @@ class CorefHtml(BaseWriter):
         if tree.newdoc:
             print(f'<hr><h1>{tree.newdoc if tree.newdoc is not True else ""}</h1><hr>')
         elif tree.newpar:
-            print('<hr>')
+            print('<hr class="par">')
         opened = []
         print(f'<p class="sentence" id={_id(tree)}>')
         for node in nodes_and_empty:
@@ -188,18 +220,18 @@ class CorefHtml(BaseWriter):
                 subspan = subspans.pop()
                 self._start_subspan(subspan, mention_ids, entity_colors)
                 opened.append(subspan)
-            
+
             is_head = self._is_head(node)
             if is_head:
-                print('<b>', end='')
+                print('<b class="head">', end='')
             if node.is_empty():
-                print('<i>', end='')
+                print('<i class="empty">', end='')
             print(node.form, end='')
             if node.is_empty():
                 print('</i>', end='')
             if is_head:
                 print('</b>', end='')
-            
+
             while opened and opened[-1].words[-1] == node:
                 print('</span>', end='')
                 opened.pop()
@@ -229,7 +261,7 @@ class CorefHtml(BaseWriter):
 
             if not node.no_space_after:
                 print(' ', end='')
-                
+
         print('</p>')
 
     def _is_head(self, node):
