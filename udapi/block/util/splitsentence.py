@@ -60,12 +60,20 @@ class SplitSentence(Block):
                 new_root.steal_nodes(nodes_to_move)
                 # The steal_nodes() method does not make sure that all nodes newly attached
                 # to the artificial root have the 'root' relation. Fix it.
+                n_root = 0
                 for n in root.descendants:
                     if n.parent.is_root():
                         n.deprel = 'root'
+                        n_root += 1
+                if n_root > 1:
+                    logging.warning('More than one 0:root relation in the first part of the sentence.')
+                n_root = 0
                 for n in new_root.descendants:
                     if n.parent.is_root():
                         n.deprel = 'root'
+                        n_root += 1
+                if n_root > 1:
+                    logging.warning('More than one 0:root relation in the second part of the sentence.')
                 # Update the sentence text attributes of the new sentences.
                 root.text = root.compute_text()
                 new_root.text = new_root.compute_text()
