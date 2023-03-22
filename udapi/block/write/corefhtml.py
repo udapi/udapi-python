@@ -1,8 +1,24 @@
-"""CorefHtml class is a writer for HTML+JavaScript visualization of coreference."""
+"""CorefHtml class is a writer for HTML+JavaScript visualization of coreference.
+
+When using lazy loading of documents (infinite scrolling),
+modern browsers don't allow JavaScript to load files from a local file system
+("Access to XMLHttpRequest at 'file://.../doc2.html' from origin 'null' has been
+blocked by CORS policy: Cross origin requests are only supported for protocol schemes:
+http, data, chrome, chrome-extension, https.")
+
+The recommended solution is to start a local web server, e.g. using
+  python -m http.server
+and browse http://0.0.0.0:8000/my.html.
+
+Non-recommended solution is to run
+ google-chrome --new-window --user-data-dir=/tmp/chrome-proxy --allow-file-access-from-files my.html
+"""
 from udapi.core.basewriter import BaseWriter
 from udapi.core.coref import span_to_nodes, CorefEntity, CorefMention
 from collections import Counter
 import udapi.block.write.html
+import sys
+import os
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
@@ -46,12 +62,19 @@ CSS = '''
 '''
 
 SCRIPT_BASE = '''
-$(".m").click(function(e) {
- let was_selected = $(this).hasClass("selected");
- $(".m").removeClass("selected");
- if (!was_selected) {$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
- e.stopPropagation();
-});
+function add_mention_listeners(mentions){
+ mentions.click(function(e) {
+   let was_selected = $(this).hasClass("selected");
+   $(".m").removeClass("selected");
+   if (!was_selected) {$("."+$(this).attr("class").split(" ")[0]).addClass("selected");}
+   e.stopPropagation();
+  });
+ mentions.hover(
+   function(e) {$(".m").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
+   function(e) {$(".m").removeClass("active");}
+  );
+}
+add_mention_listeners($(".m"));
 
 window.onhashchange = function() {
  $(".m").removeClass("selected");
@@ -59,16 +82,22 @@ window.onhashchange = function() {
  if (fragment) {$("." + fragment).addClass("selected");}
 }
 
-$(".m").hover(
- function(e) {$(".m").removeClass("active"); $("."+$(this).attr("class").split(" ")[1]).addClass("active");},
- function(e) {$(".m").removeClass("active");}
-);
-
 function menuclick(x) {
   x.classList.toggle("change");
   $("#main-menu").toggle();
 }
 
+var docs_loaded = 1;
+$(window).scroll(function () {
+  if ($(window).scrollTop() >= $(document).height() - $(window).height() - 42 && docs_loaded < all_docs) {
+    docs_loaded += 1;
+    console.log("loading doc" + docs_loaded + ".html");
+    $.get(docs_dir + "/doc" + docs_loaded + ".html", function(data){
+     $("#main").append(data);
+     add_mention_listeners($("#doc" + docs_loaded + " .m"));
+    });
+  }
+});
 '''
 
 SCRIPT_SHOWTREE = '''
@@ -80,7 +109,7 @@ $(".sentence").each(function(index){
       if (tree_div.length == 0){
         var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(this));
         tdiv.treexView([data[index]]);
-        $("<button>",{append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
+        $("<button>", {append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
       } else {tree_div.remove();}
     })
@@ -92,12 +121,15 @@ WRITE_HTML = udapi.block.write.html.Html()
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
+    def __init__(self, docs_dir='.', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
         super().__init__(**kwargs)
+        self.docs_dir = docs_dir
         self.show_trees = show_trees
         self.show_eid = show_eid
         self.show_etype = show_etype
         self.colors = colors
+        if docs_dir != '.' and not os.path.exists(docs_dir):
+            os.makedirs(docs_dir)
 
     def _representative_word(self, entity):
         # return the first PROPN or NOUN. Or the most frequent one?
@@ -109,7 +141,19 @@ class CorefHtml(BaseWriter):
                 return lemma_or_form(nodes[0])
         return lemma_or_form(heads[0])
 
+    def process_ud_doc(self, ud_doc, doc_num, mention_ids, entity_colors):
+        print(f'<div class="doc" id="doc{doc_num}">')
+        for tree in ud_doc:
+            self.process_tree(tree, mention_ids, entity_colors)
+        print('</div>')
+
     def process_document(self, doc):
+        ud_docs = []
+        for tree in doc.trees:
+            if tree.newdoc or not ud_docs:
+                ud_docs.append([])
+            ud_docs[-1].append(tree)
+
         print(HEADER)
         if self.show_trees:
             print('<script src="https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js"></script>')
@@ -162,11 +206,22 @@ class CorefHtml(BaseWriter):
               ' <input id="show-docs" type="checkbox" checked onclick="$(\'h1\').toggle();"><label for="show-docs">document names</label><br>\n'
               '</div></div>\n'
               '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
-        for tree in doc.trees:
-            self.process_tree(tree, mention_ids, entity_colors)
-        print('</div>')
 
-        print('<script>')
+        # The first ud_doc will be printed to the main html file.
+        self.process_ud_doc(ud_docs[0], 1, mention_ids, entity_colors)
+        print('</div>') # id=main
+
+        # Other ud_docs will be printed into separate files (so they can be loaded lazily)
+        orig_stdout = sys.stdout
+        try:
+            for i, ud_doc in enumerate(ud_docs[1:], 2):
+                sys.stdout = open(f"{self.docs_dir}/doc{i}.html", 'wt')
+                self.process_ud_doc(ud_doc, i, mention_ids, entity_colors)
+                sys.stdout.close()
+        finally:
+            sys.stdout = orig_stdout
+
+        print(f'<script>\nvar all_docs = {len(ud_docs)};\nvar docs_dir = "{self.docs_dir}";')
         print(SCRIPT_BASE)
         if self.show_trees:
             WRITE_HTML.print_doc_json(doc)
