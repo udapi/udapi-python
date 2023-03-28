@@ -87,41 +87,78 @@ function menuclick(x) {
   $("#main-menu").toggle();
 }
 
+function load_doc(doc_num) {
+  loading_now = true;
+  console.log("loading doc" + doc_num + ".html");
+  $.get(docs_dir + "/doc" + doc_num + ".html", function(data){
+    $("#main").append(data);
+    add_mention_listeners($("#doc" + doc_num + " .m"));
+    $("#doc" + doc_num + " .sentence").each(add_show_tree_button);
+    loading_now = false;
+  }).fail(function(){
+    if (! load_fail_reported) {
+      load_fail_reported = true;
+      alert("Cannot load " + docs_dir + "/doc" + doc_num
+      + ".html\\nLocal files do not support lazy loading. Run a web server 'python -m http.server'");
+    }
+  });
+}
+
 var docs_loaded = 1;
+var load_fail_reported = false;
+var loading_now = false;
+add_show_tree_button = function(index, el){ } // to be redefined later if show_trees=True
 $(window).scroll(function () {
-  if ($(window).scrollTop() >= $(document).height() - $(window).height() - 42 && docs_loaded < all_docs) {
+  if (!loading_now && $(window).scrollTop() >= $(document).height() - $(window).height() - 42 && docs_loaded < all_docs) {
     docs_loaded += 1;
-    console.log("loading doc" + docs_loaded + ".html");
-    $.get(docs_dir + "/doc" + docs_loaded + ".html", function(data){
-     $("#main").append(data);
-     add_mention_listeners($("#doc" + docs_loaded + " .m"));
-    });
+    load_doc(docs_loaded);
   }
 });
 '''
 
 SCRIPT_SHOWTREE = '''
-$(".sentence").each(function(index){
-  var sent_id = this.id;
-  $(this).prepend(
+function show_tree_in_tdiv(tdiv, doc_number, index){
+  tdiv.treexView([docs_json[doc_number][index]]);
+  $("<button>", {append:"×", class:"close"}).prependTo(tdiv).on("click", function(){tdiv.remove();});
+}
+
+var load_json_fail_reported = false;
+add_show_tree_button = function(index, el){
+  var sent_id = el.id;
+  $(el).prepend(
     $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
-        var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(this));
-        tdiv.treexView([data[index]]);
-        $("<button>", {append:"×", class:"close"}).prependTo(tdiv).on("click", function(){$(this).parent().remove();});
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
+        var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(el));
+        doc_number = 1 * el.parentElement.id.substr(3);
+        if (docs_json[doc_number]){
+          show_tree_in_tdiv(tdiv, doc_number, index);
+        } else {
+          $.getJSON(docs_dir + "/doc" + doc_number + ".json", function(data){
+            docs_json[doc_number] = data;
+            show_tree_in_tdiv(tdiv, doc_number, index);
+          }).fail(function(){
+            if (! load_json_fail_reported) {
+              load_json_fail_reported = true;
+              alert("Cannot load " + docs_dir + "/doc" + doc_number
+              + ".json\\nLocal files do not support lazy loading. Run a web server 'python -m http.server'");
+            }
+          });
+        }
       } else {tree_div.remove();}
     })
   );
-});
+}
+
+$("#doc1 .sentence").each(add_show_tree_button);
 '''
 
 WRITE_HTML = udapi.block.write.html.Html()
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, docs_dir='.', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
+    def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
         super().__init__(**kwargs)
         self.docs_dir = docs_dir
         self.show_trees = show_trees
@@ -130,6 +167,8 @@ class CorefHtml(BaseWriter):
         self.colors = colors
         if docs_dir != '.' and not os.path.exists(docs_dir):
             os.makedirs(docs_dir)
+        self._mention_ids = {}
+        self._entity_colors = {}
 
     def _representative_word(self, entity):
         # return the first PROPN or NOUN. Or the most frequent one?
@@ -141,18 +180,21 @@ class CorefHtml(BaseWriter):
                 return lemma_or_form(nodes[0])
         return lemma_or_form(heads[0])
 
-    def process_ud_doc(self, ud_doc, doc_num, mention_ids, entity_colors):
+    def process_ud_doc(self, ud_doc, doc_num):
         print(f'<div class="doc" id="doc{doc_num}">')
         for tree in ud_doc:
-            self.process_tree(tree, mention_ids, entity_colors)
+            self.process_tree(tree)
         print('</div>')
 
     def process_document(self, doc):
-        ud_docs = []
+        ud_docs, doc_num, sent_id2doc = [], 0, {}
         for tree in doc.trees:
             if tree.newdoc or not ud_docs:
                 ud_docs.append([])
+                doc_num += 1
             ud_docs[-1].append(tree)
+            sent_id2doc[tree.sent_id] = doc_num
+        # TODO: use sent_id2doc
 
         print(HEADER)
         if self.show_trees:
@@ -170,16 +212,16 @@ class CorefHtml(BaseWriter):
         print('</style>')
         print('</head>\n<body>\n<div id="wrap">')
 
-        mention_ids = {}
-        entity_colors = {}
+        self._mention_ids = {}
+        self._entity_colors = {}
         entities_of_type = Counter()
         for entity in doc.coref_entities:
             if self.colors:
                 count = entities_of_type[entity.etype]
                 entities_of_type[entity.etype] = count + 1
-                entity_colors[entity] = f'c{count % self.colors}'
+                self._entity_colors[entity] = f'c{count % self.colors}'
             for idx, mention in enumerate(entity.mentions, 1):
-                mention_ids[mention] = f'{entity.eid}e{idx}'
+                self._mention_ids[mention] = f'{entity.eid}e{idx}'
 
         print('<div id="overview">')
         print('<table><thead><tr><th title="entity id">eid</th>'
@@ -208,7 +250,7 @@ class CorefHtml(BaseWriter):
               '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
 
         # The first ud_doc will be printed to the main html file.
-        self.process_ud_doc(ud_docs[0], 1, mention_ids, entity_colors)
+        self.process_ud_doc(ud_docs[0], 1)
         print('</div>') # id=main
 
         # Other ud_docs will be printed into separate files (so they can be loaded lazily)
@@ -216,7 +258,7 @@ class CorefHtml(BaseWriter):
         try:
             for i, ud_doc in enumerate(ud_docs[1:], 2):
                 sys.stdout = open(f"{self.docs_dir}/doc{i}.html", 'wt')
-                self.process_ud_doc(ud_doc, i, mention_ids, entity_colors)
+                self.process_ud_doc(ud_doc, i)
                 sys.stdout.close()
         finally:
             sys.stdout = orig_stdout
@@ -224,18 +266,27 @@ class CorefHtml(BaseWriter):
         print(f'<script>\nvar all_docs = {len(ud_docs)};\nvar docs_dir = "{self.docs_dir}";')
         print(SCRIPT_BASE)
         if self.show_trees:
-            WRITE_HTML.print_doc_json(doc)
+            print('docs_json = [false, ', end='') # 1-based index, so dummy docs_json[0]
+            WRITE_HTML.print_doc_json(ud_docs[0])
+            print('];')
+            try:
+                for i, ud_doc in enumerate(ud_docs[1:], 2):
+                    sys.stdout = open(f"{self.docs_dir}/doc{i}.json", 'wt')
+                    WRITE_HTML.print_doc_json(ud_doc)
+                    sys.stdout.close()
+            finally:
+                sys.stdout = orig_stdout
             print(SCRIPT_SHOWTREE)
         print('</script>')
         print('</div></body></html>')
 
-    def _start_subspan(self, subspan, mention_ids, entity_colors, crossing=False):
+    def _start_subspan(self, subspan, crossing=False):
         m = subspan.mention
         e = m.entity
-        classes = f'{e.eid} {mention_ids[m]} {e.etype or "other"} m'
+        classes = f'{e.eid} {self._mention_ids[m]} {e.etype or "other"} m'
         title = f'eid={subspan.subspan_eid}\netype={e.etype}\nhead={m.head.form}'
         if self.colors:
-            classes += f' {entity_colors[e]}'
+            classes += f' {self._entity_colors[e]}'
         if all(w.is_empty() for w in subspan.words):
             classes += ' empty'
         if len(e.mentions) == 1:
@@ -252,7 +303,7 @@ class CorefHtml(BaseWriter):
               f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
               f' <i class="etype">{e.etype}</i></span>', end='')
 
-    def process_tree(self, tree, mention_ids, entity_colors):
+    def process_tree(self, tree):
         mentions = set()
         nodes_and_empty = tree.descendants_and_empty
         for node in nodes_and_empty:
@@ -273,7 +324,7 @@ class CorefHtml(BaseWriter):
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
-                self._start_subspan(subspan, mention_ids, entity_colors)
+                self._start_subspan(subspan)
                 opened.append(subspan)
 
             is_head = self._is_head(node)
@@ -311,7 +362,7 @@ class CorefHtml(BaseWriter):
                 opened = new_opened
                 print('</span>' * (len(endings) + len(brokens)), end='')
                 for broken in brokens:
-                    self._start_subspan(broken, mention_ids, entity_colors, True)
+                    self._start_subspan(broken, True)
                     opened.append(subspan)
 
             if not node.no_space_after:
