@@ -17,6 +17,7 @@ from udapi.core.basewriter import BaseWriter
 from udapi.core.coref import span_to_nodes, CorefEntity, CorefMention
 from collections import Counter
 import udapi.block.write.html
+import gzip
 import sys
 import os
 
@@ -26,6 +27,7 @@ HEADER = '''
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Udapi CorefUD viewer</title>
 <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
 '''
 
 CSS = '''
@@ -87,21 +89,26 @@ function menuclick(x) {
   $("#main-menu").toggle();
 }
 
-function load_doc(doc_num) {
+async function load_doc(doc_num) {
   loading_now = true;
-  console.log("loading doc" + doc_num + ".html");
-  $.get(docs_dir + "/doc" + doc_num + ".html", function(data){
-    $("#main").append(data);
-    add_mention_listeners($("#doc" + doc_num + " .m"));
-    $("#doc" + doc_num + " .sentence").each(add_show_tree_button);
-    loading_now = false;
-  }).fail(function(){
+  let filename = docs_dir + "/doc" + doc_num + ".html.gz"
+  console.log("loading " + filename);
+  try {
+    const res = await fetch(filename);
+    let raw = await res.arrayBuffer();
+    data = pako.inflate(raw, {to: "string"});
+  } catch (error){
     if (! load_fail_reported) {
       load_fail_reported = true;
-      alert("Cannot load " + docs_dir + "/doc" + doc_num
-      + ".html\\nLocal files do not support lazy loading. Run a web server 'python -m http.server'");
+      alert("Cannot load " + filename + "\\nLocal files do not support lazy loading."
+      + " Run a web server 'python -m http.server'\\n"
+      + "error = " + error);
     }
-  });
+  }
+  $("#main").append(data);
+  add_mention_listeners($("#doc" + doc_num + " .m"));
+  $("#doc" + doc_num + " .sentence").each(add_show_tree_button);
+  loading_now = false;
 }
 
 var docs_loaded = 1;
@@ -126,7 +133,7 @@ var load_json_fail_reported = false;
 add_show_tree_button = function(index, el){
   var sent_id = el.id;
   $(el).prepend(
-    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", function() {
+    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", async function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
@@ -135,16 +142,18 @@ add_show_tree_button = function(index, el){
         if (docs_json[doc_number]){
           show_tree_in_tdiv(tdiv, doc_number, index);
         } else {
-          $.getJSON(docs_dir + "/doc" + doc_number + ".json", function(data){
-            docs_json[doc_number] = data;
+          try {
+            console.log("loading doc" + doc_number + ".json.gz");
+            const res = await fetch(docs_dir + "/doc" + doc_number + ".json.gz");
+            let raw = await res.arrayBuffer();
+            docs_json[doc_number] = JSON.parse(pako.inflate(raw, {to: "string"}));
             show_tree_in_tdiv(tdiv, doc_number, index);
-          }).fail(function(){
+          } catch(error) {
             if (! load_json_fail_reported) {
               load_json_fail_reported = true;
-              alert("Cannot load " + docs_dir + "/doc" + doc_number
-              + ".json\\nLocal files do not support lazy loading. Run a web server 'python -m http.server'");
+              alert("Cannot load " + docs_dir + "/doc" + doc_number + ".json.gz:\\n" + error);
             }
-          });
+          }
         }
       } else {tree_div.remove();}
     })
@@ -257,7 +266,7 @@ class CorefHtml(BaseWriter):
         orig_stdout = sys.stdout
         try:
             for i, ud_doc in enumerate(ud_docs[1:], 2):
-                sys.stdout = open(f"{self.docs_dir}/doc{i}.html", 'wt')
+                sys.stdout = gzip.open(f"{self.docs_dir}/doc{i}.html.gz", 'wt')
                 self.process_ud_doc(ud_doc, i)
                 sys.stdout.close()
         finally:
@@ -271,7 +280,7 @@ class CorefHtml(BaseWriter):
             print('];')
             try:
                 for i, ud_doc in enumerate(ud_docs[1:], 2):
-                    sys.stdout = open(f"{self.docs_dir}/doc{i}.json", 'wt')
+                    sys.stdout = gzip.open(f"{self.docs_dir}/doc{i}.json.gz", 'wt')
                     WRITE_HTML.print_doc_json(ud_doc)
                     sys.stdout.close()
             finally:
