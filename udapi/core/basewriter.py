@@ -2,6 +2,7 @@
 import sys
 import logging
 import os
+from pathlib import Path
 
 import udapi.core.coref
 from udapi.core.block import Block
@@ -62,7 +63,7 @@ class BaseWriter(Block):
                 docname = document.meta.get('docname', None)
                 if docname is not None:
                     logging.info('Writing to file %s.', docname)
-                    sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
+                    sys.stdout = self._open(docname)
                 else:
                     logging.warning('docname_as_file=1 but the document contains no docname')
             elif self.overwrite or self.path:
@@ -81,7 +82,7 @@ class BaseWriter(Block):
                             new_ext = old_ext
                         docname = os.path.join(new_dir, new_file + new_ext)
                     logging.info('Writing to file %s.', docname)
-                    sys.stdout = open(docname, 'wt', encoding=self.encoding, newline=self.newline)
+                    sys.stdout = self._open(docname)
                 else:
                     logging.warning('using overwrite or path but document.meta["loaded_from"] is None')
             else:
@@ -96,10 +97,13 @@ class BaseWriter(Block):
                 sys.stdout = self.orig_stdout
             else:
                 logging.info('Writing to file %s.', filename)
-                sys.stdout = open(filename, 'wt', encoding=self.encoding, newline=self.newline)
+                sys.stdout = self._open(filename)
         if old_filehandle not in (sys.stdout, self.orig_stdout):
             old_filehandle.close()
 
+    def _open(self, filename):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        return open(filename, 'wt', encoding=self.encoding, newline=self.newline)
 
     def after_process_document(self, document):
         sys.stdout.flush()
