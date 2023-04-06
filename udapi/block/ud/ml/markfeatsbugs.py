@@ -36,6 +36,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'ADJ':
             self.check_allowed_features(node, {
                 'VerbForm': ['Part'],
+                'NumType': ['Ord'],
                 'Abbr': ['Yes'],
                 'Foreign': ['Yes'],
                 'Typo': ['Yes']})
@@ -116,7 +117,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             else:
                 self.check_required_features(node, ['NumType', 'NumForm', 'Case'])
                 self.check_allowed_features(node, {
-                    'NumType': ['Card'],
+                    'NumType': ['Card', 'Frac'],
                     'NumForm': ['Word'],
                     'Number': ['Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
