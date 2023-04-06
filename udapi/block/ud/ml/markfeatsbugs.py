@@ -29,12 +29,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Animacy': ['Anim', 'Inan'],
                 'Number': ['Sing', 'Plur'],
                 'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Abbr': ['Yes'],
                 'Foreign': ['Yes'],
                 'Typo': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
             self.check_allowed_features(node, {
                 'VerbForm': ['Part'],
+                'Abbr': ['Yes'],
                 'Foreign': ['Yes'],
                 'Typo': ['Yes']})
         # PRONOUNS #############################################################
@@ -43,6 +45,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             af = {
                 'PronType': ['Prs', 'Int', 'Ind'], # demonstrative pronouns are treated as third person personal pronouns
                 'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Abbr': ['Yes'],
                 'Typo': ['Yes']
             }
             if node.feats['PronType'] == 'Prs':
@@ -88,6 +91,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_allowed_features(node, {
                     'PronType': ['Art'],
                     'Definite': ['Ind'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
             else:
@@ -95,6 +99,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_allowed_features(node, {
                     'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg', 'Tot'],
                     'Deixis': ['Prox', 'Remt'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
         # NUMERALS #############################################################
@@ -105,6 +110,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_allowed_features(node, {
                     'NumType': ['Card'],
                     'NumForm': ['Digit', 'Roman'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
             else:
@@ -114,6 +120,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumForm': ['Word'],
                     'Number': ['Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
         # VERBS ################################################################
@@ -125,6 +132,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
                     'Foreign': ['Yes'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
             elif node.feats['VerbForm'] == 'Fin':
@@ -140,6 +148,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
                         'Polite': ['Infm', 'Form'],
+                        'Abbr': ['Yes'],
                         'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
@@ -151,6 +160,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Nec'],
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
+                        'Abbr': ['Yes'],
                         'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
@@ -163,6 +173,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
                         'Voice': ['Act', 'Pass', 'Cau'],
+                        'Abbr': ['Yes'],
                         'Foreign': ['Yes'],
                         'Typo': ['Yes']
                     })
@@ -174,6 +185,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Tense': ['Past'],
                     'Polarity': ['Pos', 'Neg'],
                     'Voice': ['Act', 'Pass', 'Cau'],
+                    'Abbr': ['Yes'],
                     'Foreign': ['Yes'],
                     'Typo': ['Yes']
                 })
@@ -190,6 +202,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Voice': ['Act', 'Pass', 'Cau'],
                     # We only annotate case of verbal nouns if it is not Nom, i.e., there is an actual case suffix.
                     'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                    'Abbr': ['Yes'],
                     'Foreign': ['Yes'],
                     'Typo': ['Yes']
                 })
@@ -204,6 +217,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'VerbForm': ['Fin'],
                         'Mood': ['Imp'],
                         'Polarity': ['Pos', 'Neg'],
+                        'Abbr': ['Yes'],
                         'Typo': ['Yes']
                     })
                 else: # indicative or subjunctive
@@ -214,6 +228,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Mood': ['Ind', 'Sub', 'Cnd'],
                         'Tense': ['Past', 'Imp', 'Pres', 'Fut'], # only in indicative
                         'Polarity': ['Pos', 'Neg'],
+                        'Abbr': ['Yes'],
                         'Typo': ['Yes']
                     })
             else: # verbal noun
@@ -228,6 +243,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Polarity': ['Pos', 'Neg'],
                     # We only annotate case of verbal nouns if it is not Nom, i.e., there is an actual case suffix.
                     'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                    'Abbr': ['Yes'],
                     'Typo': ['Yes']
                 })
         # ADVERBS ##############################################################
@@ -248,13 +264,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Case suffixes after numbers are separate tokens, they are attached
                 # via the 'case' relation and they bear the Case feature (the number does not).
                 'Case': ['Gen', 'Dat', 'Ben', 'Acc', 'Voc', 'Loc', 'Abl', 'Ins', 'Cmp', 'Com', 'All'],
+                'Abbr': ['Yes'],
                 'Typo': ['Yes']})
         # PARTICLES ############################################################
         elif node.upos == 'PART':
             self.check_allowed_features(node, {
                 'Polarity': ['Neg'],
+                'Abbr': ['Yes'],
                 'Typo': ['Yes']
             })
         # THE REST: NO FEATURES ################################################
         else:
-            self.check_allowed_features(node, {'Typo': ['Yes']})
+            self.check_allowed_features(node, {'Abbr': ['Yes'], 'Typo': ['Yes']})
