@@ -23,7 +23,7 @@ class Wc(Block):
         self.mwts += mwtoks
         self.tokens += len(tree.token_descendants) if mwtoks else len(tree.descendants)
         self.empty += len(tree.empty_nodes)
-        if tree.newdoc:
+        if tree.newdoc or tree == tree.document[0].trees[0]:
             self.docs += 1
         if tree.newpar:
             self.paragraphs += 1

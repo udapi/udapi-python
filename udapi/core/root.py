@@ -178,6 +178,10 @@ class Root(Node):
         """
         mwt = MWT(words, form, misc, root=self)
         self._mwts.append(mwt)
+        if words[-1].misc["SpaceAfter"] == "No":
+            mwt.misc["SpaceAfter"] = "No"
+        for word in words:
+            word.misc["SpaceAfter"] = ""
         return mwt
 
     @property

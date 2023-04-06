@@ -80,9 +80,13 @@ def _blocks_in_a_package(package_name):
             pname = pname[12:]
         blocks = []
         for sname in submodule_names:
-            module =  __import__(f"{package_name}.{sname}", fromlist="dummy")
-            bname = [c for c in dir(module) if c.lower() == sname][0]
-            blocks.append(f"{pname}.{bname}")
+            try: # ignore modules with compilation errors
+                module =  __import__(f"{package_name}.{sname}", fromlist="dummy")
+                bnames = [c for c in dir(module) if c.lower() == sname]
+                if bnames:
+                    blocks.append(f"{pname}.{bnames[0]}")
+            except:
+                pass
         return blocks
     except:
             return []
@@ -114,13 +118,13 @@ def _import_blocks(block_names, block_args):
             exec(command)  # pylint: disable=exec-used
         except ModuleNotFoundError as err:
             package_name = ".".join(module.split(".")[:-1])
-            blocks = _blocks_in_a_package(package_name)
-            if not blocks:
+            package_blocks = _blocks_in_a_package(package_name)
+            if not package_blocks:
                 raise
             raise ModuleNotFoundError(
                 f"Cannot find block {block_name} (i.e. class {module}.{class_name})\n"
                 f"Available block in {package_name} are:\n"
-                + "\n".join(_blocks_in_a_package(package_name))) from err
+                + "\n".join(package_blocks)) from err
         except Exception as ex:
             logging.warning(f"Cannot import block {block_name} (i.e. class {module}.{class_name})")
             raise

@@ -314,6 +314,6 @@ class BaseReader(Block):
         docs = []
         while not self.finished:
             doc = Document()
-            self.process_document(doc)
+            self.apply_on_document(doc)
             docs.append(doc)
         return docs

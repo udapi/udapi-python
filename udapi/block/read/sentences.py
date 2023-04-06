@@ -56,3 +56,8 @@ class Sentences(BaseReader):
         if self.newdoc_if_empty_line and preceded_by_empty_line:
             root.newdoc = True
         return root
+
+    # The first line in a file also marks a start of new document
+    def after_process_document(self, document):
+        if self.newdoc_if_empty_line:
+            document.bundles[0].trees[0].newdoc = True
