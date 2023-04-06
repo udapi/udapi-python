@@ -52,7 +52,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             if node.feats['PronType'] == 'Prs':
                 af['Reflex'] = ['Yes']
                 if node.feats['Reflex'] == 'Yes':
-                    af['Case'] = [c for c in af['Case'] if c != 'Nom' and c != 'Voc']
+                    rf = ['PronType']
                 else: # not reflexive
                     rf.extend(['Person', 'Number'])
                     af['Person'] = ['1', '2', '3']
