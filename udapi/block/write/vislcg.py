@@ -64,10 +64,7 @@ class Vislcg(BaseWriter):
         # Print the line with forms and optional upos tags and feats.
         for token in tree.token_descendants:
             print('"<%s>"' % self._escape(token.form))
-            try:
-                words = token.words
-            except AttributeError:
-                words = [token]
+            words = token.words
             print('\t' + self._node(words[0]))
             for nonfirst_mwt_word in words[1:]:
                 print('\t\t' + self._node(nonfirst_mwt_word))

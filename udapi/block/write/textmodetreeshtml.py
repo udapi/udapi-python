@@ -26,7 +26,7 @@ class TextModeTreesHtml(TextModeTrees):
     This block is a subclass of `TextModeTrees`, see its documentation for more info.
     """
 
-    def __init__(self, color=True, title='Udapi visualization', **kwargs):
+    def __init__(self, color=True, title='Udapi visualization', zones_in_rows=True, **kwargs):
         """Create new TextModeTreesHtml block object.
 
         Args: see `TextModeTrees`.
@@ -38,6 +38,7 @@ class TextModeTreesHtml(TextModeTrees):
         """
         super().__init__(color=color, **kwargs)
         self.title = title
+        self.zones_in_rows = zones_in_rows
 
     def before_process_document(self, document):
         # TextModeTrees.before_process_document changes the color property,
@@ -82,3 +83,25 @@ class TextModeTreesHtml(TextModeTrees):
             print(escape(text))
         if self.print_comments and root.comment:
             print('#' + self.colorize_comment(escape(root.comment)).rstrip().replace('\n', '\n#'))
+
+    def process_bundle(self, bundle):
+        if self.zones_in_rows:
+            # Don't print <table><tr></tr></table> if no tree will be printed in this bundle.
+            marked_trees = []
+            for tree in bundle:
+                if self._should_process_tree(tree):
+                    if self.print_empty:
+                        allnodes = [tree] + tree.descendants_and_empty
+                    else:
+                        allnodes = tree.descendants(add_self=1)
+                if self.should_print_tree(tree, allnodes):
+                    marked_trees.append(tree)
+            if marked_trees:
+                print("<table><tr>")
+                for tree in marked_trees:
+                    print("<td>")
+                    self.process_tree(tree)
+                    print("</td>")
+                print("</tr></table>")
+        else:
+            super().process_bundle(bundle)

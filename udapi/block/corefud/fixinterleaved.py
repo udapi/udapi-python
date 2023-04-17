@@ -3,7 +3,9 @@ import udapi.core.coref
 import itertools
 
 class FixInterleaved(Block):
-    """Fix mentions with interleaved or crossing spans."""
+    """Fix mentions with interleaved or crossing spans.
+       https://github.com/ufal/corefUD/issues/25
+    """
 
     def __init__(self, same_entity_only=True, both_discontinuous=False,
                  crossing_only=False, nested_same_subspan=True, **kwargs):
@@ -58,8 +60,8 @@ class FixInterleaved(Block):
                 pass
             deleted.add(mB)
 
-            # By changing the mA.words, we could have create another error:
-            # making the span same as another mention. Let's fix it
+            # By changing the mA.words, we could have created another error:
+            # making the span same as another mention. Let's fix it.
             sA = set(mA.words)
             for mC in mentions:
                 if mC in deleted or mC is mA or mC is mB:

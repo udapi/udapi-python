@@ -79,16 +79,32 @@ class Html(BaseWriter):
         print('</head>\n<body>')
         print('<button style="float:right" type="submit" onclick="saveTree()">'
               '<span>Save as SVG</span></button><div id="treex-view"></div><script>')
-        print('data=[')
+        print('data=', end='')
+        self.print_doc_json(doc)
+        print(';')
+        print("$('#treex-view').treexView(data);")
+        print('''function saveTree() {
+         var svg_el = jQuery('svg');
+         if (svg_el.length) {
+            var svg = new Blob([svg_el.parent().html()], {type: "image/svg+xml"});
+            saveAs(svg, 'tree.svg');
+         }
+        }''')
+        print('</script></body></html>')
+
+    def print_doc_json(self, doc):
+        print('[')
         for (bundle_number, bundle) in enumerate(doc, 1):
-            # TODO: if not self._should_process_bundle(bundle): continue
             if bundle_number != 1:
                 print(',', end='')
             print('{"zones":{', end='')
             first_zone = True
             desc = ''
-            for tree in bundle.trees:
-                # TODO: if not self._should_process_tree(tree): continue
+            try:
+                trees = bundle.trees
+            except:
+                trees = [bundle] # allow to call print_doc_json([tree1, tree2])
+            for tree in trees:
                 zone = tree.zone
                 if first_zone:
                     first_zone = False
@@ -101,24 +117,16 @@ class Html(BaseWriter):
                 print('"labels":["zone=%s","id=%s"]}' % (zone, tree.address()))
                 desc += ',["[%s]","label"],[" ","space"]' % zone
                 for node in tree.descendants:
-                    desc += self.print_node(node)
+                    desc += self.print_node_json(node)
                 desc += r',["\n","newline"]'
                 print(']}}}')
             # print desc without the extra starting comma
             print('},"desc":[%s]}' % desc[1:])
-        print('];')
-        print("$('#treex-view').treexView(data);")
-        print('''function saveTree() {
-         var svg_el = jQuery('svg');
-         if (svg_el.length) {
-            var svg = new Blob([svg_el.parent().html()], {type: "image/svg+xml"});
-            saveAs(svg, 'tree.svg');
-         }
-        }''')
-        print('</script></body></html>')
+        print(']')
+
 
     @staticmethod
-    def print_node(node):
+    def print_node_json(node):
         """JSON representation of a given node."""
         # pylint does not understand `.format(**locals())` and falsely alarms for unused vars
         # pylint: disable=too-many-locals,unused-variable

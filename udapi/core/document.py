@@ -23,7 +23,7 @@ class Document(object):
             No pre-processing is applied, so when loading the document from a *.txt file,
             `Document("a.txt").nodes` will be empty and you need to run tokenization first.
             You can pass additional parameters for `udapi.block.read.sentences`
-            (`ignore_empty_lines` and `rstrip`).
+            (`ignore_empty_lines`, `newdoc_if_empty_line` and `rstrip`).
         """
         self.bundles = []
         self._highest_bundle_id = 0

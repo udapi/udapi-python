@@ -95,6 +95,13 @@ class Root(Node):
         if self._bundle:
             self._bundle.check_zone(zone)
         self._zone = zone
+        slashzone = '/' + zone if zone else ''
+        if self._bundle is not None:
+            self._sent_id = self._bundle.address() + slashzone
+        elif self._sent_id:
+            self._sent_id = self._sent_id.split('/', 1)[0] + slashzone
+        else:
+            self._sent_id = '?' + slashzone
 
     @property
     def parent(self):
@@ -169,8 +176,18 @@ class Root(Node):
         form: string representing the surface form of the new MWT
         misc: misc attribute of the new MWT
         """
+        # Nested or overlapping MWTs are not allowed in CoNLL-U,
+        # so first remove all previous MWTs containing any of words.
+        for w in words:
+            if w.multiword_token:
+                w.multiword_token.remove()
+        # Now, create the new MWT.
         mwt = MWT(words, form, misc, root=self)
         self._mwts.append(mwt)
+        if words[-1].misc["SpaceAfter"] == "No":
+            mwt.misc["SpaceAfter"] = "No"
+        for word in words:
+            word.misc["SpaceAfter"] = ""
         return mwt
 
     @property

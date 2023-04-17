@@ -72,7 +72,7 @@ class Bundle(object):
     def create_tree(self, zone=None):
         """Return the root of a newly added tree with a given zone."""
         root = Root()
-        root.zone = zone
+        root._zone = zone
         self.add_tree(root)
         return root
 
@@ -89,7 +89,7 @@ class Bundle(object):
     def add_tree(self, root):
         """Add an existing tree to the bundle."""
         if root.zone is None:
-            root.zone = ''
+            root._zone = ''
         self.check_zone(root.zone)
         root.bundle = self
         self.trees.append(root)

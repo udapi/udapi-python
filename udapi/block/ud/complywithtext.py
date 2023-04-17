@@ -24,7 +24,7 @@ Author: Martin Popel
 """
 import difflib
 import logging
-import re
+import regex
 
 from udapi.core.block import Block
 from udapi.core.mwt import MWT
@@ -34,7 +34,9 @@ class ComplyWithText(Block):
     """Adapt the nodes to comply with the text."""
 
     def __init__(self, fix_text=True, prefer_mwt=True, allow_goeswith=True, max_mwt_length=4,
-                 **kwargs):
+                 allow_add_punct=True, allow_delete_punct=True, allow_hyphen_goeswith=True,
+                 previous_form_label='CorrectForm', previous_text_label='OrigText',
+                 added_label='Added', **kwargs):
         """Args:
         fix_text: After all heuristics are applied, the token forms may still not match the text.
             Should we edit the text to match the token forms (as a last resort)? Default=True.
@@ -54,33 +56,66 @@ class ComplyWithText(Block):
             Default=True (i.e. add the goeswith nodes if applicable).
         max_mwt_length - Maximum length of newly created multi-word tokens (in syntactic words).
             Default=4.
+        allow_add_punct - allow creating punctuation-only nodes
+        allow_delete_punct - allow deleting extra punctuation-only nodes,
+            which are not represented in root.text
+        allow_hyphen_goeswith - if e.g. node.form=="mother-in-law" corresponds to
+            "mother in law" in root.text, convert it to three nodes:
+            node1(form="mother", feats["Typo"]="Yes", misc["CorrectForm"]="mother-in-law")
+            node2(form="in", deprel="goeswith", upos="X", parent=node1)
+            node3(form="law", deprel="goeswith", upos="X", parent=node1).
+        previous_form_label - when changing node.form, we store the previous value
+            in node.misc[previous_form_label] (so no information is lost).
+            Default="CorrectForm" because we expect that the previous value
+            (i.e. the value of node.form before applying this block)
+            contained the corrected spelling, while root.text contains
+            the original spelling with typos as found in the raw text.
+            CorrectForm is defined in https://universaldependencies.org/u/overview/typos.html
+            When setting this parameter to an empty string, no values will be stored to node.misc.
+            When keeping the default name CorrectForm, node.feats["Typo"] = "Yes" will be filled as well.
+        previous_text_label - when we are not able to adapt the annotation to match root.text
+            and fix_text is True, we store the previous root.text value in a CoNLL-U comment with this label.
+            Default="OrigText". When setting this parameter to an empty string,
+            no values will be stored to root.comment.
+        added_label - when creating new nodes because allow_add_punct=True, we mark these nodes
+            as new_node.misc[added_label] = 1. Default="Added".
         """
         super().__init__(**kwargs)
         self.fix_text = fix_text
         self.prefer_mwt = prefer_mwt
         self.allow_goeswith = allow_goeswith
         self.max_mwt_length = max_mwt_length
+        self.allow_add_punct = allow_add_punct
+        self.allow_delete_punct = allow_delete_punct
+        self.allow_hyphen_goeswith = allow_hyphen_goeswith
+        self.previous_form_label = previous_form_label
+        self.previous_text_label = previous_text_label
+        self.added_label = added_label
 
     @staticmethod
     def allow_space(form):
         """Is space allowed within this token form?"""
-        return re.fullmatch('[0-9 ]+([,.][0-9]+)?', form)
+        return regex.fullmatch('[0-9 ]+([,.][0-9]+)?', form)
 
-    @staticmethod
-    def store_orig_form(node, new_form):
-        """Store the original form of this node into MISC, unless the change is common&expected."""
-        _ = new_form
-        if node.form not in ("''", "``"):
-            node.misc['OrigForm'] = node.form
+    def store_previous_form(self, node):
+        """Store the previous form of this node into MISC, unless the change is common&expected."""
+        if node.form not in ("''", "``") and self.previous_form_label:
+            node.misc[self.previous_form_label] = node.form
+            if self.previous_form_label == 'CorrectForm':
+                node.feats['Typo'] = 'Yes'
 
     def process_tree(self, root):
         text = root.text
         if text is None:
             raise ValueError('Tree %s has no text, cannot use ud.ComplyWithText' % root)
 
-        # Normalize the stored text (double space -> single space)
+        # Normalize the stored text (e.g. double space or no-break space -> single space)
         # and skip sentences which are already ok.
         text = ' '.join(text.split())
+        if root.text != text and self.fix_text:
+            if self.previous_text_label:
+                root.add_comment(f'{self.previous_text_label} = {root.text}')
+            root.text = text
         if text == root.compute_text():
             return
 
@@ -112,13 +147,14 @@ class ComplyWithText(Block):
                     node.misc['SpaceAfter'] = 'No'
             else:
                 logging.warning('Node %s does not match text "%s"', node, tmp_text[:20])
-                return
+                break
 
         # Edit root.text if needed.
         if self.fix_text:
             computed_text = root.compute_text()
             if text != computed_text:
-                root.add_comment('ToDoOrigText = ' + root.text)
+                if self.previous_text_label:
+                    root.add_comment(f'{self.previous_text_label} = {root.text}')
                 root.text = computed_text
 
     def unspace_diffs(self, orig_diffs, tree_chars, text):
@@ -130,6 +166,10 @@ class ComplyWithText(Block):
                     tree_lo += 1
                 if tree_chars[tree_hi - 1] == ' ':
                     tree_hi -= 1
+                if text[text_lo] == ' ':
+                    text_lo += 1
+                if text[text_hi - 1] == ' ':
+                    text_hi -= 1
             old = tree_chars[tree_lo:tree_hi]
             new = text[text_lo:text_hi]
             if old == '' and new == '':
@@ -181,18 +221,37 @@ class ComplyWithText(Block):
         for diff in diffs:
             edit, tree_lo, tree_hi, text_lo, text_hi = diff
 
-            # Focus only on edits of type 'replace', log insertions and deletions as failures.
             if edit == 'equal':
-                continue
-            if edit in ('insert', 'delete'):
-                logging.warning('Unable to solve token-vs-text mismatch\n%s',
-                                _diff2str(diff, tree_chars, text))
-                continue
-
-            # Revert the splittng and solve the diff.
-            nodes = [n for n in char_nodes[tree_lo:tree_hi] if n is not None]
-            form = text[text_lo:text_hi]
-            self.solve_diff(nodes, form.strip())
+                pass
+            elif edit == 'insert':
+                forms = text[text_lo:text_hi].split(' ')
+                if all(regex.fullmatch('\p{P}+', f) for f in forms) and self.allow_add_punct:
+                    next_node = char_nodes[tree_lo]
+                    for f in reversed(forms):
+                        new = next_node.create_child(form=f, deprel='punct', upos='PUNCT')
+                        new.shift_before_node(next_node)
+                        new.misc[self.added_label] = 1
+                else:
+                    logging.warning('Unable to insert nodes\n%s',
+                                    _diff2str(diff, tree_chars, text))
+            elif edit == 'delete':
+                nodes = [n for n in char_nodes[tree_lo:tree_hi] if n is not None]
+                if all(regex.fullmatch('\p{P}+', n.form) for n in nodes):
+                    if self.allow_delete_punct:
+                        for node in nodes:
+                            node.remove(children='rehang')
+                    else:
+                        logging.warning('Unable to delete punctuation nodes (try ud.ComplyWithText allow_delete_punct=1)\n%s',
+                                        _diff2str(diff, tree_chars, text))
+                else:
+                    logging.warning('Unable to delete non-punctuation nodes\n%s',
+                                        _diff2str(diff, tree_chars, text))
+            else:
+                assert edit == 'replace'
+                # Revert the splittng and solve the diff.
+                nodes = [n for n in char_nodes[tree_lo:tree_hi] if n is not None]
+                form = text[text_lo:text_hi]
+                self.solve_diff(nodes, form.strip())
 
     def solve_diff(self, nodes, form):
         """Fix a given (minimal) tokens-vs-text inconsistency."""
@@ -201,20 +260,33 @@ class ComplyWithText(Block):
 
         # First, solve the cases when the text contains a space.
         if ' ' in form:
-            if len(nodes) == 1 and node.form == form.replace(' ', ''):
-                if self.allow_space(form):
-                    self.store_orig_form(node, form)
-                    node.form = form
-                elif self.allow_goeswith:
-                    forms = form.split()
-                    node.form = forms[0]
-                    for split_form in reversed(forms[1:]):
-                        new = node.create_child(form=split_form, deprel='goeswith', upos=node.upos)
+            node_form = node.form
+            if self.allow_hyphen_goeswith and node_form.replace('-', ' ') == form:
+                node_form = node_form.replace('-', '')
+            if len(nodes) == 1:
+                if node_form == form.replace(' ', ''):
+                    if self.allow_space(form):
+                        self.store_previous_form(node)
+                        node.form = form
+                    elif self.allow_goeswith:
+                        self.store_previous_form(node)
+                        forms = form.split()
+                        node.form = forms[0]
+                        node.feats['Typo'] = 'Yes'
+                        for split_form in reversed(forms[1:]):
+                            new = node.create_child(form=split_form, deprel='goeswith', upos='X')
+                            new.shift_after_node(node)
+                    else:
+                        logging.warning('Unable to solve 1:m diff:\n%s -> %s', nodes_str, form)
+                elif self.allow_add_punct and form.startswith(node.form) and regex.fullmatch('[ \p{P}]+', form[len(node.form):]):
+                    for punct_form in reversed(form[len(node.form):].split()):
+                        new = node.create_child(form=punct_form, lemma=punct_form, deprel='punct', upos='PUNCT')
                         new.shift_after_node(node)
+                        new.misc[self.added_label] = 1
                 else:
                     logging.warning('Unable to solve 1:m diff:\n%s -> %s', nodes_str, form)
             else:
-                logging.warning('Unable to solve n:m diff:\n%s -> %s', nodes_str, form)
+                logging.warning(f'Unable to solve {len(nodes)}:{len(form.split(" "))} diff:\n{nodes_str} -> {form}')
 
         # Second, solve the cases when multiple nodes match one form (without any spaces).
         elif len(nodes) > 1:
@@ -235,8 +307,14 @@ class ComplyWithText(Block):
 
         # Third, solve the 1-1 cases.
         else:
-            self.store_orig_form(node, form)
-            node.form = form
+            if self.allow_add_punct and form.startswith(node.form) and regex.fullmatch('\p{P}+', form[len(node.form):]):
+                punct_form = form[len(node.form):]
+                new = node.create_child(form=punct_form, lemma=punct_form, deprel='punct', upos='PUNCT')
+                new.shift_after_node(node)
+                new.misc[self.added_label] = 1
+            else:
+                self.store_previous_form(node)
+                node.form = form
 
 
 def _nodes_to_chars(nodes):
@@ -261,6 +339,4 @@ def _log_diffs(diffs, tree_chars, text, msg):
 def _diff2str(diff, tree, text):
     old = '|' + ''.join(tree[diff[1]:diff[2]]) + '|'
     new = '|' + ''.join(text[diff[3]:diff[4]]) + '|'
-    if diff[0] == 'equal':
-        return '{:7} {!s:>50}'.format(diff[0], old)
     return '{:7} {!s:>50} --> {!s}'.format(diff[0], old, new)

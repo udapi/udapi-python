@@ -1,5 +1,6 @@
 """Block class represents the basic Udapi processing unit."""
 import logging
+import inspect
 
 def not_overridden(method):
   method.is_not_overridden = True
@@ -14,9 +15,23 @@ class Block(object):
         Possible values are: process (default), skip, skip_warn, fail, delete.
     """
 
-    def __init__(self, zones='all', if_empty_tree='process'):
+    def __init__(self, zones='all', if_empty_tree='process', **kwargs):
         self.zones = zones
         self.if_empty_tree = if_empty_tree
+        if kwargs:
+            params = set()
+            for cls in type(self).mro()[:-1]:
+                params.update(inspect.signature(cls.__init__).parameters.keys())
+            params -= {'self', 'kwargs'}
+            raise TypeError(f"Extra parameters {kwargs}.\n"
+                            f"Parameters of {self.block_name()} are:\n"
+                            + '\n'.join(sorted(params)))
+
+    def block_name(self):
+        module = ".".join(self.__module__.split(".")[:-1])
+        if module.startswith('udapi.block.'):
+            module = module[12:]
+        return module + "." + self.__class__.__name__
 
     def process_start(self):
         """A hook method that is executed before processing UD data"""
@@ -73,7 +88,7 @@ class Block(object):
         p_tree = not hasattr(self.process_tree, 'is_not_overridden')
         p_node = not hasattr(self.process_node, 'is_not_overridden')
         if not any((p_entity, p_mention, p_bundle, p_tree, p_node)):
-            raise Exception("No processing activity defined in block " + str(self))
+            raise Exception("No processing activity defined in block " + self.block_name())
 
         if p_entity or p_mention:
             for entity in document.coref_entities:
@@ -85,8 +100,8 @@ class Block(object):
 
         if p_bundle or p_tree or p_node:
             for bundle_no, bundle in enumerate(document.bundles, 1):
-                logging.debug('Block %s processing bundle #%d (id=%s)',
-                            self.__class__.__name__, bundle_no, bundle.bundle_id)
+                logging.debug(f'Block {self.block_name()} processing '
+                              f'bundle #{bundle_no} (id={bundle.bundle_id})')
                 if p_bundle:
                     self.process_bundle(bundle)
                 else:

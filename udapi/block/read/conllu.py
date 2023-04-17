@@ -73,7 +73,7 @@ class Conllu(BaseReader):
         if entity_match is not None:
             global_entity = entity_match.group(1)
             if self._global_entity and self._global_entity != global_entity:
-                logging.warning("Mismatch in global.Entity: %s != %s", (self._global_entity, global_entity))
+                logging.warning(f"Mismatch in global.Entity: {self._global_entity} != {global_entity}")
             self._global_entity = global_entity
             root.comment += '$GLOBAL.ENTITY\n'
             return
@@ -81,8 +81,26 @@ class Conllu(BaseReader):
         root.comment += line[1:] + "\n"
 
     def read_trees(self):
-        return [self.read_tree_from_lines(s.split('\n')) for s in
-                self.filehandle.read().split('\n\n') if s]
+        if not self.max_docs:
+            return [self.read_tree_from_lines(s.split('\n')) for s in
+                    self.filehandle.read().split('\n\n') if s]
+        # udapi.core.basereader takes care about the max_docs parameter.
+        # However, we can make the loading much faster by not reading
+        # the whole file if the user wants just first N documents.
+        trees, lines, loaded_docs = [], [], 0
+        for line in self.filehandle:
+            line = line.rstrip()
+            if line == '':
+               tree = self.read_tree_from_lines(lines)
+               lines = []
+               if tree.newdoc:
+                   if loaded_docs == self.max_docs:
+                       return trees
+                   loaded_docs += 1
+               trees.append(tree)
+            else:
+                lines.append(line)
+        return
 
     def read_tree(self):
         if self.filehandle is None:
@@ -193,7 +211,11 @@ class Conllu(BaseReader):
 
         # Create multi-word tokens.
         for fields in mwts:
-            range_start, range_end = fields[0].split('-')
+            try:
+                range_start, range_end = fields[0].split('-')
+            except ValueError:
+                logging.warning(f"Wrong MWT range in\n{fields[0]}\n\n{lines}")
+                raise
             words = nodes[int(range_start):int(range_end) + 1]
             root.create_multiword_token(words, form=fields[1], misc=fields[-1])
 
