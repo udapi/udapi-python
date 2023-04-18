@@ -85,6 +85,10 @@ class ElQue(Block):
                 eldeprel = 'nsubj'
             elif re.match(r'^ccomp$', verb.udeprel):
                 eldeprel = 'obj'
+            elif re.match(r'^advcl$', verb.udeprel):
+                eldeprel = 'obl'
+            elif re.match(r'^acl$', verb.udeprel):
+                eldeprel = 'nmod'
             if eldeprel:
                 attach(el, verb.parent, eldeprel)
                 attach(verb, el, 'acl:relcl')
