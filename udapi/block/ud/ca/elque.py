@@ -77,3 +77,8 @@ class ElQue(Block):
                 if len(adp.deps) == 1:
                     adp.deps[0]['parent'] = el
                     adp.deps[0]['deprel'] = 'case'
+        if el.parent == que:
+            ###!!! Just a temporary change. In the end it will be attached elsewhere.
+            el.parent = verb
+            if len(el.deps) == 1:
+                el.deps[0]['parent'] = verb
