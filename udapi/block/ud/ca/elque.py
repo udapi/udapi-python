@@ -89,6 +89,8 @@ class ElQue(Block):
                 eldeprel = 'obl'
             elif re.match(r'^acl$', verb.udeprel):
                 eldeprel = 'nmod'
+            elif re.match(r'^(xcomp|conj|appos|root)$', verb.udeprel):
+                eldeprel = verb.deprel
             if eldeprel:
                 attach(el, verb.parent, eldeprel)
                 attach(verb, el, 'acl:relcl')
