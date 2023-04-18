@@ -80,8 +80,13 @@ class ElQue(Block):
             if len(el.deps) == 1:
                 el.deps[0]['parent'] = verb
         if verb.parent != adp and verb.parent != el and verb.parent != que:
+            eldeprel = None
             if re.match(r'^[nc]subj$', verb.udeprel):
-                attach(el, verb.parent, 'nsubj')
+                eldeprel = 'nsubj'
+            elif re.match(r'^ccomp$', verb.udeprel):
+                eldeprel = 'obj'
+            if eldeprel:
+                attach(el, verb.parent, eldeprel)
                 attach(verb, el, 'acl:relcl')
                 # If anything before 'el' depends on the verb ('cc', 'mark', 'punct' etc.),
                 # re-attach it to 'el'.
