@@ -884,6 +884,18 @@ class Node(object):
         """
         return self._mwt
 
+    @property
+    def words(self):
+        """Return one-item list with this node.
+
+        This property is there for compatibility with udapi.core.mwt.MWT.words.
+        So that it is possible to use code such as:
+          for token in root.token_descendants:
+            words = token.words
+            ...
+        """
+        return [self]
+
     def is_nonprojective(self):
         """Is the node attached to its parent non-projectively?
 

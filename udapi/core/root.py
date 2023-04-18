@@ -176,6 +176,12 @@ class Root(Node):
         form: string representing the surface form of the new MWT
         misc: misc attribute of the new MWT
         """
+        # Nested or overlapping MWTs are not allowed in CoNLL-U,
+        # so first remove all previous MWTs containing any of words.
+        for w in words:
+            if w.multiword_token:
+                w.multiword_token.remove()
+        # Now, create the new MWT.
         mwt = MWT(words, form, misc, root=self)
         self._mwts.append(mwt)
         if words[-1].misc["SpaceAfter"] == "No":
