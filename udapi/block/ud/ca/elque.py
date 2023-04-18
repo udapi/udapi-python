@@ -23,6 +23,8 @@ class ElQue(Block):
                 adp = None
                 if el.prev_node and el.prev_node.upos == 'ADP':
                     adp = el.prev_node
+                    if adp.udeprel == 'fixed':
+                        adp = adp.parent
                     parentstr = 'OTHER'
                     if adp.parent == el:
                         parentstr = 'el'
