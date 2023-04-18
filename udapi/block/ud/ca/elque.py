@@ -72,13 +72,34 @@ class ElQue(Block):
     def fix_pattern(self, adp, el, que, verb):
         if adp:
             if adp.parent == que or adp.parent == verb:
-                adp.parent = el
-                adp.deprel = 'case'
-                if len(adp.deps) == 1:
-                    adp.deps[0]['parent'] = el
-                    adp.deps[0]['deprel'] = 'case'
+                attach(adp, el, 'case')
         if el.parent == que:
             ###!!! Just a temporary change. In the end it will be attached elsewhere.
+            attach(el, verb)
             el.parent = verb
             if len(el.deps) == 1:
                 el.deps[0]['parent'] = verb
+        if verb.parent != adp and verb.parent != el and verb.parent != que:
+            if re.match(r'^[nc]subj$', verb.udeprel):
+                attach(el, verb.parent, 'nsubj')
+                attach(verb, el, 'acl:relcl')
+                # If anything before 'el' depends on the verb ('cc', 'mark', 'punct' etc.),
+                # re-attach it to 'el'.
+                for c in verb.children:
+                    if c.ord < el.ord and re.match(r'^(cc|mark|case|punct)$', c.udeprel):
+                        attach(c, el)
+
+def attach(node, parent, deprel=None):
+    """
+    Attach a node to a new parent with a new deprel in the basic tree. In
+    addition, if there are enhanced dependencies and there is just one incoming
+    enhanced relation (this is the case in AnCora), this relation will be
+    modified accordingly.
+    """
+    node.parent = parent
+    if deprel:
+        node.deprel = deprel
+    if len(node.deps) == 1:
+        node.deps[0]['parent'] = parent
+        if deprel:
+            node.deps[0]['deprel'] = deprel
