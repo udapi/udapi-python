@@ -39,9 +39,9 @@ class Bundle(object):
                 tree._sent_id = bundle_id + '/' + tree.zone  # pylint: disable=protected-access
 
     def __str__(self):
-        if self.bundle_id is None:
+        if self._bundle_id is None:
             return 'bundle without id'
-        return "bundle id='%s'" % self.bundle_id
+        return f"bundle id='{self._bundle_id}'"
 
     def __iter__(self):
         return iter(self.trees)
@@ -91,6 +91,10 @@ class Bundle(object):
         if root.zone is None:
             root._zone = ''
         self.check_zone(root.zone)
+        if self._bundle_id:
+            root._sent_id = self._bundle_id
+            if root.zone:
+                root._sent_id += '/' + root.zone
         root.bundle = self
         self.trees.append(root)
         doc_json = root.json.get('__doc__')
@@ -107,7 +111,7 @@ class Bundle(object):
 
     def address(self):
         """Return bundle_id or '?' if missing."""
-        return self.bundle_id if self.bundle_id is not None else '?'
+        return self._bundle_id if self._bundle_id is not None else '?'
 
     def draw(self, **kwargs):
         """Pretty print the trees using TextModeTrees."""

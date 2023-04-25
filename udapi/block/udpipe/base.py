@@ -153,7 +153,7 @@ class Base(Block):
                             orig_bundle_id = bundle.bundle_id
                             bundle.bundle_id = orig_bundle_id + '-1'
                             for i, new_tree in enumerate(new_trees[1:], 2):
-                                new_bundle = Bundle(document=doc, bundle_id=orig_bundle_id + '-' + str(i))
+                                new_bundle = Bundle(document=doc, bundle_id=f"{orig_bundle_id}-{i}")
                                 new_tree.zone = tree.zone
                                 new_bundle.add_tree(new_tree)
                                 new_bundles.append(new_bundle)
@@ -166,7 +166,7 @@ class Base(Block):
                             bundle.bundle_id = orig_bundle_id + '-1'
                             tree.text = sentences[0]
                             for i, sentence in enumerate(sentences[1:], 2):
-                                new_bundle = Bundle(document=doc, bundle_id=orig_bundle_id + '-' + str(i))
+                                new_bundle = Bundle(document=doc, bundle_id=f"{orig_bundle_id}-{i}")
                                 new_tree = new_bundle.create_tree(zone=tree.zone)
                                 new_tree.text = sentence
                                 new_bundles.append(new_bundle)
