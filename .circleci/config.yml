@@ -36,10 +36,13 @@ jobs:
       - run:
           name: Install Udapi
           command: pip install ".[test]"
+      - run: mkdir -p test-results
       - run:
           name: Run pytest tests
           # This assumes pytest is installed via the install-package step above
-          command: pytest
+          command: pytest --junitxml=test-results/junit.xml -o junit_family=legacy
+      - store_test_results:
+          path: test-results
       - run:
           name: Color TextModeTrees
           command: udapy read.Conllu files=udapi/core/tests/data/babinsky.conllu write.TextModeTrees color=1
