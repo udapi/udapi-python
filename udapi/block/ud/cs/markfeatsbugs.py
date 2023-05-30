@@ -390,8 +390,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['1', '2'],
                         'Number[psor]': ['Sing', 'Plur']
                     })
+            elif re.match(r'^(samý)$', node.lemma):
+                # Unlike other determiners, it allows Variant=Short: sám, sama, samu, samo, sami, samy.
+                self.check_adjective_like(node, ['PronType'], {'PronType': ['Emp'], 'Variant': ['Short']})
             else:
-                self.check_adjective_like(node, ['PronType'], {'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot', 'Emp']})
+                self.check_adjective_like(node, ['PronType'], {'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot']})
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
             self.check_required_features(node, ['NumType', 'NumForm'])
