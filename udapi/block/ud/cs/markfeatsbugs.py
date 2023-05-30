@@ -222,7 +222,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                                 'PronType': ['Prs'],
                                 'Person': ['3']
                             })
-                        else: # jeho, něho, jemu, němu, jej, něj, něm, jím, ním, jí, ní, ji, ni, je, ně
+                        else: # jeho, něho, ho, jemu, němu, mu, jej, něj, něm, jím, ním, jí, ní, ji, ni, je, ně
                             # Mostly only two gender groups and no animacy:
                             # Masc,Neut ... jeho, jemu, jej, něm, jím
                             # Fem ... jí, ji, ní
@@ -232,7 +232,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             self.check_adjective_like(node, ['PronType', 'Person', 'PrepCase'], {
                                 'PronType': ['Prs'],
                                 'Person': ['3'],
-                                'PrepCase': ['Npr', 'Pre']
+                                'PrepCase': ['Npr', 'Pre'],
+                                'Variant': ['Short']
                             })
                     else: # 1st and 2nd person do not have gender: já, ty
                         self.check_required_features(node, ['PronType', 'Person', 'Number', 'Case'])
