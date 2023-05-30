@@ -25,8 +25,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
     pdt20 = False # True = like in PDT 2.0; False = like in ČNK
 
     def process_node(self, node):
+        # Czech constraints should not be applied to foreign words.
+        if node.feats['Foreign'] == 'Yes':
+            pass
         # NOUNS ################################################################
-        if node.upos == 'NOUN':
+        elif node.upos == 'NOUN':
             self.check_required_features(node, ['Gender', 'Number', 'Case', 'Polarity'])
             if node.feats['VerbForm'] == 'Vnoun':
                 # verbal nouns: bytí, dělání, ...
