@@ -28,7 +28,13 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # NOUNS ################################################################
         if node.upos == 'NOUN':
             self.check_required_features(node, ['Gender', 'Number', 'Case', 'Polarity'])
-            if node.feats['Gender'] == 'Masc':
+            if node.feats['VerbForm'] == 'Vnoun':
+                # verbal nouns: bytí, dělání, ...
+                self.check_allowed_features(node, {
+                    'Gender': ['Neut'],
+                    'Foreign': ['Yes']
+                })
+            elif node.feats['Gender'] == 'Masc':
                 self.check_required_features(node, ['Animacy'])
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
