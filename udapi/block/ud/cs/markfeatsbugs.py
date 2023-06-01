@@ -408,29 +408,26 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumForm': ['Digit', 'Roman']
                 })
             else:
-                ###!!! Somehow the NumValue feature from PDT via Interset is useless.
                 # 'jeden' has Gender, Animacy, Number, Case: jeden, jedna, jedno, jednoho, jednomu, jednom, jedním, jedné, jednu, jednou, jedni, jedny, jedněch, jedněm, jedněmi.
                 # 'dva', 'oba' have Gender, Number=Dual(Plur in modern Czech), Case: dva, dvě, dvou, dvěma.
                 # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
                 # 'pět' and more have Number=Plur, Case: pět, pěti.
                 if node.lemma == 'jeden':
-                    self.check_required_features(node, ['NumType', 'NumForm', 'NumValue', 'Number', 'Case'])
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
                         'NumForm': ['Word'],
-                        'NumValue': ['1,2,3'],
                         'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
                 elif re.match(r'^(dva|oba)$', node.lemma):
-                    self.check_required_features(node, ['NumType', 'NumForm', 'NumValue', 'Gender', 'Number', 'Case'])
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Gender', 'Number', 'Case'])
                     if self.pdt20:
                         self.check_allowed_features(node, {
                             'NumType': ['Card'],
                             'NumForm': ['Word'],
-                            'NumValue': ['1,2,3'],
                             'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
                             'Number': ['Dual', 'Plur'],
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
@@ -439,7 +436,6 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         self.check_allowed_features(node, {
                             'NumType': ['Card'],
                             'NumForm': ['Word'],
-                            'NumValue': ['1,2,3'],
                             'Gender': ['Masc', 'Fem', 'Neut'],
                             'Animacy': ['Anim', 'Inan'],
                             'Number': ['Dual', 'Plur'],
@@ -450,7 +446,6 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
                         'NumForm': ['Word'],
-                        'NumValue': ['1,2,3'],
                         'Number': ['Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
