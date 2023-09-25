@@ -61,6 +61,9 @@ class TestDocument(unittest.TestCase):
         nodes[0].shift_after_node(nodes[1])
         self.assertEqual([node.ord for node in nodes], [2, 1, 3, 4, 5, 6])
         self.assertEqual([node.ord for node in root.descendants()], [1, 2, 3, 4, 5, 6])
+        self.assertEqual([node.ord for node in nodes[1].children], [2, 3, 4])
+        nodes[3].shift_before_node(nodes[2])
+        self.assertEqual([node.ord for node in nodes[1].children], [2, 3, 6])
 
     def test_draw(self):
         """Test the draw() method, which uses udapi.block.write.textmodetrees."""

@@ -590,6 +590,7 @@ class Node(object):
                     all_nodes[i_ord - 1]._ord = i_ord
                 all_nodes[reference_ord - 1] = self
                 self._ord = reference_ord
+            self._parent._children.sort()
             return
 
         nodes_to_move = self.descendants(add_self=True)
@@ -615,6 +616,7 @@ class Node(object):
             for node in nodes_to_move:
                 all_nodes[trg_ord - 1], node._ord = node, trg_ord
                 trg_ord += 1
+            self._parent._children.sort()
             return
 
         # First, move a node from position src_ord to position trg_ord RIGHT-ward.
@@ -648,6 +650,7 @@ class Node(object):
         for node in nodes_to_move:
             all_nodes[trg_ord - 1], node._ord = node, trg_ord
             trg_ord += 1
+        self._parent._children.sort()
 
     def shift_after_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node after the reference_node."""
