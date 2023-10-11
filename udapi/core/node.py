@@ -662,6 +662,8 @@ class Node(object):
 
     def shift_before_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node before the reference_node."""
+        if reference_node.is_root():
+            raise ValueError(f'Cannot shift a node before the root ({reference_node})')
         if not without_children and reference_node.is_descendant_of(self):
             if skip_if_descendant:
                 return
@@ -690,6 +692,8 @@ class Node(object):
         Args:
         without_children: shift just this node without its subtree?
         """
+        if reference_node.is_root():
+            raise ValueError(f'Cannot shift a node before the root ({reference_node})')
         if not without_children and reference_node.is_descendant_of(self):
             if skip_if_descendant:
                 return
