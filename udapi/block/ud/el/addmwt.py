@@ -8,13 +8,13 @@ Also notice that this block does not deal with the relatively rare
 import udapi.block.ud.addmwt
 
 MWTS = {
-    'στη':   {'form': 'σ τη', 'feats':   '_ Case=Acc|Gender=Fem|Number=Sing'},
-    'στην':  {'form': 'σ την', 'feats':  '_ Case=Acc|Gender=Fem|Number=Sing'},
-    'στα':   {'form': 'σ τα', 'feats':   '_ Case=Acc|Gender=Neut|Number=Plur'},
-    'στους': {'form': 'σ τους', 'feats': '_ Case=Acc|Gender=Masc|Number=Plur'},
-    'στις':  {'form': 'σ τις', 'feats':  '_ Case=Acc|Gender=Fem|Number=Plur'},
-    'στον':  {'form': 'σ τον', 'feats':  '_ Case=Acc|Gender=Masc|Number=Sing'},
-    'στο':   {'form': 'σ το', 'feats':   '_ Case=Acc|Gender=*|Number=Sing'},
+    'στη':   {'form': 'σ τη', 'feats':   '_ Case=Acc|Definite=Def|Gender=Fem|Number=Sing|PronType=Art'},
+    'στην':  {'form': 'σ την', 'feats':  '_ Case=Acc|Definite=Def|Gender=Fem|Number=Sing|PronType=Art'},
+    'στα':   {'form': 'σ τα', 'feats':   '_ Case=Acc|Definite=Def|Gender=Neut|Number=Plur|PronType=Art'},
+    'στους': {'form': 'σ τους', 'feats': '_ Case=Acc|Definite=Def|Gender=Masc|Number=Plur|PronType=Art'},
+    'στις':  {'form': 'σ τις', 'feats':  '_ Case=Acc|Definite=Def|Gender=Fem|Number=Plur|PronType=Art'},
+    'στον':  {'form': 'σ τον', 'feats':  '_ Case=Acc|Definite=Def|Gender=Masc|Number=Sing|PronType=Art'},
+    'στο':   {'form': 'σ το', 'feats':   '_ Case=Acc|Definite=Def|Gender=*|Number=Sing|PronType=Art'},
 }
 
 # shared values for all entries in MWTS
