@@ -22,6 +22,7 @@ class Stats(Block):
         self.counter = Counter()
         self.mentions = 0
         self.entities = 0
+        self.singletons = 0
         self.total_nodes = 0
         self.longest_mention = 0
         self.longest_entity = 0
@@ -32,6 +33,8 @@ class Stats(Block):
         self.total_nodes += len(list(doc.nodes))
         for entity in doc.coref_entities:
             len_mentions = len(entity.mentions)
+            if len_mentions == 1:
+                self.singletons += 1
             if len_mentions == 1 and self.exclude_singletons:
                 continue
             elif len_mentions > 1 and self.exclude_nonsingletons:
