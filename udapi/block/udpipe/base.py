@@ -1,6 +1,7 @@
 """Block udpipe.Base for tagging and parsing using UDPipe."""
 from udapi.core.block import Block
 from udapi.tool.udpipe import UDPipe
+from udapi.tool.udpipeonline import UDPipeOnline
 from udapi.core.bundle import Bundle
 
 KNOWN_MODELS = {
@@ -118,11 +119,11 @@ class Base(Block):
     """Base class for all UDPipe blocks."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, model=None, model_alias=None,
+    def __init__(self, model=None, model_alias=None, online=False,
                  tokenize=True, tag=True, parse=True, resegment=False, **kwargs):
         """Create the udpipe.En block object."""
         super().__init__(**kwargs)
-        self.model, self.model_alias = model, model_alias
+        self.model, self.model_alias, self.online = model, model_alias, online
         self._tool = None
         self.tokenize, self.tag, self.parse, self.resegment = tokenize, tag, parse, resegment
 
@@ -134,8 +135,14 @@ class Base(Block):
         if not self.model:
             if not self.model_alias:
                 raise ValueError('model (path/to/model) or model_alias (e.g. en) must be set!')
-            self.model = KNOWN_MODELS[self.model_alias]
-        self._tool = UDPipe(model=self.model)
+            if self.online:
+                self.model = self.model_alias
+            else:
+                self.model = KNOWN_MODELS[self.model_alias]
+        if self.online:
+            self._tool = UDPipeOnline(model=self.model)
+        else:
+            self._tool = UDPipe(model=self.model)
         return self._tool
 
     def process_document(self, doc):
