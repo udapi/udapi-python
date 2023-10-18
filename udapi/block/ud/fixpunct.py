@@ -50,8 +50,9 @@ class FixPunct(Block):
         Args:
         check_paired_punct_upos: fix paired punctuation tokens only if their UPOS=PUNCT.
             The default is false, which means that fixed punctuation is detected only
-            based on the form with the exception of single quote / apostrophe character,
-            which is frequently ambiguous, so UPOS=PUNCT is checked always.
+            based on the form with the exception of single & double quote character,
+            which is frequently ambiguous*, so UPOS=PUNCT is checked always.
+            *) Single quote can be an apostrophe. Double quote as a NOUN can be the inch symbol.
         copy_to_enhanced: for all PUNCT nodes, let the enhanced depencies be the same
             as the basic dependencies.
         """
@@ -65,7 +66,7 @@ class FixPunct(Block):
             return True
         if self.check_paired_punct_upos:
             return False
-        if node.form == "'":
+        if node.form in "'\"":
             return False
         if node.form in PAIRED_PUNCT or node.form in PAIRED_PUNCT.values():
             return True
@@ -78,7 +79,7 @@ class FixPunct(Block):
         for node in root.descendants:
             while self._is_punct(node.parent):
                 node.parent = node.parent.parent
-        root.draw()
+
         # Second, fix paired punctuations: quotes and brackets, marking them in _punct_type.
         # This should be done before handling the subordinate punctuation,
         # in order to prevent non-projectivities e.g. in dot-before-closing-quote style sentences:
@@ -214,7 +215,7 @@ class FixPunct(Block):
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
         if (self.check_paired_punct_upos
-            or opening_node.form == "'") and opening_node.upos != 'PUNCT':
+            or opening_node.form in "'\"") and opening_node.upos != 'PUNCT':
             return
         nested_level = 0
         for node in root.descendants[opening_node.ord:]:
