@@ -60,14 +60,25 @@ class FixPunct(Block):
         self.check_paired_punct_upos = check_paired_punct_upos
         self.copy_to_enhanced = copy_to_enhanced
 
+    def _is_punct(self, node):
+        if node.upos == 'PUNCT':
+            return True
+        if self.check_paired_punct_upos:
+            return False
+        if node.form == "'":
+            return False
+        if node.form in PAIRED_PUNCT or node.form in PAIRED_PUNCT.values():
+            return True
+        return False
+
     def process_tree(self, root):
         # First, make sure no PUNCT has children.
         # This may introduce multiple subroots, which will be fixed later on
         # (preventing to temporarily create multiple subroots here would prevent fixing some errors).
         for node in root.descendants:
-            while node.parent.upos == 'PUNCT':
+            while self._is_punct(node.parent):
                 node.parent = node.parent.parent
-
+        root.draw()
         # Second, fix paired punctuations: quotes and brackets, marking them in _punct_type.
         # This should be done before handling the subordinate punctuation,
         # in order to prevent non-projectivities e.g. in dot-before-closing-quote style sentences:
@@ -77,7 +88,7 @@ class FixPunct(Block):
         self._punct_type = [None] * (1 + len(root.descendants))
         for node in root.descendants:
             if self._punct_type[node.ord] != 'closing':
-                closing_punct = PAIRED_PUNCT.get(node.form, None)
+                closing_punct = PAIRED_PUNCT.get(node.form)
                 if closing_punct is not None:
                     self._fix_paired_punct(root, node, closing_punct)
 
@@ -236,12 +247,11 @@ class FixPunct(Block):
             # they also must not cause non-projectivity of other relations. This could
             # happen if an outside node is attached to an inside node. To account for
             # this, mark the inside parent as a head, too.
-            else:
-                if node.parent > opening_node and node.parent < closing_node:
-                    if node.parent.upos == 'PUNCT':
-                        punct_heads.append(node.parent)
-                    else:
-                        heads.append(node.parent)
+            elif node.parent > opening_node and node.parent < closing_node:
+                if node.parent.upos == 'PUNCT':
+                    punct_heads.append(node.parent)
+                else:
+                    heads.append(node.parent)
 
         # Punctuation should not have children, but if there is no other head candidate,
         # let's break this rule.
