@@ -148,13 +148,13 @@ class FixPunct(Block):
         if l_cand is None or l_cand.is_root():
             l_cand, l_path = None, []
         else:
-            while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
-                   and not node.precedes(l_cand.descendants(add_self=1)[-1])):
+            while (not l_cand.parent.is_root() and l_cand.parent < node
+                   and not node < l_cand.descendants(add_self=1)[-1]):
                 l_cand = l_cand.parent
                 l_path.append(l_cand)
         if r_cand is not None:
-            while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
-                   and not r_cand.descendants(add_self=1)[0].precedes(node)):
+            while (not r_cand.parent.is_root() and node < r_cand.parent
+                   and not r_cand.descendants(add_self=1)[0] < node):
                 r_cand = r_cand.parent
                 r_path.append(r_cand)
 
@@ -226,8 +226,8 @@ class FixPunct(Block):
             if node == opening_node or node == closing_node:
                 continue
             # If this is a node inside of the pair, is its parent outside?
-            if opening_node.precedes(node) and node.precedes(closing_node):
-                if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
+            if node > opening_node and node < closing_node:
+                if node.parent < opening_node or node.parent > closing_node:
                     if node.upos == 'PUNCT':
                         punct_heads.append(node)
                     else:
@@ -237,7 +237,7 @@ class FixPunct(Block):
             # happen if an outside node is attached to an inside node. To account for
             # this, mark the inside parent as a head, too.
             else:
-                if opening_node.precedes(node.parent) and node.parent.precedes(closing_node):
+                if node.parent > opening_node and node.parent < closing_node:
                     if node.parent.upos == 'PUNCT':
                         punct_heads.append(node.parent)
                     else:
