@@ -53,8 +53,8 @@ class FixPunct(Block):
             based on the form with the exception of single & double quote character,
             which is frequently ambiguous*, so UPOS=PUNCT is checked always.
             *) Single quote can be an apostrophe. Double quote as a NOUN can be the inch symbol.
-        copy_to_enhanced: for all PUNCT nodes, let the enhanced depencies be the same
-            as the basic dependencies.
+        copy_to_enhanced: for all upos=PUNCT deprel=punct nodes, let the enhanced depencies
+            be the same as the basic dependencies.
         """
         super().__init__(**kwargs)
         self._punct_type = None
@@ -118,7 +118,7 @@ class FixPunct(Block):
         # TODO: This block changes parents not only for PUNCT nodes. These should be reflected into enhanced deps as well.
         if self.copy_to_enhanced:
             for node in root.descendants:
-                if node.upos == 'PUNCT':
+                if node.upos == 'PUNCT' and node.udeprel == 'punct':
                     node.deps = [{'parent': node.parent, 'deprel': 'punct'}]
 
     def _fix_subord_punct(self, node):
