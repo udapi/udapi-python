@@ -53,7 +53,7 @@ class FixPunct(Block):
             based on the form with the exception of single & double quote character,
             which is frequently ambiguous*, so UPOS=PUNCT is checked always.
             *) Single quote can be an apostrophe. Double quote as a NOUN can be the inch symbol.
-        copy_to_enhanced: for all upos=PUNCT deprel=punct nodes, let the enhanced depencies
+        copy_to_enhanced: for all upos=PUNCT, let the enhanced depencies
             be the same as the basic dependencies.
         """
         super().__init__(**kwargs)
@@ -111,6 +111,8 @@ class FixPunct(Block):
         # This may not hold if the original subroot was a paired punctuation, which was rehanged.
         if root.children[0].udeprel != 'root':
             root.children[0].udeprel = 'root'
+            if self.copy_to_enhanced:
+                root.children[0].deps = [{'parent': root, 'deprel': 'root'}]
             for another_node in root.children[0].descendants:
                 if another_node.udeprel == 'root':
                     another_node.udeprel = 'punct'
@@ -118,8 +120,8 @@ class FixPunct(Block):
         # TODO: This block changes parents not only for PUNCT nodes. These should be reflected into enhanced deps as well.
         if self.copy_to_enhanced:
             for node in root.descendants:
-                if node.upos == 'PUNCT' and node.udeprel == 'punct':
-                    node.deps = [{'parent': node.parent, 'deprel': 'punct'}]
+                if node.upos == 'PUNCT':
+                    node.deps = [{'parent': node.parent, 'deprel': node.deprel}]
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
