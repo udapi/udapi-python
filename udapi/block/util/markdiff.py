@@ -9,7 +9,7 @@ class MarkDiff(Block):
     """Mark differences between parallel trees."""
 
     def __init__(self, gold_zone, attributes='form,lemma,upos,xpos,deprel,feats,misc',
-                 mark=1, add=False, print_stats=0, ignore_parent=False, **kwargs):
+                 mark=1, mark_attr="Mark", add=False, print_stats=0, ignore_parent=False, **kwargs):
         """Create the Mark block object.
         Params:
         gold_zone: Which of the zones should be treated as gold?
@@ -26,6 +26,7 @@ class MarkDiff(Block):
         self.gold_zone = gold_zone
         self.attrs = attributes.split(',')
         self.mark = mark
+        self.mark_attr = mark_attr
         self.add = add
         self.print_stats = print_stats
         self.ignore_parent = ignore_parent
@@ -37,15 +38,15 @@ class MarkDiff(Block):
             return
         if not self.add:
             for node in tree.descendants + gold_tree.descendants:
-                del node.misc['Mark']
+                del node.misc[self.mark_attr]
                 del node.misc['ToDo']
                 del node.misc['Bug']
 
         pred_nodes, gold_nodes = tree.descendants, gold_tree.descendants
         # Make sure both pred and gold trees are marked, even if one has just deleted nodes.
         if len(pred_nodes) != len(gold_nodes):
-            tree.add_comment('Mark = %s' % self.mark)
-            gold_tree.add_comment('Mark = %s' % self.mark)
+            tree.add_comment(f'{self.mark_attr} = {self.mark}')
+            gold_tree.add_comment(f'{self.mark_attr} = {self.mark}')
         pred_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in pred_nodes]
         gold_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in gold_nodes]
         matcher = difflib.SequenceMatcher(None, pred_tokens, gold_tokens, autojunk=False)
@@ -63,12 +64,12 @@ class MarkDiff(Block):
             if edit == 'equal':
                 for p_node, g_node in zip(pred_nodes[pred_lo:pred_hi], gold_nodes[gold_lo:gold_hi]):
                     if not self.ignore_parent and alignment.get(p_node.parent.ord - 1) != g_node.parent.ord - 1:
-                        p_node.misc['Mark'] = self.mark
-                        g_node.misc['Mark'] = self.mark
+                        p_node.misc[self.mark_attr] = self.mark
+                        g_node.misc[self.mark_attr] = self.mark
                         self.stats['ONLY-PARENT-CHANGED'] += 1
             else:
                 for node in pred_nodes[pred_lo:pred_hi] + gold_nodes[gold_lo:gold_hi]:
-                    node.misc['Mark'] = self.mark
+                    node.misc[self.mark_attr] = self.mark
                 if self.print_stats:
                     if edit == 'replace':
                         # first n nodes are treated as aligned, the rest is treated as ADDED/DELETED
