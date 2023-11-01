@@ -17,6 +17,7 @@ class MarkDiff(Block):
         attributes: Which node attributes should be considered when searching for diffs?
             The tree topology, i.e. node parent is always considered.
         mark: What value should be used in `node.misc['Mark']` of the differing nodes?
+        mark_attr: use this MISC attribute name instead of "Mark".
         add: If False, node.misc attributes Mark, ToDo and Bug will be deleted before running this block,
             so that the marked_only option (e.g. via `udapy -TM`) prints only nodes marked by this block.
         print_stats: How many lines of statistics should be printed? -1 means all.
