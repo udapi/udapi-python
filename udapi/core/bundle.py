@@ -122,6 +122,6 @@ class Bundle(object):
         """An iterator over all nodes (excluding empty nodes) in all trees in this bundle."""
         for tree in self:
             # tree.descendants is slightly slower than tree._descendants,
-            # but it seems safer, see the comment in udapi.core.block.Block.process.process_tree().
+            # but it seems safer, see the comment in udapi.core.block.Block.process_tree().
             for node in tree.descendants:
                 yield node

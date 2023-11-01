@@ -96,7 +96,7 @@ class Document(object):
         for bundle in self:
             for tree in bundle:
                 # tree.descendants is slightly slower than tree._descendants,
-                # but it seems safer, see the comment in udapi.core.block.Block.process.process_tree().
+                # but it seems safer, see the comment in udapi.core.block.Block.process_tree().
                 for node in tree.descendants:
                     yield node
 
