@@ -131,9 +131,9 @@ class MarkBugs(Block):
             self.log(node, 'degree-upos',
                      'Degree=%s upos!=ADJ|ADV (but %s)' % (feats['Degree'], upos))
 
-        subject_children = [n for n in node.children if 'subj' in n.udeprel]
+        subject_children = [n for n in node.children if 'subj' in n.udeprel and n.sdeprel != 'outer']
         if len(subject_children) > 1:
-            self.log(node, 'multi-subj', 'More than one [nc]subj(:pass)? child')
+            self.log(node, 'multi-subj', 'More than one (non-outer) [nc]subj child')
 
         object_children = [n for n in node.children if n.udeprel in ('obj', 'ccomp')]
         if len(object_children) > 1:

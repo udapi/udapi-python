@@ -15,6 +15,9 @@ class AddMwt(Block):
             orig_attr[attr] = getattr(node, attr)
         orig_attr['feats'] = node.feats.copy()
         orig_attr['misc'] = node.misc.copy()
+        # Defaults for the newly created MWT
+        mwt_misc = node.misc.copy()
+        mwt_form = node.form
 
         forms = analysis['form'].split()
         main = analysis.get('main', 0)
@@ -37,6 +40,7 @@ class AddMwt(Block):
         elif orig_attr['form'][0].isupper():
             nodes[0].form = nodes[0].form.title()
 
+        node.misc = None
         for attr in 'lemma upos xpos feats deprel misc'.split():
             if attr in analysis:
                 values = analysis[attr].split()
@@ -47,6 +51,17 @@ class AddMwt(Block):
                             logging.warning("%s = %s" % (attr, analysis.get(attr, '')))
                     if values[i] == '*':
                         setattr(new_node, attr, orig_attr[attr])
+                        # No MISC attribute should be duplicated on the word level and token level,
+                        # so if copying MISC to a new_node, delete mwt_misc.
+                        # However, SpaceAfter should be annotated only on the token level,
+                        # so make sure it is not accidentally copied on the word level.
+                        if attr == 'misc':
+                            orig_attr['misc'].clear()
+                            for a in 'SpaceAfter SpacesAfter SpacesBefore'.split():
+                                if new_node.misc[a]:
+                                    orig_attr['misc'][a] = new_node.misc[a]
+                                    del new_node.misc[a]
+
                     elif attr == 'feats' and '*' in values[i]:
                         new_node.feats = values[i]
                         for feat_name, feat_value in list(new_node.feats.items()):
@@ -55,8 +70,23 @@ class AddMwt(Block):
                     else:
                         setattr(new_node, attr, values[i])
 
-        mwt = node.root.create_multiword_token(nodes, orig_attr['form'], orig_attr['misc'])
-        node.misc = None
+        # Entity (coreference) annotation should be only on the word level,
+        # so make sure it does not stay on the token level.
+        if mwt_misc['Entity']:
+            nodes[0].misc['Entity'] = mwt_misc['Entity']
+            del mwt_misc['Entity']
+
+        # If node is already part of an MWT, we need to delete the old MWT and extend the new MWT.
+        if node.multiword_token:
+            mwt_words = node.multiword_token.words
+            mwt_form = node.multiword_token.form
+            if node.multiword_token.misc:
+                mwt_misc.update(node.multiword_token.misc)
+            node.multiword_token.remove()
+            mwt_words[mwt_words.index(node):mwt_words.index(node)+1] = nodes
+            nodes = mwt_words
+
+        mwt = node.root.create_multiword_token(nodes, mwt_form, mwt_misc)
         self.postprocess_mwt(mwt)
 
     def multiword_analysis(self, node):

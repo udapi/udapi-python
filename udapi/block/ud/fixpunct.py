@@ -50,22 +50,34 @@ class FixPunct(Block):
         Args:
         check_paired_punct_upos: fix paired punctuation tokens only if their UPOS=PUNCT.
             The default is false, which means that fixed punctuation is detected only
-            based on the form with the exception of single quote / apostrophe character,
-            which is frequently ambiguous, so UPOS=PUNCT is checked always.
-        copy_to_enhanced: for all PUNCT nodes, let the enhanced depencies be the same
-            as the basic dependencies.
+            based on the form with the exception of single & double quote character,
+            which is frequently ambiguous*, so UPOS=PUNCT is checked always.
+            *) Single quote can be an apostrophe. Double quote as a NOUN can be the inch symbol.
+        copy_to_enhanced: for all upos=PUNCT, let the enhanced depencies
+            be the same as the basic dependencies.
         """
         super().__init__(**kwargs)
         self._punct_type = None
         self.check_paired_punct_upos = check_paired_punct_upos
         self.copy_to_enhanced = copy_to_enhanced
 
+    def _is_punct(self, node):
+        if node.upos == 'PUNCT':
+            return True
+        if self.check_paired_punct_upos:
+            return False
+        if node.form in "'\"":
+            return False
+        if node.form in PAIRED_PUNCT or node.form in PAIRED_PUNCT.values():
+            return True
+        return False
+
     def process_tree(self, root):
         # First, make sure no PUNCT has children.
         # This may introduce multiple subroots, which will be fixed later on
         # (preventing to temporarily create multiple subroots here would prevent fixing some errors).
         for node in root.descendants:
-            while node.parent.upos == 'PUNCT':
+            while self._is_punct(node.parent):
                 node.parent = node.parent.parent
 
         # Second, fix paired punctuations: quotes and brackets, marking them in _punct_type.
@@ -77,7 +89,7 @@ class FixPunct(Block):
         self._punct_type = [None] * (1 + len(root.descendants))
         for node in root.descendants:
             if self._punct_type[node.ord] != 'closing':
-                closing_punct = PAIRED_PUNCT.get(node.form, None)
+                closing_punct = PAIRED_PUNCT.get(node.form)
                 if closing_punct is not None:
                     self._fix_paired_punct(root, node, closing_punct)
 
@@ -99,6 +111,8 @@ class FixPunct(Block):
         # This may not hold if the original subroot was a paired punctuation, which was rehanged.
         if root.children[0].udeprel != 'root':
             root.children[0].udeprel = 'root'
+            if self.copy_to_enhanced:
+                root.children[0].deps = [{'parent': root, 'deprel': 'root'}]
             for another_node in root.children[0].descendants:
                 if another_node.udeprel == 'root':
                     another_node.udeprel = 'punct'
@@ -107,7 +121,7 @@ class FixPunct(Block):
         if self.copy_to_enhanced:
             for node in root.descendants:
                 if node.upos == 'PUNCT':
-                    node.deps = [{'parent': node.parent, 'deprel': 'punct'}]
+                    node.deps = [{'parent': node.parent, 'deprel': node.deprel}]
 
     def _fix_subord_punct(self, node):
         # Dot used as the ordinal-number marker (in some languages) or abbreviation marker.
@@ -148,13 +162,13 @@ class FixPunct(Block):
         if l_cand is None or l_cand.is_root():
             l_cand, l_path = None, []
         else:
-            while (not l_cand.parent.is_root() and l_cand.parent.precedes(node)
-                   and not node.precedes(l_cand.descendants(add_self=1)[-1])):
+            while (not l_cand.parent.is_root() and l_cand.parent < node
+                   and not node < l_cand.descendants(add_self=1)[-1]):
                 l_cand = l_cand.parent
                 l_path.append(l_cand)
         if r_cand is not None:
-            while (not r_cand.parent.is_root() and node.precedes(r_cand.parent)
-                   and not r_cand.descendants(add_self=1)[0].precedes(node)):
+            while (not r_cand.parent.is_root() and node < r_cand.parent
+                   and not r_cand.descendants(add_self=1)[0] < node):
                 r_cand = r_cand.parent
                 r_path.append(r_cand)
 
@@ -203,7 +217,7 @@ class FixPunct(Block):
 
     def _fix_paired_punct(self, root, opening_node, closing_punct):
         if (self.check_paired_punct_upos
-            or opening_node.form == "'") and opening_node.upos != 'PUNCT':
+            or opening_node.form in "'\"") and opening_node.upos != 'PUNCT':
             return
         nested_level = 0
         for node in root.descendants[opening_node.ord:]:
@@ -226,8 +240,8 @@ class FixPunct(Block):
             if node == opening_node or node == closing_node:
                 continue
             # If this is a node inside of the pair, is its parent outside?
-            if opening_node.precedes(node) and node.precedes(closing_node):
-                if node.parent.precedes(opening_node) or closing_node.precedes(node.parent):
+            if node > opening_node and node < closing_node:
+                if node.parent < opening_node or node.parent > closing_node:
                     if node.upos == 'PUNCT':
                         punct_heads.append(node)
                     else:
@@ -236,12 +250,11 @@ class FixPunct(Block):
             # they also must not cause non-projectivity of other relations. This could
             # happen if an outside node is attached to an inside node. To account for
             # this, mark the inside parent as a head, too.
-            else:
-                if opening_node.precedes(node.parent) and node.parent.precedes(closing_node):
-                    if node.parent.upos == 'PUNCT':
-                        punct_heads.append(node.parent)
-                    else:
-                        heads.append(node.parent)
+            elif node.parent > opening_node and node.parent < closing_node:
+                if node.parent.upos == 'PUNCT':
+                    punct_heads.append(node.parent)
+                else:
+                    heads.append(node.parent)
 
         # Punctuation should not have children, but if there is no other head candidate,
         # let's break this rule.

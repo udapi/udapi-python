@@ -116,3 +116,12 @@ class Bundle(object):
     def draw(self, **kwargs):
         """Pretty print the trees using TextModeTrees."""
         TextModeTrees(**kwargs).process_bundle(self)
+
+    @property
+    def nodes(self):
+        """An iterator over all nodes (excluding empty nodes) in all trees in this bundle."""
+        for tree in self:
+            # tree.descendants is slightly slower than tree._descendants,
+            # but it seems safer, see the comment in udapi.core.block.Block.process_tree().
+            for node in tree.descendants:
+                yield node

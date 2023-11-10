@@ -34,10 +34,10 @@ class UDPipe:
             raise IOError("UDPipe error " + self.error.message)
         self.conllu_reader.files.filehandle = io.StringIO(out_data)
         parsed_root = self.conllu_reader.read_tree()
-        nodes = [root] + descendants
+        root.flatten()
         for parsed_node in parsed_root.descendants:
-            node = nodes[parsed_node.ord]
-            node.parent = nodes[parsed_node.parent.ord]
+            node = descendants[parsed_node.ord - 1]
+            node.parent = descendants[parsed_node.parent.ord - 1] if parsed_node.parent.ord else root
             for attr in 'upos xpos lemma feats deprel'.split():
                 setattr(node, attr, getattr(parsed_node, attr))
 

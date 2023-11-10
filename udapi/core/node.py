@@ -595,12 +595,15 @@ class Node(object):
                 all_nodes[reference_ord - 1] = self
                 self._ord = reference_ord
                 for en in empty_nodes:
-                    ###!!! Empty nodes before the first overt token (ID=0.X) will be never moved this way. We cannot know whether the caller wanted to place the shifted node before or after them.
+                    # Empty nodes before the first overt token (ID=0.X) will be never moved this way.
+                    # We cannot know whether the caller wanted to place the shifted node before or after them.
                     if en._ord < my_ord and en._ord > reference_ord:
                         en._ord += 1
+            self._parent._children.sort()
             return
 
-        ###!!! Updating ords of empty nodes is implemented for the simple case above but it has to be implemented also for the complex case below!
+        #TODO: Updating ords of empty nodes is implemented only for the simple case above,
+        # but it has to be implemented also for the complex case below!
         nodes_to_move = self.descendants(add_self=True)
         first_ord, last_ord = nodes_to_move[0]._ord, nodes_to_move[-1]._ord
 
@@ -624,6 +627,7 @@ class Node(object):
             for node in nodes_to_move:
                 all_nodes[trg_ord - 1], node._ord = node, trg_ord
                 trg_ord += 1
+            self._parent._children.sort()
             return
 
         # First, move a node from position src_ord to position trg_ord RIGHT-ward.
@@ -657,6 +661,7 @@ class Node(object):
         for node in nodes_to_move:
             all_nodes[trg_ord - 1], node._ord = node, trg_ord
             trg_ord += 1
+        self._parent._children.sort()
 
     def shift_after_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node after the reference_node."""
@@ -668,6 +673,8 @@ class Node(object):
 
     def shift_before_node(self, reference_node, without_children=False, skip_if_descendant=False):
         """Shift this node before the reference_node."""
+        if reference_node.is_root():
+            raise ValueError(f'Cannot shift a node before the root ({reference_node})')
         if not without_children and reference_node.is_descendant_of(self):
             if skip_if_descendant:
                 return
@@ -696,6 +703,8 @@ class Node(object):
         Args:
         without_children: shift just this node without its subtree?
         """
+        if reference_node.is_root():
+            raise ValueError(f'Cannot shift a node before the root ({reference_node})')
         if not without_children and reference_node.is_descendant_of(self):
             if skip_if_descendant:
                 return

@@ -82,8 +82,13 @@ class Conllu(BaseReader):
 
     def read_trees(self):
         if not self.max_docs:
+            # Valid CoNLL-U files must have sentences separated by a single empty line.
+            # However, some users have to work with invalid files e.g. ending with two empty lines.
+            # It is obvious how to parse such files and re.split(r'\n\n+', s) is only twice as slow
+            # as s.split('\n\n') and this time is negligble
+            # relative to the main CoNLL-U parsing in read_tree_from_lines().
             return [self.read_tree_from_lines(s.split('\n')) for s in
-                    self.filehandle.read().split('\n\n') if s]
+                    re.split(r'\n\n+', self.filehandle.read()) if s]
         # udapi.core.basereader takes care about the max_docs parameter.
         # However, we can make the loading much faster by not reading
         # the whole file if the user wants just first N documents.
@@ -91,13 +96,13 @@ class Conllu(BaseReader):
         for line in self.filehandle:
             line = line.rstrip()
             if line == '':
-               tree = self.read_tree_from_lines(lines)
-               lines = []
-               if tree.newdoc:
-                   if loaded_docs == self.max_docs:
-                       return trees
-                   loaded_docs += 1
-               trees.append(tree)
+                tree = self.read_tree_from_lines(lines)
+                lines = []
+                if tree.newdoc:
+                    if loaded_docs == self.max_docs:
+                        return trees
+                    loaded_docs += 1
+                trees.append(tree)
             else:
                 lines.append(line)
         return

@@ -34,7 +34,7 @@ class Document(object):
             if filename.endswith(".conllu"):
                 self.load_conllu(filename, **kwargs)
             elif filename.endswith(".txt"):
-                reader = SentencesReader(files=filename, **kwargs)
+                reader = SentencesReader(files=[filename], **kwargs)
                 reader.apply_on_document(self)
             else:
                 raise ValueError("Only *.conllu and *.txt are supported. Provided: " + filename)
@@ -65,11 +65,11 @@ class Document(object):
 
     def load_conllu(self, filename=None, **kwargs):
         """Load a document from a conllu-formatted file."""
-        ConlluReader(files=filename, **kwargs).process_document(self)
+        ConlluReader(files=[filename], **kwargs).process_document(self)
 
     def store_conllu(self, filename):
         """Store a document into a conllu-formatted file."""
-        ConlluWriter(files=filename).apply_on_document(self)
+        ConlluWriter(files=[filename]).apply_on_document(self)
 
     def from_conllu_string(self, string):
         """Load a document from a conllu-formatted string."""
@@ -96,7 +96,7 @@ class Document(object):
         for bundle in self:
             for tree in bundle:
                 # tree.descendants is slightly slower than tree._descendants,
-                # but it seems safer, see the comment in udapi.core.block.Block.process.process_tree().
+                # but it seems safer, see the comment in udapi.core.block.Block.process_tree().
                 for node in tree.descendants:
                     yield node
 

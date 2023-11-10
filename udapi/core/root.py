@@ -300,3 +300,17 @@ class Root(Node):
                     self.create_multiword_token(words=words, form=mwt.form, misc=mwt.misc)
         self._descendants += nodes
         # pylint: enable=protected-access
+
+    def flatten(self, deprel='root'):
+        """Flatten the tree (i.e. attach all nodes to the root) and reset all deprels.
+
+        This is equivalent to
+          for node in root.descendants:
+              node.parent = root
+              node.deprel = 'root'
+        but it is faster.
+        """
+        self._children = self._descendants[:]
+        for node in self._children:
+            node._parent = self
+            node._children.clear()
