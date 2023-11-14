@@ -2,21 +2,21 @@
 import udapi.block.ud.addmwt
 
 MWTS = {
-    'mecum':   {'lemma': 'ego cum', 'form': 'me cum', 'feats': 'Case=Abl|Gender=Masc|Number=Sing AdpType=Post|Clitic=Yes'},
-    'tecum':  {'lemma': 'tu cum', 'form': 'te cum', 'feats': 'Case=Abl|Gender=Masc|Number=Sing AdpType=Post|Clitic=Yes'},
-    'nobiscum':   {'lemma': 'nos cum', 'form': 'nobis cum', 'feats': 'Case=Abl|Gender=Neut|Number=Plur AdpType=Post|Clitic=Yes'},
-    'vobiscum': {'lemma': 'vos cum', 'form': 'vobis cum', 'feats': 'Case=Abl|Gender=Masc|Number=Plur AdpType=Post|Clitic=Yes'},
-    'uobiscum': {'lemma': 'uos cum', 'form': 'uobis cum', 'feats': 'Case=Abl|Gender=Masc|Number=Plur AdpType=Post|Clitic=Yes'},
-    'secum': {'lemma': 'sui cum', 'form': 'se cum', 'feats': 'Case=Abl|Gender=Masc AdpType=Post|Clitic=Yes'}, # can be singular or plural
+    'mecum':   {'lemma': 'ego cum', 'form': 'me cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Masc|Number=Sing AdpType=Post|Clitic=Yes', 'deprel': 'obl case'},
+    'tecum':  {'lemma': 'tu cum', 'form': 'te cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Masc|Number=Sing AdpType=Post|Clitic=Yes', 'deprel': 'obl case'},
+    'nobiscum':   {'lemma': 'nos cum', 'form': 'nobis cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Neut|Number=Plur AdpType=Post|Clitic=Yes', 'deprel': 'obl case'},
+    'vobiscum': {'lemma': 'vos cum', 'form': 'vobis cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Masc|Number=Plur AdpType=Post|Clitic=Yes', 'deprel': 'obl case'},
+    'uobiscum': {'lemma': 'uos cum', 'form': 'uobis cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Masc|Number=Plur AdpType=Post|Clitic=Yes', 'deprel': 'obl case'},
+    'secum': {'lemma': 'sui cum', 'form': 'se cum', 'upos': 'PRON ADP', 'feats': 'Case=Abl|Gender=Masc AdpType=Post|Clitic=Yes', 'deprel': 'obl case'}, # can be singular or plural
+    'nonne': {'lemma': 'non ne', 'form': 'non ne', 'upos': 'PART PART', 'feats': 'Polarity=Neg Clitic=Yes|PartType=Int', 'deprel': 'advmod:neg discourse', 'shape': 'sibling'}
 }
 
 # shared values for all entries in MWTS
 for v in MWTS.values():
-    v['upos'] = 'PRON ADP'
     # v['xpos'] = '' # treebank-specific
-    v['deprel'] = 'obl case'
+    if 'shape' not in v:
+        v['shape'] = 'subtree'
     v['main'] = 0
-    v['shape'] = 'subtree'
 	   
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
@@ -29,30 +29,13 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             return analysis
             
         if node.form.endswith('.') and len(node.form) > 1 and node.form != '...':
-            dic = {
-                'form': 'x .',
+	    # currently under discussion
+            return {'form': node.form[:-1] + ' .',
                 'lemma': '* .',
                 'upos': '* PUNCT',
                 'xpos': '_ _',
                 'feats': '* _',
                 'deprel': '* punct',
                 'main': 0,
-                'shape': 'subtree'
-            }
-            forma = node.form[:-1] + ' .'
-            dic.update(form = forma)
-            return dic
-        elif node.lemma == 'nonne':
-        	dic = {
-        	'form': 'non ne',
-                'lemma': 'non ne',
-                'upos': 'PART PART',
-                # 'xpos': '_ _', # treebank-specific
-                'feats': 'Polarity=Neg Clitic=Yes|PartType=Int',
-                'deprel': 'advmod:neg discourse',
-                'main': 0,
-                'shape': 'sibling'
-        	}
-        	return dic
-        return None
+                'shape': 'subtree'}
 
