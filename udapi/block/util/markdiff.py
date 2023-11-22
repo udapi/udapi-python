@@ -62,8 +62,8 @@ class MarkDiff(Block):
         if len(pred_nodes) != len(gold_nodes) and self.mark_attr:
             tree.add_comment(f'{self.mark_attr} = {self.mark}')
             gold_tree.add_comment(f'{self.mark_attr} = {self.mark}')
-        pred_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in pred_nodes]
-        gold_tokens = ['_'.join(n.get_attrs(self.attrs)) for n in gold_nodes]
+        pred_tokens = ['_'.join(n.get_attrs(self.attrs, undefs="_")) for n in pred_nodes]
+        gold_tokens = ['_'.join(n.get_attrs(self.attrs, undefs="_")) for n in gold_nodes]
         matcher = difflib.SequenceMatcher(None, pred_tokens, gold_tokens, autojunk=False)
         diffs = list(matcher.get_opcodes())
 
