@@ -159,9 +159,9 @@ class Document(object):
         self._load_coref()
         if not eid:
             counter = 1
-            while self._eid_to_entity.get(f'c{counter}'):
+            while self._eid_to_entity.get(f'e{counter}'):
                 counter += 1
-            eid = f'c{counter}'
+            eid = f'e{counter}'
         elif self._eid_to_entity.get(eid):
             raise ValueError("Entity with eid=%s already exists", eid)
         entity = udapi.core.coref.CorefEntity(eid, etype)
