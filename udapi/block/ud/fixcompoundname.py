@@ -24,11 +24,12 @@ class FixCompoundName(Block):
             grandparent = origparent.parent
             outdeprel = origparent.deprel
             # See if there are other PROPN compound siblings.
-            namewords = sorted([x for x in origparent.children(add_self=True) if x.upos == 'PROPN' and (x.udeprel == 'compound' or x == origparent)], key=lambda y: y.ord)
+            # (The list node.children is automatically sorted by ord. If any new sorting is needed later, we can compare nodes directly, their default comparison value is ord.)
+            namewords = [x for x in origparent.children(add_self=True) if x.upos == 'PROPN' and (x.udeprel == 'compound' or x == origparent)]
             # The Hindi treebank tags dates (['30', 'navaṁbara'], ['disaṁbara', '1993']) as PROPN compounds.
             # This is wrong but it is also different from personal names we are targeting here.
             # Hence, we will skip "names" that contain numbers.
-            if len([x for x in namewords if re.search(r"\d", x.form)]) == 0:
+            if any(re.search(r"\d", x.form) for x in namewords):
                 #logging.info(str([x.misc['Translit'] for x in namewords]))
                 ###!!! We currently cannot transform enhanced dependencies.
                 ###!!! If we proceed, the basic tree would diverge from the enhanced dependencies.
