@@ -62,21 +62,34 @@ class UDPipeOnline:
 
         return response["result"]
 
-    def tag_parse_tree(self, root):
+    def tag_parse_tree(self, root, tag=True, parse=True):
         """Tag (+lemmatize, fill FEATS) and parse a tree (already tokenized)."""
+        if not tag and not parse:
+            raise ValueError('tag_parse_tree(root, tag=False, parse=False) does not make sense.')
         descendants = root.descendants
         if not descendants:
             return
         in_data = " ".join([n.form for n in descendants])
-        out_data = self.perform_request(params={"data": in_data, "input":"horizontal", "tagger":"", "parser":""})
-        conllu_reader = ConlluReader()
+        params = {"model": self.model, "data": in_data, "input":"horizontal", "tagger":""}
+        if tag:
+            attrs = 'upos xpos lemma feats'.split()
+        else:
+            attrs = []
+        if parse:
+            params["parser"] = ""
+            attrs.append('deprel')
+
+        out_data = self.perform_request(params=params)
+        conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)
         parsed_root = conllu_reader.read_tree()
-        root.flatten()
+        if parse:
+            root.flatten()
         for parsed_node in parsed_root.descendants:
             node = descendants[parsed_node.ord - 1]
-            node.parent = descendants[parsed_node.parent.ord - 1] if parsed_node.parent.ord else root
-            for attr in 'upos xpos lemma feats deprel'.split():
+            if parse:
+                node.parent = descendants[parsed_node.parent.ord - 1] if parsed_node.parent.ord else root
+            for attr in attrs:
                 setattr(node, attr, getattr(parsed_node, attr))
 
     def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True):
