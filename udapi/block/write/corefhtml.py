@@ -61,6 +61,7 @@ CSS = '''
 .active {border: 1px solid red !important;}
 .selected {background: red !important; text-shadow: 1px 1px 4px white, -1px 1px 4px white, 1px -1px 4px white, -1px -1px 4px white;}
 .other {background: hsl(0, 0%, 85%);}
+.sent_id {display: none; background: #ddd; border-radius: 3px;}
 '''
 
 SCRIPT_BASE = '''
@@ -133,7 +134,7 @@ var load_json_fail_reported = false;
 add_show_tree_button = function(index, el){
   var sent_id = el.id;
   $(el).prepend(
-    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree", class: "showtree"}).on("click", async function() {
+    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree "+sent_id.substring(1), class: "showtree"}).on("click", async function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
         $('#button-'+sent_id).attr('title', 'hide dependency tree');
@@ -247,6 +248,7 @@ class CorefHtml(BaseWriter):
         print('<div id="main-menu">Show<br><div>\n'
               f' <input id="show-eid" type="checkbox" {"checked" if self.show_eid else ""} onclick="$(\'.eid\').toggle();"><label for="show-eid">eid</label><br>\n'
               f' <input id="show-etype" type="checkbox" {"checked" if self.show_etype else ""} onclick="$(\'.etype\').toggle();"><label for="show-etype">etype</label><br>\n'
+              ' <input id="show-sent_id" type="checkbox" onclick="$(\'.sent_id\').toggle();"><label for="show-sent_id">sent_id</label><br>\n'
               ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle();"><label for="show-trees">trees</label><br>\n'
               ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\');"><label for="show-color">colors</label><br>\n'
               ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\');"><label for="show-boxes">boxes</label></div><div>\n'
@@ -330,6 +332,7 @@ class CorefHtml(BaseWriter):
             print('<hr class="par">')
         opened = []
         print(f'<p class="sentence" id={_id(tree)}>')
+        print(f'<span class="sent_id">🆔{tree.sent_id}</span>')
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
@@ -386,11 +389,11 @@ class CorefHtml(BaseWriter):
         return None
 
 # id needs to be a valid DOM querySelector
-# so it cannot contain # nor / and it cannot start with a digit
+# so it cannot contain [#./] and it cannot start with a digit
 def _id(node):
     if node is None:
         return 'null'
-    return '"n%s"' % node.address().replace('#', '-').replace('/', '-')
+    return '"n%s"' % node.address().replace('#', '-').replace('/', '-').replace('.', '-')
 
 
 def _esc(string):
