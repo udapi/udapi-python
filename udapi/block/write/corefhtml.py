@@ -181,8 +181,6 @@ class CorefHtml(BaseWriter):
             self.docs_dir = os.path.join(new_dir, docs_dir)
         if docs_dir != '.' and not os.path.exists(self.docs_dir):
             os.makedirs(self.docs_dir)
-        print(f"DOCS_DIR: {self.docs_dir}", file=sys.stderr)
-        print(f"JS_DOCS_DIR: {self.js_docs_dir}", file=sys.stderr)
         self._mention_ids = {}
         self._entity_colors = {}
 
