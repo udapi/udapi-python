@@ -10,7 +10,7 @@ from udapi.core.files import Files
 
 
 class BaseWriter(Block):
-    """Base class for all reader blocks."""
+    """Base class for all writer blocks."""
 
     def __init__(self, files='-', filehandle=None, docname_as_file=False, encoding='utf-8',
                  newline='\n', overwrite=False, path=None, **kwargs):

@@ -170,13 +170,17 @@ class CorefHtml(BaseWriter):
 
     def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
         super().__init__(**kwargs)
-        self.docs_dir = docs_dir
         self.show_trees = show_trees
         self.show_eid = show_eid
         self.show_etype = show_etype
         self.colors = colors
-        if docs_dir != '.' and not os.path.exists(docs_dir):
-            os.makedirs(docs_dir)
+        self.js_docs_dir = docs_dir
+        self.docs_dir = docs_dir
+        if self.path:
+            new_dir, _ = os.path.split(self.path)
+            self.docs_dir = os.path.join(new_dir, docs_dir)
+        if docs_dir != '.' and not os.path.exists(self.docs_dir):
+            os.makedirs(self.docs_dir)
         self._mention_ids = {}
         self._entity_colors = {}
 
@@ -274,7 +278,7 @@ class CorefHtml(BaseWriter):
         finally:
             sys.stdout = orig_stdout
 
-        print(f'<script>\nvar all_docs = {len(ud_docs)};\nvar docs_dir = "{self.docs_dir}";')
+        print(f'<script>\nvar all_docs = {len(ud_docs)};\nvar docs_dir = "{self.js_docs_dir}";')
         print(SCRIPT_BASE)
         if self.show_trees:
             print('docs_json = [false, ', end='') # 1-based index, so dummy docs_json[0]
