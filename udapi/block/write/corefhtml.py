@@ -170,17 +170,19 @@ class CorefHtml(BaseWriter):
 
     def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
         super().__init__(**kwargs)
-        self.docs_dir = docs_dir
         self.show_trees = show_trees
         self.show_eid = show_eid
         self.show_etype = show_etype
         self.colors = colors
-        if docs_dir != '.' and not os.path.exists(docs_dir):
-            os.makedirs(docs_dir)
-        new_dir, new_filename = os.path.split(self.path)
         self.js_docs_dir = docs_dir
-        if docs_dir.startswith(new_dir):
-            self.js_docs_dir = os.path.relpath(docs_dir, new_dir)
+        self.docs_dir = docs_dir
+        if self.path:
+            new_dir, _ = os.path.split(self.path)
+            self.docs_dir = os.path.join(new_dir, docs_dir)
+        if docs_dir != '.' and not os.path.exists(self.docs_dir):
+            os.makedirs(self.docs_dir)
+        print(f"DOCS_DIR: {self.docs_dir}", file=sys.stderr)
+        print(f"JS_DOCS_DIR: {self.js_docs_dir}", file=sys.stderr)
         self._mention_ids = {}
         self._entity_colors = {}
 
