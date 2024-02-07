@@ -168,12 +168,13 @@ WRITE_HTML = udapi.block.write.html.Html()
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, **kwargs):
+    def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, rtl=None, **kwargs):
         super().__init__(**kwargs)
         self.show_trees = show_trees
         self.show_eid = show_eid
         self.show_etype = show_etype
         self.colors = colors
+        self.rtl = rtl
         self.js_docs_dir = docs_dir
         self.docs_dir = docs_dir
         if self.path:
@@ -181,6 +182,7 @@ class CorefHtml(BaseWriter):
             self.docs_dir = os.path.join(new_dir, docs_dir)
         if docs_dir != '.' and not os.path.exists(self.docs_dir):
             os.makedirs(self.docs_dir)
+
         self._mention_ids = {}
         self._entity_colors = {}
 
@@ -314,7 +316,7 @@ class CorefHtml(BaseWriter):
         span_id = ''
         if (subspan.subspan_id == '' or subspan.subspan_id.startswith('[1/')) and e.mentions[0] == m:
             span_id = f'id="{e.eid}" '
-        print(f'<span {span_id}class="{classes}" title="{title}">'
+        print(f'<span {span_id}class="{classes}" title="{title}" dir="ltr">'
               f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
               f' <i class="etype">{e.etype}</i></span>', end='')
 
@@ -335,7 +337,8 @@ class CorefHtml(BaseWriter):
         elif tree.newpar:
             print('<hr class="par">')
         opened = []
-        print(f'<p class="sentence" id={_id(tree)}>')
+        rtl = ' dir="rtl"' if self.rtl else ""
+        print(f'<p class="sentence" id={_id(tree)}{rtl}>')
         print(f'<span class="sent_id">🆔{tree.sent_id}</span>')
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
