@@ -110,6 +110,17 @@ async function load_doc(doc_num) {
   $("#main").append(data);
   add_mention_listeners($("#doc" + doc_num + " .m"));
   $("#doc" + doc_num + " .sentence").each(add_show_tree_button);
+  $('.eid').toggle($('#show-eid')[0].checked);
+  $('.etype').toggle($('#show-etype')[0].checked);
+  $('.sent_id').toggle($('#show-sent_id')[0].checked);
+  $('.showtree').toggle($('#show-trees')[0].checked);
+  $('.m').toggleClass('nocolor', ! $('#show-color')[0].checked);
+  $('.m').toggleClass('nobox', ! $('#show-boxes')[0].checked);
+  $('.head').toggleClass('nobold', ! $('#show-heads')[0].checked);
+  $('.empty').toggle($('#show-empty')[0].checked);
+  $('.sentence').toggleClass('display-inline', ! $('#show-breaks')[0].checked);
+  $('.par').toggle($('#show-pars')[0].checked);
+  $('h1').toggle($('#show-docs')[0].checked);
   loading_now = false;
 }
 
@@ -257,17 +268,17 @@ class CorefHtml(BaseWriter):
 
         print('<div id="main">')
         print('<div id="main-menu">Show<br><div>\n'
-              f' <input id="show-eid" type="checkbox" {"checked" if self.show_eid else ""} onclick="$(\'.eid\').toggle();"><label for="show-eid">eid</label><br>\n'
-              f' <input id="show-etype" type="checkbox" {"checked" if self.show_etype else ""} onclick="$(\'.etype\').toggle();"><label for="show-etype">etype</label><br>\n'
-              ' <input id="show-sent_id" type="checkbox" onclick="$(\'.sent_id\').toggle();"><label for="show-sent_id">sent_id</label><br>\n'
-              ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle();"><label for="show-trees">trees</label><br>\n'
-              ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\');"><label for="show-color">colors</label><br>\n'
-              ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\');"><label for="show-boxes">boxes</label></div><div>\n'
-              ' <input id="show-heads" type="checkbox" checked onclick="$(\'.head\').toggleClass(\'nobold\');"><label for="show-heads">heads in bold</label><br>\n'
-              ' <input id="show-empty" type="checkbox" checked onclick="$(\'.empty\').toggle();"><label for="show-empty">empty words</label><br>\n'
-              ' <input id="show-breaks" type="checkbox" checked onclick="$(\'.sentence\').toggleClass(\'display-inline\');"><label for="show-breaks">sentence per line</label><br>\n'
-              ' <input id="show-pars" type="checkbox" checked onclick="$(\'.par\').toggle();"><label for="show-pars">paragraphs</label><br>\n'
-              ' <input id="show-docs" type="checkbox" checked onclick="$(\'h1\').toggle();"><label for="show-docs">document names</label><br>\n'
+              f' <input id="show-eid" type="checkbox" {"checked" if self.show_eid else ""} onclick="$(\'.eid\').toggle(this.checked);"><label for="show-eid">eid</label><br>\n'
+              f' <input id="show-etype" type="checkbox" {"checked" if self.show_etype else ""} onclick="$(\'.etype\').toggle(this.checked);"><label for="show-etype">etype</label><br>\n'
+              ' <input id="show-sent_id" type="checkbox" onclick="$(\'.sent_id\').toggle(this.checked);"><label for="show-sent_id">sent_id</label><br>\n'
+              ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle(this.checked);"><label for="show-trees">trees</label><br>\n'
+              ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\',!this.checked);"><label for="show-color">colors</label><br>\n'
+              ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\',!this.checked);"><label for="show-boxes">boxes</label></div><div>\n'
+              ' <input id="show-heads" type="checkbox" checked onclick="$(\'.head\').toggleClass(\'nobold\',!this.checked);"><label for="show-heads">heads in bold</label><br>\n'
+              ' <input id="show-empty" type="checkbox" checked onclick="$(\'.empty\').toggle(this.checked);"><label for="show-empty">empty words</label><br>\n'
+              ' <input id="show-breaks" type="checkbox" checked onclick="$(\'.sentence\').toggleClass(\'display-inline\',!this.checked);"><label for="show-breaks">sentence per line</label><br>\n'
+              ' <input id="show-pars" type="checkbox" checked onclick="$(\'.par\').toggle(this.checked);"><label for="show-pars">paragraphs</label><br>\n'
+              ' <input id="show-docs" type="checkbox" checked onclick="$(\'h1\').toggle(this.checked);"><label for="show-docs">document names</label><br>\n'
               '</div></div>\n'
               '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
 
