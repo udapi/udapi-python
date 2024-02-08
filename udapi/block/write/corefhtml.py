@@ -134,11 +134,12 @@ function show_tree_in_tdiv(tdiv, doc_number, index){
 var load_json_fail_reported = false;
 add_show_tree_button = function(index, el){
   var sent_id = el.id;
+  $(el).prepend('<span class="sent_id">🆔' + el.dataset.id + '</span>');
   $(el).prepend(
-    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree "+sent_id.substring(1), class: "showtree"}).on("click", async function() {
+    $("<button>", {append: "🌲", id:"button-"+sent_id, title: "show dependency tree "+el.dataset.id, class: "showtree"}).on("click", async function() {
       var tree_div = $("#tree-"+sent_id);
       if (tree_div.length == 0){
-        $('#button-'+sent_id).attr('title', 'hide dependency tree');
+        $('#button-'+sent_id).attr('title', 'hide dependency tree '+el.dataset.id);
         var tdiv = $("<div>", {id:"tree-"+sent_id, class:"tree"}).insertAfter($(el));
         doc_number = 1 * el.parentElement.id.substr(3);
         if (docs_json[doc_number]){
@@ -159,7 +160,7 @@ add_show_tree_button = function(index, el){
         }
       } else {
         tree_div.remove();
-        $('#button-'+sent_id).attr('title', 'show dependency tree '+sent_id.substring(1));
+        $('#button-'+sent_id).attr('title', 'show dependency tree '+el.dataset.id);
       }
     })
   );
@@ -342,8 +343,7 @@ class CorefHtml(BaseWriter):
             print('<hr class="par">')
         opened = []
         rtl = ' dir="rtl"' if self.rtl else ""
-        print(f'<p class="sentence" id={_id(tree)}{rtl}>')
-        print(f'<span class="sent_id">🆔{tree.sent_id}</span>')
+        print(f'<p class="sentence" data-id="{tree.sent_id}" id="{_id(tree)}"{rtl}>')
         for node in nodes_and_empty:
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
