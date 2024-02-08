@@ -20,6 +20,7 @@ import udapi.block.write.html
 import gzip
 import sys
 import os
+import re
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
@@ -156,7 +157,10 @@ add_show_tree_button = function(index, el){
             }
           }
         }
-      } else {tree_div.remove();}
+      } else {
+        tree_div.remove();
+        $('#button-'+sent_id).attr('title', 'show dependency tree '+sent_id.substring(1));
+      }
     })
   );
 }
@@ -395,12 +399,15 @@ class CorefHtml(BaseWriter):
                 return mention
         return None
 
+
 # id needs to be a valid DOM querySelector
-# so it cannot contain [#./] and it cannot start with a digit
+# so it cannot contain [#./:] and maybe more,
+# so let's substitute all [^\w\d-] to be on the safe side.
+# DOM IDs cannot start with a digit, so prepend e.g. "n".
 def _id(node):
     if node is None:
         return 'null'
-    return '"n%s"' % node.address().replace('#', '-').replace('/', '-').replace('.', '-')
+    return re.sub(r'[^\w\d-]', '_', f"n{node.address()}")
 
 
 def _esc(string):
