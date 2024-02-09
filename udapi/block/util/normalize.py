@@ -20,12 +20,13 @@ class Normalize(Block):
     util.Eval node='node.misc["NonExistentAttribute"] = None'
     """
 
-    def __init__(self, feats=True, misc=True, sent_id=False, start_sent_id=1, sent_id_prefix="", **kwargs):
+    def __init__(self, feats=True, misc=True, sent_id=False, empty_node_ord=False, start_sent_id=1, sent_id_prefix="", **kwargs):
         """
         Args:
         `feats`: normalize the ordering of FEATS. Default=True.
         `misc`: normalize the ordering of MISC. Default=True.
         `sent_id`: normalize sent_id so it forms a sequence of integers. Default=False.
+        `empty_node_ord`: normalize ord attributes of empty nodes. Default=False.
         `start_sent_id`: the first sent_id number
         `sent_id_prefix`: a string to be prepended before the integer sent_id. Default=empty string.
         """
@@ -33,6 +34,7 @@ class Normalize(Block):
         self.feats = feats
         self.misc = misc
         self.sent_id = sent_id
+        self.empty_node_ord = empty_node_ord
         self.next_sent_id = start_sent_id
         self.sent_id_prefix = sent_id_prefix
         if sent_id_prefix or start_sent_id != 1:
@@ -49,6 +51,20 @@ class Normalize(Block):
                 self.process_tree(tree)
 
     def process_tree(self, tree):
+        if self.empty_node_ord:
+            node_ord, empty_ord = 0, 0
+            for node in tree.descendants_and_empty:
+                if node.is_empty():
+                    empty_ord += 1
+                    old_empty_ord, new_empty_ord = str(node.ord), f"{node_ord}.{empty_ord}"
+                    if old_empty_ord != new_empty_ord:
+                        # Make sure all nodes in this sentence have deserialized enhanced deps.
+                        for n in tree.descendants_and_empty:
+                            n.deps
+                        node.ord = new_empty_ord
+                else:
+                    empty_ord = 0
+                    node_ord = node.ord
         for node in tree.descendants:
             self.process_node(node)
 
