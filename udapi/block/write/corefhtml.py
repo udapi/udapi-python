@@ -332,9 +332,16 @@ class CorefHtml(BaseWriter):
         span_id = ''
         if (subspan.subspan_id == '' or subspan.subspan_id.startswith('[1/')) and e.mentions[0] == m:
             span_id = f'id="{e.eid}" '
-        print(f'<span {span_id}class="{classes}" title="{title}" dir="ltr">'
-              f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
-              f' <i class="etype">{e.etype}</i></span>', end='')
+        # The title should be always rendered left-to-right (e.g. "head=X", not "X=head"),
+        # so for RTL languages, we need to use explicit dir="ltr" and insert a nested span with dir="rtl".
+        if self.rtl:
+            print(f'<span {span_id}class="{classes}" title="{title}" dir="ltr">'
+                  f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
+                  f' <i class="etype">{e.etype}</i></span><span dir="rtl">', end='')
+        else:
+            print(f'<span {span_id}class="{classes}" title="{title}">'
+                  f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
+                  f' <i class="etype">{e.etype}</i></span>', end='')
 
     def process_tree(self, tree):
         mentions = set()
@@ -373,7 +380,10 @@ class CorefHtml(BaseWriter):
                 print('</b>', end='')
 
             while opened and opened[-1].words[-1] == node:
-                print('</span>', end='')
+                if self.rtl:
+                    print('</span></span>', end='')
+                else:
+                    print('</span>', end='')
                 opened.pop()
 
             # Two mentions are crossing iff their spans have non-zero intersection,
