@@ -2,7 +2,8 @@ from udapi.core.block import Block
 
 
 class FixParentheses(Block):
-    """Find mentions that contains opening parenthesis but do not contain the closing one (or the other way around)."""
+    """Find mentions that contains opening parenthesis but do not contain the closing one (or the other way around).
+    If the missing parenthesis is an immediate neighbour of the mention span, add it to the span."""
 
     def __init__(self, mark=True, **kwargs):
         super().__init__(**kwargs)
@@ -24,7 +25,7 @@ class FixParentheses(Block):
             elif pair[1] in words and pair[0] in [node.lemma for node in mention.head.root.descendants]:
                 if mention.words[0].ord == int(mention.words[0].ord) and mention.words[0].prev_node \
                         and mention.words[0].prev_node.lemma == pair[0]:
-                    prev = mention.words[0].prev_node
-                    mention.words.append(prev)
+                    prev_node = mention.words[0].prev_node
+                    mention.words.append(prev_node)
                     if self.mark:
-                        prev.misc['Mark'] = 1
+                        prev_node.misc['Mark'] = 1
