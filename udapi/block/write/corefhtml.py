@@ -131,12 +131,15 @@ var docs_loaded = 1;
 var load_fail_reported = false;
 var loading_now = false;
 add_show_tree_button = function(index, el){ } // to be redefined later if show_trees=True
-$(window).scroll(function () {
+function load_more() {
   if (!loading_now && $(window).scrollTop() >= $(document).height() - $(window).height() - 42 && docs_loaded < all_docs) {
     docs_loaded += 1;
     load_doc(docs_loaded);
   }
-});
+}
+$(window).scroll(load_more);
+const resizeObserver = new ResizeObserver(entries =>load_more());
+resizeObserver.observe(document.body);
 '''
 
 SCRIPT_SHOWTREE = '''
