@@ -24,6 +24,8 @@ import re
 
 ETYPES = 'person place organization animal plant object substance time number abstract event'.split()
 
+HTYPES = 'PROPN NOUN PRON VERB DET OTHER'.split()
+
 HEADER = '''
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <title>Udapi CorefUD viewer</title>
@@ -56,12 +58,11 @@ CSS = '''
 .showtree {margin: 5px; user-select: none;}
 .display-inline {display: inline;}
 .close{float:right; font-weight: 900; font-size: 30px; width: 36px; height: 36px; padding: 2px}
-.empty {color: gray;}
+i.empty {color: gray; border: 3px outset gray; padding: 1px;}
 .sentence .singleton {border-style: dotted;}
 .crossing:before {content: "!"; display: block; background: #ffd500;}
 .active {border: 1px solid red !important;}
 .selected {background: red !important; text-shadow: 1px 1px 4px white, -1px 1px 4px white, 1px -1px 4px white, -1px -1px 4px white;}
-.other {background: hsl(0, 0%, 85%);}
 .sent_id {display: none; background: #ddd; border-radius: 3px;}
 '''
 
@@ -116,11 +117,13 @@ async function load_doc(doc_num) {
   $('.showtree').toggle($('#show-trees')[0].checked);
   $('.m').toggleClass('nocolor', ! $('#show-color')[0].checked);
   $('.m').toggleClass('nobox', ! $('#show-boxes')[0].checked);
+  $('.norm').toggle($('#show-norm')[0].checked);
   $('.head').toggleClass('nobold', ! $('#show-heads')[0].checked);
   $('.empty').toggle($('#show-empty')[0].checked);
   $('.sentence').toggleClass('display-inline', ! $('#show-breaks')[0].checked);
   $('.par').toggle($('#show-pars')[0].checked);
   $('h1').toggle($('#show-docs')[0].checked);
+  $('.m').toggleClass('htype',$('#htype')[0].checked)
   loading_now = false;
 }
 
@@ -234,6 +237,10 @@ class CorefHtml(BaseWriter):
         print('<style>' + CSS)
         for i, etype in enumerate(ETYPES):
             print(f'.{etype} {{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
+        print('.other {background: hsl(0, 0%, 85%);}')
+        for i, htype in enumerate(HTYPES[:-1]):
+            print(f'.htype.{htype} {{background: hsl({int(i * 360/len(HTYPES))}, 80%, 85%);}}')
+        print('.htype.OTHER {background: hsl(0, 0%, 85%);}')
         if self.colors:
             for i in range(self.colors):
                 print(f'.c{i} {{color: hsl({int(i * 360/self.colors)}, 100%, 30%);}}')
@@ -274,13 +281,19 @@ class CorefHtml(BaseWriter):
               ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle(this.checked);"><label for="show-trees">trees</label><br>\n'
               ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\',!this.checked);"><label for="show-color">colors</label><br>\n'
               ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\',!this.checked);"><label for="show-boxes">boxes</label></div><div>\n'
+              ' <input id="show-norm" type="checkbox" checked onclick="$(\'.norm\').toggle(this.checked);"><label for="show-norm">non-mentions</label><br>\n'
               ' <input id="show-heads" type="checkbox" checked onclick="$(\'.head\').toggleClass(\'nobold\',!this.checked);"><label for="show-heads">heads in bold</label><br>\n'
               ' <input id="show-empty" type="checkbox" checked onclick="$(\'.empty\').toggle(this.checked);"><label for="show-empty">empty words</label><br>\n'
               ' <input id="show-breaks" type="checkbox" checked onclick="$(\'.sentence\').toggleClass(\'display-inline\',!this.checked);"><label for="show-breaks">sentence per line</label><br>\n'
               ' <input id="show-pars" type="checkbox" checked onclick="$(\'.par\').toggle(this.checked);"><label for="show-pars">paragraphs</label><br>\n'
               ' <input id="show-docs" type="checkbox" checked onclick="$(\'h1\').toggle(this.checked);"><label for="show-docs">document names</label><br>\n'
-              '</div></div>\n'
-              '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n')
+              '</div><fieldset onclick="$(\'.m\').toggleClass(\'htype\',$(\'#htype\')[0].checked)"><legend>bg color:</legend>\n'
+              '<label><input type="radio" name="bgcolor" id="etype" checked>entity type</label>\n'
+              '<label><input type="radio" name="bgcolor" id="htype">head upos</label>\n'
+              '</fieldset>\n'
+              '</div>\n'
+              '<button id="menubtn" title="Visualization options" onclick="menuclick(this)"><div class="b1"></div><div class="b2"></div><div class="b3"></div></button>\n'
+              )
 
         # The first ud_doc will be printed to the main html file.
         self.process_ud_doc(ud_docs[0], 1)
@@ -318,6 +331,8 @@ class CorefHtml(BaseWriter):
         e = m.entity
         classes = f'{e.eid} {self._mention_ids[m]} {e.etype or "other"} m'
         title = f'eid={subspan.subspan_eid}\netype={e.etype}\nhead={m.head.form}'
+        classes += f" {m.head.upos if m.head.upos in HTYPES else 'OTHER'}"
+        title += f'\nhead-upos={m.head.upos}'
         if self.colors:
             classes += f' {self._entity_colors[e]}'
         if all(w.is_empty() for w in subspan.words):
@@ -359,15 +374,20 @@ class CorefHtml(BaseWriter):
             print(f'<hr><h1>{tree.newdoc if tree.newdoc is not True else ""}</h1><hr>')
         elif tree.newpar:
             print('<hr class="par">')
-        opened = []
+        opened, prev_node_mention = [], True
         rtl = ' dir="rtl"' if self.rtl else ""
         print(f'<p class="sentence" data-id="{tree.sent_id}" id="{_id(tree)}"{rtl}>')
         for node in nodes_and_empty:
+            if not prev_node_mention and subspans and subspans[-1].words[0] == node:
+                print('</span>', end='')
             while subspans and subspans[-1].words[0] == node:
                 subspan = subspans.pop()
                 self._start_subspan(subspan)
                 opened.append(subspan)
 
+            if not opened and prev_node_mention:
+                print('<span class="norm">', end='')
+            prev_node_mention = True if opened else False
             is_head = self._is_head(node)
             if is_head:
                 print('<b class="head">', end='')
@@ -412,6 +432,8 @@ class CorefHtml(BaseWriter):
             if not node.no_space_after:
                 print(' ', end='')
 
+        if not prev_node_mention:
+            print('</span>', end='')
         print('</p>')
 
     def _is_head(self, node):
