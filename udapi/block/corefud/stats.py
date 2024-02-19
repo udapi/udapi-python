@@ -7,7 +7,7 @@ class Stats(Block):
     def __init__(self, m_len_max=5, e_len_max=5, report_mentions=True, report_entities=True,
                  report_details=True, selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human',
-                 per_doc=False, **kwargs):
+                 per_doc=False, max_rows_per_page=50, **kwargs):
         super().__init__(**kwargs)
         self.m_len_max = m_len_max
         self.e_len_max = e_len_max
@@ -20,7 +20,9 @@ class Stats(Block):
         if style not in 'tex tex-table tex-doc human'.split():
             raise ValueError(f'Unknown style {style}')
         self.per_doc = per_doc
+        self.max_rows_per_page = max_rows_per_page
         self._header_printed = False
+        self._lines_printed = None
 
         self.counter = Counter()
         self.mentions = 0
@@ -87,9 +89,9 @@ class Stats(Block):
             self.m_words = 0
 
     def process_end(self, skip=True, doc=None):
-        if not self._header_printed:
-            self._header_printed = True
+        if not self._lines_printed:
             self.print_header()
+            self._lines_printed = 0
         if self.per_doc:
             if skip:
                 self.print_footer()
@@ -98,6 +100,7 @@ class Stats(Block):
                 print(f"{doc[0].trees[0].newdoc:15}", end='&' if self.style.startswith('tex') else '\n')
         elif self.style.startswith('tex-'):
             print(f"{self.counter['documents']:4} documents &")
+        self._lines_printed += 1
 
         mentions_nonzero = 1 if self.mentions == 0 else self.mentions
         entities_nonzero = 1 if self.entities == 0 else self.entities
@@ -139,17 +142,21 @@ class Stats(Block):
                 print(f"{c[0]:>15} = {c[1].strip():>10}")
         if not self.per_doc:
             self.print_footer()
+        elif self._lines_printed > self.max_rows_per_page:
+            self.print_footer(False)
+            self._lines_printed = 0
 
     def print_header(self):
         if not self.style.startswith('tex-'):
             return
         if self.style == 'tex-doc':
-            print(r'\documentclass{standalone}')
-            print(r'\usepackage[utf8]{inputenc}\usepackage{booktabs}\usepackage{underscore}')
-            print(r'\title{Udapi coreference statistics}')
-            print(r'\begin{document}')
+            if self._lines_printed is None:
+                print(r'\documentclass[multi=mypage]{standalone}')
+                print(r'\usepackage[utf8]{inputenc}\usepackage{booktabs}\usepackage{underscore}')
+                print(r'\title{Udapi coreference statistics}')
+                print(r'\begin{document}')
         print(r'\def\MC#1#2{\multicolumn{#1}{c}{#2}}')
-        lines = [r'\begin{tabular}{@{}l ', " "*15, ("document" if self.per_doc else "dataset ") + " "*7, " "*15]
+        lines = [r'\begin{mypage}\begin{tabular}{@{}l ', " "*15, ("document" if self.per_doc else "dataset ") + " "*7, " "*15]
         if self.report_entities:
             lines[0] += "rrrr "
             lines[1] += r'& \MC{4}{entities}                 '
@@ -211,9 +218,9 @@ class Stats(Block):
             lines[1] += r'}\cmidrule(l){' + f"{last_col+4}-{last_col+3+len(upos_list)}" + '}'
         print("\n".join(lines))
 
-    def print_footer(self):
+    def print_footer(self, end_doc=True):
         if not self.style.startswith('tex-'):
             return
-        print(r'\bottomrule\end{tabular}')
-        if self.style == 'tex-doc':
+        print(r'\bottomrule\end{tabular}\end{mypage}')
+        if self.style == 'tex-doc' and end_doc:
             print(r'\end{document}')
