@@ -506,7 +506,7 @@ class Node(object):
         return False
 
     def remove(self, children=None):
-        """Delete this node and all its descendants.
+        """Delete this node (and all its descendants unlsess specified otherwise).
 
         Args:
         children: a string specifying what to do if the node has any children.
@@ -516,7 +516,8 @@ class Node(object):
             `rehang_warn` means to rehang and warn:-).
         """
         self._parent._children.remove(self)
-        empty_follows = None
+
+        # If there are any children, do the action specified in the "children" parameter.
         if children is not None and self._children:
             if children.startswith('rehang'):
                 for child in self._children:
@@ -524,16 +525,6 @@ class Node(object):
                 self._parent._children.extend(self._children)
                 self._parent._children.sort()
                 self._children.clear()
-            elif self._root.empty_nodes:
-                will_be_removed = self.descendants(add_self=1)
-                prev_nonempty = self._root
-                empty_follows = {}
-                for node in self._root.descendants_and_empty:
-                    if node.empty:
-                        empty_follows[node] = prev_nonempty
-                    elif node not in will_be_removed:
-                        prev_nonempty = node
-
             if children.endswith('warn'):
                 logging.warning('%s is being removed by remove(children=%s), '
                                 ' but it has (unexpected) children', self, children)
@@ -550,10 +541,27 @@ class Node(object):
             else:
                 for (new_ord, node) in enumerate(self._root._descendants[self._ord - 1:], self._ord):
                     node.ord = new_ord
+                last_ord = 0
                 for empty in self._root.empty_nodes:
-                    if empty > self:
-                        empty.ord = round(empty.ord - 1, 1)
+                    if empty._ord > self._ord:
+                        new_ord = round(empty._ord - 1, 1)
+                        if new_ord <= last_ord:
+                            new_ord = round(last_ord + 0.1, 1)
+                        empty.ord = new_ord
+                    last_ord = empty._ord
         else:
+            # Remember the position of empty nodes, so we can reorder them as well.
+            empty_follows = None
+            if self._root.empty_nodes:
+                will_be_removed = self if children and children.startswith('rehang') else self.descendants(add_self=1)
+                prev_nonempty = self._root
+                empty_follows = {}
+                for node in self._root.descendants_and_empty:
+                    if node.is_empty():
+                        empty_follows[node] = prev_nonempty
+                    elif node not in will_be_removed:
+                        prev_nonempty = node
+
             # TODO nodes_to_remove = self.unordered_descendants()
             # and mark all nodes as deleted, remove them from MWT and coref mentions
             self._root._descendants = sorted(self._root.unordered_descendants())
@@ -566,7 +574,7 @@ class Node(object):
                 last_ord = 0
                 for empty in self._root.empty_nodes:
                     prev_nonempty = empty_follows[empty]
-                    new_ord = round(prev_nonempty.ord + (empty.ord % 1), 1)
+                    new_ord = round(prev_nonempty._ord + (empty._ord % 1), 1)
                     while new_ord <= last_ord:
                         new_ord = round(new_ord + 0.1, 1)
                     last_ord, empty.ord = new_ord, new_ord
@@ -1046,6 +1054,19 @@ class EmptyNode(Node):
     def shift(self, reference_node, after=0, move_subtree=0, reference_subtree=0):
         """Attempts at changing the word order of EmptyNode result in NotImplemented exception."""
         raise NotImplemented('Empty nodes cannot be re-order using shift* methods yet.')
+
+    def remove(self):
+        """Delete this empty node."""
+        to_reorder = [e for e in self._root.empty_nodes if e._ord > self._ord and e._ord < self.ord+1]
+        for empty in to_reorder:
+            empty._ord = round(empty._ord - 0.1, 1)
+        try:
+            self._root.empty_nodes.remove(self)
+        except ValueError:
+            return # self may be an already deleted node e.g. if n.remove() called twice
+        for n in self._root.empty_nodes + self._root._descendants:
+            if n._deps:
+                n._deps = {(deprel, parent) for deprel, parent in n._deps if parent != self}
 
 @functools.total_ordering
 class OrdTuple:

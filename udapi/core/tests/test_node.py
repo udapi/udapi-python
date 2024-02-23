@@ -214,5 +214,36 @@ class TestDocument(unittest.TestCase):
 
         self.assertEqual(nodes[0].raw_deps, '2:test')
 
+    def test_empty_nodes(self):
+        """Test creation of empty nodes and how their ord is changed when removing nodes."""
+        root = Root()
+        for i in range(3):
+            root.create_child(form=f'node{i+1}')
+
+        n1, n2, n3 = root.descendants()
+        n3.parent = n2
+        e1 = n1.create_empty_child('dep', after=False, form='e1')
+        e2 = n1.create_empty_child('dep', after=False, form='e2')
+        e3 = n1.create_empty_child('dep', after=True, form='e3')
+        e4 = n1.create_empty_child('dep', after=True, form='e4')
+        e5 = n2.create_empty_child('dep', after=False, form='e5')
+        e6 = n1.create_empty_child('dep', after=True, form='e6')
+
+        self.assertEqual(root.empty_nodes, [e1, e2, e3, e4, e5, e6])
+        self.assertEqual(root.descendants_and_empty, [e1, e2, n1, e3, e4, e5, e6, n2, n3])
+        self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 1, 1.1, 1.2, 1.3, 1.4, 2, 3])
+        e5.remove()
+        self.assertEqual(root.descendants_and_empty, [e1, e2, n1, e3, e4, e6, n2, n3])
+        self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 1, 1.1, 1.2, 1.3, 2, 3])
+        n1.remove()
+        self.assertEqual(root.descendants_and_empty, [e1, e2, e3, e4, e6, n2, n3])
+        self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 0.3, 0.4, 0.5, 1, 2])
+        e7 = n3.create_empty_child('dep', after=True, form='e7')
+        self.assertEqual(root.descendants_and_empty, [e1, e2, e3, e4, e6, n2, n3, e7])
+        self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 0.3, 0.4, 0.5, 1, 2, 2.1])
+        n2.remove()
+        self.assertEqual(root.descendants_and_empty, [e1, e2, e3, e4, e6, e7])
+        self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
+
 if __name__ == "__main__":
     unittest.main()
