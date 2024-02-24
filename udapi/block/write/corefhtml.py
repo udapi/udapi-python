@@ -190,8 +190,10 @@ WRITE_HTML = udapi.block.write.html.Html()
 
 class CorefHtml(BaseWriter):
 
-    def __init__(self, docs_dir='docs', show_trees=True, show_eid=False, show_etype=False, colors=7, rtl=None, **kwargs):
+    def __init__(self, docs_dir='docs', path_to_js='web',
+                 show_trees=True, show_eid=False, show_etype=False, colors=7, rtl=None, **kwargs):
         super().__init__(**kwargs)
+        self.path_to_js = path_to_js
         self.show_trees = show_trees
         self.show_eid = show_eid
         self.show_etype = show_etype
@@ -234,9 +236,18 @@ class CorefHtml(BaseWriter):
             sent_id2doc[tree.sent_id] = doc_num
         # TODO: use sent_id2doc
 
-        print(HEADER)
-        if self.show_trees:
-            print('<script src="https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js"></script>')
+        print('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">')
+        print('<title>Udapi CorefUD viewer</title>')
+        if self.path_to_js == 'web':
+            print('<script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>')
+            print('<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>')
+            if self.show_trees:
+                print('<script src="https://cdn.rawgit.com/ufal/js-treex-view/gh-pages/js-treex-view.js"></script>')
+        else:
+            print(f'<script src="{self.path_to_js}/jquery-3.6.3.min.js"></script>')
+            print(f'<script src="{self.path_to_js}/pako.min.js"></script>')
+            if self.show_trees:
+                print(f'<script src="{self.path_to_js}/js-treex-view.js"></script>')
         print('<style>' + CSS)
         for i, etype in enumerate(ETYPES):
             print(f'.{etype} {{background: hsl({int(i * 360/len(ETYPES))}, 80%, 85%);}}')
@@ -263,14 +274,14 @@ class CorefHtml(BaseWriter):
                 entities_of_type[entity.etype] = count + 1
                 self._entity_colors[entity] = f'c{count % self.colors}'
             for idx, mention in enumerate(entity.mentions, 1):
-                self._mention_ids[mention] = f'{entity.eid}e{idx}'
+                self._mention_ids[mention] = f'{_dom_esc(entity.eid)}e{idx}'
 
         print('<div id="overview">')
         print('<table><thead><tr><th title="entity id">eid</th>'
               '<th title="number of mentions">#m</th>'
               '<th title="a word best representing the entity">word</th></tr></thead>\n<tbody>')
         for entity in doc.coref_entities:
-            print(f'<tr><td><a href="#{entity.eid}">{entity.eid}</a></td>'
+            print(f'<tr><td><a href="#{_dom_esc(entity.eid)}">{entity.eid}</a></td>'
                   f'<td>{len(entity.mentions)}</td>'
                   f'<td>{self._representative_word(entity)}</td></tr>')
         print('</tbody></table>')
@@ -332,7 +343,7 @@ class CorefHtml(BaseWriter):
     def _start_subspan(self, subspan, crossing=False):
         m = subspan.mention
         e = m.entity
-        classes = f'{e.eid} {self._mention_ids[m]} {e.etype or "other"} m'
+        classes = f'{_dom_esc(e.eid)} {self._mention_ids[m]} {e.etype or "other"} m'
         title = f'eid={subspan.subspan_eid}\netype={e.etype}\nhead={m.head.form}'
         classes += f" {m.head.upos if m.head.upos in HTYPES else 'OTHER'}"
         title += f'\nhead-upos={m.head.upos}'
@@ -349,16 +360,16 @@ class CorefHtml(BaseWriter):
             title += f'\n{m.other}'
         span_id = ''
         if (subspan.subspan_id == '' or subspan.subspan_id.startswith('[1/')) and e.mentions[0] == m:
-            span_id = f'id="{e.eid}" '
+            span_id = f'id="{_dom_esc(e.eid)}" '
         # The title should be always rendered left-to-right (e.g. "head=X", not "X=head"),
         # so for RTL languages, we need to use explicit dir="ltr" and insert a nested span with dir="rtl".
         if self.rtl:
             print(f'<span {span_id}class="{classes}" title="{title}" dir="ltr">'
-                  f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
+                  f'<span class="labels"><b class="eid">{_dom_esc(subspan.subspan_eid)}</b>'
                   f' <i class="etype">{e.etype}</i></span><span dir="rtl">', end='')
         else:
             print(f'<span {span_id}class="{classes}" title="{title}">'
-                  f'<span class="labels"><b class="eid">{subspan.subspan_eid}</b>'
+                  f'<span class="labels"><b class="eid">{_dom_esc(subspan.subspan_eid)}</b>'
                   f' <i class="etype">{e.etype}</i></span>', end='')
 
     def process_tree(self, tree):
@@ -449,12 +460,16 @@ class CorefHtml(BaseWriter):
 # id needs to be a valid DOM querySelector
 # so it cannot contain [#./:] and maybe more,
 # so let's substitute all [^\w\d-] to be on the safe side.
-# DOM IDs cannot start with a digit, so prepend e.g. "n".
+# DOM IDs cannot start with a digit, so prepend e.g. "n" if needed.
+def _dom_esc(string):
+    if string[0].isdecimal():
+        string = 'n' + string
+    return re.sub(r'[^\w\d-]', '_', string)
+
 def _id(node):
     if node is None:
         return 'null'
-    return re.sub(r'[^\w\d-]', '_', f"n{node.address()}")
-
+    return _dom_esc(node.address())
 
 def _esc(string):
     if string is None:
