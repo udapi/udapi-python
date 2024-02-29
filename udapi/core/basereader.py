@@ -135,6 +135,8 @@ class BaseReader(Block):
 
             bundle, last_bundle_id = None, ''
             for root in trees:
+                if root is None:
+                    continue
                 if root.newdoc:
                     if self.max_docs and self._docs_loaded >= self.max_docs:
                         self.finished = True
