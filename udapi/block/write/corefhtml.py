@@ -130,7 +130,9 @@ async function load_doc(doc_num) {
 var docs_loaded = 1;
 var load_fail_reported = false;
 var loading_now = false;
-add_show_tree_button = function(index, el){ } // to be redefined later if show_trees=True
+add_show_tree_button = function(index, el){ // to be redefined later if show_trees=True
+  $(el).prepend('<span class="sent_id">🆔' + el.dataset.id + '</span>');
+}
 function load_more() {
   if (!loading_now && $(window).scrollTop() >= $(document).height() - $(window).height() - 42 && docs_loaded < all_docs) {
     docs_loaded += 1;
@@ -182,8 +184,6 @@ add_show_tree_button = function(index, el){
     })
   );
 }
-
-$("#doc1 .sentence").each(add_show_tree_button);
 '''
 
 WRITE_HTML = udapi.block.write.html.Html()
@@ -213,7 +213,7 @@ class CorefHtml(BaseWriter):
     def _representative_word(self, entity):
         # return the first PROPN or NOUN. Or the most frequent one?
         heads = [m.head for m in entity.mentions]
-        lemma_or_form = lambda n: n.lemma if n.lemma else n.form
+        lemma_or_form = lambda n: n.lemma if n.lemma and n.lemma != '_' else n.form
         for upos in ('PROPN', 'NOUN'):
             nodes = [n for n in heads if n.upos == upos]
             if nodes:
@@ -292,7 +292,7 @@ class CorefHtml(BaseWriter):
               f' <input id="show-eid" type="checkbox" {"checked" if self.show_eid else ""} onclick="$(\'.eid\').toggle(this.checked);"><label for="show-eid">eid</label><br>\n'
               f' <input id="show-etype" type="checkbox" {"checked" if self.show_etype else ""} onclick="$(\'.etype\').toggle(this.checked);"><label for="show-etype">etype</label><br>\n'
               ' <input id="show-sent_id" type="checkbox" onclick="$(\'.sent_id\').toggle(this.checked);"><label for="show-sent_id">sent_id</label><br>\n'
-              ' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle(this.checked);"><label for="show-trees">trees</label><br>\n'
+              + (' <input id="show-trees" type="checkbox" checked onclick="$(\'.showtree\').toggle(this.checked);"><label for="show-trees">trees</label><br>\n' if self.show_trees else '') +
               ' <input id="show-color" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nocolor\',!this.checked);"><label for="show-color">colors</label><br>\n'
               ' <input id="show-boxes" type="checkbox" checked onclick="$(\'.m\').toggleClass(\'nobox\',!this.checked);"><label for="show-boxes">boxes</label></div><div>\n'
               ' <input id="show-norm" type="checkbox" checked onclick="$(\'.norm\').toggle(this.checked);"><label for="show-norm">non-mentions</label><br>\n'
@@ -337,6 +337,7 @@ class CorefHtml(BaseWriter):
             finally:
                 sys.stdout = orig_stdout
             print(SCRIPT_SHOWTREE)
+        print('$("#doc1 .sentence").each(add_show_tree_button);')
         print('</script>')
         print('</div></body></html>')
 
