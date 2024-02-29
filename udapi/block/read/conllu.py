@@ -102,10 +102,11 @@ class Conllu(BaseReader):
                     if loaded_docs == self.max_docs:
                         return trees
                     loaded_docs += 1
-                trees.append(tree)
+                if tree:
+                    trees.append(tree)
             else:
                 lines.append(line)
-        return
+        return trees
 
     def read_tree(self):
         if self.filehandle is None:
