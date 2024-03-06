@@ -15,7 +15,7 @@ class Mark(Block):
     udapy -TM util.Mark node='node.is_nonprojective()' < in | less -R
     """
 
-    def __init__(self, node, mark=1, mark_attr="Mark", add=True, print_stats=False, **kwargs):
+    def __init__(self, node, mark=1, mark_attr="Mark", add=True, print_stats=False, empty=False, **kwargs):
         """Create the Mark block object.
 
         Args:
@@ -27,6 +27,10 @@ class Mark(Block):
         `mark_attr`: use this MISC attribute name instead of "Mark".
 
         `add`: should we keep existing Mark|ToDo|Bug? Default=True.
+
+        `print_stats`: print the total number of marked nodes to stdout at process_end
+
+        `empty`: apply the code also on empty nodes
         """
         super().__init__(**kwargs)
         self.mark = mark
@@ -35,6 +39,7 @@ class Mark(Block):
         self.add = add
         self.print_stats = print_stats
         self._marked = 0
+        self.empty = empty
 
     def process_node(self, node):
         if eval(self.node):
@@ -44,6 +49,10 @@ class Mark(Block):
             del node.misc[self.mark_attr]
             del node.misc['ToDo']
             del node.misc['Bug']
+
+    def process_empty_node(self, empty_node):
+        if self.empty:
+            self.process_node(empty_node)
 
     def process_end(self):
         if self.print_stats:

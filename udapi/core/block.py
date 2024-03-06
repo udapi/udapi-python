@@ -47,6 +47,11 @@ class Block(object):
         pass
 
     @not_overridden
+    def process_empty_node(self, _):
+        """Process an empty node (in enhanced dependencies)"""
+        pass
+
+    @not_overridden
     def process_tree(self, tree):
         """Process a UD tree"""
         # tree.descendants is slightly slower than tree._descendants (0.05s per iterating over 700k words),
@@ -87,7 +92,8 @@ class Block(object):
         p_bundle = not hasattr(self.process_bundle, 'is_not_overridden')
         p_tree = not hasattr(self.process_tree, 'is_not_overridden')
         p_node = not hasattr(self.process_node, 'is_not_overridden')
-        if not any((p_entity, p_mention, p_bundle, p_tree, p_node)):
+        p_empty_node = not hasattr(self.process_empty_node, 'is_not_overridden')
+        if not any((p_entity, p_mention, p_bundle, p_tree, p_node, p_empty_node)):
             raise Exception("No processing activity defined in block " + self.block_name())
 
         if p_entity or p_mention:
@@ -98,7 +104,7 @@ class Block(object):
                     for mention in entity.mentions:
                         self.process_coref_mention(mention)
 
-        if p_bundle or p_tree or p_node:
+        if p_bundle or p_tree or p_node or p_empty_node:
             for bundle_no, bundle in enumerate(document.bundles, 1):
                 logging.debug(f'Block {self.block_name()} processing '
                               f'bundle #{bundle_no} (id={bundle.bundle_id})')
@@ -110,8 +116,12 @@ class Block(object):
                             if p_tree:
                                 self.process_tree(tree)
                             else:
-                                for node in tree.descendants:
-                                    self.process_node(node)
+                                if p_node:
+                                    for node in tree.descendants:
+                                        self.process_node(node)
+                                if p_empty_node:
+                                    for empty_node in tree.empty_nodes:
+                                        self.process_empty_node(empty_node)
 
     @not_overridden
     def process_coref_entity(self, entity):
