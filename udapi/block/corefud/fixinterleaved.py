@@ -27,7 +27,7 @@ class FixInterleaved(Block):
             if self.same_entity_only and mA.entity != mB.entity:
                 continue
 
-            # Fully nested spans are OK, expect for same-subspan
+            # Fully nested spans are OK, except for same-subspan.
             sA, sB = set(mA.words), set(mB.words)
             if (sA <= sB) or (sB <= sA):
                 if not self.nested_same_subspan:
