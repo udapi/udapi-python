@@ -63,7 +63,7 @@ class FixInterleaved(Block):
             # By changing the mA.words, we could have created another error:
             # making the span same as another mention. Let's fix it.
             sA = set(mA.words)
-            for mC in mentions:
+            for mC in sorted(mentions):
                 if mC in deleted or mC is mA or mC is mB:
                     continue
                 if sA != set(mC.words):
