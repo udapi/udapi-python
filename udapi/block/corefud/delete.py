@@ -21,7 +21,7 @@ class Delete(Block):
                         node.raw_deps = '|'.join(d for d in node.raw_deps.split('|') if not '.' in d)
                         if node.raw_deps == '':
                             node.raw_deps = '0:root'
-                    if '.' in node.misc['Functor']:
+                    if '.' in node.misc['Functor'].split(':')[0]:
                         del node.misc['Functor']
 
             for node in root.descendants + root.empty_nodes:
