@@ -139,10 +139,6 @@ class MarkBugs(Block):
         if len(object_children) > 1:
             self.log(node, 'multi-obj', 'More than one obj|ccomp child')
 
-        # In addition to http://universaldependencies.org/svalidation.html
-        if parent.udeprel == 'punct':
-            self.log(node, 'punct-child', 'parent.deprel=punct')
-
         # See http://universaldependencies.org/u/overview/syntax.html#the-status-of-function-words
         # TODO: Promotion by Head Elision: It is difficult to detect this exception.
         #       So far, I have just excluded "det" from the forbidded parent.deprel set
