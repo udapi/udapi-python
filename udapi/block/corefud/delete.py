@@ -10,6 +10,27 @@ class Delete(Block):
         super().__init__(**kwargs)
         self.empty = empty
 
+    def is_root_reachable_by_deps(self, node, parents_to_ignore=None):
+        """ Check if the root node is reachable from node, possibly after deleting the parents_to_ignore nodes.
+        """
+        stack = [(node, [])]
+        while stack:
+            proc_node, path = stack.pop()
+            # root is reachable
+            if proc_node == node.root:
+                break
+            # path forms a cycle, the root cannot be reached through this branch
+            if proc_node in path:
+                continue
+            for dep in proc_node.deps:
+                # the root cannot be reached through ignored nodes
+                if dep['parent'] in parents_to_ignore:
+                    continue
+                # process the parent recursively
+                stack.append((dep['parent'], path + [proc_node]))
+        else:
+            return False
+        return True
 
     def _deps_ignore_nodes(self, node, parents_to_ignore):
         """ Retrieve deps from the node, recursively ignoring specified parents.
@@ -40,9 +61,14 @@ class Delete(Block):
                     # process only the nodes dependent on empty nodes
                     if not '.' in node.raw_deps:
                         continue
-                    newdeps = self._deps_ignore_nodes(node, root.empty_nodes)
-                    newdeps_sorted = sorted(set((dep['parent'].ord, dep['deprel']) for dep in newdeps))
-                    node.raw_deps = '|'.join(f"{p}:{r}" for p, r in newdeps_sorted)
+                    # just remove empty parents if the root remains reachable
+                    if self.is_root_reachable_by_deps(node, root.empty_nodes):
+                        node.deps = [dep for dep in node.deps if not dep['parent'] in root.empty_nodes]
+                    # otherwise propagate to non-empty ancestors
+                    else:
+                        newdeps = self._deps_ignore_nodes(node, root.empty_nodes)
+                        newdeps_sorted = sorted(set((dep['parent'].ord, dep['deprel']) for dep in newdeps))
+                        node.raw_deps = '|'.join(f"{p}:{r}" for p, r in newdeps_sorted)
 
                     if '.' in node.misc['Functor'].split(':')[0]:
                         del node.misc['Functor']
