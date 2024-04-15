@@ -6,9 +6,16 @@ import logging
 
 class Delete(Block):
 
-    def __init__(self, empty=False, **kwargs):
+    def __init__(self, coref=True, empty=False, misc=False, **kwargs):
+        """Args:
+        coref: delete coreference attributes in MISC, i.e (Entity|Bridge|SplitAnte)
+        empty: delete all empty nodes and references to them (from DEPS and MISC[Functor])
+        misc: delete all attributes in MISC except for SpaceAfter
+        """
         super().__init__(**kwargs)
+        self.coref = coref
         self.empty = empty
+        self.misc = misc
 
     def is_root_reachable_by_deps(self, node, parents_to_ignore=None):
         """ Check if the root node is reachable from node, possibly after deleting the parents_to_ignore nodes.
@@ -54,7 +61,8 @@ class Delete(Block):
 
     def process_document(self, doc):
         # This block should work both with coreference loaded (deserialized) and not.
-        doc._eid_to_entity = None
+        if self.coref:
+            doc._eid_to_entity = None
         for root in doc.trees:
             if self.empty:
                 for node in root.descendants:
@@ -74,7 +82,12 @@ class Delete(Block):
                         del node.misc['Functor']
                 root.empty_nodes = []
 
-            for node in root.descendants + root.empty_nodes:
-                node._mentions = []
-                for attr in ('Entity', 'Bridge', 'SplitAnte'):
-                    del node.misc[attr]
+            if self.coref or self.misc:
+                for node in root.descendants + root.empty_nodes:
+                    if self.misc:
+                        node.misc = 'SpaceAfter=No' if node.no_space_after else None
+                    if self.coref:
+                        node._mentions = []
+                        if not self.misc:
+                            for attr in ('Entity', 'Bridge', 'SplitAnte'):
+                                del node.misc[attr]
