@@ -61,17 +61,16 @@ class Delete(Block):
             if self.empty:
                 for node in root.descendants:
                     # process only the nodes dependent on empty nodes
-                    if not '.' in node.raw_deps:
-                        continue
-                    # just remove empty parents if the root remains reachable
-                    if self.is_root_reachable_by_deps(node, root.empty_nodes):
-                        node.deps = [dep for dep in node.deps if not dep['parent'] in root.empty_nodes]
-                    # otherwise propagate to non-empty ancestors
-                    else:
-                        newdeps = self._deps_ignore_nodes(node, root.empty_nodes)
-                        newdeps_sorted = sorted(set((dep['parent'].ord, dep['deprel']) for dep in newdeps))
-                        node.raw_deps = '|'.join(f"{p}:{r}" for p, r in newdeps_sorted)
-
+                    if '.' in node.raw_deps:
+                        # just remove empty parents if the root remains reachable
+                        if self.is_root_reachable_by_deps(node, root.empty_nodes):
+                            node.deps = [dep for dep in node.deps if not dep['parent'] in root.empty_nodes]
+                        # otherwise propagate to non-empty ancestors
+                        else:
+                            newdeps = self._deps_ignore_nodes(node, root.empty_nodes)
+                            newdeps_sorted = sorted(set((dep['parent'].ord, dep['deprel']) for dep in newdeps))
+                            node.raw_deps = '|'.join(f"{p}:{r}" for p, r in newdeps_sorted)
+                    # This needs to be done even if '.' not in node.raw_deps.
                     if '.' in node.misc['Functor'].split(':')[0]:
                         del node.misc['Functor']
                 root.empty_nodes = []
