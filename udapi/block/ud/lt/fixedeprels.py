@@ -36,6 +36,7 @@ class FixEdeprels(Block):
         'kaip_su':          'kaip',
         'nes':              'nes', # remove morphological case # because
         'nors':             'nors', # remove morphological case # though, although, when, if
+        'nuo':              'nuo:gen', # from
         'pagal':            'pagal:acc', # according to, under, by
         'pagal_dėl':        'pagal:acc',
         'per':              'per:acc', # through, over (přes)
