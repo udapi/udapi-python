@@ -43,6 +43,7 @@ class FixEdeprels(Block):
         'per':              'per:acc', # through, over (přes)
         'prie':             'prie:gen', # to, at, near, under
         'prieš':            'prieš:acc', # against
+        'su':               'su:ins', # with
         'tarp':             'tarp:gen', # between
 
         'bez_ohled_na':     'bez_ohledu_na:acc',
