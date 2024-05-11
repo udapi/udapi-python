@@ -113,6 +113,10 @@ class FixEdeprels(Block):
                     if adpcase and not re.search(r':(nom|voc)$', adpcase):
                         edep['deprel'] = m.group(1)+':'+adpcase
                         continue
+                    # The remaining instance of 'po' should be ':acc'.
+                    elif m.group(2) == 'po':
+                        edep['deprel'] = m.group(1)+':po:acc'
+                        continue
             if re.match(r'^(acl|advcl):', edep['deprel']):
                 # We do not include 'i' in the list of redundant prefixes because we want to preserve 'i když' (but we want to discard the other combinations).
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
