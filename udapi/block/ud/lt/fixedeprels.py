@@ -286,179 +286,36 @@ class FixEdeprels(Block):
                     node.feats['VerbForm'] = ''
                     node.feats['Voice'] = ''
             elif re.match(r'^(nmod|obl(:arg)?):', edep['deprel']):
-                if edep['deprel'] == 'nmod:loc' and node.parent.feats['Case'] == 'Loc' or edep['deprel'] == 'nmod:voc' and node.parent.feats['Case'] == 'Voc':
-                    # This is a same-case noun-noun modifier, which just happens to be in the locative.
-                    # For example, 'v Ostravě-Porubě', 'Porubě' is attached to 'Ostravě', 'Ostravě' has
-                    # nmod:v:loc, which is OK, but for 'Porubě' the case does not say anything significant.
-                    edep['deprel'] = 'nmod'
-                elif edep['deprel'] == 'obl:loc':
-                    # Annotation error. The first occurrence in PDT dev:
-                    # 'V Rapaportu, ceníku Antverpské burzy i Diamantberichtu jsou uvedeny ceny...'
-                    # The preposition 'V' should modify coordination 'Rapaportu i Diamantberichtu'.
-                    # However, 'Rapaportu' is attached as 'obl' to 'Diamantberichtu'.
-                    edep['deprel'] = 'obl:v:loc'
-                elif edep['deprel'] == 'obl:arg:loc':
-                    # Annotation error. The first occurrence in PDT dev:
-                    edep['deprel'] = 'obl:arg:na:loc'
-                elif edep['deprel'] == 'nmod:loc':
-                    # 'působil v kanadském Edmontonu Oilers', 'Edmontonu' attached to 'Oilers' and not vice versa.
-                    edep['deprel'] = 'nmod:nom'
-                elif edep['deprel'] == 'obl:nom' or edep['deprel'] == 'obl:voc':
-                    # Possibly an annotation error, nominative should be accusative, and the nominal should be direct object?
-                    # However, there seems to be a great variability in the causes, some are subjects and many are really obliques, so let's go just with 'obl' for now.
-                    edep['deprel'] = 'obl'
-                elif edep['deprel'] == 'nmod:voc':
-                    # 'v 8. čísle tiskoviny Ty rudá krávo'
-                    edep['deprel'] = 'nmod:nom'
-                elif edep['deprel'] == 'nmod:co:nom':
-                    # Annotation error: 'kompatibilní znamená tolik co slučitelný'
-                    # 'co' should be relative pronoun rather than subordinating conjunction.
-                    edep['deprel'] = 'acl:relcl'
-                    node.deprel = 'acl:relcl'
-                elif re.match(r'^(obl(:arg)?):li$', edep['deprel']):
-                    edep['deprel'] = 'advcl:li'
-                elif re.match(r'^(nmod|obl(:arg)?):mezi:voc$', edep['deprel']):
-                    edep['deprel'] = re.sub(r':voc$', r':acc', edep['deprel'])
-                elif re.match(r'^(nmod|obl(:arg)?):mezi$', edep['deprel']):
-                    if len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):mimo$', edep['deprel']):
-                    edep['deprel'] += ':acc'
-                elif re.match(r'^(nmod|obl(:arg)?):místo$', edep['deprel']):
-                    edep['deprel'] += ':gen'
-                elif re.match(r'^obl:místo_za:acc$', edep['deprel']):
-                    # 'chytají krávu místo za rohy spíše za ocas'
-                    # This should be treated as coordination; 'místo' and 'spíše' are adverbs (???); 'case' for 'místo' does not seem to be the optimal solution.
-                    for c in node.children:
-                        if c.form == 'místo':
-                            c.upos = 'ADV'
-                            c.deprel = 'cc'
-                    edep['deprel'] = 'obl:za:acc'
-                elif re.match(r'^(nmod|obl(:arg)?):místo[_:].+$', edep['deprel']) and not re.match(r'^(nmod|obl(:arg)?):místo_aby$', edep['deprel']):
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):místo[_:].+$', r'\1:místo:gen', edep['deprel'])
-                elif re.match(r'^(nmod|obl(:arg)?):na(:gen)?$', edep['deprel']):
-                    edep['deprel'] = re.sub(r':gen$', '', edep['deprel'])
-                    # The case is unknown. We need 'acc' or 'loc'.
-                    # The locative is probably more frequent but it is not so likely with every noun.
-                    # If there is an nummod:gov child, it must be accusative and not locative.
-                    # (The case would be taken from the number but if it is expressed as digits, it does not have the case feature.)
-                    if len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    elif re.match(r'^(adresát|AIDS|DEM|frank|h|ha|hodina|Honolulu|jméno|koruna|litr|metr|míle|miliarda|milión|mm|MUDr|NATO|obyvatel|OSN|počet|procento|příklad|rok|SSSR|vůz)$', node.lemma):
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':loc'
-                elif re.match(r'^obl:arg:na_konec$', edep['deprel']):
-                    # Annotation error. It should have been two prepositional phrases: 'snížil na 225 tisíc koncem minulého roku'
-                    edep['deprel'] = 'obl:arg:na:acc'
-                elif re.match(r'^(nmod|obl(:arg)?):nad$', edep['deprel']):
-                    if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):o$', edep['deprel']):
-                    if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':loc'
-                elif re.match(r'^(nmod|obl(:arg)?):ohled_na:ins$', edep['deprel']):
-                    # Annotation error.
-                    if node.form == 's':
-                        ohled = node.next_node
-                        na = ohled.next_node
-                        noun = na.next_node
-                        self.set_basic_and_enhanced(noun, node.parent, 'obl', 'obl:s_ohledem_na:acc')
-                        self.set_basic_and_enhanced(ohled, node, 'fixed', 'fixed')
-                        self.set_basic_and_enhanced(na, node, 'fixed', 'fixed')
-                        self.set_basic_and_enhanced(node, noun, 'case', 'case')
-                elif re.match(r'^nmod:pára:nom$', edep['deprel']):
-                    # Annotation error: 'par excellence'.
-                    edep['deprel'] = 'nmod'
-                    for c in node.children:
-                        if c.udeprel == 'case' and c.form.lower() == 'par':
-                            c.lemma = 'par'
-                            c.upos = 'ADP'
-                            c.xpos = 'RR--X----------'
-                            c.feats['Case'] = ''
-                            c.feats['Gender'] = ''
-                            c.feats['Number'] = ''
-                            c.feats['Polarity'] = ''
-                            c.feats['AdpType'] = 'Prep'
-                elif re.match(r'^(nmod|obl(:arg)?):po$', edep['deprel']):
-                    if len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':loc'
-                elif re.match(r'^(nmod|obl(:arg)?):pod$', edep['deprel']):
-                    if re.match(r'[0-9]', node.lemma) or len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):před$', edep['deprel']):
-                    # Accusative would be possible but unlikely.
-                    edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):s$', edep['deprel']):
-                    # Genitive would be possible but unlikely.
-                    edep['deprel'] += ':ins'
-                elif re.match(r'^(nmod|obl(:arg)?):v_s(:loc)?$', edep['deprel']) and node.form == 'spolupráci':
-                    # Annotation error. 'Ve spolupráci s' should be analyzed as a multi-word preposition.
-                    # Find the content nominal.
-                    cnouns = [x for x in node.children if x.ord > node.ord and re.match(r'^(nmod|obl)', x.udeprel)]
-                    vs = [x for x in node.children if x.ord < node.ord and x.lemma == 'v']
-                    if len(cnouns) > 0 and len(vs) > 0:
-                        cnoun = cnouns[0]
-                        v = vs[0]
-                        self.set_basic_and_enhanced(cnoun, node.parent, 'obl', 'obl:ve_spolupráci_s:ins')
-                        self.set_basic_and_enhanced(v, cnoun, 'case', 'case')
-                        self.set_basic_and_enhanced(node, v, 'fixed', 'fixed')
-                elif re.match(r'^(nmod|obl(:arg)?):v(:nom)?$', edep['deprel']):
-                    # ':nom' occurs in 'karneval v Rio de Janeiro'
-                    edep['deprel'] = re.sub(r':nom$', '', edep['deprel'])
-                    if len([x for x in node.children if x.deprel == 'nummod:gov']) > 0:
-                        edep['deprel'] += ':acc'
-                    else:
-                        edep['deprel'] += ':loc'
-                elif re.match(r'^obl:v_čel[eo]_s:ins$', edep['deprel']):
-                    # There is just one occurrence and it is an error:
-                    # 'Předloňský kůň roku Law Soziri šel již v Lahovickém oblouku v čele s Raddelliosem a tato dvojice také nakonec zahanbila ostatní soupeře...'
-                    # There should be two independent oblique modifiers, 'v čele' and 's Raddelliosem'.
-                    edep['deprel'] = 'obl:s:ins'
-                elif re.match(r'^(nmod|obl(:arg)?):za$', edep['deprel']):
-                    # Instrumental would be possible but unlikely.
-                    edep['deprel'] += ':acc'
-                else:
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a([_:].+)?$', r'\1', edep['deprel']) # ala vršovický dloubák
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a_?l[ae]([_:].+)?$', r'\1', edep['deprel']) # a la bondovky
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(jak_)?ad([_:].+)?$', r'\1', edep['deprel']) # ad infinitum
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):co(:nom)?$', r'advmod', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):de([_:].+)?$', r'\1', edep['deprel']) # de facto
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):di([_:].+)?$', r'\1', edep['deprel']) # Lido di Jesolo
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):en([_:].+)?$', r'\1', edep['deprel']) # bienvenue en France
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):in([_:].+)?$', r'\1', edep['deprel']) # made in NHL
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):into([_:].+)?$', r'\1', edep['deprel']) # made in NHL
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno:nom$', r'\1:jménem:nom', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno(:gen)?$', r'\1:jménem:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):mezi:(nom|dat)$', r'\1:mezi:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):o:(nom|gen|dat)$', r'\1:o:acc', edep['deprel']) # 'zájem o obaly'
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):of([_:].+)?$', r'\1', edep['deprel']) # University of North Carolina
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):per([_:].+)?$', r'\1', edep['deprel']) # per rollam
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po:(nom|gen)$', r'\1:po:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):před:gen$', r'\1:před:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):přestože[_:].+$', r'\1:přestože', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):se?:(nom|acc|ins)$', r'\1:s:ins', edep['deprel']) # accusative: 'být s to' should be a fixed expression and it should be the predicate!
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):shoda(:gen)?$', r'\1', edep['deprel']) # 'shodou okolností' is not a prepositional phrase
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v:gen$', r'\1:v:loc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vo:acc$', r'\1:o:acc', edep['deprel']) # colloquial: vo všecko
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):von([_:].+)?$', r'\1', edep['deprel']) # von Neumannem
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):voor([_:].+)?$', r'\1', edep['deprel']) # Hoge Raad voor Diamant
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:nom$', r'\1:z:gen', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:ins$', r'\1:s:ins', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za:nom$', r'\1:za:acc', edep['deprel'])
-                    edep['deprel'] = re.sub(r'^nmod:že:gen$', 'acl:že', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a([_:].+)?$', r'\1', edep['deprel']) # ala vršovický dloubák
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):a_?l[ae]([_:].+)?$', r'\1', edep['deprel']) # a la bondovky
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):(jak_)?ad([_:].+)?$', r'\1', edep['deprel']) # ad infinitum
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):co(:nom)?$', r'advmod', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):de([_:].+)?$', r'\1', edep['deprel']) # de facto
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):di([_:].+)?$', r'\1', edep['deprel']) # Lido di Jesolo
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):en([_:].+)?$', r'\1', edep['deprel']) # bienvenue en France
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):in([_:].+)?$', r'\1', edep['deprel']) # made in NHL
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):into([_:].+)?$', r'\1', edep['deprel']) # made in NHL
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno:nom$', r'\1:jménem:nom', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):jméno(:gen)?$', r'\1:jménem:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):mezi:(nom|dat)$', r'\1:mezi:ins', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):o:(nom|gen|dat)$', r'\1:o:acc', edep['deprel']) # 'zájem o obaly'
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):of([_:].+)?$', r'\1', edep['deprel']) # University of North Carolina
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):per([_:].+)?$', r'\1', edep['deprel']) # per rollam
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):po:(nom|gen)$', r'\1:po:acc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):před:gen$', r'\1:před:ins', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):přestože[_:].+$', r'\1:přestože', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):se?:(nom|acc|ins)$', r'\1:s:ins', edep['deprel']) # accusative: 'být s to' should be a fixed expression and it should be the predicate!
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):shoda(:gen)?$', r'\1', edep['deprel']) # 'shodou okolností' is not a prepositional phrase
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):v:gen$', r'\1:v:loc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):vo:acc$', r'\1:o:acc', edep['deprel']) # colloquial: vo všecko
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):von([_:].+)?$', r'\1', edep['deprel']) # von Neumannem
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):voor([_:].+)?$', r'\1', edep['deprel']) # Hoge Raad voor Diamant
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:nom$', r'\1:z:gen', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):z:ins$', r'\1:s:ins', edep['deprel'])
+                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):za:nom$', r'\1:za:acc', edep['deprel'])
+                edep['deprel'] = re.sub(r'^nmod:že:gen$', 'acl:že', edep['deprel'])
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
