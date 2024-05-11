@@ -42,10 +42,9 @@ class FixEdeprels(Block):
         'pagal_dėl':        'pagal:acc',
         'per':              'per:acc', # through, over (přes)
         'prie':             'prie:gen', # to, at, near, under
+        'prieš':            'prieš:acc', # against
         'tarp':             'tarp:gen', # between
 
-        'aby_na':           'na:loc',
-        'bez':              'bez:gen',
         'bez_ohled_na':     'bez_ohledu_na:acc',
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
