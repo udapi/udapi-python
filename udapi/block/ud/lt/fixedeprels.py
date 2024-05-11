@@ -13,7 +13,8 @@ class FixEdeprels(Block):
     # The list in the value contains exceptions that should be left intact.
     outermost = {
         'kaip': [],
-        'nei':  []
+        'nei':  [],
+        'nes':  []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -28,11 +29,8 @@ class FixEdeprels(Block):
         'į':                'į:acc', # to, into, in
         'jei':              'jei', # remove morphological case # if
         'jeigu':            'jeigu', # remove morphological case # if
+        'kadangi':          'kadangi', # remove morphological case # since, because
         'kaip':             'kaip', # remove morphological case # as, than
-        'kaip_į':           'kaip',
-        'kaip_per':         'kaip',
-        'kaip_prieš':       'kaip',
-        'kaip_su':          'kaip',
         'nei':              'nei', # remove morphological case # more than
         'nes':              'nes', # remove morphological case # because
         'nors':             'nors', # remove morphological case # though, although, when, if
