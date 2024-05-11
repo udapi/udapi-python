@@ -70,15 +70,6 @@ class FixEdeprels(Block):
         'jakoby_pod':       'pod:ins',
         'jelikož_do':       'jelikož',
         'jestli_že':        'jestliže',
-        'k':                'k:dat',
-        'k_konec':          'ke_konci:gen',
-        'kdykoliv':         'kdykoli',
-        'kol':              'kolem:gen',
-        'kolem':            'kolem:gen',
-        'konec':            'koncem:gen',
-        'krom':             'kromě:gen',
-        'kromě':            'kromě:gen',
-        'liž':              'li',
         'mezi_uvnitř':      'uvnitř:gen',
         'na_báze':          'na_bázi:gen',
         'na_čelo':          'na_čele:gen',
@@ -105,15 +96,6 @@ class FixEdeprels(Block):
         'o_o':              'o:acc',
         'od':               'od:gen',
         'ohledně':          'ohledně:gen',
-        'okolo':            'okolo:gen',
-        'oproti':           'oproti:dat',
-        'protože':          'protože', # remove morphological case
-        'před_během':       'během:gen', # před a během utkání
-        'před_po':          'po:loc', # před a po vyloučení Schindlera
-        'přes':             'přes:acc',
-        'přestože':         'přestože', # remove morphological case
-        'při':              'při:loc',
-        'při_příležitost':  'při_příležitosti:gen',
         's_ohled_k':        's_ohledem_k:dat',
         's_ohled_na':       's_ohledem_na:acc',
         's_pomoc':          's_pomocí:gen',
@@ -128,60 +110,6 @@ class FixEdeprels(Block):
         'takže':            'takže', # remove morphological case
         'takže_a':          'takže',
         'třebaže':          'třebaže', # remove morphological case
-        'u':                'u:gen',
-        'u_příležitost':    'u_příležitosti:gen',
-        'uprostřed':        'uprostřed:gen',
-        'uvnitř':           'uvnitř:gen',
-        'v_analogie_s':     'v_analogii_s:ins',
-        'v_čelo':           'v_čele:gen',
-        'v_čelo_s':         'v_čele_s:ins',
-        'v_dohoda_s':       'v_dohodě_s:ins',
-        'v_duch':           'v_duchu:gen',
-        'v_důsledek':       'v_důsledku:gen',
-        'v_forma':          've_formě:gen',
-        'v_jméno':          've_jménu:gen',
-        'v_k':              'k:dat',
-        'v_kombinace_s':    'v_kombinaci_s:ins',
-        'v_konfrontace_s':  'v_konfrontaci_s:ins',
-        'v_kontext_s':      'v_kontextu_s:ins',
-        'v_na':             'na:loc',
-        'v_oblast':         'v_oblasti:gen',
-        'v_oblast_s':       's:ins',
-        'v_obor':           'v_oboru:gen',
-        'v_otázka':         'v_otázce:gen',
-        'v_podoba':         'v_podobě:gen',
-        'v_poměr_k':        'v_poměru_k:dat',
-        'v_proces':         'v_procesu:gen',
-        'v_prospěch':       've_prospěch:gen',
-        'v_protiklad_k':    'v_protikladu_k:dat',
-        'v_průběh':         'v_průběhu:gen',
-        'v_případ':         'v_případě:gen',
-        'v_případ_že':      'v_případě_že',
-        'v_rámec':          'v_rámci:gen',
-        'v_rozpor_s':       'v_rozporu_s:ins',
-        'v_řada':           'v_řadě:gen',
-        'v_shoda_s':        've_shodě_s:ins',
-        'v_služba':         've_službách:gen',
-        'v_směr':           've_směru:gen',
-        'v_směr_k':         've_směru_k:dat',
-        'v_smysl':          've_smyslu:gen',
-        'v_součinnost_s':   'v_součinnosti_s:ins',
-        'v_souhlas_s':      'v_souhlasu_s:ins',
-        'v_soulad_s':       'v_souladu_s:ins',
-        'v_souvislost_s':   'v_souvislosti_s:ins',
-        'v_spojení_s':      've_spojení_s:ins',
-        'v_spojený_s':      've_spojení_s:ins',
-        'v_spojitost_s':    've_spojitosti_s:ins',
-        'v_spolupráce_s':   've_spolupráci_s:ins',
-        'v_s_spolupráce':   've_spolupráci_s:ins',
-        'v_srovnání_s':     've_srovnání_s:ins',
-        'v_srovnání_se':    've_srovnání_s:ins',
-        'v_světlo':         've_světle:gen',
-        'v_věc':            've_věci:gen',
-        'v_vztah_k':        've_vztahu_k:dat',
-        'v_zájem':          'v_zájmu:gen',
-        'v_záležitost':     'v_záležitosti:gen',
-        'v_závěr':          'v_závěru:gen',
         'v_závislost_na':   'v_závislosti_na:loc',
         'v_závislost_s':    'v_závislosti_s:ins',
         'v_znamení':        've_znamení:gen',
@@ -192,11 +120,6 @@ class FixEdeprels(Block):
         'vůči':             'vůči:dat',
         'vzhledem':         'vzhledem_k:dat',
         'vzhledem_k':       'vzhledem_k:dat',
-        'z':                'z:gen',
-        'že':               'že', # remove morphological case
-        'že_ať':            'ať',
-        'že_jako':          'že',
-        'že_jakoby':        'že',
         'že_za':            'za:gen'
     }
 
@@ -255,7 +178,7 @@ class FixEdeprels(Block):
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
-                m = re.match(r'^(obl(?::arg)?|nmod):(mezi|na|nad|o|po|pod|před|v|za)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(před)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase and not re.search(r':(nom|gen|dat|voc)$', adpcase):
