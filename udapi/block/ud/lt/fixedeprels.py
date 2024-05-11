@@ -25,6 +25,8 @@ class FixEdeprels(Block):
     # case, even if they are not secondary.
     unambiguous = {
         'apie':             'apie:acc', # about (topic)
+        'dėl':              'dėl:gen', # because of
+        'iki':              'iki:gen', # until
         'jei':              'jei', # remove morphological case # if
         'jeigu':            'jeigu', # remove morphological case # if
         'kaip':             'kaip', # remove morphological case # as, than
@@ -44,12 +46,6 @@ class FixEdeprels(Block):
         'bez_ohled_na':     'bez_ohledu_na:acc',
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
-        'do_k':             'k:dat',
-        'než':              'než', # remove morphological case
-        's_ohled_k':        's_ohledem_k:dat',
-        's_ohled_na':       's_ohledem_na:acc',
-        's_zřetel_k':       'se_zřetelem_k:dat',
-        's_zřetel_na':      'se_zřetelem_na:acc',
         'že_za':            'za:gen'
     }
 
