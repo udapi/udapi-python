@@ -36,6 +36,7 @@ class FixEdeprels(Block):
         'pagal':            'pagal:acc', # according to, under, by
         'pagal_dėl':        'pagal:acc',
         'per':              'per:acc', # through, over (přes)
+        'prie':             'prie:gen', # to, at, near, under
         'tarp':             'tarp:gen', # between
 
         'aby_na':           'na:loc',
@@ -44,17 +45,9 @@ class FixEdeprels(Block):
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
         'do_k':             'k:dat',
-        'do_oblast':        'do_oblasti:gen',
-        'do_rozpor_s':      'do_rozporu_s:ins',
-        'do_soulad_s':      'do_souladu_s:ins',
         'než':              'než', # remove morphological case
         's_ohled_k':        's_ohledem_k:dat',
         's_ohled_na':       's_ohledem_na:acc',
-        's_pomoc':          's_pomocí:gen',
-        's_přihlédnutí_k':  's_přihlédnutím_k:dat',
-        's_přihlédnutí_na': 's_přihlédnutím_na:acc',
-        's_výjimka':        's_výjimkou:gen',
-        's_vyloučení':      's_vyloučením:gen',
         's_zřetel_k':       'se_zřetelem_k:dat',
         's_zřetel_na':      'se_zřetelem_na:acc',
         'že_za':            'za:gen'
