@@ -29,6 +29,7 @@ class FixEdeprels(Block):
         'į':                'į:acc', # to, into, in
         'jei':              'jei', # remove morphological case # if
         'jeigu':            'jeigu', # remove morphological case # if
+        'jog':              'jog', # remove morphological case # because
         'kadangi':          'kadangi', # remove morphological case # since, because
         'kaip':             'kaip', # remove morphological case # as, than
         'nei':              'nei', # remove morphological case # more than
