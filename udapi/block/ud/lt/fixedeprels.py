@@ -35,6 +35,7 @@ class FixEdeprels(Block):
         'kaip_prieš':       'kaip',
         'kaip_su':          'kaip',
         'nes':              'nes', # remove morphological case # because
+        'nors':             'nors', # remove morphological case # though, although, when, if
         'pagal':            'pagal:acc', # according to, under, by
         'pagal_dėl':        'pagal:acc',
         'per':              'per:acc', # through, over (přes)
@@ -115,21 +116,6 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):co_když$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):kdy$', r'\1', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(advcl):neboť$', r'\1', edep['deprel']) # 'neboť' is coordinating
-                edep['deprel'] = re.sub(r'^(advcl):nechť$', r'\1', edep['deprel'])
-                if edep['deprel'] == 'acl:v' and node.form == 'patře':
-                    edep['deprel'] = 'nmod:v:loc'
-                    node.deprel = 'nmod'
-                    node.lemma = 'patro'
-                    node.upos = 'NOUN'
-                    node.xpos = 'NNNS6-----A----'
-                    node.feats['Aspect'] = ''
-                    node.feats['Gender'] = 'Neut'
-                    node.feats['Tense'] = ''
-                    node.feats['VerbForm'] = ''
-                    node.feats['Voice'] = ''
             elif re.match(r'^(nmod|obl(:arg)?):', edep['deprel']):
                 edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
                 edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
