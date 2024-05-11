@@ -32,10 +32,10 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'abi':              'aby',
+        'nes':              'nes', # remove morphological case # because
+
         'aby_na':           'na:loc',
         'ačkoliv':          'ačkoli',
-        'ať':               'ať', # remove morphological case
         'ať_forma':         'formou:gen',
         'ať_v':             'v:loc',
         'ať_z':             'z:gen',
@@ -110,19 +110,6 @@ class FixEdeprels(Block):
         'po_v':             'po:loc',
         'po_doba':          'po_dobu:gen',
         'po_vzor':          'po_vzoru:gen',
-        'poblíž':           'poblíž:gen',
-        'počátek':          'počátkem:gen',
-        'počínat':          'počínaje:ins',
-        'pod_dojem':        'pod_dojmem:gen',
-        'pod_vliv':         'pod_vlivem:gen',
-        'podle':            'podle:gen',
-        'pomoc':            'pomocí:gen',
-        'pomocí':           'pomocí:gen',
-        'postup':           'postupem:gen',
-        'pouze_v':          'v:loc',
-        'pro':              'pro:acc',
-        'prostřednictví':   'prostřednictvím:gen',
-        'prostřednictvím':  'prostřednictvím:gen',
         'proti':            'proti:dat',
         'protože':          'protože', # remove morphological case
         'před_během':       'během:gen', # před a během utkání
@@ -142,14 +129,6 @@ class FixEdeprels(Block):
         's_zřetel_na':      'se_zřetelem_na:acc',
         'severně_od':       'od:gen',
         'skrz':             'skrz:acc',
-        'směr_do':          'směrem_do:gen',
-        'směr_k':           'směrem_k:dat',
-        'směr_na':          'směrem_na:acc',
-        'směr_od':          'směrem_od:gen',
-        'společně_s':       'společně_s:ins',
-        'spolu':            'spolu_s:ins',
-        'spolu_s':          'spolu_s:ins',
-        'stranou':          'stranou:gen',
         'takže':            'takže', # remove morphological case
         'takže_a':          'takže',
         'třebaže':          'třebaže', # remove morphological case
@@ -218,21 +197,6 @@ class FixEdeprels(Block):
         'vzhledem':         'vzhledem_k:dat',
         'vzhledem_k':       'vzhledem_k:dat',
         'z':                'z:gen',
-        'z_důvod':          'z_důvodu:gen',
-        'z_hledisko':       'z_hlediska:gen',
-        'z_oblast':         'z_oblasti:gen',
-        'z_řada':           'z_řad:gen',
-        'z_strana':         'ze_strany:gen',
-        'z_nedostatek':     'z_nedostatku:gen',
-        'z_titul':          'z_titulu:gen',
-        'za_pomoc':         'za_pomoci:gen',
-        'za_účast':         'za_účasti:gen',
-        'za_účel':          'za_účelem:gen',
-        'začátek':          'začátkem:gen',
-        'zásluha':          'zásluhou:gen',
-        'zatím_co':         'zatímco',
-        'závěr':            'závěrem:gen',
-        'závisle_na':       'nezávisle_na:loc',
         'že':               'že', # remove morphological case
         'že_ať':            'ať',
         'že_jako':          'že',
@@ -270,19 +234,6 @@ class FixEdeprels(Block):
                 # flagged as solved.
                 edep['deprel'] = re.sub(r'^advcl:do(?::gen)?$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^acl:k(?::dat)?$', r'acl', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
-                edep['deprel'] = re.sub(r'^advcl:místo(?::gen)?$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
-                edep['deprel'] = re.sub(r'^acl:na_způsob(?::gen)?$', r'nmod:na_způsob:gen', edep['deprel']) # 'střídmost na způsob Masarykova "jez dopolosyta"'
-                edep['deprel'] = re.sub(r'^acl:od(?::gen)?$', r'nmod:od:gen', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:od(?::gen)?$', r'obl:od:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
-                edep['deprel'] = re.sub(r'^advcl:podle(?::gen)?$', r'obl:podle:gen', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:pro(?::acc)?$', r'obl:pro:acc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^acl:v$', r'nmod:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
-                edep['deprel'] = re.sub(r'^advcl:v_duchu?(?::gen)?$', r'obl:v_duchu:gen', edep['deprel'])
-                # Removing 'až' must be done early. The remainder may be 'počátek'
-                # and we will want to convert it to 'počátkem:gen'.
-                edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
                 # If one of the following expressions occurs followed by another preposition
                 # or by morphological case, remove the additional case marking. For example,
                 # 'jako_v' becomes just 'jako'.
