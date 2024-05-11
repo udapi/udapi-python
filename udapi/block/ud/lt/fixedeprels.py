@@ -105,11 +105,12 @@ class FixEdeprels(Block):
                     continue
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
-                # identify the correct one.
-                m = re.match(r'^(obl(?::arg)?|nmod):(už)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                # identify the correct one. Exclude 'nom' and 'voc', which cannot
+                # be correct.
+                m = re.match(r'^(obl(?::arg)?|nmod):(po|už)(?::(?:nom|voc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
-                    if adpcase and not re.search(r':(nom|gen|dat|voc)$', adpcase):
+                    if adpcase and not re.search(r':(nom|voc)$', adpcase):
                         edep['deprel'] = m.group(1)+':'+adpcase
                         continue
             if re.match(r'^(acl|advcl):', edep['deprel']):
