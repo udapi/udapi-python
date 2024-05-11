@@ -36,21 +36,18 @@ class FixEdeprels(Block):
         'pagal':            'pagal:acc', # according to, under, by
         'pagal_dėl':        'pagal:acc',
         'per':              'per:acc', # through, over (přes)
+        'tarp':             'tarp:gen', # between
 
         'aby_na':           'na:loc',
         'bez':              'bez:gen',
         'bez_ohled_na':     'bez_ohledu_na:acc',
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
-        'blíž':             'blízko:dat',
-        'cesta':            'cestou:gen',
         'do_k':             'k:dat',
         'do_oblast':        'do_oblasti:gen',
         'do_rozpor_s':      'do_rozporu_s:ins',
         'do_soulad_s':      'do_souladu_s:ins',
         'než':              'než', # remove morphological case
-        'nežli':            'nežli', # remove morphological case
-        'ohledně':          'ohledně:gen',
         's_ohled_k':        's_ohledem_k:dat',
         's_ohled_na':       's_ohledem_na:acc',
         's_pomoc':          's_pomocí:gen',
@@ -60,11 +57,6 @@ class FixEdeprels(Block):
         's_vyloučení':      's_vyloučením:gen',
         's_zřetel_k':       'se_zřetelem_k:dat',
         's_zřetel_na':      'se_zřetelem_na:acc',
-        'severně_od':       'od:gen',
-        'skrz':             'skrz:acc',
-        'takže':            'takže', # remove morphological case
-        'takže_a':          'takže',
-        'třebaže':          'třebaže', # remove morphological case
         'že_za':            'za:gen'
     }
 
