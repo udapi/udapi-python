@@ -12,17 +12,9 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
-        'ač':      [],
-        'ačkoli':  [], # 'ačkoliv' se převede na 'ačkoli' dole
-        'byť':     [],
-        'i_když':  [],
-        'jak':     [],
-        'jakkoli': [], # 'jakkoliv' se převede na 'jakkoli' dole
-        'jako':    [],
-        'jakoby':  ['jakoby_pod:ins'], # these instances in FicTree should be spelled 'jako by'
+        'kaip':    [],
+
         'než':     ['než_aby'],
-        'protože': [],
-        'takže':   [],
         'třebaže': []
     }
 
@@ -32,69 +24,32 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'apie':             'apie:acc', # about (topic)
+        'jei':              'jei', # remove morphological case # if
+        'jeigu':            'jeigu', # remove morphological case # if
+        'kaip':             'kaip', # remove morphological case # as, than
+        'kaip_į':           'kaip',
+        'kaip_per':         'kaip',
+        'kaip_prieš':       'kaip',
+        'kaip_su':          'kaip',
         'nes':              'nes', # remove morphological case # because
+        'pagal':            'pagal:acc', # according to, under, by
+        'pagal_dėl':        'pagal:acc',
+        'per':              'per:acc', # through, over (přes)
 
         'aby_na':           'na:loc',
-        'ačkoliv':          'ačkoli',
-        'ať_forma':         'formou:gen',
-        'ať_v':             'v:loc',
-        'ať_z':             'z:gen',
-        'ať_z_strana':      'ze_strany:gen',
-        'až_do':            'do:gen',
-        'až_o':             'o:acc',
-        'během':            'během:gen',
         'bez':              'bez:gen',
         'bez_ohled_na':     'bez_ohledu_na:acc',
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
         'blíž':             'blízko:dat',
         'cesta':            'cestou:gen',
-        'daleko':           'nedaleko:gen',
-        'daleko_od':        'od:gen',
-        'dík':              'díky:dat',
-        'díky':             'díky:dat',
-        'dle':              'dle:gen',
-        'do':               'do:gen',
         'do_k':             'k:dat',
         'do_oblast':        'do_oblasti:gen',
         'do_rozpor_s':      'do_rozporu_s:ins',
         'do_soulad_s':      'do_souladu_s:ins',
-        'forma':            'formou:gen',
-        'i_když':           'i_když', # remove morphological case
-        'jak_aby':          'jak',
-        'jak_ad':           'jak',
-        'jakkoliv':         'jakkoli',
-        'jako':             'jako', # remove morphological case
-        'jako_kupříkladu':  'jako',
-        'jakoby':           'jako',
-        'jakoby_pod':       'pod:ins',
-        'jelikož_do':       'jelikož',
-        'jestli_že':        'jestliže',
-        'mezi_uvnitř':      'uvnitř:gen',
-        'na_báze':          'na_bázi:gen',
-        'na_čelo':          'na_čele:gen',
-        'na_mimo':          'na:loc', # na kurtě i mimo něj
-        'na_než':           'na:acc', # na víc než čtyři a půl kilometru
-        'na_od':            'na_rozdíl_od:gen',
-        'na_podklad':       'na_podkladě:gen',
-        'na_rozdíl_od':     'na_rozdíl_od:gen',
-        'na_újma':          'gen', # 'nebude na újmu' is a multi-word predicate but 'na újmu' is probably not used as an independent oblique modifier
-        'na_úroveň':        'na_úrovni:gen',
-        'na_úsek':          'na_úseku:gen',
-        'na_základ':        'na_základě:gen',
-        'na_základna':      'na_základně:gen',
-        'na_závěr':         'na_závěr:gen',
-        'namísto':          'namísto:gen',
-        'namísto_do':       'do:gen',
-        'narozdíl_od':      'na_rozdíl_od:gen',
-        'následek':         'následkem:gen',
-        'navzdory':         'navzdory:dat',
-        'nedaleko':         'nedaleko:gen',
         'než':              'než', # remove morphological case
         'nežli':            'nežli', # remove morphological case
-        'o_jako':           'jako',
-        'o_o':              'o:acc',
-        'od':               'od:gen',
         'ohledně':          'ohledně:gen',
         's_ohled_k':        's_ohledem_k:dat',
         's_ohled_na':       's_ohledem_na:acc',
@@ -110,16 +65,6 @@ class FixEdeprels(Block):
         'takže':            'takže', # remove morphological case
         'takže_a':          'takže',
         'třebaže':          'třebaže', # remove morphological case
-        'v_závislost_na':   'v_závislosti_na:loc',
-        'v_závislost_s':    'v_závislosti_s:ins',
-        'v_znamení':        've_znamení:gen',
-        'včetně':           'včetně:gen',
-        'vedle':            'vedle:gen',
-        'vina':             'vinou:gen',
-        'vliv':             'vlivem:gen',
-        'vůči':             'vůči:dat',
-        'vzhledem':         'vzhledem_k:dat',
-        'vzhledem_k':       'vzhledem_k:dat',
         'že_za':            'za:gen'
     }
 
@@ -178,7 +123,7 @@ class FixEdeprels(Block):
                 # The following prepositions have more than one morphological case
                 # available. Thanks to the Case feature on prepositions, we can
                 # identify the correct one.
-                m = re.match(r'^(obl(?::arg)?|nmod):(před)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
+                m = re.match(r'^(obl(?::arg)?|nmod):(už)(?::(?:nom|gen|dat|voc))?$', edep['deprel'])
                 if m:
                     adpcase = self.copy_case_from_adposition(node, m.group(2))
                     if adpcase and not re.search(r':(nom|gen|dat|voc)$', adpcase):
