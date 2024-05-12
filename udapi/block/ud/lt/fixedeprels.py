@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     # The list in the value contains exceptions that should be left intact.
     outermost = {
         'kaip': [],
+        'lyg':  [],
         'negu': [],
         'nei':  [],
         'nes':  []
@@ -33,6 +34,7 @@ class FixEdeprels(Block):
         'jog':              'jog', # remove morphological case # because
         'kadangi':          'kadangi', # remove morphological case # since, because
         'kaip':             'kaip', # remove morphological case # as, than
+        'lyg':              'lyg', # remove morphological case # like
         'negu':             'negu', # remove morphological case # than
         'nei':              'nei', # remove morphological case # more than
         'nes':              'nes', # remove morphological case # because
