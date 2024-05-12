@@ -28,6 +28,7 @@ class FixEdeprels(Block):
         'apie':             'apie:acc', # about (topic)
         'dėl':              'dėl:gen', # because of
         'iki':              'iki:gen', # until
+        'iš':               'iš:gen', # from, out of
         'į':                'į:acc', # to, into, in
         'jei':              'jei', # remove morphological case # if
         'jeigu':            'jeigu', # remove morphological case # if
