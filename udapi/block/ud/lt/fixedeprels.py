@@ -48,6 +48,7 @@ class FixEdeprels(Block):
         'prieš':            'prieš:acc', # against
         'su':               'su:ins', # with
         'tarp':             'tarp:gen', # between
+        'tarsi':            'tarsi', # remove morphological case # as if
         'virš':             'virš:gen' # above
     }
 
