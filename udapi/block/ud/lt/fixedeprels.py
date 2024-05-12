@@ -34,6 +34,7 @@ class FixEdeprels(Block):
         'jeigu':            'jeigu', # remove morphological case # if
         'jog':              'jog', # remove morphological case # because
         'kadangi':          'kadangi', # remove morphological case # since, because
+        'kai':              'kai', # remove morphological case # when
         'kaip':             'kaip', # remove morphological case # as, than
         'lyg':              'lyg', # remove morphological case # like
         'negu':             'negu', # remove morphological case # than
