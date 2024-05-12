@@ -113,6 +113,11 @@ class FixEdeprels(Block):
                     elif m.group(2) == 'po':
                         edep['deprel'] = m.group(1)+':po:acc'
                         continue
+                    # The remaining 'už' are ':acc' (they are second conjuncts
+                    # in coordinated oblique modifiers).
+                    elif m.group(2) == 'už':
+                        edep['deprel'] = m.group(1)+':už:acc'
+                        continue
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
