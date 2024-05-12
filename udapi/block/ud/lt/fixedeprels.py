@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     # The list in the value contains exceptions that should be left intact.
     outermost = {
         'kaip': [],
+        'negu': [],
         'nei':  [],
         'nes':  []
     }
@@ -32,6 +33,7 @@ class FixEdeprels(Block):
         'jog':              'jog', # remove morphological case # because
         'kadangi':          'kadangi', # remove morphological case # since, because
         'kaip':             'kaip', # remove morphological case # as, than
+        'negu':             'negu', # remove morphological case # than
         'nei':              'nei', # remove morphological case # more than
         'nes':              'nes', # remove morphological case # because
         'nors':             'nors', # remove morphological case # though, although, when, if
@@ -42,12 +44,7 @@ class FixEdeprels(Block):
         'prie':             'prie:gen', # to, at, near, under
         'prieš':            'prieš:acc', # against
         'su':               'su:ins', # with
-        'tarp':             'tarp:gen', # between
-
-        'bez_ohled_na':     'bez_ohledu_na:acc',
-        'bez_zřetel_k':     'bez_zřetele_k:dat',
-        'bez_zřetel_na':    'bez_zřetele_na:acc',
-        'že_za':            'za:gen'
+        'tarp':             'tarp:gen' # between
     }
 
     def copy_case_from_adposition(self, node, adposition):
@@ -116,14 +113,6 @@ class FixEdeprels(Block):
                     elif m.group(2) == 'po':
                         edep['deprel'] = m.group(1)+':po:acc'
                         continue
-            if re.match(r'^(acl|advcl):', edep['deprel']):
-                # We do not include 'i' in the list of redundant prefixes because we want to preserve 'i když' (but we want to discard the other combinations).
-                edep['deprel'] = re.sub(r'^(acl|advcl):(?:a|alespoň|až|jen|hlavně|například|ovšem_teprve|protože|teprve|totiž|zejména)_(aby|až|jestliže|když|li|pokud|protože|že)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):i_(aby|až|jestliže|li|pokud)$', r'\1:\2', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(acl|advcl):(aby|až|jestliže|když|li|pokud|protože|že)_(?:ale|tedy|totiž|už|však)$', r'\1:\2', edep['deprel'])
-            elif re.match(r'^(nmod|obl(:arg)?):', edep['deprel']):
-                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):ať:.+$', r'\1:ať', edep['deprel'])
-                edep['deprel'] = re.sub(r'^(nmod|obl(:arg)?):beyond([_:].+)?$', r'\1', edep['deprel']) # Beyond the Limits
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
