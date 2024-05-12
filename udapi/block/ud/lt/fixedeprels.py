@@ -47,7 +47,8 @@ class FixEdeprels(Block):
         'prie':             'prie:gen', # to, at, near, under
         'prieš':            'prieš:acc', # against
         'su':               'su:ins', # with
-        'tarp':             'tarp:gen' # between
+        'tarp':             'tarp:gen', # between
+        'virš':             'virš:gen' # above
     }
 
     def copy_case_from_adposition(self, node, adposition):
