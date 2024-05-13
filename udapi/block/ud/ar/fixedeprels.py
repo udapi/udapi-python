@@ -12,10 +12,6 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
-        'kaip': [],
-        'lyg':  [],
-        'negu': [],
-        'nei':  [],
         'nes':  []
     }
 
@@ -25,8 +21,8 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'فِي':             'فِي:gen', # fī = in
-        'dėl':              'dėl:gen', # because of
+        'فِي':   'فِي:gen', # fī = in
+        'لِ':    'لِ:gen', # li = to
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
