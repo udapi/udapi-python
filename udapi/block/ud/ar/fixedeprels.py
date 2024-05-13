@@ -23,6 +23,7 @@ class FixEdeprels(Block):
     unambiguous = {
         'فِي':   'فِي:gen', # fī = in
         'لِ':    'لِ:gen', # li = to
+        'مِن':   'مِن:gen', # min = from
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
