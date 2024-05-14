@@ -26,6 +26,7 @@ class FixEdeprels(Block):
         'مِن':    'مِن:gen', # min = from
         'بِ':     'بِ:gen', # bi = for, with
         'عَلَى':   'عَلَى:gen', # ʿalā = on
+        'إِلَى':   'إِلَى:gen', # ʾilā = to
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
