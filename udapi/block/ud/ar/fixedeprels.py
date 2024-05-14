@@ -28,6 +28,7 @@ class FixEdeprels(Block):
         'عَلَى':   'عَلَى:gen', # ʿalā = on
         'إِلَى':   'إِلَى:gen', # ʾilā = to
         'بَينَ':   'بَينَ:gen', # bayna = between
+        'مَعَ':    'مَعَ:gen', # maʿa = with
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
