@@ -21,10 +21,11 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'فِي':   'فِي:gen', # fī = in
-        'لِ':    'لِ:gen', # li = to
-        'مِن':   'مِن:gen', # min = from
-        'بِ':    'بِ:gen', # bi = for, with
+        'فِي':    'فِي:gen', # fī = in
+        'لِ':     'لِ:gen', # li = to
+        'مِن':    'مِن:gen', # min = from
+        'بِ':     'بِ:gen', # bi = for, with
+        'عَلَى':   'عَلَى:gen', # ʿalā = on
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
