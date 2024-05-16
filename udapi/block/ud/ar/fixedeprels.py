@@ -33,6 +33,7 @@ class FixEdeprels(Block):
         'خِلَالَ':   'خِلَالَ:gen', # ḫilāla = during
         'بَعدَ':   'بَعدَ:gen', # baʿda = after
         'مُنذُ':   'مُنذُ:gen', # munḏu = since
+        'حَولَ':   'حَولَ:gen', # ḥawla = about
         'nors':             'nors', # remove morphological case # though, although, when, if
         'virš':             'virš:gen' # above
     }
