@@ -12,7 +12,7 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
-        'nes':  []
+        'أَنَّ':  []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -34,7 +34,7 @@ class FixEdeprels(Block):
         'بَعدَ':   'بَعدَ:gen', # baʿda = after
         'مُنذُ':   'مُنذُ:gen', # munḏu = since
         'حَولَ':   'حَولَ:gen', # ḥawla = about
-        'nors':             'nors', # remove morphological case # though, although, when, if
+        'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
         'virš':             'virš:gen' # above
     }
 
