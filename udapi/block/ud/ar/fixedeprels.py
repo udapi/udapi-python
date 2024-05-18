@@ -39,6 +39,7 @@ class FixEdeprels(Block):
         'قَبلَ':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
         'إِذَا':   'إِذَا', # remove morphological case; ʾiḏā = if
+        'بِ_سَبَب': 'بِسَبَبِ:gen', # bisababi = because of
         'virš':             'virš:gen' # above
     }
 
