@@ -36,6 +36,7 @@ class FixEdeprels(Block):
         'حَولَ':   'حَولَ:gen', # ḥawla = about
         'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
         'قَبلَ':   'قَبلَ:gen', # qabla = before
+        'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
         'virš':             'virš:gen' # above
     }
 
