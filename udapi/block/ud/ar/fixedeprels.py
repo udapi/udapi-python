@@ -44,6 +44,7 @@ class FixEdeprels(Block):
         'حَيثُ':   'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
         'مِن_خِلَالَ': 'مِن_خِلَالِ:gen', # min ḫilāli = through, during
         'حَتَّى':   'حَتَّى:gen', # ḥattā = until
+        'دَاخِلَ':  'دَاخِلَ:gen', # dāḫila = inside of
         'virš':             'virš:gen' # above
     }
 
