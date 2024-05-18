@@ -45,6 +45,7 @@ class FixEdeprels(Block):
         'مِن_خِلَالَ': 'مِن_خِلَالِ:gen', # min ḫilāli = through, during
         'حَتَّى':   'حَتَّى:gen', # ḥattā = until
         'دَاخِلَ':  'دَاخِلَ:gen', # dāḫila = inside of
+        'لَدَى':   'لَدَى:gen', # ladā = with, by, of, for
         'virš':             'virš:gen' # above
     }
 
