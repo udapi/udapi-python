@@ -42,6 +42,7 @@ class FixEdeprels(Block):
         'إِذَا':   'إِذَا', # remove morphological case; ʾiḏā = if
         'بِ_سَبَب': 'بِسَبَبِ:gen', # bisababi = because of
         'حَيثُ':   'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
+        'مِن_خِلَالَ': 'مِن_خِلَالِ:gen', # min ḫilāli = through, during
         'virš':             'virš:gen' # above
     }
 
