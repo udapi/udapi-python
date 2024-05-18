@@ -12,7 +12,8 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
-        'أَنَّ':  []
+        'أَنَّ':  [],
+        'إِذَا': []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -37,6 +38,7 @@ class FixEdeprels(Block):
         'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
         'قَبلَ':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
+        'إِذَا':   'إِذَا', # remove morphological case; ʾiḏā = if
         'virš':             'virš:gen' # above
     }
 
