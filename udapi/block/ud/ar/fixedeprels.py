@@ -15,7 +15,8 @@ class FixEdeprels(Block):
         'أَنَّ':  [],
         'إِذَا': [],
         'حَيثُ': [],
-        'مِثلَ': []
+        'مِثلَ': [],
+        'لِأَنَّ': []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -50,6 +51,7 @@ class FixEdeprels(Block):
         'ضِدَّ':    'ضِدَّ:gen', # ḍidda = against
         'مِن_أَجل': 'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
         'مِثلَ':   'مِثلَ', # remove morphological case; miṯla = like
+        'لِأَنَّ':    'لِأَنَّ', # remove morphological case; li-ʾanna = because
         'virš':             'virš:gen' # above
     }
 
