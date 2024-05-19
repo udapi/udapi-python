@@ -14,7 +14,8 @@ class FixEdeprels(Block):
     outermost = {
         'أَنَّ':  [],
         'إِذَا': [],
-        'حَيثُ': []
+        'حَيثُ': [],
+        'مِثلَ': []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -48,6 +49,7 @@ class FixEdeprels(Block):
         'لَدَى':   'لَدَى:gen', # ladā = with, by, of, for
         'ضِدَّ':    'ضِدَّ:gen', # ḍidda = against
         'مِن_أَجل': 'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
+        'مِثلَ':   'مِثلَ', # remove morphological case; miṯla = like
         'virš':             'virš:gen' # above
     }
 
