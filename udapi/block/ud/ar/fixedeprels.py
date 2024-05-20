@@ -52,6 +52,7 @@ class FixEdeprels(Block):
         'مِن_أَجل': 'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
         'مِثلَ':   'مِثلَ', # remove morphological case; miṯla = like
         'لِأَنَّ':    'لِأَنَّ', # remove morphological case; li-ʾanna = because
+        'كَ':     'كَ:gen', # ka = in (temporal?)
         'virš':             'virš:gen' # above
     }
 
@@ -79,12 +80,11 @@ class FixEdeprels(Block):
             if m:
                 bdeprel = m.group(1)
                 solved = False
-                # Issues caused by errors in the original annotation must be fixed early.
-                # Especially if acl|advcl occurs with a preposition that unambiguously
-                # receives a morphological case in the subsequent steps, and then gets
-                # flagged as solved.
-                edep['deprel'] = re.sub(r'^advcl:do(?::gen)?$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
-                edep['deprel'] = re.sub(r'^acl:k(?::dat)?$', r'acl', edep['deprel'])
+                # Arabic clauses often start with وَ wa "and", which does not add
+                # much to the meaning but sometimes gets included in the enhanced
+                # case label. Remove it if there are more informative subsequent
+                # morphs.
+                edep['deprel'] = re.sub(r':وَ_', r':', edep['deprel'])
                 # If one of the following expressions occurs followed by another preposition
                 # or by morphological case, remove the additional case marking. For example,
                 # 'jako_v' becomes just 'jako'.
