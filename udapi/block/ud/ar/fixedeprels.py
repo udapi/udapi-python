@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     # The list in the value contains exceptions that should be left intact.
     outermost = {
         'أَنَّ':  [],
+        'إِنَّ':  [],
         'إِذَا': [],
         'حَيثُ': [],
         'مِثلَ': [],
@@ -39,6 +40,7 @@ class FixEdeprels(Block):
         'مُنذُ':   'مُنذُ:gen', # munḏu = since
         'حَولَ':   'حَولَ:gen', # ḥawla = about
         'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
+        'إِنَّ':    'إِنَّ', # remove morphological case; ʾinna = that
         'قَبلَ':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
         'إِذَا':   'إِذَا', # remove morphological case; ʾiḏā = if
