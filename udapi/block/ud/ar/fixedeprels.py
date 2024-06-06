@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     # The list in the value contains exceptions that should be left intact.
     outermost = {
         'أَنَّ':  [],
+        'أَن':  [],
         'إِنَّ':  [],
         'إِذَا': [],
         'حَيثُ': [],
