@@ -40,6 +40,7 @@ class FixEdeprels(Block):
         'مُنذُ':   'مُنذُ:gen', # munḏu = since
         'حَولَ':   'حَولَ:gen', # ḥawla = about
         'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
+        'أَن':    'أَن', # remove morphological case; ʾan = that
         'إِنَّ':    'إِنَّ', # remove morphological case; ʾinna = that
         'قَبلَ':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
