@@ -53,6 +53,8 @@ class FixEdeprels(Block):
         'مِثلَ':   'مِثلَ', # remove morphological case; miṯla = like
         'لِأَنَّ':    'لِأَنَّ', # remove morphological case; li-ʾanna = because
         'كَ':     'كَ:gen', # ka = in (temporal?)
+        'عِندَمَا': 'عِندَمَا', # ʿindamā = when
+        'تَحتَ':   'تَحتَ:gen', # tahta = under
         'virš':             'virš:gen' # above
     }
 
