@@ -55,6 +55,7 @@ class FixEdeprels(Block):
         'كَ':     'كَ:gen', # ka = in (temporal?)
         'عِندَمَا': 'عِندَمَا', # ʿindamā = when
         'تَحتَ':   'تَحتَ:gen', # tahta = under
+        'عَبرَ':   'عَبرَ:gen', # ʿabra = via
         'virš':             'virš:gen' # above
     }
 
