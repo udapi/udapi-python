@@ -61,6 +61,7 @@ class FixEdeprels(Block):
         'لِأَنَّ':    'لِأَنَّ', # remove morphological case; li-ʾanna = because
         'كَ':     'كَ:gen', # ka = in (temporal?)
         'عِندَمَا': 'عِندَمَا', # ʿindamā = when
+        'عِندَ':   'عِندَمَا', # ʿinda = when
         'تَحتَ':   'تَحتَ:gen', # tahta = under
         'عَبرَ':   'عَبرَ:gen', # ʿabra = via
         'كَمَا':   'كَمَا', # remove morphological case; kamā = as
