@@ -19,7 +19,8 @@ class FixEdeprels(Block):
         'حَيثُ': [],
         'مِثلَ': [],
         'لِأَنَّ':  [],
-        'كَمَا': []
+        'كَمَا': [],
+        'فِي_حِينَ': []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -28,45 +29,46 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'فِي':    'فِي:gen', # fī = in
-        'لِ':     'لِ:gen', # li = to
-        'مِن':    'مِن:gen', # min = from
-        'بِ':     'بِ:gen', # bi = for, with
-        'عَلَى':   'عَلَى:gen', # ʿalā = on
-        'إِلَى':   'إِلَى:gen', # ʾilā = to
-        'بَينَ':   'بَينَ:gen', # bayna = between
-        'مَعَ':    'مَعَ:gen', # maʿa = with
-        'عَن':    'عَن:gen', # ʿan = about, from
-        'خِلَالَ':   'خِلَالَ:gen', # ḫilāla = during
-        'بَعدَ':   'بَعدَ:gen', # baʿda = after
-        'بَعدَمَا': 'بَعدَ:gen', # baʿdamā = after
-        'بَعدَ_أَن': 'بَعدَ:gen', # baʿda ʾan = after + clause
-        'مُنذُ':   'مُنذُ:gen', # munḏu = since
-        'حَولَ':   'حَولَ:gen', # ḥawla = about
-        'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
-        'أَن':    'أَن', # remove morphological case; ʾan = that
-        'إِنَّ':    'إِنَّ', # remove morphological case; ʾinna = that
-        'قَبلَ':   'قَبلَ:gen', # qabla = before
-        'أَمَامَ':  'أَمَامَ:gen', # ʾamāma = in front of
-        'إِذَا':   'إِذَا', # remove morphological case; ʾiḏā = if
-        'بِ_سَبَب': 'بِسَبَبِ:gen', # bisababi = because of
-        'حَيثُ':   'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
-        'مِن_خِلَالَ': 'مِن_خِلَالِ:gen', # min ḫilāli = through, during
-        'حَتَّى':   'حَتَّى:gen', # ḥattā = until
-        'دَاخِلَ':  'دَاخِلَ:gen', # dāḫila = inside of
-        'لَدَى':   'لَدَى:gen', # ladā = with, by, of, for
-        'ضِدَّ':    'ضِدَّ:gen', # ḍidda = against
-        'مِن_أَجل': 'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
-        'مِثلَ':   'مِثلَ', # remove morphological case; miṯla = like
-        'لِأَنَّ':    'لِأَنَّ', # remove morphological case; li-ʾanna = because
-        'كَ':     'كَ:gen', # ka = in (temporal?)
-        'عِندَمَا': 'عِندَمَا', # ʿindamā = when
-        'عِندَ':   'عِندَمَا', # ʿinda = when
-        'تَحتَ':   'تَحتَ:gen', # tahta = under
-        'عَبرَ':   'عَبرَ:gen', # ʿabra = via
-        'كَمَا':   'كَمَا', # remove morphological case; kamā = as
-        'مُقَابِلَ': 'مُقَابِلَ:gen', # muqābila = in exchange for, opposite to, corresponding to
+        'فِي':      'فِي:gen', # fī = in
+        'لِ':       'لِ:gen', # li = to
+        'مِن':      'مِن:gen', # min = from
+        'بِ':       'بِ:gen', # bi = for, with
+        'عَلَى':     'عَلَى:gen', # ʿalā = on
+        'إِلَى':     'إِلَى:gen', # ʾilā = to
+        'بَينَ':     'بَينَ:gen', # bayna = between
+        'مَعَ':      'مَعَ:gen', # maʿa = with
+        'عَن':      'عَن:gen', # ʿan = about, from
+        'خِلَالَ':     'خِلَالَ:gen', # ḫilāla = during
+        'بَعدَ':     'بَعدَ:gen', # baʿda = after
+        'بَعدَمَا':   'بَعدَ:gen', # baʿdamā = after
+        'بَعدَ_أَن':  'بَعدَ:gen', # baʿda ʾan = after + clause
+        'مُنذُ':     'مُنذُ:gen', # munḏu = since
+        'حَولَ':     'حَولَ:gen', # ḥawla = about
+        'أَنَّ':      'أَنَّ', # remove morphological case; ʾanna = that
+        'أَن':      'أَن', # remove morphological case; ʾan = that
+        'إِنَّ':      'إِنَّ', # remove morphological case; ʾinna = that
+        'قَبلَ':     'قَبلَ:gen', # qabla = before
+        'أَمَامَ':    'أَمَامَ:gen', # ʾamāma = in front of
+        'إِذَا':     'إِذَا', # remove morphological case; ʾiḏā = if
+        'بِ_سَبَب':   'بِسَبَبِ:gen', # bisababi = because of
+        'حَيثُ':     'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
+        'مِن_خِلَالَ':  'مِن_خِلَالِ:gen', # min ḫilāli = through, during
+        'حَتَّى':     'حَتَّى:gen', # ḥattā = until
+        'دَاخِلَ':    'دَاخِلَ:gen', # dāḫila = inside of
+        'لَدَى':     'لَدَى:gen', # ladā = with, by, of, for
+        'ضِدَّ':      'ضِدَّ:gen', # ḍidda = against
+        'مِن_أَجل':  'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
+        'مِثلَ':     'مِثلَ', # remove morphological case; miṯla = like
+        'لِأَنَّ':      'لِأَنَّ', # remove morphological case; li-ʾanna = because
+        'كَ':       'كَ:gen', # ka = in (temporal?)
+        'عِندَمَا':   'عِندَمَا', # ʿindamā = when
+        'عِندَ':     'عِندَمَا', # ʿinda = when
+        'تَحتَ':     'تَحتَ:gen', # tahta = under
+        'عَبرَ':     'عَبرَ:gen', # ʿabra = via
+        'كَمَا':     'كَمَا', # remove morphological case; kamā = as
+        'مُقَابِلَ':   'مُقَابِلَ:gen', # muqābila = in exchange for, opposite to, corresponding to
         'فِي_إِطَار': 'فِي_إِطَار:gen', # fī ʾiṭār = in frame
+        'فِي_حِينَ':  'فِي_حِينِ', # fī ḥīni = while
         'virš':             'virš:gen' # above
     }
 
