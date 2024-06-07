@@ -38,6 +38,7 @@ class FixEdeprels(Block):
         'عَن':    'عَن:gen', # ʿan = about, from
         'خِلَالَ':   'خِلَالَ:gen', # ḫilāla = during
         'بَعدَ':   'بَعدَ:gen', # baʿda = after
+        'بَعدَ_أَن': 'بَعدَ:gen', # baʿda ʾan = after + clause
         'مُنذُ':   'مُنذُ:gen', # munḏu = since
         'حَولَ':   'حَولَ:gen', # ḥawla = about
         'أَنَّ':    'أَنَّ', # remove morphological case; ʾanna = that
