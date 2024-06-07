@@ -18,7 +18,8 @@ class FixEdeprels(Block):
         'إِذَا': [],
         'حَيثُ': [],
         'مِثلَ': [],
-        'لِأَنَّ': []
+        'لِأَنَّ':  [],
+        'كَمَا': []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -61,6 +62,7 @@ class FixEdeprels(Block):
         'عِندَمَا': 'عِندَمَا', # ʿindamā = when
         'تَحتَ':   'تَحتَ:gen', # tahta = under
         'عَبرَ':   'عَبرَ:gen', # ʿabra = via
+        'كَمَا':   'كَمَا', # remove morphological case; kamā = as
         'virš':             'virš:gen' # above
     }
 
