@@ -69,7 +69,10 @@ class FixEdeprels(Block):
         'مُقَابِلَ':   'مُقَابِلَ:gen', # muqābila = in exchange for, opposite to, corresponding to
         'فِي_إِطَار': 'فِي_إِطَار:gen', # fī ʾiṭār = in frame
         'فِي_حِينَ':  'فِي_حِينِ', # fī ḥīni = while
+        'فِيمَا':    'فِيمَا', # fīmā = while
         'ضِمنَ':     'ضِمنَ:gen', # ḍimna = within, inside, among
+        'مِن_دُونَ':  'مِن_دُونِ:gen', # min dūni = without, beneath, underneath
+        'مِن_دُونَ_أَن': 'مِن_دُونِ:gen', # min dūni ʾan = without, beneath, underneath + clause
         'virš':             'virš:gen' # above
     }
 
