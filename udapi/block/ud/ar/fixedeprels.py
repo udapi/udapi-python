@@ -64,6 +64,7 @@ class FixEdeprels(Block):
         'تَحتَ':   'تَحتَ:gen', # tahta = under
         'عَبرَ':   'عَبرَ:gen', # ʿabra = via
         'كَمَا':   'كَمَا', # remove morphological case; kamā = as
+        'مُقَابِلَ': 'مُقَابِلَ:gen', # muqābila = in exchange for, opposite to, corresponding to
         'virš':             'virš:gen' # above
     }
 
