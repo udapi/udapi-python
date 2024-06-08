@@ -78,6 +78,8 @@ class FixEdeprels(Block):
         'دُونَ_أَن':  'دُونَ:gen', # dūna ʾan = without
         'بِ_دُونَ_أَن': 'دُونَ:gen', # bi dūni ʾan = without
         'دُونَ_سِوَى': 'دُونَ:gen', # dūna siwā = without
+        'إِثرَ':     'إِثرَ:gen', # ʾiṯra = right after
+        'عَلَى_إِثرَ': 'إِثرَ:gen', # ʿalā ʾiṯri = right after
         'virš':             'virš:gen' # above
     }
 
