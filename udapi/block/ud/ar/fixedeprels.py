@@ -73,6 +73,11 @@ class FixEdeprels(Block):
         'ضِمنَ':     'ضِمنَ:gen', # ḍimna = within, inside, among
         'مِن_دُونَ':  'مِن_دُونِ:gen', # min dūni = without, beneath, underneath
         'مِن_دُونَ_أَن': 'مِن_دُونِ:gen', # min dūni ʾan = without, beneath, underneath + clause
+        'دُونَ':     'دُونَ:gen', # dūna = without
+        'بِ_دُونَ':   'دُونَ:gen', # bi dūni = without
+        'دُونَ_أَن':  'دُونَ:gen', # dūna ʾan = without
+        'بِ_دُونَ_أَن': 'دُونَ:gen', # bi dūni ʾan = without
+        'دُونَ_سِوَى': 'دُونَ:gen', # dūna siwā = without
         'virš':             'virš:gen' # above
     }
 
