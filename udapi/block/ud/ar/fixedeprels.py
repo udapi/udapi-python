@@ -119,6 +119,9 @@ class FixEdeprels(Block):
         'بِ_أَنَّ_هُوَ_عَلَى':      'أَنَّ', # that
         'بِ_أَنَّ_لَا':           'أَنَّ', # that
         'بِ_أَنَّ_مِن':          'أَنَّ', # that
+        'عَقِبَ':              'عَقِبَ:gen', # ʿaqiba = following
+        'عَقِبَ_أَن':           'عَقِبَ:gen', # ʿaqiba = following
+        'عَقِبَ_مِن':           'عَقِبَ:gen', # ʿaqiba = following
         'virš':             'virš:gen' # above
     }
 
