@@ -16,6 +16,7 @@ class FixEdeprels(Block):
         'أَن':  [],
         'إِنَّ':  [],
         'إِذَا': [],
+        'لَو':  [],
         'حَيثُ': [],
         'مِثلَ': [],
         'لِأَنَّ':  [],
@@ -29,13 +30,15 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'فِي':      'فِي:gen', # fī = in
-        'لِ':       'لِ:gen', # li = to
-        'مِن':      'مِن:gen', # min = from
-        'بِ':       'بِ:gen', # bi = for, with
-        'عَلَى':     'عَلَى:gen', # ʿalā = on
-        'إِلَى':     'إِلَى:gen', # ʾilā = to
-        'بَينَ':     'بَينَ:gen', # bayna = between
+        'فِي':       'فِي:gen', # fī = in
+        'لِ':        'لِ:gen', # li = to
+        'مِن':       'مِن:gen', # min = from
+        'بِ':        'بِ:gen', # bi = for, with
+        'عَلَى':      'عَلَى:gen', # ʿalā = on
+        'إِلَى':      'إِلَى:gen', # ʾilā = to
+        'بَينَ':      'بَينَ:gen', # bayna = between
+        'بَينَمَا':    'بَينَ:gen',
+        'بَينَمَا_لَم': 'بَينَ:gen',
         'مَعَ':      'مَعَ:gen', # maʿa = with
         'عَن':      'عَن:gen', # ʿan = about, from
         'خِلَالَ':     'خِلَالَ:gen', # ḫilāla = during
@@ -103,6 +106,11 @@ class FixEdeprels(Block):
         'فِي_نَحوَ':           'فِي:gen', # in about N
         'أَثنَاءَ':            'أَثنَاءَ:gen', # ʾaṯnāʾa = during
         'فِي_أَثنَاءَ':         'أَثنَاءَ:gen', # ʾaṯnāʾa = during
+        'لَو':               'لَو', # law = if
+        'حَتَّى_لَو':           'لَو', # even if
+        'حَتَّى_وَ_لَو':         'لَو', # even if
+        'لَو_أَنَّ':            'لَو', # if
+        'لَو_مِن':            'لَو', # if
         'virš':             'virš:gen' # above
     }
 
