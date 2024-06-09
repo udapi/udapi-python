@@ -91,6 +91,16 @@ class FixEdeprels(Block):
         'بِ_إِضَافَة_إِلَى_أَنَّ': 'إِلَى_أَنَّ',
         'إِلَى_أَنَّ_هُوَ_مِن_بَينَ': 'إِلَى_أَنَّ',
         'إِلَى_أَنَّ_مِن':        'إِلَى_أَنَّ',
+        'نَحوَ':              'نَحوَ', # naḥwa = about, approximately
+        'بِ_نَحوَ':            'بِ:gen', # by about N
+        'نَحوَ_بِ':            'بِ:gen', # about by N
+        'قَبلَ_نَحوَ':          'قَبلَ:gen', # before about N
+        'عَلَى_نَحوَ':          'عَلَى:gen', # to about N
+        'إِلَى_نَحوَ':          'إِلَى:gen', # to about N
+        'لِ_نَحوَ':            'لِ:gen', # to/for about N
+        'مُنذُ_نَحوَ':          'مُنذُ:gen', # since about N
+        'بَعدَ_نَحوَ':          'بَعدَ:gen', # after about N
+        'فِي_نَحوَ':           'فِي:gen', # in about N
         'virš':             'virš:gen' # above
     }
 
