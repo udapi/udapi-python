@@ -101,6 +101,8 @@ class FixEdeprels(Block):
         'مُنذُ_نَحوَ':          'مُنذُ:gen', # since about N
         'بَعدَ_نَحوَ':          'بَعدَ:gen', # after about N
         'فِي_نَحوَ':           'فِي:gen', # in about N
+        'أَثنَاءَ':            'أَثنَاءَ:gen', # ʾaṯnāʾa = during
+        'فِي_أَثنَاءَ':         'أَثنَاءَ:gen', # ʾaṯnāʾa = during
         'virš':             'virš:gen' # above
     }
 
