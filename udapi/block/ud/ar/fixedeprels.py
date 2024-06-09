@@ -80,6 +80,10 @@ class FixEdeprels(Block):
         'دُونَ_سِوَى': 'دُونَ:gen', # dūna siwā = without
         'إِثرَ':     'إِثرَ:gen', # ʾiṯra = right after
         'عَلَى_إِثرَ': 'إِثرَ:gen', # ʿalā ʾiṯri = right after
+        'رَغمَ':     'رَغمَ:gen', # raġma = despite
+        'رَغمَ_أَنَّ':  'رَغمَ:gen', # raġma ʾanna = despite + clause
+        'عَلَى_رَغمَ_أَنَّ': 'رَغمَ:gen', # ʿalā raġma ʾanna = despite + clause
+        'رَغمَ_أَنَّ_مِن': 'رَغمَ:gen', # raġma ʾanna min = despite
         'virš':             'virš:gen' # above
     }
 
