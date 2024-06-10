@@ -30,27 +30,34 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
-        'فِي':       'فِي:gen', # fī = in
-        'لِ':        'لِ:gen', # li = to
-        'مِن':       'مِن:gen', # min = from
-        'بِ':        'بِ:gen', # bi = for, with
-        'عَلَى':      'عَلَى:gen', # ʿalā = on
+        'فِي':            'فِي:gen', # fī = in
+        'لِ':             'لِ:gen', # li = to
+        'مِن':            'مِن:gen', # min = from
+        'بِ':             'بِ:gen', # bi = for, with
+        'عَلَى':           'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَن':        'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ':        'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_هُوَ':     'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَن_بِ':      'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_هُوَ_لَدَى': 'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_مِن_شَأن': 'عَلَى:gen', # ʿalā = on
         'إِلَى':      'إِلَى:gen', # ʾilā = to
         'بَينَ':      'بَينَ:gen', # bayna = between
         'بَينَمَا':    'بَينَ:gen',
         'بَينَمَا_لَم': 'بَينَ:gen',
-        'مَعَ':      'مَعَ:gen', # maʿa = with
-        'عَن':      'عَن:gen', # ʿan = about, from
-        'خِلَالَ':     'خِلَالَ:gen', # ḫilāla = during
-        'بَعدَ':     'بَعدَ:gen', # baʿda = after
-        'بَعدَمَا':   'بَعدَ:gen', # baʿdamā = after
-        'بَعدَ_أَن':  'بَعدَ:gen', # baʿda ʾan = after + clause
-        'مُنذُ':     'مُنذُ:gen', # munḏu = since
-        'حَولَ':     'حَولَ:gen', # ḥawla = about
-        'أَنَّ':      'أَنَّ', # remove morphological case; ʾanna = that
-        'أَن':      'أَن', # remove morphological case; ʾan = that
-        'إِنَّ':      'إِنَّ', # remove morphological case; ʾinna = that
-        'قَبلَ':     'قَبلَ:gen', # qabla = before
+        'مَعَ':       'مَعَ:gen', # maʿa = with
+        'عَن':       'عَن:gen', # ʿan = about, from
+        'خِلَالَ':      'خِلَالَ:gen', # ḫilāla = during
+        'بَعدَ':      'بَعدَ:gen', # baʿda = after
+        'بَعدَمَا':    'بَعدَ:gen', # baʿdamā = after
+        'بَعدَ_أَن':   'بَعدَ:gen', # baʿda ʾan = after + clause
+        'مُنذُ':      'مُنذُ:gen', # munḏu = since
+        'حَولَ':      'حَولَ:gen', # ḥawla = about
+        'أَنَّ':       'أَنَّ', # remove morphological case; ʾanna = that
+        'أَن':       'أَن', # remove morphological case; ʾan = that
+        'إِنَّ':       'إِنَّ', # remove morphological case; ʾinna = that
+        'قَبلَ':      'قَبلَ:gen', # qabla = before
+        'قَبلَ_أَن':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':    'أَمَامَ:gen', # ʾamāma = in front of
         'إِذَا':     'إِذَا', # remove morphological case; ʾiḏā = if
         'بِ_سَبَب':   'بِسَبَبِ:gen', # bisababi = because of
@@ -129,8 +136,8 @@ class FixEdeprels(Block):
         'بِ_حَسَبَ':            'حَسَبَ:gen', # ḥasaba = according to, depending on
         'حَسَبَمَا':            'حَسَبَ:gen', # ḥasaba = according to, depending on
         'عَلَى_حَسَبَ':          'حَسَبَ:gen', # ḥasaba = according to, depending on
-        'بِ_نِسبَة_لِ':         'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li = in proportion to
-        'بِ_نِسبَة_لِ_مِن':      'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li = in proportion to
+        'بِ_نِسبَة_لِ':         'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li (bin-nisbati li) = in proportion/relation to
+        'بِ_نِسبَة_لِ_مِن':      'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li (bin-nisbati li) = in proportion/relation to
         'تُجَاهَ':             'تُجَاهَ:gen', # tuǧāha = towards, facing
         'لِكَي':              'لِكَي', # li-kay = in order to
         'ذٰلِكَ_لِكَي':          'لِكَي', # li-kay = in order to
