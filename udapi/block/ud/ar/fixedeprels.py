@@ -136,6 +136,18 @@ class FixEdeprels(Block):
         'ذٰلِكَ_لِكَي':          'لِكَي', # li-kay = in order to
         'مِن_قِبَل':           'مِن_قِبَلِ:gen', # min qibali = by
         'مِن_قِبَل_بِ_فِي':      'مِن_قِبَلِ:gen', # min qibali = by
+        'حَوَالَى':            'حَوَالَى', # ḥawālā = around, about
+        'فِي_حَوَالَى':         'فِي:gen', # fi hawala = in around X
+        'إِلَى_حَوَالَى':        'إِلَى:gen', # ila hawala = to around X
+        'بِ_حَوَالَى':          'بِ:gen', # bi hawala = with around X
+        'حَوَالَى_مِن':         'مِن:gen', # hawala min = from around X
+        'مِن_حَوَالَى':         'مِن:gen', # min hawala = from around X
+        'بَينَ_حَوَالَى':        'بَينَ:gen', # bayna hawala
+        'مُقَابِلَ_حَوَالَى':      'مُقَابِلَ:gen', # muqabila hawala
+        'إِلَى_حَوَالَى_مِن':     'إِلَى:gen', # ila hawala min
+        'لِ_حَوَالَى':          'لِ:gen', # li hawala = for around X
+        'بَعدَ_حَوَالَى':        'بَعدَ:gen', # baada hawala
+        'قَبلَ_حَوَالَى':        'قَبلَ:gen', # qabla hawala
         'virš':             'virš:gen' # above
     }
 
