@@ -155,6 +155,11 @@ class FixEdeprels(Block):
         'لِ_حَوَالَى':          'لِ:gen', # li hawala = for around X
         'بَعدَ_حَوَالَى':        'بَعدَ:gen', # baada hawala
         'قَبلَ_حَوَالَى':        'قَبلَ:gen', # qabla hawala
+        'خَارِجَ':             'خَارِجَ:gen', # ḫāriǧa = outside
+        'فِي_خَارِجَ':          'خَارِجَ:gen', # ḫāriǧa = outside
+        'لِ_خَارِجَ':           'لِخَارِجِ:gen', # liḫāriǧi = out
+        'إِلَى_خَارِجَ':         'إِلَى_خَارِجِ:gen', # ʾilā ḫāriǧi = out
+        'مِن_خَارِجَ':          'مِن_خَارِجِ:gen', # min ḫāriǧi = from outside
         'virš':             'virš:gen' # above
     }
 
