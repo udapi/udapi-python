@@ -160,6 +160,11 @@ class FixEdeprels(Block):
         'لِ_خَارِجَ':           'لِخَارِجِ:gen', # liḫāriǧi = out
         'إِلَى_خَارِجَ':         'إِلَى_خَارِجِ:gen', # ʾilā ḫāriǧi = out
         'مِن_خَارِجَ':          'مِن_خَارِجِ:gen', # min ḫāriǧi = from outside
+        'عَلَى_رَغم':          'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
+        'عَلَى_رَغم_مِن':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
+        'عَلَى_رَغم_أَنَّ':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
+        'عَلَى_رَغم_مِن_أَنَّ':    'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
+        'عَلَى_رَغم_مِن_أَنَّ_هُوَ': 'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'virš':             'virš:gen' # above
     }
 
