@@ -125,6 +125,10 @@ class FixEdeprels(Block):
         'إِذ':               'إِذ', # ʾiḏ = because
         'إِذ_أَنَّ':            'إِذ', # ʾiḏ ʾanna
         'بِ_شَأن':            'بِشَأنِ:gen', # bišaʾni = about, regarding (lit. with + matter)
+        'حَسَبَ':              'حَسَبَ:gen', # ḥasaba = according to, depending on
+        'بِ_حَسَبَ':            'حَسَبَ:gen', # ḥasaba = according to, depending on
+        'حَسَبَمَا':            'حَسَبَ:gen', # ḥasaba = according to, depending on
+        'عَلَى_حَسَبَ':          'حَسَبَ:gen', # ḥasaba = according to, depending on
         'virš':             'virš:gen' # above
     }
 
