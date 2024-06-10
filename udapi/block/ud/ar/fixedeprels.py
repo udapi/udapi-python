@@ -131,6 +131,9 @@ class FixEdeprels(Block):
         'عَلَى_حَسَبَ':          'حَسَبَ:gen', # ḥasaba = according to, depending on
         'بِ_نِسبَة_لِ':         'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li = in proportion to
         'بِ_نِسبَة_لِ_مِن':      'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li = in proportion to
+        'تُجَاهَ':             'تُجَاهَ:gen', # tuǧāha = towards, facing
+        'لِكَي':              'لِكَي', # li-kay = in order to
+        'ذٰلِكَ_لِكَي':          'لِكَي', # li-kay = in order to
         'virš':             'virš:gen' # above
     }
 
