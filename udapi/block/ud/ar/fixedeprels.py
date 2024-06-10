@@ -122,6 +122,8 @@ class FixEdeprels(Block):
         'عَقِبَ':              'عَقِبَ:gen', # ʿaqiba = following
         'عَقِبَ_أَن':           'عَقِبَ:gen', # ʿaqiba = following
         'عَقِبَ_مِن':           'عَقِبَ:gen', # ʿaqiba = following
+        'إِذ':               'إِذ', # ʾiḏ = because
+        'إِذ_أَنَّ':            'إِذ', # ʾiḏ ʾanna
         'virš':             'virš:gen' # above
     }
 
