@@ -134,6 +134,8 @@ class FixEdeprels(Block):
         'تُجَاهَ':             'تُجَاهَ:gen', # tuǧāha = towards, facing
         'لِكَي':              'لِكَي', # li-kay = in order to
         'ذٰلِكَ_لِكَي':          'لِكَي', # li-kay = in order to
+        'مِن_قِبَل':           'مِن_قِبَلِ:gen', # min qibali = by
+        'مِن_قِبَل_بِ_فِي':      'مِن_قِبَلِ:gen', # min qibali = by
         'virš':             'virš:gen' # above
     }
 
