@@ -176,6 +176,9 @@ class FixEdeprels(Block):
         'بِ_إِزَاءَ':           'إِزَاءَ:gen', # ʾizāʾa = regarding, facing, towards
         'قُربَ':              'قُربَ:gen', # qurba = near
         'عَن_قُربَ':           'قُربَ:gen', # qurba = near
+        'وَرَاءَ':             'وَرَاءَ:gen', # warāʾa = behind, past, beyond
+        'عَن_أَنَّ_وَرَاءَ':       'وَرَاءَ:gen', # warāʾa = behind, past, beyond
+        'مِن_وَرَاءَ':          'مِن_وَرَاءِ:gen', # min warāʾi = from behind
         'virš':             'virš:gen' # above
     }
 
