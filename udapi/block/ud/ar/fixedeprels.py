@@ -57,8 +57,9 @@ class FixEdeprels(Block):
         'مُنذُ':      'مُنذُ:gen', # munḏu = since
         'حَولَ':      'حَولَ:gen', # ḥawla = about
         'أَنَّ':       'أَنَّ', # remove morphological case; ʾanna = that
-        'أَن':       'أَن', # remove morphological case; ʾan = that
+        'أَن':       'أَنَّ', # remove morphological case; ʾanna = that
         'إِنَّ':       'إِنَّ', # remove morphological case; ʾinna = that
+        'إِن':       'إِنَّ', # remove morphological case; ʾinna = that
         'قَبلَ':      'قَبلَ:gen', # qabla = before
         'قَبلَ_أَن':   'قَبلَ:gen', # qabla = before
         'أَمَامَ':    'أَمَامَ:gen', # ʾamāma = in front of
@@ -181,6 +182,8 @@ class FixEdeprels(Block):
         'عَن_أَنَّ_وَرَاءَ':       'وَرَاءَ:gen', # warāʾa = behind, past, beyond
         'مِن_وَرَاءَ':          'مِن_وَرَاءِ:gen', # min warāʾi = from behind
         'بِ_إِضَافَة_إِلَى':      'بِاَلإِضَافَةِ_إِلَى:gen', # bi-al-ʾiḍāfati ʾilā = in addition to
+        'فَوقَ':              'فَوقَ:gen', # fawqa = above, over
+        'مِن_فَوقَ':           'مِن_فَوقِ:gen', # min fawqi = from above
         'virš':             'virš:gen' # above
     }
 
