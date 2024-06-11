@@ -172,6 +172,8 @@ class FixEdeprels(Block):
         'فِي_وَسطَ':           'وَسطَ:gen', # wasṭa = in the middle
         'بِ_وَسطَ':            'وَسطَ:gen', # wasṭa = in the middle
         'وِفقَ':              'وِفقَ:gen', # wifqa = according to
+        'إِزَاءَ':             'إِزَاءَ:gen', # ʾizāʾa = regarding, facing, towards
+        'بِ_إِزَاءَ':           'إِزَاءَ:gen', # ʾizāʾa = regarding, facing, towards
         'virš':             'virš:gen' # above
     }
 
