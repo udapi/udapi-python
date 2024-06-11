@@ -70,7 +70,8 @@ class FixEdeprels(Block):
         'دَاخِلَ':    'دَاخِلَ:gen', # dāḫila = inside of
         'لَدَى':     'لَدَى:gen', # ladā = with, by, of, for
         'ضِدَّ':      'ضِدَّ:gen', # ḍidda = against
-        'مِن_أَجل':  'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
+        'مِن_أَجل':           'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
+        'مِن_اجل':           'مِن_أَجلِ:gen', # min ʾaǧli = for the sake of
         'مِثلَ':     'مِثلَ', # remove morphological case; miṯla = like
         'لِأَنَّ':      'لِأَنَّ', # remove morphological case; li-ʾanna = because
         'كَ':       'كَ:gen', # ka = in (temporal?)
