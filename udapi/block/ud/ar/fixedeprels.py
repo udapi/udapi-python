@@ -174,6 +174,8 @@ class FixEdeprels(Block):
         'وِفقَ':              'وِفقَ:gen', # wifqa = according to
         'إِزَاءَ':             'إِزَاءَ:gen', # ʾizāʾa = regarding, facing, towards
         'بِ_إِزَاءَ':           'إِزَاءَ:gen', # ʾizāʾa = regarding, facing, towards
+        'قُربَ':              'قُربَ:gen', # qurba = near
+        'عَن_قُربَ':           'قُربَ:gen', # qurba = near
         'virš':             'virš:gen' # above
     }
 
