@@ -165,6 +165,9 @@ class FixEdeprels(Block):
         'عَلَى_رَغم_أَنَّ':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغم_مِن_أَنَّ':    'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغم_مِن_أَنَّ_هُوَ': 'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
+        'وَسطَ':              'وَسطَ:gen', # wasṭa = in the middle
+        'فِي_وَسطَ':           'وَسطَ:gen', # wasṭa = in the middle
+        'بِ_وَسطَ':            'وَسطَ:gen', # wasṭa = in the middle
         'virš':             'virš:gen' # above
     }
 
