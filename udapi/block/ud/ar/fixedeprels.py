@@ -179,6 +179,7 @@ class FixEdeprels(Block):
         'وَرَاءَ':             'وَرَاءَ:gen', # warāʾa = behind, past, beyond
         'عَن_أَنَّ_وَرَاءَ':       'وَرَاءَ:gen', # warāʾa = behind, past, beyond
         'مِن_وَرَاءَ':          'مِن_وَرَاءِ:gen', # min warāʾi = from behind
+        'بِ_إِضَافَة_إِلَى':      'بِاَلإِضَافَةِ_إِلَى:gen', # bi-al-ʾiḍāfati ʾilā = in addition to
         'virš':             'virš:gen' # above
     }
 
