@@ -186,6 +186,7 @@ class FixEdeprels(Block):
         'مِن_فَوقَ':           'مِن_فَوقِ:gen', # min fawqi = from above
         'إِلَى_جَانِب':         'إِلَى_جَانِبِ:gen', # ʾilā ǧānibi = beside
         'بِ_هَدَف':            'بِهَدَفِ:gen', # bihadafi = with goal
+        'بِ_اِسم':            'بِاِسمِ:gen', # biismi = in name
         'virš':             'virš:gen' # above
     }
 
