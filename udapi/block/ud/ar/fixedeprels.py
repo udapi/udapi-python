@@ -186,7 +186,10 @@ class FixEdeprels(Block):
         'مِن_فَوقَ':           'مِن_فَوقِ:gen', # min fawqi = from above
         'إِلَى_جَانِب':         'إِلَى_جَانِبِ:gen', # ʾilā ǧānibi = beside
         'بِ_هَدَف':            'بِهَدَفِ:gen', # bihadafi = with goal
-        'بِ_اِسم':            'بِاِسمِ:gen', # biismi = in name
+        'بِ_اِسم':            'بِاِسمِ:gen', # biismi = in name of
+        'مِن_حَيثُ':           'مِن:gen',
+        'بِ_حَيثُ':            'بِ:gen',
+        'فِي_حُضُور':          'فِي_حُضُورِ:gen', # fī ḥuḍūri = in presence of
         'virš':             'virš:gen' # above
     }
 
