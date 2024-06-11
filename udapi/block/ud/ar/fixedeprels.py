@@ -184,6 +184,7 @@ class FixEdeprels(Block):
         'بِ_إِضَافَة_إِلَى':      'بِاَلإِضَافَةِ_إِلَى:gen', # bi-al-ʾiḍāfati ʾilā = in addition to
         'فَوقَ':              'فَوقَ:gen', # fawqa = above, over
         'مِن_فَوقَ':           'مِن_فَوقِ:gen', # min fawqi = from above
+        'إِلَى_جَانِب':         'إِلَى_جَانِبِ:gen', # ʾilā ǧānibi = beside
         'virš':             'virš:gen' # above
     }
 
