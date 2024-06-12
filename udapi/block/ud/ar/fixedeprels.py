@@ -143,9 +143,12 @@ class FixEdeprels(Block):
         'عَلَى_حَسَبَ':          'حَسَبَ:gen', # ḥasaba = according to, depending on
         'بِ_نِسبَة_لِ':         'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li (bin-nisbati li) = in proportion/relation to
         'بِ_نِسبَة_لِ_مِن':      'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati li (bin-nisbati li) = in proportion/relation to
+        'بِ_نِسبَة_إِلَى':       'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati ʾilā (bin-nisbati ʾilā) = in proportion/relation to
+        'بِ_نِسبَة':           'بِاَلنِّسبَةِ_لِ:gen', # bi an-nisbati (bin-nisbati) = in proportion/relation to
         'تُجَاهَ':             'تُجَاهَ:gen', # tuǧāha = towards, facing
         'لِكَي':              'لِكَي', # li-kay = in order to
         'ذٰلِكَ_لِكَي':          'لِكَي', # li-kay = in order to
+        'كَي':               'لِكَي', # kay = in order to
         'مِن_قِبَل':           'مِن_قِبَلِ:gen', # min qibali = by
         'مِن_قِبَل_بِ_فِي':      'مِن_قِبَلِ:gen', # min qibali = by
         'حَوَالَى':            'حَوَالَى', # ḥawālā = around, about
@@ -185,6 +188,7 @@ class FixEdeprels(Block):
         'فَوقَ':              'فَوقَ:gen', # fawqa = above, over
         'مِن_فَوقَ':           'مِن_فَوقِ:gen', # min fawqi = from above
         'إِلَى_جَانِب':         'إِلَى_جَانِبِ:gen', # ʾilā ǧānibi = beside
+        'مِن_جَانِب':          'إِلَى_جَانِبِ:gen', # min ǧānibi = beside
         'بِ_هَدَف':            'بِهَدَفِ:gen', # bihadafi = with goal
         'بِ_اِسم':            'بِاِسمِ:gen', # biismi = in name of
         'مِن_حَيثُ':           'مِن:gen',
