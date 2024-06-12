@@ -216,6 +216,9 @@ class FixEdeprels(Block):
         'سِوَى_أَنَّ_هُوَ':        'سِوَى:gen', # siwā = except for
         'سِوَى_بِ':            'سِوَى:gen', # siwā = except for
         'سِوَى_لِ':            'سِوَى:gen', # siwā = except for
+        'بِ_اِستِثنَاء':        'بِاِستِثنَاءِ:gen', # biistiṯnāʾi = with exception of
+        'بِ_قُرب_مِن':         'بِاَلقُربِ_مِن:gen', # bi-al-qurbi min = near (with proximity to)
+        'قُبَالَةَ':            'قُبَالَةَ:gen', # qubālata = in front of, facing
         'virš':             'virš:gen' # above
     }
 
