@@ -195,6 +195,8 @@ class FixEdeprels(Block):
         'بِ_حَيثُ':            'بِ:gen',
         'فِي_حُضُور':          'فِي_حُضُورِ:gen', # fī ḥuḍūri = in presence of
         'بِ_خِلَاف':            'بِخِلَافِ:gen', # biḫilāfi = in addition to
+        'جَرَّاء':             'جَرَّاء:gen', # ǧarrāʾ = because of
+        'مِن_جَرَّاء':          'جَرَّاء:gen', # ǧarrāʾ = because of
         'virš':             'virš:gen' # above
     }
 
