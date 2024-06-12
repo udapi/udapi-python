@@ -211,6 +211,7 @@ class FixEdeprels(Block):
         'لِ_بِ':              'لِ:gen',
         'بِ_لَا':              'بِ:gen',
         'لِ_صَالِح':           'لِصَالِحِ:gen', # liṣāliḥi = in interest of
+        'سِوَى':              'سِوَى:gen', # siwā = except for
         'virš':             'virš:gen' # above
     }
 
