@@ -198,6 +198,19 @@ class FixEdeprels(Block):
         'جَرَّاء':             'جَرَّاء:gen', # ǧarrāʾ = because of
         'مِن_جَرَّاء':          'جَرَّاء:gen', # ǧarrāʾ = because of
         'عَن_طَرِيق':          'عَن_طَرِيقِ:gen', # ʿan ṭarīqi = via
+        'فِي_ظِلّ':            'فِي_ظِلِّ:gen', # fī ẓilli = in light of
+        'بِ_مُوجِب':           'بِمُوجِبِ:gen', # bimūǧibi = with motive
+        'حِيَالَ':             'حِيَالَ:gen', # ḥiyāla = concerning
+        'فِي_شَأن':           'فِي_شَأنِ:gen', # fī šaʾni = in regard of
+        'فِي_عُقب':           'فِي_أَعقَابِ:gen', # fī ʾaʿqābi = in the aftermath of
+        'بناء_عَلَى':         'بناء_عَلَى:gen', # bnāʾ ʿalā = based on
+        'طِوَالَ':             'طِوَالَ:gen', # ṭiwāla = throughout
+        'فِي_حِين_أَنَّ':        'فِي_حِينِ',
+        'فِي_غُضُون':          'فِي:gen',
+        'فِي_مُقَابِلَ':         'مُقَابِلَ:gen',
+        'لِ_بِ':              'لِ:gen',
+        'بِ_لَا':              'بِ:gen',
+        'لِ_صَالِح':           'لِصَالِحِ:gen', # liṣāliḥi = in interest of
         'virš':             'virš:gen' # above
     }
 
