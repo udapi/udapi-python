@@ -274,6 +274,10 @@ class FixEdeprels(Block):
         'مِن_مِن':            'مِن:gen',
         'بِ_مُنَاسَبَة':         'بِمُنَاسَبَةِ:gen', # bimunāsabati = on the occasion of
         'فِي_مَجَال':          'فِي_مَجَالِ:gen', # fī maǧāli = in the area of
+        'عَدَا':              'عَدَا:gen', # ʿadā = except for
+        'بِ_اِعتِبَار':         'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
+        'بِ_اِعتِبَار_أَنَّ':      'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
+        'بِ_اِعتِبَار_مِن':      'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
         'virš':             'virš:gen' # above
     }
 
