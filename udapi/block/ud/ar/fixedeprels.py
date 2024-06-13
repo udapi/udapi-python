@@ -278,6 +278,7 @@ class FixEdeprels(Block):
         'بِ_اِعتِبَار':         'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
         'بِ_اِعتِبَار_أَنَّ':      'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
         'بِ_اِعتِبَار_مِن':      'بِاِعتِبَارِ:gen', # bi-iʿtibāri = with regard to
+        'بِ_تُهمَة':           'بِتُهمَةِ:gen', # bituhmati = on charges of
         'virš':             'virš:gen' # above
     }
 
