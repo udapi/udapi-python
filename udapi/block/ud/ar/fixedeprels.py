@@ -282,6 +282,11 @@ class FixEdeprels(Block):
         'بِ_فَضل':            'بِفَضلِ:gen', # bifaḍli = thanks to
         'عَلَى_حِسَاب':         'عَلَى_حِسَابِ:gen', # ʿalā ḥisābi = at the expense of
         'لِ_حِسَاب':           'عَلَى_حِسَابِ:gen', # ʿalā ḥisābi = at the expense of
+        'عَلَى_رَأس':          'عَلَى_رَأسِ:gen', # ʿalā raʾsi = on top of
+        'قُبَيلَ':             'قُبَيلَ:gen', # qubayla = before
+        'مَهمَا':             'مَهمَا', # mahmā = regardless
+        'مِمَّا':              'مِمَّا', # mimmā = that, which
+        'مِمَّا_لَدَى':          'مِمَّا', # mimmā = that, which
         'virš':             'virš:gen' # above
     }
 
