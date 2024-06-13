@@ -272,6 +272,8 @@ class FixEdeprels(Block):
         'مِن_عَلَى':           'مِن:gen',
         'مِن_فِي':            'مِن:gen',
         'مِن_مِن':            'مِن:gen',
+        'بِ_مُنَاسَبَة':         'بِمُنَاسَبَةِ:gen', # bimunāsabati = on the occasion of
+        'فِي_مَجَال':          'فِي_مَجَالِ:gen', # fī maǧāli = in the area of
         'virš':             'virš:gen' # above
     }
 
@@ -304,6 +306,8 @@ class FixEdeprels(Block):
                 # case label. Remove it if there are more informative subsequent
                 # morphs.
                 edep['deprel'] = re.sub(r':وَ_', r':', edep['deprel'])
+                edep['deprel'] = re.sub(r':وَ:', r':', edep['deprel'])
+                edep['deprel'] = re.sub(r':وَ$', r'', edep['deprel'])
                 # If one of the following expressions occurs followed by another preposition
                 # or by morphological case, remove the additional case marking. For example,
                 # 'jako_v' becomes just 'jako'.
@@ -326,25 +330,6 @@ class FixEdeprels(Block):
                         break
                 if solved:
                     continue
-                # The following prepositions have more than one morphological case
-                # available. Thanks to the Case feature on prepositions, we can
-                # identify the correct one. Exclude 'nom' and 'voc', which cannot
-                # be correct.
-                m = re.match(r'^(obl(?::arg)?|nmod):(po|už)(?::(?:nom|voc))?$', edep['deprel'])
-                if m:
-                    adpcase = self.copy_case_from_adposition(node, m.group(2))
-                    if adpcase and not re.search(r':(nom|voc)$', adpcase):
-                        edep['deprel'] = m.group(1)+':'+adpcase
-                        continue
-                    # The remaining instance of 'po' should be ':acc'.
-                    elif m.group(2) == 'po':
-                        edep['deprel'] = m.group(1)+':po:acc'
-                        continue
-                    # The remaining 'už' are ':acc' (they are second conjuncts
-                    # in coordinated oblique modifiers).
-                    elif m.group(2) == 'už':
-                        edep['deprel'] = m.group(1)+':už:acc'
-                        continue
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''
