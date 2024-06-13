@@ -287,6 +287,25 @@ class FixEdeprels(Block):
         'مَهمَا':             'مَهمَا', # mahmā = regardless
         'مِمَّا':              'مِمَّا', # mimmā = that, which
         'مِمَّا_لَدَى':          'مِمَّا', # mimmā = that, which
+        'بِ_اِتِّجَاه':          'بِاِتِّجَاهِ:gen', # bi-ittiǧāhi = towards
+        'فِي_اِتِّجَاه':         'بِاِتِّجَاهِ:gen', # bi-ittiǧāhi = towards
+        'طَالَمَا':            'طَالَمَا', # ṭālamā = as long as
+        'طَالَمَا_أَنَّ':         'طَالَمَا', # ṭālamā = as long as
+        'عَلَى_غِرَار':         'عَلَى_غِرَارِ:gen', # ʿalā ġirāri = similar to
+        'فَورَ':              'فَورَ:gen', # fawra = as soon as
+        'فِي_حَال':           'فِي_حَالِ:gen', # fī ḥāli = in case
+        'فِي_حَالَة':          'فِي_حَالِ:gen', # fī ḥāli = in case
+        'بِ_حَالَة':           'فِي_حَالِ:gen', # fī ḥāli = in case
+        'لِ_مِثلَ':            'مِثلَ', # miṯla = like
+        'مِثلَمَا':            'مِثلَ', # miṯla = like
+        'مِن_مِثلَ':           'مِثلَ', # miṯla = like
+        'بِ_مِثلَ':            'مِثلَ', # miṯla = like
+        'فِي_مِثلَ':           'مِثلَ', # miṯla = like
+        'إِلَى_مِثلَ':          'مِثلَ', # miṯla = like
+        'عَلَى_مِثلَ':          'مِثلَ', # miṯla = like
+        'عَن_مِثلَ':           'مِثلَ', # miṯla = like
+        'مُنذُ_أَن':           'مُنذُ:gen',
+        'مُنذُ_وَ_فِي':         'مُنذُ:gen',
         'virš':             'virš:gen' # above
     }
 
