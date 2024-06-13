@@ -306,6 +306,23 @@ class FixEdeprels(Block):
         'عَن_مِثلَ':           'مِثلَ', # miṯla = like
         'مُنذُ_أَن':           'مُنذُ:gen',
         'مُنذُ_وَ_فِي':         'مُنذُ:gen',
+        'إِلَّا':               'إِلَّا', # ʾillā = except, unless
+        'إِلَّا_أَنَّ':            'إِلَّا', # ʾillā = except, unless
+        'إِلَّا_أَنَّ_هُوَ':         'إِلَّا', # ʾillā = except, unless
+        'إِلَّا_أَن':            'إِلَّا', # ʾillā = except, unless
+        'إِلَّا_إِذَا':           'إِلَّا', # ʾillā = except, unless
+        'عَلَى_إِلَّا':           'إِلَّا', # ʾillā = except, unless
+        'بَدَلًا_مِن':           'بَدَلًا_مِن:gen', # badalan min = instead of
+        'بِ_حُضُور':           'فِي_حُضُورِ:gen', # together with
+        'بِ_صَدَد':            'بِصَدَدِ:gen', # biṣadadi = with respect to
+        'بِ_مُقتَضَى':          'بِمُقتَضَى:gen', # bimuqtaḍā = with requirement of
+        'خَلفَ':              'خَلفَ:gen', # ḫalfa = behind
+        'عَلَى_أَسَاس':         'عَلَى_أَسَاسٍ:gen', # ʿalā ʾasāsin = based on
+        'عَلَى_أَسَاس_أَنَّ':      'عَلَى_أَسَاسٍ:gen', # ʿalā ʾasāsin = based on
+        'فِي_خِتَام':          'فِي_خِتَامِ', # fī ḫitāmi = in conclusion
+        'فِي_ضَوء':           'فِي_ضَوءِ:gen', # fī ḍawʾi = in light of
+        'كُلَّمَا':             'كُلَّمَا', # kullamā = whenever
+        'لِ_كَون':            'لِكَونِ', # likawni = because
         'virš':             'virš:gen' # above
     }
 
