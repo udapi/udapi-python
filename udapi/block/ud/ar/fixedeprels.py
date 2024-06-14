@@ -223,6 +223,7 @@ class FixEdeprels(Block):
         'خَارِجَ':             'خَارِجَ:gen', # ḫāriǧa = outside
         'خِلَالَ':              'خِلَالَ:gen', # ḫilāla = during
         'خَلفَ':              'خَلفَ:gen', # ḫalfa = behind
+        'دَاخِل':             'دَاخِلَ:gen', # dāḫila = inside of
         'دَاخِلَ':             'دَاخِلَ:gen', # dāḫila = inside of
         'دُونَ':              'دُونَ:gen', # dūna = without
         'دُونَ_أَن':           'دُونَ:gen', # dūna ʾan = without
