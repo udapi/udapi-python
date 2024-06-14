@@ -353,6 +353,23 @@ class FixEdeprels(Block):
         'بِ_رَغم':            'رَغمَ:gen', # despite
         'بِ_رَغم_أَنَّ':         'رَغمَ:gen', # despite
         'بِ_رَغم_مِن_أَنَّ':      'رَغمَ:gen', # despite
+        'بدون':             'دُونَ:gen', # without
+        'بِ_تَعَاوُن_مَعَ':       'بِاَلتَّعَاوُنِ_مَعَ:gen', # bi-at-taʿāwuni maʿa = in cooperation with
+        'بِ_خُصُوص':           'بِخُصُوصِ:gen', # biḫuṣūṣi = with regard
+        'بِ_دَعوَى':           'بِ:gen',
+        'بِ_صَرف_نَظَر_عَن':     'بِصَرفِ_اَلنَّظَرِ_عَن:gen', # biṣarfi an-naẓari ʿan = regardless of
+        'بِ_وَاسِطَة':          'بِوَاسِطَةِ:gen', # biwāsiṭati = by means of
+        'ذٰلِكَ_لِأَنَّ':            'لِأَنَّ', # because
+        'عَلَى_قَيد':          'عَلَى:gen',
+        'فِي_دَاخِل':          'دَاخِل:gen',
+        'لِ_عَلَى':            'لِ:gen',
+        'لِذَا':              'لِذَا', # liḏā = so, therefore
+        'لِذٰلِكَ':             'لِذَا', # liḏā = so, therefore
+        'مِن_ثُمَّ':            'مِن:gen',
+        'مِن_خَارِج':          'مِن_خَارِجِ:gen', # min ḫāriǧi = from outside
+        'مِن_دَاخِلَ':          'مِن_دَاخِلِ:gen', # min dāḫili = from inside
+        'مِن_ضِمنَ':           'مِن_ضِمنِ:gen', # min ḍimni = from within = including
+        'هذا_بالأضافة':      'بِ:gen',
         'virš':             'virš:gen' # above
     }
 
