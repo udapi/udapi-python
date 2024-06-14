@@ -348,6 +348,11 @@ class FixEdeprels(Block):
         'مِن_نَاحِيَة':         'مِن:gen',
         'وإن':              'إِنَّ',
         'حَتَّى_وإن':          'إِنَّ',
+        'إِلَى_بَينَ':          'إِلَى_بَينِ:gen', # ʾilā bayni = to between
+        'بِ_رَغم_مِن':         'رَغمَ:gen', # despite
+        'بِ_رَغم':            'رَغمَ:gen', # despite
+        'بِ_رَغم_أَنَّ':         'رَغمَ:gen', # despite
+        'بِ_رَغم_مِن_أَنَّ':      'رَغمَ:gen', # despite
         'virš':             'virš:gen' # above
     }
 
