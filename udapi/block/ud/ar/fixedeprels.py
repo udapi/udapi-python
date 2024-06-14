@@ -121,6 +121,7 @@ class FixEdeprels(Block):
         'بِ_دُون':            'دُونَ:gen',
         'بِ_دُونَ':            'دُونَ:gen', # bi dūni = without
         'بِ_دُونَ_أَن':         'دُونَ:gen', # bi dūni ʾan = without
+        'بِ_رِعَايَة':          'بِ:gen',
         'بِ_رَغم':            'رَغمَ:gen', # despite
         'بِ_رَغم_أَنَّ':         'رَغمَ:gen', # despite
         'بِ_رَغم_مِن':         'رَغمَ:gen', # despite
@@ -139,6 +140,7 @@ class FixEdeprels(Block):
         'بِ_عَكس':            'بِ:gen',
         'بِ_عَلَى':            'بِ:gen',
         'بِ_عَن':             'بِ:gen',
+        'بِ_عَين':            'بِ:gen',
         'بِ_غَضّ_نَظَر_عَن':      'بِغَضِّ_اَلنَّظَرِ_عَن:gen', # biġaḍḍi an-naẓari ʿan = regardless of
         'بِ_فَضل':            'بِفَضلِ:gen', # bifaḍli = thanks to
         'بِ_فِي':             'بِ:gen',
@@ -256,8 +258,8 @@ class FixEdeprels(Block):
         'عَقِبَ_مِن':           'عَقِبَ:gen', # ʿaqiba = following
         'عَلَى':              'عَلَى:gen', # ʿalā = on
         'عَلَى_أبواب':        'عَلَى:gen',
-        'عَلَى_أَثَر':          'عَلَى:gen',
         'عَلَى_إِثرَ':          'إِثرَ:gen', # ʿalā ʾiṯri = right after
+        'عَلَى_أَثَر':          'عَلَى:gen',
         'عَلَى_اِختِلَاف':        'عَلَى:gen',
         'عَلَى_أَسَاس':         'عَلَى_أَسَاسٍ:gen', # ʿalā ʾasāsin = based on
         'عَلَى_أَسَاس_أَنَّ':      'عَلَى_أَسَاسٍ:gen', # ʿalā ʾasāsin = based on
@@ -280,8 +282,8 @@ class FixEdeprels(Block):
         'عَلَى_حَولَ':          'عَلَى:gen',
         'عَلَى_رَأس':          'عَلَى_رَأسِ:gen', # ʿalā raʾsi = on top of
         'عَلَى_رَغم':          'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
-        'عَلَى_رَغم_أَنَّ':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغمَ_أَنَّ':       'رَغمَ:gen', # ʿalā raġma ʾanna = despite + clause
+        'عَلَى_رَغم_أَنَّ':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغم_مِن':       'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغم_مِن_أَنَّ':    'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
         'عَلَى_رَغم_مِن_أَنَّ_هُوَ': 'عَلَى_رَغمِ:gen', # ʿalā raġmi = despite
