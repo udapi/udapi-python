@@ -326,6 +326,7 @@ class FixEdeprels(Block):
         'فِي_اِتِّجَاه':         'بِاِتِّجَاهِ:gen', # bi-ittiǧāhi = towards
         'فِي_أَثنَاءَ':         'أَثنَاءَ:gen', # ʾaṯnāʾa = during
         'فِي_إِطَار':          'فِي_إِطَار:gen', # fī ʾiṭār = in frame
+        'فِي_اعقاب':         'فِي_أَعقَابِ:gen',
         'فِي_إِلَى':           'فِي:gen',
         'فِي_أَن':            'فِي:gen',
         'فِي_أَنَّ':            'فِي:gen',
@@ -526,8 +527,7 @@ class FixEdeprels(Block):
         'وَسطَ':              'وَسطَ:gen', # wasṭa = in the middle
         'وِفقَ':              'وِفقَ:gen', # wifqa = according to
         'ولو':              'إِذَا', # walaw = even if
-        'ولو_أَنَّ':           'إِذَا', # walaw = even if
-        'virš':             'virš:gen' # above
+        'ولو_أَنَّ':           'إِذَا' # walaw = even if
     }
 
     def copy_case_from_adposition(self, node, adposition):
