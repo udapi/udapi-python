@@ -490,6 +490,7 @@ class FixEdeprels(Block):
         'مِن_دُونَ':           'مِن_دُونِ:gen', # min dūni = without, beneath, underneath
         'مِن_دُون_أَن':        'مِن_دُونِ:gen',
         'مِن_دُونَ_أَن':        'مِن_دُونِ:gen', # min dūni ʾan = without, beneath, underneath + clause
+        'مِن_زَاوِيَة':         'مِن:gen',
         'مِن_شَأن':           'مِن_شَأنِ:gen', # min šaʾni = from matter
         'مِن_ضِمنَ':           'مِن_ضِمنِ:gen', # min ḍimni = from within = including
         'مِن_طَرَف':           'مِن:gen',
