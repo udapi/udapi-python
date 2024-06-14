@@ -21,7 +21,8 @@ class FixEdeprels(Block):
         'مِثلَ': [],
         'لِأَنَّ':  [],
         'كَمَا': [],
-        'فِي_حِينَ': []
+        'فِي_حِينَ': [],
+        'فَ':   []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -323,6 +324,30 @@ class FixEdeprels(Block):
         'فِي_ضَوء':           'فِي_ضَوءِ:gen', # fī ḍawʾi = in light of
         'كُلَّمَا':             'كُلَّمَا', # kullamā = whenever
         'لِ_كَون':            'لِكَونِ', # likawni = because
+        'بِ_مُشَارَكَة':         'بِمُشَارَكَةِ:gen', # bimušārakati = with participation of
+        'بينا':             'بَينَ:gen', # bayna = between
+        'بِ_دَور':            'بِ:gen', # bidawri = with role, in turn?
+        'بِ_صِفَة':            'بِصِفَةِ:gen', # biṣifati = as
+        'بِ_قَصد':            'بِقَصدِ:gen', # biqaṣdi = with intention
+        'عَلَى_اِعتِبَار_أَنَّ':    'عَلَى_اِعتِبَارِ_أَنَّ', # ʿalā iʿtibāri ʾanna = considering that
+        'عَلَى_حَدّ':           'عَلَى:gen',
+        'فِي_حَدّ':            'فِي:gen',
+        'عَلَى_مدى':          'عَلَى:gen',
+        'عَلَى_يَد':           'عَلَى:gen',
+        'فَ':                'فَ', # fa = so (advcl or coordination)
+        'فَ_بَينَ':            'فَ', # fa = so (advcl or coordination)
+        'فَ_فِي':             'فَ', # fa = so (advcl or coordination)
+        'فَ_مِن':             'فَ', # fa = so (advcl or coordination)
+        'فَ_إِذَا':            'فَ', # fa = so (advcl or coordination)
+        'فَ_بَدَل_مِن_أَن':      'فَ', # fa = so (advcl or coordination)
+        'فَ_بَينَ':            'فَ', # fa = so (advcl or coordination)
+        'فَ_عَلَى':            'فَ', # fa = so (advcl or coordination)
+        'فَ_فِي':             'فَ', # fa = so (advcl or coordination)
+        'فِي_سَبِيل':          'فِي_سَبِيلِ:gen', # fī sabīli = in order to
+        'مِن_شَأن':           'مِن_شَأنِ:gen', # min šaʾni = from matter
+        'مِن_نَاحِيَة':         'مِن:gen',
+        'وإن':              'إِنَّ',
+        'حَتَّى_وإن':          'إِنَّ',
         'virš':             'virš:gen' # above
     }
 
