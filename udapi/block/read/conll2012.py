@@ -1,6 +1,7 @@
 """"Conll2012 is a reader block for the coreference in CoNLL-2012 format.
 
-This implementation was tested on the LitBank files only, so far.
+This implementation was tested on the LitBank files only
+(and quickly on Portuguese Corref-PT and Summ-it++v2), so far.
 LitBank does not use most of the columns, so the implementation
 should be improved to handle other types of CoNLL-2012 files.
 """
@@ -12,8 +13,7 @@ import udapi.block.read.conllu
 from udapi.core.root import Root
 from udapi.core.node import Node
 
-#RE_BEGIN = re.compile(r'^#begin document \(([^)]+)\); part (\d+)')
-RE_BEGIN = re.compile(r'^#begin document \(([^)]+)\)')
+RE_BEGIN = re.compile(r'^#begin document ([^ ]+)')
 
 class Conll2012(udapi.block.read.conllu.Conllu):
     """A reader of the Conll2012 files."""
@@ -23,10 +23,12 @@ class Conll2012(udapi.block.read.conllu.Conllu):
 
         Args:
         attributes: comma-separated list of column names in the input files
-            (default='docname,_,ord,form,_,_,_,_,_,_,_,_,coref')
+            (default='docname,_,ord,form,_,_,_,_,_,_,_,_,coref' suitable for LitBank)
             For ignoring a column, use "_" as its name.
             Column "ord" marks the column with 0-based (unlike in CoNLL-U, which uses 1-based)
             word-order number/index (usualy called ID).
+            For Corref-PT-SemEval, use attributes='ord,form,_,_,_,_,coref'.
+            For Summ-it++v2, use attributes='ord,form,_,_,_,_,_,_,coref'.
         """
         super().__init__(**kwargs)
         self.node_attributes = attributes.split(',')
@@ -38,6 +40,18 @@ class Conll2012(udapi.block.read.conllu.Conllu):
         match = RE_BEGIN.match(line)
         if match:
             docname = match.group(1)
+            # LitBank uses e.g.
+            # #begin document (1023_bleak_house_brat); part 0
+            if docname.startswith('(') and docname.endswith(');'):
+                docname = docname[1:-2]
+            # Summ-it++v2 uses e.g.
+            # #begin document /home/andre/Recursos-fontes/Summit/Summ-it_v3.0/corpusAnotado_CCR/CIENCIA_2002_22010/CIENCIA_2002_22010.txt
+            elif docname.startswith('/home/'):
+                docname = docname.split('/')[-1]
+            # Corref-PT-SemEval uses e.g.
+            # #begin document D1_C30_Folha_07-08-2007_09h19.txt.xml
+            docname = docname.replace('.txt', '').replace('.xml', '')
+
             root.newdoc = docname
             self._global_entity = 'eid-etype-head-other'
             root.comment += '$GLOBAL.ENTITY\n'
@@ -62,15 +76,23 @@ class Conll2012(udapi.block.read.conllu.Conllu):
                     logging.warning(f"Document name mismatch {value} != {self._docname}")
 
             # convert the zero-based index to one-based
+            # but Corref-PT uses a mix of one-based and zero-based
             elif attribute_name == 'ord':
-                setattr(node, 'ord', int(value) + 1)
+                #setattr(node, 'ord', int(value) + 1)
+                if node.ord not in(int(value) + 1, int(value)):
+                    logging.warning(f"Mismatch: expected {node.ord=}, but found {int(value) + 1} {line=}")
 
             elif attribute_name == 'coref':
                 if value and value != '_':
-                    entities = value.split("|")
+                    # LitBank always separates chunks by a vertical bar, e.g. (13)|10)
+                    # Summ-it++v2 does not, e.g. (13)10)
+                    if '|' in value:
+                        chunks = value.split("|")
+                    else:
+                        chunks = [x for x in re.split(r'(\([^()]+\)?|[^()]+\))', value) if x]
                     modified_entities = []
                     escaped_docname = self._docname.replace("-", "")
-                    for entity in entities:
+                    for entity in chunks:
                         entity_num = entity.replace("(", "").replace(")","")
                         modified_entity = f"{escaped_docname}_e{entity_num}--1"
                         if entity.startswith("(") and entity.endswith(")"):
@@ -108,3 +130,14 @@ class Conll2012(udapi.block.read.conllu.Conllu):
             return None
 
         return root
+
+    def read_trees(self):
+        if self.max_docs:
+            raise NotImplementedError("TODO implement max_docs in read.Conll2012")
+        # Corref-PT does not put an empty line before #end document,
+        # so we need to split both on #end document and empty lines.
+        return [self.read_tree_from_lines(s.split('\n')) for s in
+                re.split(r'\n\n+|\n#end document\n', self.filehandle.read()) if s]
+
+    def read_tree(self):
+        raise NotImplementedError("TODO implement read_tree in read.Conll2012")
