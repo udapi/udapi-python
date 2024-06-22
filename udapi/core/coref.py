@@ -603,7 +603,15 @@ def load_coref_from_misc(doc, strict=True):
                 last_word = mention.words[-1]
                 if node.root is not last_word.root:
                     # TODO cross-sentence mentions
-                    raise ValueError(f"Cross-sentence mentions not supported yet: {chunk} at {node}")
+                    if strict:
+                        raise ValueError(f"Cross-sentence mentions not supported yet: {chunk} at {node}")
+                    else:
+                        logging.warning(f"Cross-sentence mentions not supported yet: {chunk} at {node}. Deleting.")
+                        entity = mention.entity
+                        mention.words = []
+                        entity._mentions.remove(mention)
+                        if not entity._mentions:
+                            del entities[entity.eid]
                 for w in node.root.descendants_and_empty:
                     if last_word.precedes(w):
                         mention._words.append(w)
@@ -720,14 +728,14 @@ def load_coref_from_misc(doc, strict=True):
                     entities[ante_str] = CorefEntity(ante_str)
                 entities[this_str].split_ante.append(entities[ante_str])
 
-    for entity_name, mentions in unfinished_mentions.items():
-        for mention in mentions:
-            logging.warning(f"Mention {entity_name} opened at {mention.head}, but not closed. Deleting.")
+    for eid, mentions in unfinished_mentions.items():
+        for mention, head_idx in mentions:
+            logging.warning(f"Mention {eid} opened at {mention.head}, but not closed. Deleting.")
             entity = mention.entity
             mention.words = []
             entity._mentions.remove(mention)
             if not entity._mentions:
-                del entities[name]
+                del entities[eid]
 
     # c=doc.coref_entities should be sorted, so that c[0] < c[1] etc.
     # In other words, the dict should be sorted by the values (according to CorefEntity.__lt__),
