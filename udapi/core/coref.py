@@ -623,7 +623,9 @@ def load_coref_from_misc(doc, strict=True):
                         mention.head = mention.words[head_idx - 1]
                     except IndexError as err:
                         _error(f"Invalid head_idx={head_idx} for {mention.entity.eid} "
-                                f"closed at {node} with words={mention.words}", 1)
+                               f"closed at {node} with words={mention.words}", strict)
+                        if not strict and head_idx > len(mention.words):
+                            mention.head = mention.words[-1]
                 if subspan_idx and subspan_idx == total_subspans:
                     m = discontinuous_mentions[eid].pop()
                     if m is not mention:
@@ -643,7 +645,8 @@ def load_coref_from_misc(doc, strict=True):
                         try:
                             head_idx = int(value)
                         except ValueError as err:
-                            raise ValueError(f"Non-integer {value} as head index in {chunk} in {node}: {err}")
+                            _error(f"Non-integer {value} as head index in {chunk} in {node}: {err}", strict)
+                            head_idx = 1
                     elif name == 'other':
                         if other:
                             new_other = OtherDualDict(value)
