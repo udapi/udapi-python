@@ -14,6 +14,10 @@ class SetSpaceAfterFromText(Block):
     """Block for setting of the SpaceAfter=No MISC attribute according to the sentence text."""
 
     def process_tree(self, root):
+        # Empty nodes cannot have 'SpaceAfter=No', so make sure the file is valid.
+        for empty_node in root.empty_nodes:
+            del empty_node.misc['SpaceAfter']
+
         text = root.text
         if text is None:
             raise ValueError('Tree %s has no text, cannot use ud.SetSpaceAfterFromText' % root)
