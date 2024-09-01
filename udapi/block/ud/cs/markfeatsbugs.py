@@ -30,7 +30,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             pass
         # NOUNS ################################################################
         elif node.upos == 'NOUN':
-            self.check_required_features(node, ['Gender', 'Number', 'Case', 'Polarity'])
+            self.check_required_features(node, ['Gender', 'Number', 'Case'])
             if node.feats['VerbForm'] == 'Vnoun':
                 # verbal nouns: bytí, dělání, ...
                 self.check_allowed_features(node, {
@@ -38,7 +38,6 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'Foreign': ['Yes']
                 })
             elif node.feats['Gender'] == 'Masc':
@@ -48,18 +47,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'Foreign': ['Yes']})
             else:
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'Foreign': ['Yes']})
         # PROPER NOUNS #########################################################
         elif node.upos == 'PROPN':
-            self.check_required_features(node, ['Gender', 'Number', 'Case', 'Polarity'])
+            self.check_required_features(node, ['Gender', 'Number', 'Case'])
             if node.feats['Gender'] == 'Masc':
                 self.check_required_features(node, ['Animacy'])
                 self.check_allowed_features(node, {
@@ -67,7 +64,6 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'NameType': ['Giv', 'Sur', 'Geo'],
                     'Foreign': ['Yes']})
             else:
@@ -75,7 +71,6 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Polarity': ['Pos', 'Neg'],
                     'NameType': ['Giv', 'Sur', 'Geo'],
                     'Foreign': ['Yes']})
         # ADJECTIVES ###########################################################
