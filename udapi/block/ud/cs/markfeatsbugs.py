@@ -343,7 +343,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Poss': ['Yes'],
                     'Person': ['3'],
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
-                    'Gender[psor]': ['Masc,Neut']
+                    'Gender[psor]': ['Masc,Neut'],
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'] # uninflected in modern Czech, but old Czech annotations sometime indicate the case by context
                 })
             elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)?$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
