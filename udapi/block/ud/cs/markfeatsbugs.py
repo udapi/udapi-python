@@ -395,7 +395,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Unlike other determiners, it allows Variant=Short: sám, sama, samu, samo, sami, samy.
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Emp'], 'Variant': ['Short']})
             elif node.feats['NumType'] == 'Card': # pronominal quantifiers 'mnoho', 'málo', 'několik' etc.
-                if node.lemma eq 'nejeden':
+                if node.lemma == 'nejeden':
                     self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']})
                 else:
                     self.check_required_features(node, ['PronType', 'NumType', 'Case'])
