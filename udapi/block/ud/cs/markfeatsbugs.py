@@ -336,7 +336,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(jeho|jejich|jich)(ž(to)?)?$', node.form.lower()):
+            if re.match(r'^(jeho|jejich|jich)(ž(e|to)?)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Prs', 'Rel'],
@@ -345,7 +345,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
                     'Gender[psor]': ['Masc,Neut']
                 })
-            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(to)?)?$', node.form.lower()):
+            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)?$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
                 # Congruent gender is annotated only in singular. Masculine and
                 # neuter are merged even in nominative. Feminine singular does
