@@ -396,7 +396,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Emp'], 'Variant': ['Short']})
             elif node.feats['NumType'] == 'Card': # pronominal quantifiers 'mnoho', 'málo', 'několik' etc.
                 if node.lemma eq 'nejeden':
-                    self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']}])
+                    self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']})
                 else:
                     self.check_required_features(node, ['PronType', 'NumType', 'Case'])
                     self.check_allowed_features(node, {
