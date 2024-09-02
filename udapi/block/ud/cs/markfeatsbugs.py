@@ -475,15 +475,26 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # imperatives (although passive imperatives are a combination
                 # of the active imperative and a passive participle). It is
                 # also not annotated at the conditional auxiliary 'bych', 'bys', 'by', 'bychom', 'byste'.
+                # Conditional "by" has no person and number (it is typically
+                # 3rd person but it could be other persons, too, as in "ty by
+                # ses bál").
                 if node.feats['Mood'] == 'Cnd':
-                    self.check_required_features(node, ['Mood', 'Person'])
-                    self.check_allowed_features(node, {
-                        'Aspect': ['Imp', 'Perf'],
-                        'VerbForm': ['Fin'],
-                        'Mood': ['Cnd'],
-                        'Person': ['1', '2', '3'],
-                        'Number': ['Sing', 'Dual', 'Plur'] # optional: it is not annotated in the third person
-                    })
+                    if node.form.lower() == 'by':
+                        self.check_required_features(node, ['Mood'])
+                        self.check_allowed_features(node, {
+                            'Aspect': ['Imp'],
+                            'VerbForm': ['Fin'],
+                            'Mood': ['Cnd']
+                        })
+                    else:
+                        self.check_required_features(node, ['Mood', 'Person', 'Number'])
+                        self.check_allowed_features(node, {
+                            'Aspect': ['Imp'],
+                            'VerbForm': ['Fin'],
+                            'Mood': ['Cnd'],
+                            'Person': ['1', '2'],
+                            'Number': ['Sing', 'Dual', 'Plur']
+                        })
                 elif node.feats['Mood'] == 'Imp':
                     self.check_required_features(node, ['Mood', 'Person', 'Number', 'Polarity'])
                     self.check_allowed_features(node, {
