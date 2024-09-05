@@ -336,12 +336,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
                     'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut'],
                     'Gender': ['Masc', 'Fem', 'Neut'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
+                    'Animacy': ['Anim', 'Inan'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'] # uninflected in modern Czech, but old Czech annotations sometime indicate the case by context
+                    # PrepCase is not allowed when it is a possessive determiner because no n-form can be used (jeho dům VS. na jeho dům).
+                    # Compare with genitive/accusative of the pronoun "on", there the form changes after preposition and PrepCase must be annotated
+                    # (jeho se bojím VS. bez něho se neobejdu).
                 })
             # Relative possessive determiners 'jehož' and 'jejichž' behave similarly
             # to the personal possessive determiners but they do not have Person.
-            elif re.match(r'^(jeho|jejich|jich)(ž(e|to)?)$', node.form.lower()):
+            elif re.match(r'^(jeho|jejich|jich)ž(e|to)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Rel'],
@@ -349,8 +353,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
                     'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut'],
                     'Gender': ['Masc', 'Fem', 'Neut'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
+                    'Animacy': ['Anim', 'Inan'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'] # uninflected in modern Czech, but old Czech annotations sometime indicate the case by context
+                    # PrepCase is not allowed when it is a possessive determiner (muž, jehož manželka zahynula při nehodě) because no n-form can be used
+                    # (after preposition: muž, na jehož manželku jste si stěžoval). Compare with genitive/accusative of the relative pronoun "jenž",
+                    # there the form changes after preposition and PrepCase must be annotated (muž, jehož se bojím VS. muž, bez něhož se neobejdeme).
                 })
             # Feminine personal possessive determiner.
             elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
