@@ -101,7 +101,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 if node.feats['Gender'] == 'Masc':
                     self.check_required_features(node, ['NumType', 'Gender', 'Animacy', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Ord'],
+                        'NumType': ['Ord', 'Mult'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
@@ -110,7 +110,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 else:
                     self.check_required_features(node, ['NumType', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Ord'],
+                        'NumType': ['Ord', 'Mult'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
