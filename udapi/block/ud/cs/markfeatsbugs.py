@@ -434,7 +434,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['1', '2'],
                         'Number[psor]': ['Sing', 'Plur']
                     })
-            elif re.match(r'^(samý)$', node.lemma):
+            elif re.match(r'^(sám|samý)$', node.lemma):
+                # The above condition looks at both lemma options, although only one lemma is assumed.
+                # However, in New Czech data the one lemma is "samý" while in Old Czech data it is "sám".
                 # Unlike other determiners, it allows Variant=Short: sám, sama, samu, samo, sami, samy.
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Emp'], 'Variant': ['Short']})
             elif node.feats['NumType'] == 'Card': # pronominal quantifiers 'mnoho', 'málo', 'několik' etc.
