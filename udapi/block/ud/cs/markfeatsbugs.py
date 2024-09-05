@@ -215,10 +215,13 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                                 'Person': ['3']
                             })
                         elif node.feats['Variant'] == 'Short': # ho, mu
-                            # The short (clitic) forms do not have PrepCase.
+                            # The short (clitic) forms do not have PrepCase in Modern Czech
+                            # but Old Czech has also 'jmu' (besides 'jemu' and 'mu'), which
+                            # is also annotated as Variant=Short and PrepCase=Npr.
                             self.check_adjective_like(node, ['PronType', 'Person'], {
                                 'PronType': ['Prs'],
                                 'Person': ['3'],
+                                'PrepCase': ['Npr'],
                                 'Variant': ['Short']
                             })
                         else: # jeho, něho, jemu, němu, jej, něj, něm, jím, ním, jí, ní, ji, ni, je, ně
@@ -320,10 +323,10 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(jeho|jejich|jich)(ž(e|to)?)?$', node.form.lower()):
+            if re.match(r'^(jeho|jejich|jich)$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Prs', 'Rel'],
+                    'PronType': ['Prs'],
                     'Poss': ['Yes'],
                     'Person': ['3'],
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
@@ -332,7 +335,21 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'] # uninflected in modern Czech, but old Czech annotations sometime indicate the case by context
                 })
-            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)?$', node.form.lower()):
+            # Relative possessive determiners 'jehož' and 'jejichž' behave similarly
+            # to the personal possessive determiners but they do not have Person.
+            elif re.match(r'^(jeho|jejich|jich)(ž(e|to)?)$', node.form.lower()):
+                self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]'])
+                self.check_allowed_features(node, {
+                    'PronType': ['Rel'],
+                    'Poss': ['Yes'],
+                    'Number[psor]': ['Sing', 'Dual', 'Plur'],
+                    'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut'],
+                    'Gender': ['Masc', 'Fem', 'Neut'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
+                    'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
+                    'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'] # uninflected in modern Czech, but old Czech annotations sometime indicate the case by context
+                })
+            # Feminine personal possessive determiner.
+            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
                 # Congruent gender is annotated only in singular. Masculine and
                 # neuter are merged even in nominative. Feminine singular does
@@ -341,7 +358,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 if node.feats['Number'] == 'Sing':
                     self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'PronType': ['Prs', 'Rel'],
+                        'PronType': ['Prs'],
                         'Poss': ['Yes'],
                         'Person': ['3'],
                         'Number[psor]': ['Sing'],
@@ -353,9 +370,37 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 else:
                     self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'PronType': ['Prs', 'Rel'],
+                        'PronType': ['Prs'],
                         'Poss': ['Yes'],
                         'Person': ['3'],
+                        'Number[psor]': ['Sing'],
+                        'Gender[psor]': ['Fem'],
+                        'Number': ['Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
+            # Feminine relative possessive determiner.
+            elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)$', node.form.lower()):
+                # The feminine possessive 'jejíž' slightly inflects, unlike 'jehož' and 'jejichž'.
+                # Congruent gender is annotated only in singular. Masculine and
+                # neuter are merged even in nominative. Feminine singular does
+                # not distinguish case in PDT but we need it in Old Czech at
+                # least for 'jejiej'.
+                if node.feats['Number'] == 'Sing':
+                    self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Rel'],
+                        'Poss': ['Yes'],
+                        'Number[psor]': ['Sing'],
+                        'Gender[psor]': ['Fem'],
+                        'Gender': ['Masc,Neut', 'Fem'],
+                        'Number': ['Sing'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
+                else:
+                    self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Rel'],
+                        'Poss': ['Yes'],
                         'Number[psor]': ['Sing'],
                         'Gender[psor]': ['Fem'],
                         'Number': ['Dual', 'Plur'],
@@ -527,16 +572,44 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Polarity': ['Pos', 'Neg']
                     })
             else: # converb
-                self.check_required_features(node, ['Tense', 'Number', 'Voice', 'Polarity'])
-                self.check_allowed_features(node, {
-                    'Aspect': ['Imp', 'Perf'],
-                    'VerbForm': ['Conv'],
-                    'Tense': ['Past', 'Pres'],
-                    'Voice': ['Act'],
-                    'Number': ['Sing', 'Dual', 'Plur'],
-                    'Gender': ['Masc', 'Fem', 'Neut'], # annotated only in singular, and no animacy
-                    'Polarity': ['Pos', 'Neg']
-                })
+                # Old Czech data annotate converb gender by context rather than form
+                # (because the form was different than in Modern Czech) and for
+                # masculines they also include animacy. In Modern Czech animacy is
+                # currently not annotated and Masc,Neut gender is merged.
+                if node.feats['Number'] == 'Sing':
+                    if node.feats['Gender'] == 'Masc':
+                        self.check_required_features(node, ['Tense', 'Gender', 'Animacy', 'Number', 'Voice', 'Polarity'])
+                        self.check_allowed_features(node, {
+                            'Aspect': ['Imp', 'Perf'],
+                            'VerbForm': ['Conv'],
+                            'Tense': ['Past', 'Pres'],
+                            'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
+                            'Number': ['Sing'],
+                            'Gender': ['Masc'],
+                            'Animacy': ['Anim', 'Inan'],
+                            'Polarity': ['Pos', 'Neg']
+                        })
+                    else:
+                        self.check_required_features(node, ['Tense', 'Gender', 'Number', 'Voice', 'Polarity'])
+                        self.check_allowed_features(node, {
+                            'Aspect': ['Imp', 'Perf'],
+                            'VerbForm': ['Conv'],
+                            'Tense': ['Past', 'Pres'],
+                            'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
+                            'Number': ['Sing'],
+                            'Gender': ['Fem', 'Neut'],
+                            'Polarity': ['Pos', 'Neg']
+                        })
+                else:
+                    self.check_required_features(node, ['Tense', 'Number', 'Voice', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'Aspect': ['Imp', 'Perf'],
+                        'VerbForm': ['Conv'],
+                        'Tense': ['Past', 'Pres'],
+                        'Voice': ['Act'],
+                        'Number': ['Dual', 'Plur'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
             if node.feats['PronType'] != '':
