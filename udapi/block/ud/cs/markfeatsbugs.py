@@ -510,7 +510,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     })
         # VERBS AND AUXILIARIES ################################################
         elif re.match(r'^(VERB|AUX)$', node.upos):
-            self.check_required_features(node, ['Aspect', 'VerbForm'])
+            # All Czech verbs (and some adjectives and nouns) must have VerbForm.
+            # Almost all verbs have lexical Aspect but we cannot require it
+            # because there are a few biaspectual verbs (e.g. 'analyzovat') that
+            # do not have the feature.
+            self.check_required_features(node, ['VerbForm'])
             if node.feats['VerbForm'] == 'Inf':
                 # There is no voice. For some reason, PDT does not annotate that
                 # the infinitive form is active (while a passive infinitive is
