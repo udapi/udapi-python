@@ -250,9 +250,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # There is no Number. Někdo and nikdo behave like singular;
                 # kdo is by default singular as well but it also occurs as a subject
                 # of plural verbs.
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kdo to je?" use Rel.)
+                # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Case'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Int,Rel', 'Rel', 'Ind', 'Neg'],
+                    'PronType': ['Int,Rel', 'Int', 'Rel', 'Ind', 'Neg'],
                     'Gender': ['Masc'],
                     'Animacy': ['Anim'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
@@ -266,9 +268,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 ###!!! animacy. For now, let's at least make animacy an optional
                 ###!!! feature (I see that we already do not fill it in the Old
                 ###!!! Czech data).
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, co to je?" use Rel.)
+                # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_required_features(node, ['PronType', 'Case'])
                 self.check_allowed_features(node, {
-                    'PronType': ['Int,Rel', 'Rel', 'Ind', 'Neg'],
+                    'PronType': ['Int,Rel', 'Int', 'Rel', 'Ind', 'Neg'],
                     'Animacy': ['Inan'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
@@ -434,7 +438,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             else:
-                self.check_adjective_like(node, ['PronType'], {'PronType': ['Dem', 'Int,Rel', 'Rel', 'Ind', 'Neg', 'Tot']})
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
+                # New Czech data, in particular PDT, use Int,Rel regardless of context.
+                self.check_adjective_like(node, ['PronType'], {'PronType': ['Dem', 'Int,Rel', 'Int', 'Rel', 'Ind', 'Neg', 'Tot']})
         # NUMERALS #############################################################
         elif node.upos == 'NUM':
             self.check_required_features(node, ['NumType', 'NumForm'])
@@ -614,8 +620,10 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'ADV':
             if node.feats['PronType'] != '':
                 # Pronominal adverbs are neither compared nor negated.
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
+                # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind', 'Neg', 'Tot']
                 })
             elif node.feats['Degree'] != '':
                 # Adverbs that are compared can also be negated.
