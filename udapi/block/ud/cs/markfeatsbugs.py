@@ -503,7 +503,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # approach is defined and implemented in the data.
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Card'],
+                        'NumType': ['Card', 'Sets'],
                         'NumForm': ['Word'],
                         'Number': ['Sing', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
