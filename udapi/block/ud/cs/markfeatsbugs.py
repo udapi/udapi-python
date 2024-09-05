@@ -320,6 +320,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'PronType': ['Rel'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom']
                     })
