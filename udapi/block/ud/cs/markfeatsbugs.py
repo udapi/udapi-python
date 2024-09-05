@@ -495,11 +495,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                         })
                 else:
+                    # In PDT, cardinal numerals higher than four in nominative/accusative/vocative
+                    # have Number=Sing instead of Plur! It may be motivated by the default
+                    # agreement they trigger on verbs (but they don't have Gender=Neut).
+                    # It does not make much sense but we must allow Sing before a better
+                    # approach is defined and implemented in the data.
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
                         'NumForm': ['Word'],
-                        'Number': ['Plur'],
+                        'Number': ['Sing', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
         # VERBS AND AUXILIARIES ################################################
