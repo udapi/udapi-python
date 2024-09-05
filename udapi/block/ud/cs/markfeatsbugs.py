@@ -618,7 +618,17 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     })
         # ADVERBS ##############################################################
         elif node.upos == 'ADV':
-            if node.feats['PronType'] != '':
+            if node.feats['NumType'] != '':
+                # Adverbial multiplicative numerals (jednou, dvakrát, třikrát)
+                # belong here. They have also pronominal counterparts (kolikrát,
+                # tolikrát, několikrát).
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
+                # New Czech data, in particular PDT, use Int,Rel regardless of context.
+                self.check_allowed_features(node, {
+                    'NumType': ['Mult'],
+                    'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind']
+                })
+            elif node.feats['PronType'] != '':
                 # Pronominal adverbs are neither compared nor negated.
                 # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
                 # New Czech data, in particular PDT, use Int,Rel regardless of context.
