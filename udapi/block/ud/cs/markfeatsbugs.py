@@ -671,7 +671,10 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins']
             })
         # THE REST: NO FEATURES ################################################
+        # (OR UNDEFINED UPOS) ##################################################
         else:
+            if not re.match(r"^(CCONJ|SCONJ|PART|INTJ|PUNCT|SYM|X)$", node.upos):
+                self.bug(node, 'UnknownUpos' + node.upos)
             self.check_allowed_features(node, {})
 
     def check_adjective_like(self, node, r0, a0):
