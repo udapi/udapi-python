@@ -478,6 +478,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     if self.pdt20:
                         self.check_allowed_features(node, {
                             'NumType': ['Card'],
+                            'PronType': ['Tot'], # for 'oba'
                             'NumForm': ['Word'],
                             'Gender': ['Masc', 'Masc,Neut', 'Fem', 'Fem,Neut', 'Neut'], # similarly to determiners, genders are merged in some slots of the paradigm
                             'Number': ['Dual', 'Plur'],
@@ -486,6 +487,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     else:
                         self.check_allowed_features(node, {
                             'NumType': ['Card'],
+                            'PronType': ['Tot'], # for 'oba'
                             'NumForm': ['Word'],
                             'Gender': ['Masc', 'Fem', 'Neut'],
                             'Animacy': ['Anim', 'Inan'],
