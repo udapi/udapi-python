@@ -552,6 +552,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Aspect': ['Imp', 'Perf'],
                         'VerbForm': ['Fin'],
                         'Mood': ['Imp'],
+                        'Voice': ['Act'], # optional in Old Czech data, not used with imperatives in Modern Czech data (at least not yet)
                         'Person': ['1', '2', '3'], # 3rd person imperative occasionally occurs in old Czech (but the form is identical to 2nd person)
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Polarity': ['Pos', 'Neg']
