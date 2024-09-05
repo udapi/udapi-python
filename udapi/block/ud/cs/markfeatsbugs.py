@@ -375,7 +375,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['3'],
                         'Number[psor]': ['Sing'],
                         'Gender[psor]': ['Fem'],
-                        'Gender': ['Masc,Neut', 'Fem'],
+                        'Gender': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
+                        'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
