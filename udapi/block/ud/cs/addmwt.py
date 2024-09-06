@@ -60,7 +60,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         # in MISC. (These are annotation conventions used for Old Czech in the
         # Hičkok project.)
         if node.misc['RETOKENIZE'] == 'rozdělit':
-            subtokens = ' '.split(node.misc['SUBTOKENS'])
+            subtokens = node.misc['SUBTOKENS'].split()
             if len(subtokens) != 2:
                 logging.warning("MISC SUBTOKENS='%s' has unexpected number of subtokens." % node.misc['SUBTOKENS'])
                 return None
