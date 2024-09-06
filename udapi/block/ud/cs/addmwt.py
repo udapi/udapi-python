@@ -1,5 +1,6 @@
 """Block ud.cs.AddMwt for heuristic detection of multi-word tokens."""
 import udapi.block.ud.addmwt
+import logging
 
 # Define static rules for 'aby', 'kdyby' and similar forms.
 MWTS = {
