@@ -54,20 +54,45 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         if analysis is not None:
             return analysis
         # If the node did not match any of the static rules defined in MWTS,
-        # check it against the "dynamic" rule below. The enclitic 'ť' will be
+        # check it against the "dynamic" rules below. The enclitic 'ť' will be
         # separated from its host but only if it has been marked by an annotator
-        # in MISC.
-        if node.form.lower().endswith('ť') and node.misc['RETOKENIZE'] == 'rozdělit':
-            return {
-                'form':   node.form.lower()[:-1] + ' ť',
-                'lemma':  '* ť',
-                'upos':   '* PART',
-                'xpos':   '* TT-------------',
-                'feats':  '* _',
-                'deprel': '* discourse',
-                'main':   0,
-                'shape':  'subtree',
-            }
+        # in MISC. (These are annotation conventions used for Old Czech in the
+        # Hičkok project.)
+        if node.misc['RETOKENIZE'] == 'rozdělit':
+            subtokens = ' '.split(node.misc['SUBTOKENS'])
+            if len(subtokens) != 2:
+                logging.warning("MISC SUBTOKENS='%s' has unexpected number of subtokens." % node.misc['SUBTOKENS'])
+                return None
+            token_from_subtokens = ''.join(subtokens)
+            if token_from_subtokens != node.form:
+                logging.warning("Concatenation of MISC SUBTOKENS='%s' does not yield the FORM '%s'." % (node.misc['SUBTOKENS'], node.form))
+                return None
+            if subtokens[1] == 's':
+                node.misc['RETOKENIZE'] = ''
+                node.misc['SUBTOKENS'] = ''
+                return {
+                    'form':   subtokens[0] + ' jsi',
+                    'lemma':  '* být',
+                    'upos':   '* AUX',
+                    'xpos':   '* VB-S---2P-AAI--',
+                    'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
+                    'deprel': '* aux',
+                    'main':   0,
+                    'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
+                }
+            if subtokens[1] == 'ť':
+                node.misc['RETOKENIZE'] = ''
+                node.misc['SUBTOKENS'] = ''
+                return {
+                    'form':   node.form.lower()[:-1] + ' ť',
+                    'lemma':  '* ť',
+                    'upos':   '* PART',
+                    'xpos':   '* TT-------------',
+                    'feats':  '* _',
+                    'deprel': '* discourse',
+                    'main':   0,
+                    'shape':  'subtree',
+                }
         return None
 
     def postprocess_mwt(self, mwt):
