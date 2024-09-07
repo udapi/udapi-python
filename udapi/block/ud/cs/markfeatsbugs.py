@@ -439,6 +439,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # However, in New Czech data the one lemma is "samý" while in Old Czech data it is "sám".
                 # Unlike other determiners, it allows Variant=Short: sám, sama, samu, samo, sami, samy.
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Emp'], 'Variant': ['Short']})
+            elif node.lemma == 'žádný':
+                # In Old Czech, this determiner also allows Variant=Short: žáden, žádna, žádnu, žádno, žádni, žádny.
+                self.check_adjective_like(node, ['PronType'], {'PronType': ['Neg'], 'Variant': ['Short']})
             elif node.feats['NumType'] == 'Card': # pronominal quantifiers 'mnoho', 'málo', 'několik' etc.
                 if node.lemma == 'nejeden':
                     self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']})
