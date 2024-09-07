@@ -248,8 +248,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         })
             elif re.search(r'k[dt]o', node.lemma): # kdo (kto), kdož, někdo, nikdo
                 # There is no Number. Někdo and nikdo behave like singular;
-                # kdo is by default singular as well but it also occurs as a subject
-                # of plural verbs.
+                # kdo is by default singular as well but it also occurs as subject
+                # of plural verbs ("ti, kdo nepřišli včas, byli vyloučeni").
                 # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kdo to je?" use Rel.)
                 # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Case'])
@@ -259,7 +259,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
-            elif re.match(r'^(co|což|něco|nic|nicož)$', node.lemma):
+            elif re.match(r'^(co|což|něco|lečco|lecco|nic|nicož)$', node.lemma):
                 # Although these pronouns behave by default as neuter singular,
                 # no Gender and Number is annotated. However, quite unusually,
                 # there is Animacy=Inan without Gender.
