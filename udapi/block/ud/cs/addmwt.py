@@ -59,18 +59,17 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         # separated from its host but only if it has been marked by an annotator
         # in MISC. (These are annotation conventions used for Old Czech in the
         # Hičkok project.)
-        if node.misc['RETOKENIZE'] == 'rozdělit':
-            subtokens = node.misc['SUBTOKENS'].split()
+        if node.misc['AddMwt'] != '':
+            subtokens = node.misc['AddMwt'].split()
             if len(subtokens) != 2:
-                logging.warning("MISC SUBTOKENS='%s' has unexpected number of subtokens." % node.misc['SUBTOKENS'])
+                logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
                 return None
             token_from_subtokens = ''.join(subtokens)
             if token_from_subtokens != node.form:
-                logging.warning("Concatenation of MISC SUBTOKENS='%s' does not yield the FORM '%s'." % (node.misc['SUBTOKENS'], node.form))
+                logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
                 return None
             if subtokens[1] == 's':
-                node.misc['RETOKENIZE'] = ''
-                node.misc['SUBTOKENS'] = ''
+                node.misc['AddMwt'] = ''
                 return {
                     'form':   subtokens[0] + ' jsi',
                     'lemma':  '* být',
@@ -82,8 +81,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
                 }
             if subtokens[1] == 'ť':
-                node.misc['RETOKENIZE'] = ''
-                node.misc['SUBTOKENS'] = ''
+                node.misc['AddMwt'] = ''
                 return {
                     'form':   node.form.lower()[:-1] + ' ť',
                     'lemma':  '* ť',
