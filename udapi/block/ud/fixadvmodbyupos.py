@@ -29,10 +29,14 @@ class FixAdvmodByUpos(Block):
                 node.deprel = 'discourse'
             else:
                 node.deprel = 'dep'
-        ###!!! The following are not advmod so they should probably have their own block or this block should have a different name.
+        ###!!! The following are not advmod so they should probably have their
+        ###!!! own block or this block should have a different name.
         elif node.udeprel == 'expl':
             if node.upos == 'AUX':
                 node.deprel = 'aux'
         elif node.udeprel == 'mark':
             if node.upos == 'PRON':
                 node.deprel = 'nsubj' # it could be also obj, iobj, obl or nmod; just guessing what might be more probable
+        elif node.udeprel == 'det':
+            if node.upos == 'ADJ':
+                node.deprel = 'amod'
