@@ -41,6 +41,8 @@ for prep in 'na za o'.split():
         'form': prep + ' co',
         'lemma': prep + ' co',
         'upos': 'ADP PRON',
+        'xpos': 'RR--4---------- PQ--4----------',
+        'feats': 'AdpType=Prep|Case=Acc Animacy=Inan|Case=Acc|PronType=Int,Rel',
         'deprel': 'case *',
         'main': 1,
         'shape': 'subtree',
