@@ -7,7 +7,6 @@ Usage: cat *.conllu | udapy -HAMX layout=compact ud.cs.MarkFeatsBugs > bugs.html
 Windows: python udapy read.Conllu files="a.conllu,b.conllu" merge=1 ud.cs.MarkFeatsBugs write.TextModeTreesHtml files="bugs.html" marked_only=1 layout=compact attributes=form,lemma,upos,xpos,feats,deprel,misc
 """
 import udapi.block.ud.markfeatsbugs
-import logging
 import re
 
 class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
