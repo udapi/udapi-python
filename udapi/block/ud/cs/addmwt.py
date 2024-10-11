@@ -53,6 +53,9 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
 
     def multiword_analysis(self, node):
         """Return a dict with MWT info or None if `node` does not represent a multiword token."""
+        # Avoid adding a MWT if the current node already is part of an MWT.
+        if node.multiword_token:
+            return None
         analysis = MWTS.get(node.form.lower(), None)
         if analysis is not None:
             return analysis
