@@ -85,6 +85,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'NameType': ['Giv', 'Sur'], # for possessive adjectives derived from personal names
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
                 else:
                     self.check_required_features(node, ['Poss', 'Gender[psor]', 'Gender', 'Number', 'Case'])
@@ -95,6 +96,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'NameType': ['Giv', 'Sur'], # for possessive adjectives derived from personal names
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
             elif node.feats['NumType'] == 'Ord' or node.feats['NumType'] == 'Mult': # ordinal numerals are a subtype of adjectives; same for some multiplicative numerals (dvojí, trojí)
                 if node.feats['Gender'] == 'Masc':
@@ -105,6 +107,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
                 else:
                     self.check_required_features(node, ['NumType', 'Gender', 'Number', 'Case'])
@@ -113,6 +116,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
             elif node.feats['VerbForm'] == 'Part': # participles (except l-participles) are a subtype of adjectives
                 self.check_required_features(node, ['VerbForm', 'Voice'])
@@ -130,6 +134,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                             'Polarity': ['Pos', 'Neg'],
                             'Variant': ['Short'],
+                            'Emph': ['Yes'],
                             'Foreign': ['Yes']})
                     else:
                         self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Tense', 'Gender', 'Number', 'Case', 'Polarity'])
@@ -143,6 +148,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                             'Polarity': ['Pos', 'Neg'],
                             'Variant': ['Short'],
+                            'Emph': ['Yes'],
                             'Foreign': ['Yes']})
                 else:
                     if node.feats['Gender'] == 'Masc':
@@ -158,6 +164,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Polarity': ['Pos', 'Neg'],
                             'Degree': ['Pos', 'Cmp', 'Sup'],
                             'Variant': ['Short'],
+                            'Emph': ['Yes'],
                             'Foreign': ['Yes']})
                     else:
                         self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Gender', 'Number', 'Case', 'Polarity', 'Degree'])
@@ -171,6 +178,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Polarity': ['Pos', 'Neg'],
                             'Degree': ['Pos', 'Cmp', 'Sup'],
                             'Variant': ['Short'],
+                            'Emph': ['Yes'],
                             'Foreign': ['Yes']})
             else: # regular adjectives, including short forms
                 if node.feats['Gender'] == 'Masc':
@@ -183,6 +191,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Degree': ['Pos', 'Cmp', 'Sup'],
                         'Polarity': ['Pos', 'Neg'],
                         'Variant': ['Short'],
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
                 else:
                     self.check_required_features(node, ['Gender', 'Number', 'Case', 'Degree', 'Polarity'])
@@ -193,6 +202,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Degree': ['Pos', 'Cmp', 'Sup'],
                         'Polarity': ['Pos', 'Neg'],
                         'Variant': ['Short'],
+                        'Emph': ['Yes'],
                         'Foreign': ['Yes']})
         # PRONOUNS #############################################################
         elif node.upos == 'PRON':
@@ -729,7 +739,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         caller in parameters r0 (list) and a0 (dict).
         """
         required_features = []
-        allowed_featurs = {}
+        allowed_features = {}
         full_set = node.upos == 'ADJ' or not self.pdt20
         if full_set:
             # Even in the full set, animacy is only distinguished for the
