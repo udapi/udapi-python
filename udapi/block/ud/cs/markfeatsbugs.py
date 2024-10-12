@@ -363,11 +363,13 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             # Feminine personal possessive determiner.
             elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
-                # Congruent gender is annotated only in singular. Masculine and
-                # neuter are merged even in nominative. Feminine singular does
-                # not distinguish case in PDT but we need it in Old Czech at
-                # least for 'jejiej'.
-                if node.feats['Number'] == 'Sing':
+                # Congruent gender:
+                # - in PDT, only in singular; masculine and neuter are merged even in nominative
+                # - in Old Czech data, gender is disambiguated by context (no merging), even in dual and plural
+                # Case:
+                # - in PDT, not distinguished in feminine singular (její bota, její boty, její botě, její botu...)
+                # - in Old Czech data, distinguished always (and needed at least for 'jejiej')
+                if node.feats['Number'] == 'Sing' or not self.pdt20:
                     self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'PronType': ['Prs'],
@@ -394,18 +396,21 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             # Feminine relative possessive determiner.
             elif re.match(r'^(její|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)$', node.form.lower()):
                 # The feminine possessive 'jejíž' slightly inflects, unlike 'jehož' and 'jejichž'.
-                # Congruent gender is annotated only in singular. Masculine and
-                # neuter are merged even in nominative. Feminine singular does
-                # not distinguish case in PDT but we need it in Old Czech at
-                # least for 'jejiej'.
-                if node.feats['Number'] == 'Sing':
+                # Congruent gender:
+                # - in PDT, only in singular; masculine and neuter are merged even in nominative
+                # - in Old Czech data, gender is disambiguated by context (no merging), even in dual and plural
+                # Case:
+                # - in PDT, not distinguished in feminine singular (jejíž bota, jejíž boty, jejíž botě, jejíž botu...)
+                # - in Old Czech data, distinguished always (and needed at least for 'jejiejž')
+                if node.feats['Number'] == 'Sing' or not self.pdt20:
                     self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'PronType': ['Rel'],
                         'Poss': ['Yes'],
                         'Number[psor]': ['Sing'],
                         'Gender[psor]': ['Fem'],
-                        'Gender': ['Masc,Neut', 'Fem'],
+                        'Gender': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
+                        'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
