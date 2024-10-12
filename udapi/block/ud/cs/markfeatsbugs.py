@@ -369,7 +369,31 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Case:
                 # - in PDT, not distinguished in feminine singular (její bota, její boty, její botě, její botu...)
                 # - in Old Czech data, distinguished always (and needed at least for 'jejiej')
-                if node.feats['Number'] == 'Sing' or not self.pdt20:
+                if self.pdt20:
+                    if node.feats['Number'] == 'Sing':
+                        self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Prs'],
+                            'Poss': ['Yes'],
+                            'Person': ['3'],
+                            'Number[psor]': ['Sing'],
+                            'Gender[psor]': ['Fem'],
+                            'Gender': ['Masc,Neut', 'Fem'],
+                            'Number': ['Sing'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                    else:
+                        self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Prs'],
+                            'Poss': ['Yes'],
+                            'Person': ['3'],
+                            'Number[psor]': ['Sing'],
+                            'Gender[psor]': ['Fem'],
+                            'Number': ['Dual', 'Plur'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                else:
                     self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'PronType': ['Prs'],
@@ -377,20 +401,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['3'],
                         'Number[psor]': ['Sing'],
                         'Gender[psor]': ['Fem'],
-                        'Gender': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
-                        'Animacy': ['Anim', 'Inan'],
-                        'Number': ['Sing'],
-                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-                    })
-                else:
-                    self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
-                    self.check_allowed_features(node, {
-                        'PronType': ['Prs'],
-                        'Poss': ['Yes'],
-                        'Person': ['3'],
-                        'Number[psor]': ['Sing'],
-                        'Gender[psor]': ['Fem'],
-                        'Number': ['Dual', 'Plur'],
+                        'Gender': ['Masc', 'Neut', 'Fem'],
+                        'Animacy': ['Anim', 'Inan'], # only for Gender=Masc
+                        'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             # Feminine relative possessive determiner.
@@ -402,26 +415,38 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Case:
                 # - in PDT, not distinguished in feminine singular (jejíž bota, jejíž boty, jejíž botě, jejíž botu...)
                 # - in Old Czech data, distinguished always (and needed at least for 'jejiejž')
-                if node.feats['Number'] == 'Sing' or not self.pdt20:
+                if self.pdt20:
+                    if node.feats['Number'] == 'Sing':
+                        self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Poss': ['Yes'],
+                            'Number[psor]': ['Sing'],
+                            'Gender[psor]': ['Fem'],
+                            'Gender': ['Masc,Neut', 'Fem'],
+                            'Number': ['Sing'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                    else:
+                        self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
+                        self.check_allowed_features(node, {
+                            'PronType': ['Rel'],
+                            'Poss': ['Yes'],
+                            'Number[psor]': ['Sing'],
+                            'Gender[psor]': ['Fem'],
+                            'Number': ['Dual', 'Plur'],
+                            'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        })
+                else:
                     self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'PronType': ['Rel'],
                         'Poss': ['Yes'],
                         'Number[psor]': ['Sing'],
                         'Gender[psor]': ['Fem'],
-                        'Gender': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
-                        'Animacy': ['Anim', 'Inan'],
-                        'Number': ['Sing'],
-                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
-                    })
-                else:
-                    self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]', 'Gender[psor]', 'Number', 'Case'])
-                    self.check_allowed_features(node, {
-                        'PronType': ['Rel'],
-                        'Poss': ['Yes'],
-                        'Number[psor]': ['Sing'],
-                        'Gender[psor]': ['Fem'],
-                        'Number': ['Dual', 'Plur'],
+                        'Gender': ['Masc', 'Neut', 'Fem'],
+                        'Animacy': ['Anim', 'Inan'], # only for Gender=Masc
+                        'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             elif node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
