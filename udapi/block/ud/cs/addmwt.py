@@ -1,5 +1,6 @@
 """Block ud.cs.AddMwt for heuristic detection of multi-word tokens."""
 import udapi.block.ud.addmwt
+import re
 import logging
 
 # Define static rules for 'aby', 'kdyby' and similar forms.
@@ -58,6 +59,19 @@ for prep in 'na o pro za'.split():
         'upos': 'ADP PRON',
         'xpos': 'RR--4---------- PEZS4--3-------',
         'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
+# Additional contractions in Old Czech with vocalization.
+for prep in 'přěd'.split():
+    preplemma = re.sub(r"ě", r"e", prep)
+    MWTS[prep + 'eň'] = {
+        'form': prep + ' něj',
+        'lemma': preplemma + ' on',
+        'upos': 'ADP PRON',
+        'xpos': 'RV--4---------- PEZS4--3-------',
+        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
         'deprel': 'case *',
         'main': 1,
         'shape': 'subtree',
