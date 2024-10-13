@@ -77,6 +77,21 @@ for prep in 'přěd'.split():
         'shape': 'subtree',
     }
 
+# Define static rules for 'naňž', 'oňž', 'proňž', 'zaňž'.
+# Add them to the already existing dictionary MWTS.
+# naňž -> na + nějž
+for prep in 'na o pro za'.split():
+    MWTS[prep + 'ňž'] = {
+        'form': prep + ' nějž',
+        'lemma': prep + ' jenž',
+        'upos': 'ADP PRON',
+        'xpos': 'RR--4---------- P4ZS4---------2',
+        'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|PrepCase=Pre|PronType=Rel',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
+
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
 
