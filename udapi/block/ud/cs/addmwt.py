@@ -33,16 +33,31 @@ for v in MWTS.values():
     v['main'] = 0
     v['shape'] = 'siblings'
 
-# Define static rules for 'nač', 'zač', 'oč' (but not 'proč').
+# Define static rules for 'nač', 'oč', 'zač' (but not 'proč').
 # Add them to the already existing dictionary MWTS.
 # nač -> na + co
-for prep in 'na za o'.split():
+for prep in 'na o za'.split():
     MWTS[prep + 'č'] = {
         'form': prep + ' co',
         'lemma': prep + ' co',
         'upos': 'ADP PRON',
         'xpos': 'RR--4---------- PQ--4----------',
         'feats': 'AdpType=Prep|Case=Acc Animacy=Inan|Case=Acc|PronType=Int,Rel',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
+
+# Define static rules for 'naň', 'oň', 'proň', 'zaň'.
+# Add them to the already existing dictionary MWTS.
+# naň -> na + něj
+for prep in 'na o pro za'.split():
+    MWTS[prep + 'ň'] = {
+        'form': prep + ' něj',
+        'lemma': prep + ' on',
+        'upos': 'ADP PRON',
+        'xpos': 'RR--4---------- PEZS4--3-------',
+        'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
         'deprel': 'case *',
         'main': 1,
         'shape': 'subtree',
