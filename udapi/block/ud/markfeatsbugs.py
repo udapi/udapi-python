@@ -8,8 +8,6 @@ one and define the actual rules valid in that language.
 Usage (Czech example): cat *.conllu | udapy -HAMX layout=compact ud.cs.MarkFeatsBugs > bugs.html
 """
 from udapi.core.block import Block
-import logging
-import re
 
 class MarkFeatsBugs(Block):
 
