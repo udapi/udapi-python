@@ -485,11 +485,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 if node.lemma == 'nejeden':
                     self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']})
                 else:
+                    # Lemmas 'hodně' and 'málo' have Degree even if used as quantifiers and not adverbs:
+                    # hodně, více, nejvíce; málo, méně, nejméně
+                    # Lemmas 'mnoho' and 'málo' can be negated (nemnoho, nemálo).
                     self.check_required_features(node, ['PronType', 'NumType', 'Case'])
                     self.check_allowed_features(node, {
                         'PronType': ['Ind', 'Int', 'Rel', 'Dem'],
                         'NumType': ['Card'],
-                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                        'Degree': ['Pos', 'Cmp', 'Sup'],
+                        'Polarity': ['Pos', 'Neg']
                     })
             else:
                 # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
