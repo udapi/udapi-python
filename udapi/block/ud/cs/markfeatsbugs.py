@@ -689,30 +689,55 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # belong here. They have also pronominal counterparts (kolikrát,
                 # tolikrát, několikrát). There are also adverbial ordinal numerals
                 # (zaprvé, poprvé, zadruhé, podruhé).
-                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
+                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with question mark; indirect questions like "Ptal ses, kde to je?" use Rel.)
                 # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_allowed_features(node, {
                     'NumType': ['Mult', 'Ord'],
                     'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind']
                 })
-            elif node.feats['PronType'] != '':
-                # Pronominal adverbs are neither compared nor negated.
-                # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kde to je?" use Rel.)
-                # New Czech data, in particular PDT, use Int,Rel regardless of context.
-                self.check_allowed_features(node, {
-                    'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind', 'Neg', 'Tot']
-                })
-            elif node.feats['Degree'] != '':
-                # Adverbs that are compared can also be negated.
-                self.check_required_features(node, ['Degree', 'Polarity'])
-                self.check_allowed_features(node, {
-                    'Degree': ['Pos', 'Cmp', 'Sup'],
-                    'Polarity': ['Pos', 'Neg']
-                })
+            elif self.pdt20:
+                if node.feats['PronType'] != '':
+                    # Pronominal adverbs in PDT are neither compared nor negated.
+                    # New Czech data, in particular PDT, use Int,Rel regardless of context.
+                    self.check_allowed_features(node, {
+                        'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot']
+                    })
+                elif node.feats['Degree'] != '':
+                    # Adverbs that are compared can also be negated.
+                    self.check_required_features(node, ['Degree', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'Degree': ['Pos', 'Cmp', 'Sup'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
+                else:
+                    # The remaining adverbs are neither pronominal, nor compared or
+                    # negated.
+                    self.check_allowed_features(node, {})
             else:
-                # The remaining adverbs are neither pronominal, nor compared or
-                # negated.
-                self.check_allowed_features(node, {})
+                if node.feats['PronType'] == 'Tot':
+                    # Total adverbs in Old Czech can be negated: vždy, nevždy.
+                    # Then for consistence with other adverbs, we also require
+                    # Degree, although it will be always Pos.
+                    self.check_required_features(node, ['Degree', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Tot'],
+                        'Degree': ['Pos'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
+                elif node.feats['PronType'] != '':
+                    # Other pronominal adverbs are neither compared nor negated.
+                    # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with question mark; indirect questions like "Ptal ses, kde to je?" use Rel.)
+                    self.check_allowed_features(node, {
+                        'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg']
+                    })
+                else:
+                    # All other adverbs should have both Degree and Polarity,
+                    # although for some of them the values will always be Pos.
+                    self.check_required_features(node, ['Degree', 'Polarity'])
+                    self.check_allowed_features(node, {
+                        'Degree': ['Pos', 'Cmp', 'Sup'],
+                        'Polarity': ['Pos', 'Neg']
+                    })
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
             self.check_required_features(node, ['AdpType', 'Case'])
