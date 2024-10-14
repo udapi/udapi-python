@@ -92,10 +92,11 @@ class UDPipeOnline:
             for attr in attrs:
                 setattr(node, attr, getattr(parsed_node, attr))
 
-    def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True):
+    def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True, ranges=False):
         """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`.
 
         If resegment=True, the returned list of Udapi trees may contain multiple trees.
+        If ranges=True, each token will contain `node.misc[TokenRange]` will contain character level 0-based ranges, e.g. `0:2`.
         """
         if parse and not tag:
             raise ValueError('Combination parse=True tag=False is not allowed.')
@@ -108,6 +109,8 @@ class UDPipeOnline:
             params["tagger"] = ""
         if parse:
             params["parser"] = ""
+        if ranges:
+            params["tokenizer"] = "presegmented,ranges" if resegment else "ranges"
         out_data = self.perform_request(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)

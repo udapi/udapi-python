@@ -47,11 +47,13 @@ class UDPipe:
         # pylint: disable=protected-access
         #root._children, root._descendants = parsed_root._children, parsed_root._descendants
 
-    def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True):
+    def tokenize_tag_parse_tree(self, root, resegment=False, tag=True, parse=True, ranges=False):
         """Tokenize, tag (+lemmatize, fill FEATS) and parse the text stored in `root.text`.
 
         If resegment=True, the returned list of Udapi trees may contain multiple trees.
         """
+        if ranges:
+            raise ValueError('ranges=True is implemented only in the REST API version (add "online=1" to the udpipe block)')
         if root.children:
             raise ValueError('Tree already contained nodes before tokenization')
 

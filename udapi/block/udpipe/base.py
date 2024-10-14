@@ -121,13 +121,13 @@ class Base(Block):
     # pylint: disable=too-many-arguments
     def __init__(self, model=None, model_alias=None, online=False,
                  tokenize=True, tag=True, parse=True, resegment=False,
-                 delete_nodes=False, **kwargs):
+                 ranges=False, delete_nodes=False, **kwargs):
         """Create the udpipe.En block object."""
         super().__init__(**kwargs)
         self.model, self.model_alias, self.online = model, model_alias, online
         self._tool = None
         self.tokenize, self.tag, self.parse, self.resegment = tokenize, tag, parse, resegment
-        self.delete_nodes = delete_nodes
+        self.ranges, self.delete_nodes = ranges, delete_nodes
 
     @property
     def tool(self):
@@ -160,7 +160,8 @@ class Base(Block):
                             subroot.remove()
                     if tok:
                         new_trees = self.tool.tokenize_tag_parse_tree(tree, resegment=reseg,
-                                                                      tag=tag, parse=par)
+                                                                      tag=tag, parse=par,
+                                                                      ranges=self.ranges)
                         if self.resegment and len(new_trees) > 1:
                             orig_bundle_id = bundle.bundle_id
                             bundle.bundle_id = orig_bundle_id + '-1'
