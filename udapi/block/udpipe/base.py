@@ -122,7 +122,6 @@ class Base(Block):
     def __init__(self, model=None, model_alias=None, online=False,
                  tokenize=True, tag=True, parse=True, resegment=False,
                  ranges=False, delete_nodes=False, **kwargs):
-        """Create the udpipe.En block object."""
         super().__init__(**kwargs)
         self.model, self.model_alias, self.online = model, model_alias, online
         self._tool = None
@@ -148,7 +147,10 @@ class Base(Block):
         return self._tool
 
     def process_document(self, doc):
-        tok, tag, par, reseg = self.tokenize, self.tag, self.parse, self.resegment
+        tok, tag, par, reseg, ranges = self.tokenize, self.tag, self.parse, self.resegment, self.ranges
+        if self.zones == "all" and self.online:
+            self.tool.process_document(doc, tok, tag, par, reseg, ranges)
+            return
         old_bundles = doc.bundles
         new_bundles = []
         for bundle in old_bundles:
@@ -160,8 +162,7 @@ class Base(Block):
                             subroot.remove()
                     if tok:
                         new_trees = self.tool.tokenize_tag_parse_tree(tree, resegment=reseg,
-                                                                      tag=tag, parse=par,
-                                                                      ranges=self.ranges)
+                                                                      tag=tag, parse=par, ranges=ranges)
                         if self.resegment and len(new_trees) > 1:
                             orig_bundle_id = bundle.bundle_id
                             bundle.bundle_id = orig_bundle_id + '-1'

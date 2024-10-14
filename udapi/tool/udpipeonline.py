@@ -110,7 +110,7 @@ class UDPipeOnline:
         if parse:
             params["parser"] = ""
         if ranges:
-            params["tokenizer"] = "presegmented,ranges" if resegment else "ranges"
+            params["tokenizer"] = "presegmented;ranges" if resegment else "ranges"
         out_data = self.perform_request(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)
@@ -130,3 +130,42 @@ class UDPipeOnline:
         """Segment the provided text into sentences returned as a Python list."""
         params = {"model": self.model, "data": text, "tokenizer":"", "output": "plaintext=normalized_spaces"}
         return self.perform_request(params=params).rstrip().split("\n")
+
+    def process_document(self, doc, tokenize=True, tag=True, parse=True, resegment=False, ranges=False):
+        """Delete all existing bundles and substitute them with those parsed by UDPipe."""
+        if parse and not tag:
+            raise ValueError('Combination parse=True tag=False is not allowed.')
+        params = {"model": self.model, "tokenizer": "presegmented"}
+        if tag:
+            params["tagger"] = ""
+        if parse:
+            params["parser"] = ""
+        if resegment:
+            params["tokenizer"] = ""
+        if ranges:
+            params["tokenizer"] = "ranges" if resegment else "presegmented;ranges"
+
+        #in_trees = []
+        #for bundle in doc.bundles:
+        #    assert(len(bundle.trees) == 1)
+        #    in_trees.append(bundle.trees[0])
+        if tokenize:
+            params["data"] = "\n".join(root.text for root in doc.trees)
+        else:
+            params["input"] = "horizontal"
+            params["data"] = "\n".join(" ".join([n.form for n in root.descendants]) for root in doc.trees)
+
+        out_data = self.perform_request(params=params)
+        conllu_reader = ConlluReader(empty_parent="ignore")
+        conllu_reader.files.filehandle = io.StringIO(out_data)
+        trees = conllu_reader.read_trees()
+
+        bundles = list(reversed(doc.bundles))
+        for tree in trees:
+            if bundles:
+                bundle = bundles.pop()
+                # TODO is this safe?
+                bundle.trees = []
+            else:
+                bundle = doc.create_bundle()
+            bundle.add_tree(tree)
