@@ -49,71 +49,7 @@ for prep in 'na o za'.split():
         'shape': 'subtree',
     }
 
-# Define static rules for 'naň', 'oň', 'proň', 'zaň'.
-# Add them to the already existing dictionary MWTS.
-# naň -> na + něj
-for prep in 'na o pro za'.split():
-    MWTS[prep + 'ň'] = {
-        'form': prep + ' něj',
-        'lemma': prep + ' on',
-        'upos': 'ADP PRON',
-        'xpos': 'RR--4---------- PEZS4--3-------',
-        'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
-        'deprel': 'case *',
-        'main': 1,
-        'shape': 'subtree',
-    }
-# Additional contractions in Old Czech with vocalization.
-for prep in 'přěd'.split():
-    preplemma = re.sub(r"ě", r"e", prep)
-    MWTS[prep + 'eň'] = {
-        'form': prep + ' něj',
-        'lemma': preplemma + ' on',
-        'upos': 'ADP PRON',
-        'xpos': 'RV--4---------- PEZS4--3-------',
-        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
-        'deprel': 'case *',
-        'main': 1,
-        'shape': 'subtree',
-    }
-for prep in 'skirzě skrzě skrze'.split():
-    MWTS[prep + 'ň'] = {
-        'form': prep + ' něj',
-        'lemma': 'skrz on',
-        'upos': 'ADP PRON',
-        'xpos': 'RV--4---------- PEZS4--3-------',
-        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
-        'deprel': 'case *',
-        'main': 1,
-        'shape': 'subtree',
-    }
 
-# Define static rules for 'naňž', 'oňž', 'proňž', 'zaňž'.
-# Add them to the already existing dictionary MWTS.
-# naňž -> na + nějž
-for prep in 'na o pro za'.split():
-    MWTS[prep + 'ňž'] = {
-        'form': prep + ' nějž',
-        'lemma': prep + ' jenž',
-        'upos': 'ADP PRON',
-        'xpos': 'RR--4---------- P4ZS4---------2',
-        'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|PrepCase=Pre|PronType=Rel',
-        'deprel': 'case *',
-        'main': 1,
-        'shape': 'subtree',
-    }
-# Additional contractions in Old Czech with vocalization.
-for prep in 'skirzě skrzě skrze'.split():
-    MWTS[prep + 'ňž'] = {
-        'form': prep + ' nějž',
-        'lemma': 'skrz jenž',
-        'upos': 'ADP PRON',
-        'xpos': 'RV--4---------- P4ZS4---------2',
-        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|PrepCase=Pre|PronType=Rel',
-        'deprel': 'case *',
-        'main': 1,
-        'shape': 'subtree',
-    }
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):
     """Detect and mark MWTs (split them into words and add the words to the tree)."""
@@ -163,6 +99,58 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'deprel': '* discourse',
                     'main':   0,
                     'shape':  'subtree',
+                }
+        # Contractions of prepositions and pronouns will be processed regardless
+        # of AddMwt instructions by the annotator. These rules are dynamic because
+        # the pronoun could be masculine or neuter. We pick Gender=Masc by default,
+        # unless the original token was annotated as Gender=Neut.
+        m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)ň(ž?)$", node.form.lower())
+        if m:
+            # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
+            # (skrze něj).
+            if m.group(1) == 'přěde':
+                pform = 'přěd'
+                plemma = 'před'
+                adptype = 'Voc'
+                at = 'V'
+            elif re.match(r"^ski?rz[eě]$", m.group(1).lower()):
+                pform = m.group(1)
+                plemma = 'skrz'
+                adptype = 'Voc'
+                at = 'V'
+            else:
+                pform = m.group(1)
+                plemma = m.group(1)
+                adptype = 'Prep'
+                at = 'R'
+            # In UD PDT, Gender=Masc,Neut, and in PDT it is PEZS4--3.
+            if node.feats['Gender'] == 'Neut':
+                gender = 'Neut'
+                g = 'N'
+            else:
+                gender = 'Masc'
+                g = 'Y' # standing for 'M' or 'I'
+            if m.group(2).lower() == 'ž':
+                return {
+                    'form': pform + ' nějž',
+                    'lemma': plemma + ' jenž',
+                    'upos': 'ADP PRON',
+                    'xpos': 'R'+at+'--4---------- P4'+g+'S4---------2',
+                    'feats': 'AdpType='+adptype+'|Case=Acc Case=Acc|Gender='+gender+'|Number=Sing|PrepCase=Pre|PronType=Rel',
+                    'deprel': 'case *',
+                    'main': 1,
+                    'shape': 'subtree',
+                }
+            else:
+                return {
+                    'form': pform + ' něj',
+                    'lemma': plemma + ' on',
+                    'upos': 'ADP PRON',
+                    'xpos': 'R'+at+'--4---------- PE'+g+'S4--3-------',
+                    'feats': 'AdpType='+adptype+'|Case=Acc Case=Acc|Gender='+gender+'|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
+                    'deprel': 'case *',
+                    'main': 1,
+                    'shape': 'subtree',
                 }
         return None
 
