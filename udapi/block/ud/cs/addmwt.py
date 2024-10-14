@@ -64,8 +64,9 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             return analysis
         # Contractions of prepositions and pronouns will be processed regardless
         # of AddMwt instructions by the annotator. These rules are dynamic because
-        # the pronoun could be masculine or neuter. We pick Gender=Masc by default,
-        # unless the original token was annotated as Gender=Neut.
+        # the pronoun could be masculine or neuter. We pick Gender=Masc and
+        # Animacy=Anim by default, unless the original token was annotated as
+        # Animacy=Inan or Gender=Neut.
         # Note that we do this before looking at AddMwt in MISC because the code
         # below that looks there will require that the parts can be concatenated,
         # and that does not work for pronouns (skirzě + nějž != skirzěňž).
@@ -89,20 +90,26 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 plemma = m.group(1)
                 adptype = 'Prep'
                 at = 'R'
-            # In UD PDT, Gender=Masc,Neut, and in PDT it is PEZS4--3.
+            # In UD PDT, Gender=Masc,Neut, and in PDT it is PEZS4--3 / P4ZS4---.
             if node.feats['Gender'] == 'Neut':
                 gender = 'Neut'
+                animacy = ''
                 g = 'N'
+            elif node.feats['Animacy'] == 'Inan':
+                gender = 'Masc'
+                animacy = 'Animacy=Inan|'
+                g = 'I'
             else:
                 gender = 'Masc'
-                g = 'Y' # standing for 'M' or 'I'
+                animacy = 'Animacy=Anim|'
+                g = 'M'
             if m.group(2).lower() == 'ž':
                 return {
                     'form': pform + ' nějž',
                     'lemma': plemma + ' jenž',
                     'upos': 'ADP PRON',
                     'xpos': 'R'+at+'--4---------- P4'+g+'S4---------2',
-                    'feats': 'AdpType='+adptype+'|Case=Acc Case=Acc|Gender='+gender+'|Number=Sing|PrepCase=Pre|PronType=Rel',
+                    'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|PrepCase=Pre|PronType=Rel',
                     'deprel': 'case *',
                     'main': 1,
                     'shape': 'subtree',
@@ -113,7 +120,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'lemma': plemma + ' on',
                     'upos': 'ADP PRON',
                     'xpos': 'R'+at+'--4---------- PE'+g+'S4--3-------',
-                    'feats': 'AdpType='+adptype+'|Case=Acc Case=Acc|Gender='+gender+'|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
+                    'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
                     'deprel': 'case *',
                     'main': 1,
                     'shape': 'subtree',
