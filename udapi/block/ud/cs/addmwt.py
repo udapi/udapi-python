@@ -76,6 +76,17 @@ for prep in 'přěd'.split():
         'main': 1,
         'shape': 'subtree',
     }
+for prep in 'skirzě skrzě skrze'.split():
+    MWTS[prep + 'ň'] = {
+        'form': prep + ' něj',
+        'lemma': 'skrz on',
+        'upos': 'ADP PRON',
+        'xpos': 'RV--4---------- PEZS4--3-------',
+        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
 
 # Define static rules for 'naňž', 'oňž', 'proňž', 'zaňž'.
 # Add them to the already existing dictionary MWTS.
@@ -87,6 +98,18 @@ for prep in 'na o pro za'.split():
         'upos': 'ADP PRON',
         'xpos': 'RR--4---------- P4ZS4---------2',
         'feats': 'AdpType=Prep|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|PrepCase=Pre|PronType=Rel',
+        'deprel': 'case *',
+        'main': 1,
+        'shape': 'subtree',
+    }
+# Additional contractions in Old Czech with vocalization.
+for prep in 'skirzě skrzě skrze'.split():
+    MWTS[prep + 'ňž'] = {
+        'form': prep + ' nějž',
+        'lemma': 'skrz jenž',
+        'upos': 'ADP PRON',
+        'xpos': 'RV--4---------- P4ZS4---------2',
+        'feats': 'AdpType=Voc|Case=Acc Case=Acc|Gender=Masc,Neut|Number=Sing|PrepCase=Pre|PronType=Rel',
         'deprel': 'case *',
         'main': 1,
         'shape': 'subtree',
