@@ -514,6 +514,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # 'dva', 'oba' have Gender, Number=Dual(Plur in modern Czech), Case: dva, dvě, dvou, dvěma.
                 # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
                 # 'pět' and more have Number=Plur, Case: pět, pěti.
+                # 'půl' has no Number and Case, although it behaves syntactically similarly to 'pět' (but genitive is still 'půl', not '*půli').
                 if node.lemma == 'jeden':
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
@@ -545,6 +546,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Number': ['Dual', 'Plur'],
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                         })
+                elif node.lemma == 'půl':
+                    self.check_required_features(node, ['NumType', 'NumForm'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'NumForm': ['Word']
+                    })
                 else:
                     # In PDT, cardinal numerals higher than four in nominative/accusative/vocative
                     # have Number=Sing instead of Plur! It may be motivated by the default
