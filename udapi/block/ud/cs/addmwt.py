@@ -62,50 +62,16 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         analysis = MWTS.get(node.form.lower(), None)
         if analysis is not None:
             return analysis
-        # If the node did not match any of the static rules defined in MWTS,
-        # check it against the "dynamic" rules below. The enclitic 'ť' will be
-        # separated from its host but only if it has been marked by an annotator
-        # in MISC. (These are annotation conventions used for Old Czech in the
-        # Hičkok project.)
-        if node.misc['AddMwt'] != '':
-            subtokens = node.misc['AddMwt'].split()
-            if len(subtokens) != 2:
-                logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
-                return None
-            token_from_subtokens = ''.join(subtokens)
-            if token_from_subtokens != node.form:
-                logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
-                return None
-            if subtokens[1] == 's':
-                node.misc['AddMwt'] = ''
-                return {
-                    'form':   subtokens[0] + ' jsi',
-                    'lemma':  '* být',
-                    'upos':   '* AUX',
-                    'xpos':   '* VB-S---2P-AAI--',
-                    'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
-                    'deprel': '* aux',
-                    'main':   0,
-                    'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
-                }
-            if subtokens[1] == 'ť':
-                node.misc['AddMwt'] = ''
-                return {
-                    'form':   node.form.lower()[:-1] + ' ť',
-                    'lemma':  '* ť',
-                    'upos':   '* PART',
-                    'xpos':   '* TT-------------',
-                    'feats':  '* _',
-                    'deprel': '* discourse',
-                    'main':   0,
-                    'shape':  'subtree',
-                }
         # Contractions of prepositions and pronouns will be processed regardless
         # of AddMwt instructions by the annotator. These rules are dynamic because
         # the pronoun could be masculine or neuter. We pick Gender=Masc by default,
         # unless the original token was annotated as Gender=Neut.
+        # Note that we do this before looking at AddMwt in MISC because the code
+        # below that looks there will require that the parts can be concatenated,
+        # and that does not work for pronouns (skirzě + nějž != skirzěňž).
         m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)ň(ž?)$", node.form.lower())
         if m:
+            node.misc['AddMwt'] = ''
             # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
             # (skrze něj).
             if m.group(1) == 'přěde':
@@ -151,6 +117,44 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'deprel': 'case *',
                     'main': 1,
                     'shape': 'subtree',
+                }
+        # If the node did not match any of the static rules defined in MWTS,
+        # check it against the "dynamic" rules below. The enclitic 'ť' will be
+        # separated from its host but only if it has been marked by an annotator
+        # in MISC. (These are annotation conventions used for Old Czech in the
+        # Hičkok project.)
+        if node.misc['AddMwt'] != '':
+            subtokens = node.misc['AddMwt'].split()
+            if len(subtokens) != 2:
+                logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
+                return None
+            token_from_subtokens = ''.join(subtokens)
+            if token_from_subtokens != node.form:
+                logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
+                return None
+            if subtokens[1] == 's':
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   subtokens[0] + ' jsi',
+                    'lemma':  '* být',
+                    'upos':   '* AUX',
+                    'xpos':   '* VB-S---2P-AAI--',
+                    'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
+                    'deprel': '* aux',
+                    'main':   0,
+                    'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
+                }
+            if subtokens[1] == 'ť':
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   node.form.lower()[:-1] + ' ť',
+                    'lemma':  '* ť',
+                    'upos':   '* PART',
+                    'xpos':   '* TT-------------',
+                    'feats':  '* _',
+                    'deprel': '* discourse',
+                    'main':   0,
+                    'shape':  'subtree',
                 }
         return None
 
