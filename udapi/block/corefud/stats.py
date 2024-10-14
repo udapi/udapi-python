@@ -4,13 +4,16 @@ from collections import Counter
 class Stats(Block):
     """Block corefud.Stats prints various coreference-related statistics."""
 
-    def __init__(self, m_len_max=5, e_len_max=5, report_mentions=True, report_entities=True,
-                 report_details=True, selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM',
+    def __init__(self, m_len_max=5, e_len_max=5,
+                 report_basics=False, report_mentions=True, report_entities=True,
+                 report_details=True, selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM _',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human',
-                 per_doc=False, max_rows_per_page=50, **kwargs):
+                 per_doc=False, max_rows_per_page=50, docname='newdoc', docname_len=15,
+                 **kwargs):
         super().__init__(**kwargs)
         self.m_len_max = m_len_max
         self.e_len_max = e_len_max
+        self.report_basics = report_basics
         self.report_mentions = report_mentions
         self.report_entities = report_entities
         self.report_details = report_details
@@ -21,6 +24,10 @@ class Stats(Block):
             raise ValueError(f'Unknown style {style}')
         self.per_doc = per_doc
         self.max_rows_per_page = max_rows_per_page
+        if docname not in 'newdoc filename'.split():
+            raise ValueError(f'Unknown style {style}')
+        self.docname = docname
+        self.docname_len = docname_len
         self._header_printed = False
         self._lines_printed = None
 
@@ -75,6 +82,12 @@ class Stats(Block):
                             heads += 0 if any(d['parent'] in mwords for d in w.deps) else 1
                     self.counter['m_nontreelet'] += 1 if heads > 1 else 0
 
+        if self.report_basics:
+            for tree in doc.trees:
+                self.counter['newdocs'] += 1 if tree.newdoc else 0
+                self.counter['sents'] += 1
+                self.counter['words'] += len(tree.descendants)
+                self.counter['empty'] += len(tree.empty_nodes)
 
     def after_process_document(self, doc):
         if self.per_doc:
@@ -97,7 +110,8 @@ class Stats(Block):
                 self.print_footer()
                 return
             else:
-                print(f"{doc[0].trees[0].newdoc:15}", end='&' if self.style.startswith('tex') else '\n')
+                docname = doc.meta['loaded_from'] if self.docname == 'filename' else doc[0].trees[0].newdoc
+                print(f"{docname:{self.docname_len}}", end='&' if self.style.startswith('tex') else '\n')
         elif self.style.startswith('tex-'):
             print(f"{self.counter['documents']:4} documents &")
         self._lines_printed += 1
@@ -107,6 +121,11 @@ class Stats(Block):
         total_nodes_nonzero = 1 if self.total_nodes == 0 else self.total_nodes
 
         columns =[ ]
+        if self.report_basics:
+            columns += [('docs', f"{self.counter['newdocs']:7,}"),
+                        ('sents', f"{self.counter['sents']:7,}"),
+                        ('words', f"{self.counter['words']:7,}"),
+                        ('empty', f"{self.counter['empty']:7,}"),]
         if self.report_entities:
             columns += [('entities', f"{self.entities:7,}"),
                         ('entities_per1k', f"{1000 * self.entities / total_nodes_nonzero:6.0f}"),
@@ -156,7 +175,15 @@ class Stats(Block):
                 print(r'\title{Udapi coreference statistics}')
                 print(r'\begin{document}')
         print(r'\def\MC#1#2{\multicolumn{#1}{c}{#2}}')
-        lines = [r'\begin{mypage}\begin{tabular}{@{}l ', " "*15, ("document" if self.per_doc else "dataset ") + " "*7, " "*15]
+        lines = [r'\begin{mypage}\begin{tabular}{@{}l ',
+                 " " * self.docname_len,
+                 ("document" if self.per_doc else "dataset ") + " " * (self.docname_len-8),
+                 " " * self.docname_len]
+        if self.report_basics:
+            lines[0] += "rrrr "
+            lines[1] += r'& \MC{4}{total number of}              '
+            lines[2] += r'&        &         &         &         '
+            lines[3] += r'&   docs &   sents &   words & empty n.'
         if self.report_entities:
             lines[0] += "rrrr "
             lines[1] += r'& \MC{4}{entities}                 '
@@ -199,10 +226,13 @@ class Stats(Block):
         lines[1] += r'\\'
         lines[2] += r'\\'
         lines[3] += r'\\\midrule'
-        if self.report_entities:
+        if self.report_basics:
             last_col += 4
             lines[1] += r'\cmidrule(lr){2-5}'
-            lines[2] += r'\cmidrule(lr){4-5}'
+        if self.report_entities:
+            lines[1] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+4}" + '}'
+            lines[2] += r'\cmidrule(lr){' + f"{last_col+3}-{last_col+4}" + '}'
+            last_col += 4
             if self.e_len_max:
                 last_col += self.e_len_max
                 lines[1] += r'\cmidrule(lr){6-' + str(last_col) + '}'
