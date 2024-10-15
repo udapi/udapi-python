@@ -223,19 +223,18 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                                 'PronType': ['Prs'],
                                 'Person': ['3']
                             })
-                        elif node.feats['Variant'] == 'Short': # ho, mu
-                            # The short (clitic) forms do not have PrepCase in Modern Czech
-                            # but Old Czech has also 'jmu' (besides 'jemu' and 'mu'), which
-                            # is also annotated as Variant=Short and PrepCase=Npr.
-                            self.check_adjective_like(node, ['PronType', 'Person'], {
+                        elif re.match(r"^(ho|mu)$", node.form.lower()):
+                            # The short (clitic) forms do not have PrepCase in Modern Czech.
+                            # Old Czech has also 'jmu' (besides 'jemu' and 'mu'); it should
+                            # not have Variant=Short and it should have PrepCase=Npr (the next block).
+                            self.check_adjective_like(node, ['PronType', 'Person', 'Variant'], {
                                 'PronType': ['Prs'],
                                 'Person': ['3'],
-                                'PrepCase': ['Npr'],
                                 'Variant': ['Short']
                             })
                         else: # jeho, něho, jemu, němu, jej, něj, něm, jím, ním, jí, ní, ji, ni, je, ně
                             # Mostly only two gender groups and no animacy:
-                            # Masc,Neut ... jeho, jemu, jej, něm, jím
+                            # Masc,Neut ... jeho, jemu, jmu, jej, něm, jím
                             # Fem ... jí, ji, ní
                             # Neut ... je
                             # No gender in dual and plural:
