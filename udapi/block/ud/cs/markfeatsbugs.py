@@ -225,8 +225,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             })
                         elif re.match(r"^(ho|mu)$", node.form.lower()):
                             # The short (clitic) forms do not have PrepCase in Modern Czech.
-                            # Old Czech has also 'jmu' (besides 'jemu' and 'mu'); it should
-                            # not have Variant=Short and it should have PrepCase=Npr (the next block).
+                            # Old Czech has also 'jmu' (besides 'jemu' and 'mu') and 'jho'
+                            # (besides 'jeho' and 'ho'); it should not have Variant=Short
+                            # and it should have PrepCase=Npr (the next block).
                             self.check_adjective_like(node, ['PronType', 'Person', 'Variant'], {
                                 'PronType': ['Prs'],
                                 'Person': ['3'],
@@ -234,7 +235,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             })
                         else: # jeho, něho, jemu, němu, jej, něj, něm, jím, ním, jí, ní, ji, ni, je, ně
                             # Mostly only two gender groups and no animacy:
-                            # Masc,Neut ... jeho, jemu, jmu, jej, něm, jím
+                            # Masc,Neut ... jeho, jho, jemu, jmu, jej, něm, jím
                             # Fem ... jí, ji, ní
                             # Neut ... je
                             # No gender in dual and plural:
@@ -336,7 +337,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(jeho|jejich|jich)$', node.form.lower()):
+            if re.match(r'^(je?ho|jejich|jich)$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Prs'],
