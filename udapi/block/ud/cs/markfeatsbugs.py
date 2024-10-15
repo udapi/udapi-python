@@ -565,7 +565,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
         # VERBS AND AUXILIARIES ################################################
-        elif re.match(r'^(VERB|AUX)$', node.upos):
+        elif node.upos in ['VERB', 'AUX']:
             # All Czech verbs (and some adjectives and nouns) must have VerbForm.
             # Almost all verbs have lexical Aspect but we cannot require it
             # because there are a few biaspectual verbs (e.g. 'analyzovat') that
