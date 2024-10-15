@@ -760,7 +760,10 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # (OR UNDEFINED UPOS) ##################################################
         else:
             if not node.upos in ['CCONJ', 'SCONJ', 'PART', 'INTJ', 'PUNCT', 'SYM', 'X']:
-                self.bug(node, 'UnknownUpos' + node.upos)
+                bugmsg = 'UnknownUpos'
+                if node.upos:
+                    bugmsg += node.upos
+                self.bug(node, bugmsg)
             self.check_allowed_features(node, {})
 
     def check_adjective_like(self, node, r0, a0):
