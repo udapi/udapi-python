@@ -759,7 +759,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # THE REST: NO FEATURES ################################################
         # (OR UNDEFINED UPOS) ##################################################
         else:
-            if not re.match(r"^(CCONJ|SCONJ|PART|INTJ|PUNCT|SYM|X)$", node.upos):
+            if not node.upos in ['CCONJ', 'SCONJ', 'PART', 'INTJ', 'PUNCT', 'SYM', 'X']:
                 self.bug(node, 'UnknownUpos' + node.upos)
             self.check_allowed_features(node, {})
 
