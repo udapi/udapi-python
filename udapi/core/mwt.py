@@ -47,6 +47,20 @@ class MWT(object):
         """Full (document-wide) id of the multi-word token."""
         return self.root.address + '#' + self.ord_range
 
+    @staticmethod
+    def is_mwt():
+        """Is this a multi-word token?
+
+        Returns always True.
+        False is returned only by instances of the Node class.
+        """
+        return True
+
+    @property
+    def no_space_after(self):
+        """Boolean property as a shortcut for `node.misc["SpaceAfter"] == "No"`."""
+        return self.misc["SpaceAfter"] == "No"
+
 # TODO: node.remove() should check if the node is not part of any MWT
 # TODO: Document that editing words by mwt.words.append(node), del or remove(node) is not supported
 # TODO: Make mwt._words private and provide a setter

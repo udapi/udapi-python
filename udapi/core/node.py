@@ -1004,6 +1004,14 @@ class Node(object):
         entity.create_mention(head=self, **kwargs)
         return entity
 
+    @staticmethod
+    def is_mwt():
+        """Is this a multi-word token?
+
+        Returns False for all Node instances.
+        True is returned only by instances of the MWT class.
+        """
+        return False
 
 class CycleError(Exception):
     '''A cycle in the dependency tree detected (or would be created).'''
