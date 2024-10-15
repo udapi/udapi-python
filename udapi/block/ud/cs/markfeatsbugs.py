@@ -63,14 +63,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
                     'Foreign': ['Yes']})
             else:
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
                     'Foreign': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
@@ -84,7 +84,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                        'NameType': ['Giv', 'Sur'], # for possessive adjectives derived from personal names
+                        'NameType': ['Giv', 'Sur', 'Nat'], # for possessive adjectives derived from personal names
                         'Emph': ['Yes'],
                         'Foreign': ['Yes']})
                 else:
@@ -95,7 +95,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                        'NameType': ['Giv', 'Sur'], # for possessive adjectives derived from personal names
+                        'NameType': ['Giv', 'Sur', 'Nat'], # for possessive adjectives derived from personal names
                         'Emph': ['Yes'],
                         'Foreign': ['Yes']})
             elif node.feats['NumType'] == 'Ord' or node.feats['NumType'] == 'Mult': # ordinal numerals are a subtype of adjectives; same for some multiplicative numerals (dvojí, trojí)
