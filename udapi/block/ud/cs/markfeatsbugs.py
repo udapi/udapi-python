@@ -289,6 +289,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Unlike 'jenžto', this relative pronoun does not inflect, it
                 # always occurs in a nominative position, but the context can
                 # be any gender and number.
+                # Update from the Hičkok project: 'ješto' is lemmatized to
+                # 'jenžto' (see below), meaning that this branch should not be
+                # needed for the new data.
                 self.check_required_features(node, ['PronType', 'Case'])
                 self.check_allowed_features(node, {
                     'PronType': ['Rel'],
@@ -307,10 +310,24 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # Unlike 'on', 'jenž' has the feature PrepCase everywhere, even
                 # in the nominative, although there is no prepositional counter-
                 # part (but similarly the locative has no prepositionless form).
-                self.check_adjective_like(node, ['PronType', 'PrepCase'], {
-                    'PronType': ['Rel'],
-                    'PrepCase': ['Npr', 'Pre']
-                })
+                # Update from the Hičkok project: In Old Czech, both 'jenž' and
+                # 'jenžto' (or its variant 'ješto') can be used uninflected,
+                # accompanied by a resumptive pronoun which provides the inflection.
+                # In this case, the Hičkok data will not annotate Gender, Animacy,
+                # Number and Case of the relative pronoun. Therefore, we require
+                # the full set of features if any of them is present; otherwise,
+                # we only expect PronType and PrepCase.
+                if node.feats['Gender'] != '' or node.feats['Animacy'] != '' or node.feats['Number'] != '' or node.feats['Case'] != '':
+                    self.check_adjective_like(node, ['PronType', 'PrepCase'], {
+                        'PronType': ['Rel'],
+                        'PrepCase': ['Npr', 'Pre']
+                    })
+                else:
+                    self.check_required_features(node, ['PronType', 'PrepCase'])
+                    self.check_allowed_features(node, {
+                        'PronType': ['Rel'],
+                        'PrepCase': ['Npr']
+                    })
             else:
                 # What remains is the relative pronoun 'an'. It behaves similarly
                 # to 'jenž' but it does not have the PrepCase feature and it
