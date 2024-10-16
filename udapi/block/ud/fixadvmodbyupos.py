@@ -38,9 +38,15 @@ class FixAdvmodByUpos(Block):
                 node.deprel = 'case'
             elif node.upos == 'CCONJ':
                 node.deprel = 'cc'
+        elif node.udeprel in ['aux', 'cop']:
+            if node.upos != 'AUX':
+                node.deprel = 'dep'
         elif node.udeprel == 'mark':
-            if node.upos == 'PRON':
+            if node.upos in ['PRON', 'DET']:
                 node.deprel = 'nsubj' # it could be also obj, iobj, obl or nmod; just guessing what might be more probable
+        elif node.udeprel == 'cc':
+            if node.upos == 'AUX':
+                node.deprel = 'aux'
         elif node.udeprel == 'det':
             if node.upos == 'NOUN':
                 node.deprel = 'nmod'
@@ -51,3 +57,6 @@ class FixAdvmodByUpos(Block):
         elif node.udeprel == 'nummod':
             if node.upos == 'DET':
                 node.deprel = 'det'
+        elif node.udeprel == 'punct':
+            if node.upos != 'PUNCT':
+                node.deprel = 'dep'
