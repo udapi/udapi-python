@@ -62,69 +62,6 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         analysis = MWTS.get(node.form.lower(), None)
         if analysis is not None:
             return analysis
-        # Contractions of prepositions and pronouns will be processed regardless
-        # of AddMwt instructions by the annotator. These rules are dynamic because
-        # the pronoun could be masculine or neuter. We pick Gender=Masc and
-        # Animacy=Anim by default, unless the original token was annotated as
-        # Animacy=Inan or Gender=Neut.
-        # Note that we do this before looking at AddMwt in MISC because the code
-        # below that looks there will require that the parts can be concatenated,
-        # and that does not work for pronouns (skirzě + nějž != skirzěňž).
-        m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
-        if m:
-            node.misc['AddMwt'] = ''
-            # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
-            # (skrze něj).
-            if m.group(1) == 'přěde':
-                pform = 'přěd'
-                plemma = 'před'
-                adptype = 'Voc'
-                at = 'V'
-            elif re.match(r"^ski?rz[eě]$", m.group(1).lower()):
-                pform = m.group(1)
-                plemma = 'skrz'
-                adptype = 'Voc'
-                at = 'V'
-            else:
-                pform = m.group(1)
-                plemma = m.group(1)
-                adptype = 'Prep'
-                at = 'R'
-            # In UD PDT, Gender=Masc,Neut, and in PDT it is PEZS4--3 / P4ZS4---.
-            if node.feats['Gender'] == 'Neut':
-                gender = 'Neut'
-                animacy = ''
-                g = 'N'
-            elif node.feats['Animacy'] == 'Inan':
-                gender = 'Masc'
-                animacy = 'Animacy=Inan|'
-                g = 'I'
-            else:
-                gender = 'Masc'
-                animacy = 'Animacy=Anim|'
-                g = 'M'
-            if m.group(2).lower() == 'ž':
-                return {
-                    'form': pform + ' nějž',
-                    'lemma': plemma + ' jenž',
-                    'upos': 'ADP PRON',
-                    'xpos': 'R'+at+'--4---------- P4'+g+'S4---------2',
-                    'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|PrepCase=Pre|PronType=Rel',
-                    'deprel': 'case *',
-                    'main': 1,
-                    'shape': 'subtree',
-                }
-            else:
-                return {
-                    'form': pform + ' něj',
-                    'lemma': plemma + ' on',
-                    'upos': 'ADP PRON',
-                    'xpos': 'R'+at+'--4---------- PE'+g+'S4--3-------',
-                    'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
-                    'deprel': 'case *',
-                    'main': 1,
-                    'shape': 'subtree',
-                }
         # If the node did not match any of the static rules defined in MWTS,
         # check it against the "dynamic" rules below. The enclitic 'ť' will be
         # separated from its host but only if it has been marked by an annotator
@@ -163,6 +100,69 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'main':   0,
                     'shape':  'subtree',
                 }
+            # Contractions of prepositions and pronouns almost could be processed
+            # regardless of AddMwt instructions by the annotator, but we still
+            # require it to be on the safe side. For example, both 'přědeň' and
+            # 'přěden' are attested in Old Czech but then we do not want to catch
+            # 'on' (besides the wanted 'oň'). Another reason si that the pronoun
+            # could be masculine or neuter. We pick Gender=Masc and Animacy=Anim
+            # by default, unless the original token was annotated as Animacy=Inan
+            # or Gender=Neut.
+            m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
+            if m:
+                node.misc['AddMwt'] = ''
+                # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
+                # (skrze něj).
+                if m.group(1) == 'přěde':
+                    pform = 'přěd'
+                    plemma = 'před'
+                    adptype = 'Voc'
+                    at = 'V'
+                elif re.match(r"^ski?rz[eě]$", m.group(1).lower()):
+                    pform = m.group(1)
+                    plemma = 'skrz'
+                    adptype = 'Voc'
+                    at = 'V'
+                else:
+                    pform = m.group(1)
+                    plemma = m.group(1)
+                    adptype = 'Prep'
+                    at = 'R'
+                # In UD PDT, Gender=Masc,Neut, and in PDT it is PEZS4--3 / P4ZS4---.
+                if node.feats['Gender'] == 'Neut':
+                    gender = 'Neut'
+                    animacy = ''
+                    g = 'N'
+                elif node.feats['Animacy'] == 'Inan':
+                    gender = 'Masc'
+                    animacy = 'Animacy=Inan|'
+                    g = 'I'
+                else:
+                    gender = 'Masc'
+                    animacy = 'Animacy=Anim|'
+                    g = 'M'
+                if m.group(2).lower() == 'ž':
+                    return {
+                        'form': pform + ' nějž',
+                        'lemma': plemma + ' jenž',
+                        'upos': 'ADP PRON',
+                        'xpos': 'R'+at+'--4---------- P4'+g+'S4---------2',
+                        'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|PrepCase=Pre|PronType=Rel',
+                        'deprel': 'case *',
+                        'main': 1,
+                        'shape': 'subtree',
+                    }
+                else:
+                    return {
+                        'form': pform + ' něj',
+                        'lemma': plemma + ' on',
+                        'upos': 'ADP PRON',
+                        'xpos': 'R'+at+'--4---------- PE'+g+'S4--3-------',
+                        'feats': 'AdpType='+adptype+'|Case=Acc '+animacy+'Case=Acc|Gender='+gender+'|Number=Sing|Person=3|PrepCase=Pre|PronType=Prs',
+                        'deprel': 'case *',
+                        'main': 1,
+                        'shape': 'subtree',
+                    }
         return None
 
     def postprocess_mwt(self, mwt):
