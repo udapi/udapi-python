@@ -1,5 +1,5 @@
 """
-Block util.SplitSentence will split a given sentence at a given token.
+Block util.JoinSentence will join a given sentence with the preceding one.
 """
 import logging
 from udapi.core.block import Block
