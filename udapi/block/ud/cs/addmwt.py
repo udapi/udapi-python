@@ -70,7 +70,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
         # Note that we do this before looking at AddMwt in MISC because the code
         # below that looks there will require that the parts can be concatenated,
         # and that does not work for pronouns (skirzě + nějž != skirzěňž).
-        m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)ň(ž?)$", node.form.lower())
+        m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
         if m:
             node.misc['AddMwt'] = ''
             # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
