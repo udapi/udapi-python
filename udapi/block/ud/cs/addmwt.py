@@ -139,7 +139,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             if token_from_subtokens != node.form:
                 logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
                 return None
-            if subtokens[1] == 's':
+            if re.match(r"^j?s’?$", subtokens[1]):
                 node.misc['AddMwt'] = ''
                 return {
                     'form':   subtokens[0] + ' jsi',
