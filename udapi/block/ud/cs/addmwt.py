@@ -136,7 +136,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
                 return None
             token_from_subtokens = ''.join(subtokens)
-            if re.match(r"^j?s’?$", subtokens[1]):
+            if subtokens[1] == 'jsi':
                 node.misc['AddMwt'] = ''
                 return {
                     'form':   subtokens[0] + ' jsi',
