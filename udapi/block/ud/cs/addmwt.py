@@ -136,9 +136,6 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
                 return None
             token_from_subtokens = ''.join(subtokens)
-            if token_from_subtokens != node.form:
-                logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
-                return None
             if re.match(r"^j?s’?$", subtokens[1]):
                 node.misc['AddMwt'] = ''
                 return {
@@ -152,6 +149,9 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
                 }
             if subtokens[1] == 'ť':
+                if token_from_subtokens != node.form:
+                    logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
+                    return None
                 node.misc['AddMwt'] = ''
                 return {
                     'form':   node.form.lower()[:-1] + ' ť',
