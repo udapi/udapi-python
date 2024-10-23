@@ -268,7 +268,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
-            elif re.match(r'^(co|což|něco|lečco|lecco|nic|nicož)$', node.lemma):
+            elif re.match(r'^(co|což|což?koliv?|něco|lečco|lecco|nic|nicož)$', node.lemma):
                 # Although these pronouns behave by default as neuter singular,
                 # no Gender and Number is annotated. However, quite unusually,
                 # there is Animacy=Inan without Gender.
@@ -354,7 +354,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(je?ho|jejich|jich)$', node.form.lower()):
+            if re.match(r'^(je?ho|jejich|j[ií]ch)$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Prs'],
@@ -372,7 +372,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
             # Relative possessive determiners 'jehož' and 'jejichž' behave similarly
             # to the personal possessive determiners but they do not have Person.
-            elif re.match(r'^(jeho|jejich|jich)ž(e|to)?$', node.form.lower()):
+            elif re.match(r'^(jeho|jejich|j[ií]ch)ž(e|to)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Rel'],
