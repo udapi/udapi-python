@@ -68,7 +68,9 @@ class FixAdvmodByUpos(Block):
             elif node.upos == 'X':
                 node.deprel = 'dep'
         elif node.udeprel == 'nummod':
-            if node.upos == 'DET':
+            if node.upos == 'PRON':
+                node.deprel = 'nmod'
+            elif node.upos == 'DET':
                 node.deprel = 'det'
         elif node.udeprel == 'punct':
             if node.upos != 'PUNCT':
