@@ -150,10 +150,10 @@ class UDPipeOnline:
         #    assert(len(bundle.trees) == 1)
         #    in_trees.append(bundle.trees[0])
         if tokenize:
-            params["data"] = "\n".join(root.text for root in doc.trees)
+            params["data"] = "\n".join(root.text for root in doc.trees) + "\n"
         else:
             params["input"] = "horizontal"
-            params["data"] = "\n".join(" ".join([n.form for n in root.descendants]) for root in doc.trees)
+            params["data"] = "\n".join(" ".join([n.form for n in root.descendants]) for root in doc.trees) + "\n"
 
         out_data = self.perform_request(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
