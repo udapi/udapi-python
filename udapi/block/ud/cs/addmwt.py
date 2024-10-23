@@ -5,16 +5,19 @@ import logging
 
 # Define static rules for 'aby', 'kdyby' and similar forms.
 MWTS = {
-    'abych': {'form': 'aby bych', 'feats': '_ Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
-    'kdybych': {'form': 'když bych', 'feats': '_ Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
-    'abys': {'form': 'aby bys', 'feats': '_ Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
-    'kdybys': {'form': 'když bys', 'feats': '_ Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
-    'aby': {'form': 'aby by', 'feats': '_ Mood=Cnd|VerbForm=Fin'},
-    'kdyby': {'form': 'když by', 'feats': '_ Mood=Cnd|VerbForm=Fin'},
-    'abychom': {'form': 'aby bychom', 'feats': '_ Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
-    'kdybychom': {'form': 'když bychom', 'feats': '_ Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
-    'abyste': {'form': 'aby byste', 'feats': '_ Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
-    'kdybyste': {'form': 'když byste', 'feats': '_ Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'abych': {'form': 'aby bych', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
+    'kdybych': {'form': 'když bych', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
+    'abys': {'form': 'aby bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
+    'kdybys': {'form': 'když bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
+    'aby': {'form': 'aby by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
+    'kdyby': {'form': 'když by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
+    'abychom': {'form': 'aby bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    'kdybychom': {'form': 'když bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    # Old Czech 'abychme' == Modern Czech 'abychom'
+    'abychme': {'form': 'aby bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    'kdybychme': {'form': 'když bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    'abyste': {'form': 'aby byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'kdybyste': {'form': 'když byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
 }
 for v in MWTS.values():
     v['upos'] = 'SCONJ AUX'
