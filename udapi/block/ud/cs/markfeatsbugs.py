@@ -476,7 +476,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
-            elif node.feats['Poss'] == 'Yes': # 'můj', 'tvůj', 'svůj'
+            elif re.match(r'^(můj|tvůj|svůj)$', node.lemma):
                 if node.feats['Reflex'] == 'Yes':
                     self.check_adjective_like(node, ['PronType', 'Poss', 'Reflex'], {
                         'PronType': ['Prs'],
@@ -490,6 +490,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['1', '2'],
                         'Number[psor]': ['Sing', 'Plur']
                     })
+            elif node.lemma == 'čí':
+                self.check_adjective_like(node, ['PronType', 'Poss'], {
+                    'PronType': ['Int', 'Rel'],
+                    'Poss': ['Yes']
+                })
             elif re.match(r'^(sám|samý)$', node.lemma):
                 # The above condition looks at both lemma options, although only one lemma is assumed.
                 # However, in New Czech data the one lemma is "samý" while in Old Czech data it is "sám".
