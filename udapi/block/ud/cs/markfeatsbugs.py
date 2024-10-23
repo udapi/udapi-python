@@ -490,9 +490,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['1', '2'],
                         'Number[psor]': ['Sing', 'Plur']
                     })
-            elif node.lemma == 'čí':
+            elif re.match(r'^(ně|lec|ni)?číž?(koliv?)?$', node.lemma):
                 self.check_adjective_like(node, ['PronType', 'Poss'], {
-                    'PronType': ['Int', 'Rel'],
+                    'PronType': ['Int', 'Rel', 'Ind', 'Neg'],
                     'Poss': ['Yes']
                 })
             elif re.match(r'^(sám|samý)$', node.lemma):
