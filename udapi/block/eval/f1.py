@@ -156,6 +156,13 @@ class F1(BaseWriter):
                 self._pred[x] += 1
                 self._total[x] += 1
 
+    @property
+    def f1(self):
+        pred, gold = self.pred or 1, self.gold or 1  # prevent division by zero
+        precision = self.correct / pred
+        recall = self.correct / gold
+        return 2 * precision * recall / ((precision + recall) or 1)
+
     def process_end(self):
         # Redirect the default filehandle to the file specified by self.files
         self.before_process_document(None)
