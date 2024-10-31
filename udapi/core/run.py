@@ -200,6 +200,9 @@ class Run(object):
         for bname, block in blocks:
             block.process_end()
 
+        # Some users may use the block instances (e.g. to retrieve some variables).
+        return blocks
+
     # TODO: better implementation, included Scen
     def scenario_string(self):
         """Return the scenario string."""
