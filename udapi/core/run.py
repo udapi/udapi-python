@@ -165,6 +165,9 @@ class Run(object):
         # Import blocks (classes) and construct block instances.
         blocks = _import_blocks(block_names, block_args)
 
+        return self.run_blocks(blocks)
+
+    def run_blocks(self, blocks):
         # Initialize blocks (process_start).
         for bname, block in blocks:
             block.process_start()
