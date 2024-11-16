@@ -1,6 +1,5 @@
 """Block to fix case-enhanced dependency relations in Arabic."""
 from udapi.core.block import Block
-import logging
 import re
 
 class FixEdeprels(Block):
@@ -21,7 +20,7 @@ class FixEdeprels(Block):
         'مِثلَ': [],
         'لِأَنَّ':  [],
         'كَمَا': [],
-        'فِي_حِينَ': [],
+#        'فِي_حِينَ': [],
         'فَ':   []
     }
 
@@ -552,7 +551,6 @@ class FixEdeprels(Block):
         for edep in node.deps:
             m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):', edep['deprel'])
             if m:
-                bdeprel = m.group(1)
                 solved = False
                 # Arabic clauses often start with وَ wa "and", which does not add
                 # much to the meaning but sometimes gets included in the enhanced
@@ -564,10 +562,12 @@ class FixEdeprels(Block):
                 # If one of the following expressions occurs followed by another preposition
                 # or by morphological case, remove the additional case marking. For example,
                 # 'jako_v' becomes just 'jako'.
+                re_prefix = r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'
+                re_suffix = r'([_:].+)?$'
                 for x in self.outermost:
                     exceptions = self.outermost[x]
-                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'([_:].+)?$', edep['deprel'])
-                    if m and m.group(2) and not x+m.group(2) in exceptions:
+                    m = re.match(re_prefix + x + re_suffix, edep['deprel'])
+                    if m and (not m.group(2) or not (x + m.group(2)) in exceptions):
                         edep['deprel'] = m.group(1)+':'+x
                         solved = True
                         break
