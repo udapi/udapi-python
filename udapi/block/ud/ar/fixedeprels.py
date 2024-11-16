@@ -397,6 +397,7 @@ class FixEdeprels(Block):
         'كَمَا':              'كَمَا', # remove morphological case; kamā = as
         'كَي':               'لِكَي', # kay = in order to
         'لَ':                'لِ:gen',
+        'لَ_عَلَّ':                'لِ:gen',
         'لِ':                'لِ:gen', # li = to
         'لِ_أَجَلّ':            'لِ:gen',
         'لِ_إِلَى':            'لِ:gen',
