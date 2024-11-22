@@ -30,7 +30,7 @@ class Eval(Block):
     def __init__(self, doc=None, bundle=None, tree=None, node=None, start=None, end=None,
                  before_doc=None, after_doc=None, before_bundle=None, after_bundle=None,
                  coref_mention=None, coref_entity=None, empty_nodes=False,
-                 expand_code=True, **kwargs):
+                 expand_code=True, mwt=None, **kwargs):
         super().__init__(**kwargs)
         self.doc = doc
         self.bundle = bundle
@@ -38,6 +38,7 @@ class Eval(Block):
         self.node = node
         self.start = start
         self.end = end
+        self.mwt = mwt
         self.before_doc = before_doc
         self.after_doc = after_doc
         self.before_bundle = before_bundle
@@ -70,7 +71,7 @@ class Eval(Block):
         if self.doc:
             exec(self.expand_eval_code(self.doc))
 
-        if self.bundle or self.before_bundle or self.after_bundle or self.tree or self.node:
+        if self.bundle or self.before_bundle or self.after_bundle or self.tree or self.node or self.mwt:
             for bundle in doc.bundles:
                 # TODO if self._should_process_bundle(bundle):
                 self.process_bundle(bundle)
@@ -96,7 +97,7 @@ class Eval(Block):
         if self.bundle:
             exec(self.expand_eval_code(self.bundle))
 
-        if self.tree or self.node:
+        if self.tree or self.node or self.mwt:
             trees = bundle.trees
             for tree in trees:
                 if self._should_process_tree(tree):
@@ -120,6 +121,11 @@ class Eval(Block):
             for node in nodes:
                 this = node
                 exec(self.expand_eval_code(self.node))
+
+        if self.mwt:
+            for mwt in tree.multiword_tokens:
+                this = mwt
+                exec(self.expand_eval_code(self.mwt))
 
     def process_start(self):
         if self.start:
