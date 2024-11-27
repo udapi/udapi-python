@@ -36,9 +36,12 @@ class FixEdeprels(Block):
         'ačkoliv':          'ačkoli',
         'ať':               'ať', # remove morphological case
         'ať_forma':         'formou:gen',
+        'ať_na':            'na:loc',
         'ať_s':             's:ins',
         'ať_v':             'v:loc',
+        'ať_v_oblast':      'v_oblasti:gen',
         'ať_z':             'z:gen',
+        'ať_z_hledisko':    'z_hlediska:gen',
         'ať_z_strana':      'ze_strany:gen',
         'až_do':            'do:gen',
         'až_o':             'o:acc',
