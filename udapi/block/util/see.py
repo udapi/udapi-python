@@ -51,7 +51,7 @@ STATS = 'dir,edge,depth,children,siblings,p_upos,p_lemma,c_upos,form,lemma,upos,
 class See(Block):
     """Print statistics about the nodes specified by the parameter `node`."""
 
-    def __init__(self, node, n=5, stats=STATS, **kwargs):
+    def __init__(self, node, n=5, stats=STATS, empty=False, **kwargs):
         """Args:
         `node`: Python expression to be evaluated for each node and if True,
             the node will be considered "matching".
@@ -62,6 +62,7 @@ class See(Block):
             `children` = number of children nodes,
             `p_lemma` = lemma of a parent node, etc).
             See `udapi.core.Node.get_attrs` for a full list of statistics.
+        `empty`: apply the code also on empty nodes
         """
         super().__init__(**kwargs)
         self.node = node
@@ -73,11 +74,13 @@ class See(Block):
             self.match[stat] = Counter()
             self.every[stat] = Counter()
         self.overall = Counter()
+        self.empty = empty
 
     def process_tree(self, root):
         self.overall['trees'] += 1
         tree_match = False
-        for node in root.descendants:
+        nodes = root.descendants_and_empty if self.empty else root.descendants
+        for node in nodes:
             matching = self.process_node(node)
             self.overall['nodes'] += 1
             if matching:
