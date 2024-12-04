@@ -353,7 +353,8 @@ class TextModeTrees(BaseWriter):
             os.environ["FORCE_COLOR"] = "1"
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
-                print('%s = %s' % (key, value))
+                if key[0] != '_':
+                    print('%s = %s' % (key, value))
 
     def _add(self, idx, text):
         self.lines[idx] += text
