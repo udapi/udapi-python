@@ -14,6 +14,7 @@ COLOR_OF = {
     'upos': 'red',
     'deprel': 'blue',
     'ord': 'green',
+    'misc[Entity]': 'magenta',
 }
 
 # Too many instance variables, arguments, branches...
