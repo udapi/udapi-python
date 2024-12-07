@@ -580,11 +580,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # agreement they trigger on verbs (but they don't have Gender=Neut).
                     # It does not make much sense but we must allow Sing before a better
                     # approach is defined and implemented in the data.
+                    # On the other hand, we may want to allow Dual for "stě".
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card', 'Sets'],
                         'NumForm': ['Word'],
-                        'Number': ['Sing', 'Plur'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
         # VERBS AND AUXILIARIES ################################################
