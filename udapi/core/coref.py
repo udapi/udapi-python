@@ -331,8 +331,8 @@ class CorefEntity(object):
     def eid_or_grp(self):
         root = self._mentions[0].head.root
         meta = root.document.meta
-        if 'GRP' in meta['global.Entity'] and meta['tree2docid']:
-            docid = meta['tree2docid'][root]
+        if 'GRP' in meta['global.Entity'] and meta['_tree2docid']:
+            docid = meta['_tree2docid'][root]
             if self._eid.startswith(docid):
                 return self._eid.replace(docid, '', 1)
             else:
@@ -551,7 +551,7 @@ def load_coref_from_misc(doc, strict=True):
                     highest_doc_n += 1
                     docid = f"d{highest_doc_n}."
                 tree2docid[tree] = docid
-        doc.meta['tree2docid'] = tree2docid
+        doc.meta['_tree2docid'] = tree2docid
     elif 'eid' not in global_entity:
         raise ValueError("No eid in global.Entity = " + global_entity)
     fields = global_entity.split('-')
@@ -758,7 +758,7 @@ def store_coref_to_misc(doc):
     if not doc._eid_to_entity:
         return
 
-    tree2docid = doc.meta.get('tree2docid')
+    tree2docid = doc.meta.get('_tree2docid')
     global_entity = doc.meta.get('global.Entity')
     if not global_entity:
         global_entity = 'eid-etype-head-other'

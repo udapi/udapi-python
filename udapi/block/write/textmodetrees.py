@@ -14,6 +14,7 @@ COLOR_OF = {
     'upos': 'red',
     'deprel': 'blue',
     'ord': 'green',
+    'misc[Entity]': 'magenta',
 }
 
 # Too many instance variables, arguments, branches...
@@ -244,7 +245,7 @@ class TextModeTrees(BaseWriter):
             return False
         return self.comment_mark_re.search(root.comment)
 
-    def process_tree(self, root):
+    def process_tree(self, root, force_print=False):
         """Print the tree to (possibly redirected) sys.stdout."""
         if self.print_empty:
             if root.is_root():
@@ -256,7 +257,7 @@ class TextModeTrees(BaseWriter):
                 allnodes.sort()
         else:
             allnodes = root.descendants(add_self=1)
-        if not self.should_print_tree(root, allnodes):
+        if not force_print and not self.should_print_tree(root, allnodes):
             return
         self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
@@ -353,7 +354,8 @@ class TextModeTrees(BaseWriter):
             os.environ["FORCE_COLOR"] = "1"
         if self.print_doc_meta:
             for key, value in sorted(document.meta.items()):
-                print('%s = %s' % (key, value))
+                if key[0] != '_':
+                    print('%s = %s' % (key, value))
 
     def _add(self, idx, text):
         self.lines[idx] += text

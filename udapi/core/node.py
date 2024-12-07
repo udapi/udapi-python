@@ -764,21 +764,21 @@ class Node(object):
 
     def _get_attr(self, name):  # pylint: disable=too-many-return-statements
         if name == 'dir':
-            if self._parent.is_root():
+            if not self._parent or self._parent.is_root():
                 return 'root'
             return 'left' if self.precedes(self._parent) else 'right'
         if name == 'edge':
-            if self._parent.is_root():
+            if not self._parent or self._parent.is_root():
                 return 0
             return self._ord - self._parent._ord
         if name == 'children':
             return len(self._children)
         if name == 'siblings':
-            return len(self._parent._children) - 1
+            return 0 if not self._parent else len(self._parent._children) - 1
         if name == 'depth':
             value = 0
             tmp = self
-            while not tmp.is_root():
+            while tmp and not tmp.is_root():
                 tmp = tmp._parent
                 value += 1
             return value
