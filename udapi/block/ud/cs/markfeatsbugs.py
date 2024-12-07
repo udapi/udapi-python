@@ -638,7 +638,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Voice': ['Act'], # optional in Old Czech data, not used with imperatives in Modern Czech data (at least not yet)
                         'Person': ['1', '2', '3'], # 3rd person imperative occasionally occurs in old Czech (but the form is identical to 2nd person)
                         'Number': ['Sing', 'Dual', 'Plur'],
-                        'Polarity': ['Pos', 'Neg']
+                        'Polarity': ['Pos', 'Neg'],
+                        'Emph': ['Yes']
                     })
                 else: # indicative
                     self.check_required_features(node, ['Mood', 'Voice', 'Tense', 'Person', 'Number', 'Polarity'])
@@ -770,7 +771,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_required_features(node, ['Degree', 'Polarity'])
                     self.check_allowed_features(node, {
                         'Degree': ['Pos', 'Cmp', 'Sup'],
-                        'Polarity': ['Pos', 'Neg']
+                        'Polarity': ['Pos', 'Neg'],
+                        'Emph': ['Yes']
                     })
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
@@ -779,10 +781,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'AdpType': ['Prep', 'Voc'],
                 'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins']
             })
+        # COORDINATING CONJUNCTIONS ############################################
+        elif node.upos == 'CCONJ':
+            self.check_allowed_features(node, {
+                'Emph': ['Yes']
+            })
         # THE REST: NO FEATURES ################################################
         # (OR UNDEFINED UPOS) ##################################################
         else:
-            if not node.upos in ['CCONJ', 'SCONJ', 'PART', 'INTJ', 'PUNCT', 'SYM', 'X']:
+            if not node.upos in ['SCONJ', 'PART', 'INTJ', 'PUNCT', 'SYM', 'X']:
                 bugmsg = 'UnknownUpos'
                 if node.upos:
                     bugmsg += node.upos
