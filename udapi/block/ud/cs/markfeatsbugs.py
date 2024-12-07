@@ -255,10 +255,12 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                             'Variant': ['Short']
                         })
-            elif re.search(r'k[dt]o', node.lemma): # kdo (kto), kdož, někdo, nikdo
+            elif re.search(r'k[dt][oe]', node.lemma): # kdo (kto), kdož, někdo, nikdo
                 # There is no Number. Někdo and nikdo behave like singular;
                 # kdo is by default singular as well but it also occurs as subject
                 # of plural verbs ("ti, kdo nepřišli včas, byli vyloučeni").
+                # In Old Czech, "nikde" is a variant of the pronoun "nikdo" (nobody)
+                # (while in New Czech, "nikde" (nowhere) is a pronominal adverb only).
                 # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with; indirect questions like "Ptal ses, kdo to je?" use Rel.)
                 # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_required_features(node, ['PronType', 'Gender', 'Animacy', 'Case'])
