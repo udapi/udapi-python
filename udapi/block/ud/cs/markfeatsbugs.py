@@ -796,6 +796,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins'],
                 'Abbr': ['Yes']
             })
+        # SUBORDINATING CONJUNCTIONS ###########################################
+        elif node.upos == 'SCONJ':
+            self.check_allowed_features(node, {
+                'Emph': ['Yes']
+            })
         # COORDINATING CONJUNCTIONS ############################################
         elif node.upos == 'CCONJ':
             self.check_allowed_features(node, {
@@ -810,7 +815,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # THE REST: NO FEATURES ################################################
         # (OR UNDEFINED UPOS) ##################################################
         else:
-            if not node.upos in ['SCONJ', 'INTJ', 'PUNCT', 'SYM', 'X']:
+            if not node.upos in ['INTJ', 'PUNCT', 'SYM', 'X']:
                 bugmsg = 'UnknownUpos'
                 if node.upos:
                     bugmsg += node.upos
