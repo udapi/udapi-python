@@ -52,6 +52,8 @@ class FixAdvmodByUpos(Block):
         elif node.udeprel == 'cc':
             if node.upos == 'AUX':
                 node.deprel = 'aux'
+            elif node.upos == 'DET':
+                node.deprel = 'det'
             elif node.upos == 'INTJ':
                 node.deprel = 'discourse'
         elif node.udeprel == 'det':
