@@ -539,6 +539,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
                 # 'pět' and more have Number=Plur, Case: pět, pěti.
                 # 'půl' has no Number and Case, although it behaves syntactically similarly to 'pět' (but genitive is still 'půl', not '*půli').
+                # 'sto', 'tisíc', 'milión', 'miliarda' etc. have Gender (+ possibly Animacy) and Number (depending on their form).
                 if node.lemma == 'jeden':
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
@@ -575,6 +576,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
                         'NumForm': ['Word']
+                    })
+                elif re.match(r'^(sto|tisíc|.+ili[oó]n|.+iliarda)$', node.lemma):
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card', 'Sets'],
+                        'NumForm': ['Word'],
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
                 else:
                     # In PDT, cardinal numerals higher than four in nominative/accusative/vocative
