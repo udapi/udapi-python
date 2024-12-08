@@ -782,17 +782,24 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             self.check_required_features(node, ['AdpType', 'Case'])
             self.check_allowed_features(node, {
                 'AdpType': ['Prep', 'Voc'],
-                'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins']
+                'Case': ['Gen', 'Dat', 'Acc', 'Loc', 'Ins'],
+                'Abbr': ['Yes']
             })
         # COORDINATING CONJUNCTIONS ############################################
         elif node.upos == 'CCONJ':
             self.check_allowed_features(node, {
                 'Emph': ['Yes']
             })
+        # PARTICLES ############################################################
+        elif node.upos == 'PART':
+            # "t." = "totiž"
+            self.check_allowed_features(node, {
+                'Abbr': ['Yes']
+            })
         # THE REST: NO FEATURES ################################################
         # (OR UNDEFINED UPOS) ##################################################
         else:
-            if not node.upos in ['SCONJ', 'PART', 'INTJ', 'PUNCT', 'SYM', 'X']:
+            if not node.upos in ['SCONJ', 'INTJ', 'PUNCT', 'SYM', 'X']:
                 bugmsg = 'UnknownUpos'
                 if node.upos:
                     bugmsg += node.upos
