@@ -608,14 +608,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             # because there are a few biaspectual verbs (e.g. 'analyzovat') that
             # do not have the feature.
             self.check_required_features(node, ['VerbForm'])
-            if node.feats['VerbForm'] == 'Inf':
+            if node.feats['VerbForm'] in ['Inf', 'Sup']:
                 # There is no voice. For some reason, PDT does not annotate that
                 # the infinitive form is active (while a passive infinitive is
                 # a combination of the infinitive with a passive participle).
                 self.check_required_features(node, ['Polarity'])
                 self.check_allowed_features(node, {
                     'Aspect': ['Imp', 'Perf'],
-                    'VerbForm': ['Inf'],
+                    'VerbForm': ['Inf', 'Sup'],
                     'Polarity': ['Pos', 'Neg']
                 })
             elif node.feats['VerbForm'] == 'Fin':
