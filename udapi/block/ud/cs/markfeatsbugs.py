@@ -603,6 +603,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     })
         # VERBS AND AUXILIARIES ################################################
         elif node.upos in ['VERB', 'AUX']:
+            # There are only three lemmas recognized as AUX in Czech. This is not
+            # about features and it would be caught by the UD validator, but it
+            # is error in morphology, so let's report it here as well.
+            if node.upos == 'AUX' and node.lemma not in ['být', 'bývat', 'bývávat']:
+                self.bug(node, 'NonAuxLemma')
             # All Czech verbs (and some adjectives and nouns) must have VerbForm.
             # Almost all verbs have lexical Aspect but we cannot require it
             # because there are a few biaspectual verbs (e.g. 'analyzovat') that
