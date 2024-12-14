@@ -71,10 +71,7 @@ class UDPipeOnline:
             return
         in_data = " ".join([n.form for n in descendants])
         params = {"model": self.model, "data": in_data, "input":"horizontal", "tagger":""}
-        if tag:
-            attrs = 'upos xpos lemma feats'.split()
-        else:
-            attrs = []
+        attrs = 'upos xpos lemma feats'.split() if tag else []
         if parse:
             params["parser"] = ""
             attrs.append('deprel')
