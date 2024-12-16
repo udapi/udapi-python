@@ -134,10 +134,10 @@ class Conllu(BaseWriter):
                 '_' if node._feats is None else str(node.feats), head, node.deprel,
                 node.raw_deps, '_' if node._misc is None else str(node.misc))))
 
-        # Empty sentences are not allowed in CoNLL-U,
+        # Empty sentences (sentences with no non-empty nodes) are not allowed in CoNLL-U,
         # but with print_empty_trees==1 (which is the default),
         # we will print an artificial node, so we can print the comments.
-        if not nodes:
+        if not tree._descendants:
             print("1\t_\t_\t_\t_\t_\t0\t_\t_\tEmpty=Yes")
 
         # Empty line separates trees in CoNLL-U (and is required after the last tree as well)

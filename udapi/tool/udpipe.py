@@ -22,8 +22,10 @@ class UDPipe:
         self.conllu_reader = ConlluReader()
         self.tokenizer = self.tool.newTokenizer(Model.DEFAULT)
 
-    def tag_parse_tree(self, root):
+    def tag_parse_tree(self, root, tag=True, parse=True):
         """Tag (+lemmatize, fill FEATS) and parse a tree (already tokenized)."""
+        if not tag and not parse:
+            raise ValueError('tag_parse_tree(root, tag=False, parse=False) does not make sense.')
         descendants = root.descendants
         if not descendants:
             return
@@ -34,11 +36,15 @@ class UDPipe:
             raise IOError("UDPipe error " + self.error.message)
         self.conllu_reader.files.filehandle = io.StringIO(out_data)
         parsed_root = self.conllu_reader.read_tree()
-        root.flatten()
+        attrs = 'upos xpos lemma feats'.split() if tag else []
+        if parse:
+            attrs.append('deprel')
+            root.flatten()
         for parsed_node in parsed_root.descendants:
             node = descendants[parsed_node.ord - 1]
-            node.parent = descendants[parsed_node.parent.ord - 1] if parsed_node.parent.ord else root
-            for attr in 'upos xpos lemma feats deprel'.split():
+            if parse:
+                node.parent = descendants[parsed_node.parent.ord - 1] if parsed_node.parent.ord else root
+            for attr in attrs:
                 setattr(node, attr, getattr(parsed_node, attr))
 
         # TODO: benchmark which solution is the fastest one. E.g. we could also do
