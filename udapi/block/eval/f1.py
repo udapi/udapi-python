@@ -126,7 +126,7 @@ class F1(BaseWriter):
             i, j, c, un_pred, un_gold, common  = 0, 0, 0, [], [], []
             while i < len(pred_tokens) and j < len(gold_tokens):
                 if c == len(nf_common):
-                    common += find_lcs(pred_tokens[i+1:], gold_tokens[j+1:])
+                    common += find_lcs(pred_tokens[i:], gold_tokens[j:])
                     break
                 while nf_common[c] != pred_tokens[i]:
                     un_pred.append(pred_tokens[i])
