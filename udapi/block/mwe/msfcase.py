@@ -143,7 +143,16 @@ class MsfCase(Block):
             return
         else:
             node.misc['MSFFunc'] = 'No'
-        adpositions = [x.lemma for x in node.children if x.udeprel == 'case']
+        # Get all case markers (adpositions) attached to the current node.
+        adpositions = []
+        for c in node.children:
+            if c.udeprel == 'case':
+                lemma = c.lemma
+                # If it has outgoing 'fixed' relations, it is a multiword adposition.
+                fixedchildren = [x.lemma for x in c.children if x.udeprel == 'fixed']
+                if fixedchildren:
+                    lemma += '_'.join(fixedchildren)
+                adpositions.append(lemma)
         msfcase = node.feats['Case']
         if adpositions:
             adpostring = '_'.join(adpositions)
