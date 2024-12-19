@@ -143,8 +143,8 @@ class MsfCase(Block):
         if adpositions:
             adpostring = '_'.join(adpositions)
             caseadpostring = adpostring + '+' + msfcase
-            if caseadpostring in adposmap:
-                msfcase = adposmap[caseadpostring]
+            if caseadpostring in self.adposmap:
+                msfcase = self.adposmap[caseadpostring]
             else:
                 msfcase = caseadpostring
         node.misc['MSFCase'] = msfcase
