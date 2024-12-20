@@ -14,7 +14,7 @@ class MsfInit(Block):
         for f in node.feats:
             # Only selected features will be copied. Certain features are not
             # interesting for the morphosyntactic annotation.
-            if f not in ['AdpType', 'NameType', 'Style', 'Variant']:
+            if f not in ['Abbr', 'AdpType', 'Emph', 'Foreign', 'NameType', 'Style', 'Typo', 'Variant']:
                 node.misc['MSF'+f] = node.feats[f]
         # We are particularly interested in the Case feature but some nominals
         # lack it (e.g. acronyms or numbers). If there is a preposition, it may
