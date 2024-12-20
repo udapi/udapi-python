@@ -12,6 +12,6 @@ class MsfRemoveFunc(Block):
         Removes MSF* features if MSFFunc=Yes.
         """
         if node.misc['MSFFunc'] == 'Yes':
-            for msf in node.misc:
-                if msf.startswith('MSF'):
-                    node.misc[msf] = ''
+            msfeats = [x for x in node.misc if x.startswith('MSF')]
+            for msf in msfeats:
+                node.misc[msf] = ''
