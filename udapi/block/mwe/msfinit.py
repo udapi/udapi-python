@@ -12,7 +12,10 @@ class MsfInit(Block):
         For every feature in FEATS, creates its MSF* counterpart in MISC.
         """
         for f in node.feats:
-            node.misc['MSF'+f] = node.feats[f]
+            # Only selected features will be copied. Certain features are not
+            # interesting for the morphosyntactic annotation.
+            if f not in ['AdpType', 'NameType', 'Style', 'Variant']:
+                node.misc['MSF'+f] = node.feats[f]
         # We are particularly interested in the Case feature but some nominals
         # lack it (e.g. acronyms or numbers). If there is a preposition, it may
         # indicate the expected case of the nominal.
