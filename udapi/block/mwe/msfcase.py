@@ -153,7 +153,9 @@ class MsfCase(Block):
                 if fixedchildren:
                     lemma += '_' + '_'.join(fixedchildren)
                 adpositions.append(lemma)
-        msfcase = node.feats['Case']
+        # We assume that all features were copied from FEATS to MISC in mwe.MsfInit.
+        # They may have been further processed there, so we take the input from there.
+        msfcase = node.misc['MSFCase']
         if adpositions:
             adpostring = '_'.join(adpositions)
             caseadpostring = adpostring + '+' + msfcase
