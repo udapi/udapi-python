@@ -3,6 +3,7 @@ Morphosyntactic features (UniDive):
 Derive a MS Case feature from morphological case and adposition.
 """
 from udapi.core.block import Block
+import logging
 
 class MsfCase(Block):
 
@@ -162,5 +163,6 @@ class MsfCase(Block):
             if caseadpostring in self.adposmap:
                 msfcase = self.adposmap[caseadpostring]
             else:
+                logging.warn(f"No Case value found for '{caseadpostring}'.")
                 msfcase = caseadpostring
         node.misc['MSFCase'] = msfcase
