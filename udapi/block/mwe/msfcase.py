@@ -140,7 +140,7 @@ class MsfCase(Block):
             node.misc['MSFFunc'] = 'Yes'
             return
         elif node.udeprel in ['det', 'amod']:
-            node.misc['MSCFunc'] = 'No'
+            node.misc['MSFFunc'] = 'No'
             return
         else:
             node.misc['MSFFunc'] = 'No'
