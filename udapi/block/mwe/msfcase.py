@@ -136,7 +136,7 @@ class MsfCase(Block):
         # Do not do anything for function words.
         # Specifically for Case, also skip 'det' and 'amod' modifiers (congruent attributes)
         # because their Case is only agreement feature inherited from the head noun.
-        if node.udeprel in ['case', 'mark', 'cc', 'aux', 'cop']:
+        if node.udeprel in ['case', 'mark', 'cc', 'aux', 'cop', 'punct']:
             node.misc['MSFFunc'] = 'Yes'
             return
         elif node.udeprel in ['det', 'amod']:
