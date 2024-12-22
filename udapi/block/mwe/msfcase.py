@@ -54,6 +54,7 @@ class MsfCase(Block):
         'doprostřed+Gen': 'Cnl',
         'mezi+Acc':       'Itl',
         'na+Acc':         'All',
+        'na+Gen':         'All', # annotation error
         'k+Dat':          'Apl',
         'nad+Acc':        'Spl',
         'pod+Acc':        'Sbl',
@@ -62,6 +63,7 @@ class MsfCase(Block):
         'dokud':          'Tan',
         'nežli':          'Tan',
         'v+Acc':          'Tem',
+        'v+Nom':          'Tem', # annotation error
         'v_období+Gen':   'Tpx',
         'počátkem+Gen':   'Din',
         'začátkem+Gen':   'Din',
