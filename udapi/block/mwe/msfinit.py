@@ -3,6 +3,7 @@ Morphosyntactic features (UniDive):
 Initialization. Copies features from FEATS as MSF* attributes to MISC.
 """
 from udapi.core.block import Block
+import re
 
 class MsfInit(Block):
 
@@ -39,3 +40,14 @@ class MsfInit(Block):
                 node.misc['MSFCase'] = 'Nom'
             elif node.udeprel == 'obj':
                 node.misc['MSFCase'] = 'Acc'
+        # If the node contains Phrase features in MISC (periphrastic verb forms
+        # detected by Lenka's code), replace the MS features with them.
+        phrasefeatures = [x for x in node.misc if re.match(r"^Phrase[A-Z]", x)]
+        for pf in phrasefeatures:
+            msf = pf
+            if msf == 'PhraseForm':
+                msf = 'MSFVerbForm'
+            else:
+                msf = re.sub(r"Phrase", 'MSF', pf)
+            node.misc[msf] = node.misc[pf]
+            node.misc[pf] = ''
