@@ -27,6 +27,8 @@ class MsfCreateAbstract(Block):
                     subject.upos = 'PRON'
                     subject.feats['PronType'] = 'Prs'
                     subject.misc['MSFPronType'] = 'Prs'
+                    subject.feats['Case'] = 'Nom'
+                    subject.misc['MSFCase'] = 'Nom'
                     for f in ['Number', 'Person', 'Gender', 'Animacy', 'Polite']:
                         msf = 'MSF' + f
                         if node.misc[msf]:
