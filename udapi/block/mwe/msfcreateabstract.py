@@ -26,8 +26,10 @@ class MsfCreateAbstract(Block):
                     subject = node.create_empty_child('nsubj')
                     subject.upos = 'PRON'
                     subject.feats['PronType'] = 'Prs'
+                    subject.misc['MSFPronType'] = 'Prs'
                     for f in ['Number', 'Person', 'Gender', 'Animacy', 'Polite']:
                         msf = 'MSF' + f
                         if node.misc[msf]:
                             subject.feats[f] = node.misc[msf]
                             subject.misc[msf] = node.misc[msf]
+                    subject.misc['MSFFunc'] = 'No'
