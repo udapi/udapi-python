@@ -2,7 +2,6 @@
    but they should be treated as normal verbs (with secondary predication)
    instead."""
 from udapi.core.block import Block
-import logging
 import re
 
 class FixPseudoCop(Block):
