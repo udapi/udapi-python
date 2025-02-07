@@ -3,7 +3,6 @@ Block util.JoinSentence will join a given sentence with the preceding one.
 """
 import logging
 from udapi.core.block import Block
-from udapi.core.root import Root
 
 class JoinSentence(Block):
     """
