@@ -19,10 +19,12 @@ class FixEdeprels(Block):
         'jakkoli': [], # 'jakkoliv' se převede na 'jakkoli' dole
         'jako':    [],
         'jakoby':  ['jakoby_pod:ins'], # these instances in FicTree should be spelled 'jako by'
+        'když':    [],
         'než':     ['než_aby'],
         'protože': [],
         'takže':   [],
-        'třebaže': []
+        'třebaže': [],
+        'že':      []
     }
 
     # Secondary prepositions sometimes have the lemma of the original part of
@@ -90,6 +92,7 @@ class FixEdeprels(Block):
         'na_od':            'na_rozdíl_od:gen',
         'na_podklad':       'na_podkladě:gen',
         'na_rozdíl_od':     'na_rozdíl_od:gen',
+        'na_účet':          'na_účet:gen',
         'na_újma':          'gen', # 'nebude na újmu' is a multi-word predicate but 'na újmu' is probably not used as an independent oblique modifier
         'na_úroveň':        'na_úrovni:gen',
         'na_úsek':          'na_úseku:gen',
@@ -162,8 +165,11 @@ class FixEdeprels(Block):
         'uprostřed':        'uprostřed:gen',
         'uvnitř':           'uvnitř:gen',
         'v_analogie_s':     'v_analogii_s:ins',
+        'v_blízkost':       'v_blízkosti:gen',
+        'v_čas':            'v_čase:gen',
         'v_čelo':           'v_čele:gen',
         'v_čelo_s':         'v_čele_s:ins',
+        'v_doba':           'v_době:gen',
         'v_dohoda_s':       'v_dohodě_s:ins',
         'v_duch':           'v_duchu:gen',
         'v_důsledek':       'v_důsledku:gen',
@@ -219,6 +225,7 @@ class FixEdeprels(Block):
         'vina':             'vinou:gen',
         'vliv':             'vlivem:gen',
         'vůči':             'vůči:dat',
+        'výměna_za':        'výměnou_za:acc',
         'vzhledem':         'vzhledem_k:dat',
         'vzhledem_k':       'vzhledem_k:dat',
         'z':                'z:gen',
