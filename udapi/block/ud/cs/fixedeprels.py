@@ -13,6 +13,7 @@ class FixEdeprels(Block):
     outermost = {
         'ač':      [],
         'ačkoli':  [], # 'ačkoliv' se převede na 'ačkoli' dole
+        'ať':      [],
         'byť':     [],
         'i_když':  [],
         'jak':     [],
@@ -21,6 +22,7 @@ class FixEdeprels(Block):
         'jakoby':  ['jakoby_pod:ins'], # these instances in FicTree should be spelled 'jako by'
         'když':    [],
         'než':     ['než_aby'],
+        'nežli':   [],
         'protože': [],
         'takže':   [],
         'třebaže': [],
