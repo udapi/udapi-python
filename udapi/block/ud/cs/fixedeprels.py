@@ -156,6 +156,7 @@ class FixEdeprels(Block):
         'takže':            'takže', # remove morphological case
         'takže_a':          'takže',
         'třebaže':          'třebaže', # remove morphological case
+        'tvář_v_tvář':      'tváří_v_tvář:dat',
         'u':                'u:gen',
         'u_příležitost':    'u_příležitosti:gen',
         'uprostřed':        'uprostřed:gen',
