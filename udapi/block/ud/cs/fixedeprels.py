@@ -115,6 +115,7 @@ class FixEdeprels(Block):
         'oproti':           'oproti:dat',
         'po_v':             'po:loc',
         'po_doba':          'po_dobu:gen',
+        'po_stránka':       'po_stránce:gen',
         'po_vzor':          'po_vzoru:gen',
         'poblíž':           'poblíž:gen',
         'počátek':          'počátkem:gen',
