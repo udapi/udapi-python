@@ -11,6 +11,7 @@ class FixEdeprels(Block):
     # by all the inner cases.
     # The list in the value contains exceptions that should be left intact.
     outermost = {
+        'aby':     [],
         'ač':      [],
         'ačkoli':  [], # 'ačkoliv' se převede na 'ačkoli' dole
         'ať':      [],
