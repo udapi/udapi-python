@@ -54,6 +54,7 @@ class FixEdeprels(Block):
         'během':            'během:gen',
         'bez':              'bez:gen',
         'bez_ohled_na':     'bez_ohledu_na:acc',
+        'bez_na':           'bez_ohledu_na:acc', ###!!! a temporary hack to silence the validator about (https://github.com/UniversalDependencies/UD_Czech-PDT/issues/10#issuecomment-2710721703)
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
         'blízko':           'blízko:dat',
