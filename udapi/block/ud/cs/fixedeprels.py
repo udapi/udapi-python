@@ -303,13 +303,13 @@ class FixEdeprels(Block):
         for edep in node.deps:
             m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):', edep['deprel'])
             if m:
-                bdeprel = m.group(1)
                 solved = False
                 # Issues caused by errors in the original annotation must be fixed early.
                 # Especially if acl|advcl occurs with a preposition that unambiguously
                 # receives a morphological case in the subsequent steps, and then gets
                 # flagged as solved.
                 edep['deprel'] = re.sub(r'^advcl:do(?::gen)?$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
+                edep['deprel'] = re.sub(r'^advcl:pro(?::acc)?$', r'advcl:aby', edep['deprel']) # byl by pro, abychom... ###!!! Opravit i konverzi stromu.
                 edep['deprel'] = re.sub(r'^acl:k(?::dat)?$', r'acl', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^advcl:místo(?::gen)?$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
