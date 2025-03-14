@@ -127,10 +127,6 @@ class MarkBugs(Block):
             if not feats['Mood']:
                 self.log(node, 'finverb-mood', 'VerbForm=Fin but Mood feature is missing')
 
-        if feats['Degree'] and upos not in ('ADJ', 'ADV'):
-            self.log(node, 'degree-upos',
-                     'Degree=%s upos!=ADJ|ADV (but %s)' % (feats['Degree'], upos))
-
         subject_children = [n for n in node.children if 'subj' in n.udeprel and n.sdeprel != 'outer']
         if len(subject_children) > 1:
             self.log(node, 'multi-subj', 'More than one (non-outer) [nc]subj child')
