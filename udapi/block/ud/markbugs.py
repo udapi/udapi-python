@@ -180,14 +180,6 @@ class MarkBugs(Block):
         if upos == 'PUNCT' and node.is_nonprojective_gap() and not parent.is_nonprojective_gap():
             self.log(node, 'punct-nonproj-gap', 'upos=PUNCT and causing a non-projectivity')
 
-        # http://universaldependencies.org/u/dep/cc.html says
-        #   "cc is the relation between a conjunct and a preceding
-        #   [coordinating conjunction](http://universaldependencies.org/u/pos/CCONJ)."
-        # No other upos is allowed in the documentation, although e.g. PART is common in the data.
-        # There are clear cases of adverbs in role of cc (e.g. "respektive" in Swedish and Czech).
-        if udeprel == 'cc' and upos not in ('CCONJ', 'ADV'):
-            self.log(node, 'cc-upos', "deprel=cc upos!=CCONJ (but %s): " % upos)
-
         if udeprel == 'cop':
             lemma = node.lemma if node.lemma != '_' else form
             self.cop_nodes[lemma].append(node)
