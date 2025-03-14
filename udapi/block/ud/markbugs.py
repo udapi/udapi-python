@@ -131,7 +131,15 @@ class MarkBugs(Block):
         if len(subject_children) > 1:
             self.log(node, 'multi-subj', 'More than one (non-outer) [nc]subj child')
 
-        object_children = [n for n in node.children if n.udeprel in ('obj', 'ccomp')]
+        # Since "ccomp" is considered a clausal counterpart of "obj" in UD v2,
+        # one may conclude that "obj" and "ccomp" are mutually exclusive.
+        # However, this has always be a gray zone and people have occasionally
+        # brought up examples where they would want the two relations to co-occur.
+        # Also, there is no clausal counterpart for "iobj", which may cause some
+        # of the problems. It is probably safer not to consider "ccomp" in this
+        # test. Nevertheless, two "obj" under the same parent are definitely an
+        # error.
+        object_children = [n for n in node.children if n.udeprel == 'obj']
         if len(object_children) > 1:
             self.log(node, 'multi-obj', 'More than one obj|ccomp child')
 
