@@ -138,6 +138,7 @@ class FixEdeprels(Block):
         'počínaje':         'počínaje:ins',
         'počínat':          'počínaje:ins',
         'pod_dojem':        'pod_dojmem:gen',
+        'pod_tlak':         'pod_tlakem:gen',
         'pod_vliv':         'pod_vlivem:gen',
         'pod_záminka':      'pod_záminkou:gen',
         'podle':            'podle:gen',
