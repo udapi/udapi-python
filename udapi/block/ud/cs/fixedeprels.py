@@ -105,6 +105,7 @@ class FixEdeprels(Block):
         'na_od':            'na_rozdíl_od:gen',
         'na_podklad':       'na_podkladě:gen',
         'na_rozdíl_od':     'na_rozdíl_od:gen',
+        'na_strana':        'na_straně:gen',
         'na_účet':          'na_účet:gen',
         'na_újma':          'gen', # 'nebude na újmu' is a multi-word predicate but 'na újmu' is probably not used as an independent oblique modifier
         'na_úroveň':        'na_úrovni:gen',
