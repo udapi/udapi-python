@@ -92,6 +92,7 @@ class FixEdeprels(Block):
         'kdykoliv':         'kdykoli',
         'kol':              'kolem:gen',
         'kolem':            'kolem:gen',
+        'koncem':           'koncem:gen',
         'konec':            'koncem:gen',
         'krom':             'kromě:gen',
         'kromě':            'kromě:gen',
