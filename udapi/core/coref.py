@@ -257,6 +257,10 @@ class CorefMention(object):
     def span(self, new_span):
         self.words = span_to_nodes(self._head.root, new_span)
 
+    def __str__(self):
+        """String representation of the CorefMention object: Mention<m.entity.eid: m.head>."""
+        return f"Mention<{self._entity._eid}: {self._head}>"
+
 
 @functools.total_ordering
 class CorefMentionSubspan(object):
@@ -385,6 +389,11 @@ class CorefEntity(object):
             if m._bridging:
                 for b in m._bridging:
                     yield b
+
+    def __str__(self):
+        """String representation of the CorefEntity object: Entity<e.eid: m.head>."""
+        first_mention_head = self._mentions[0].head.form if self._mentions else ""
+        return f"Entity<{self._eid}: {first_mention_head}>"
 
 
 # BridgingLink
