@@ -261,6 +261,11 @@ class CorefMention(object):
         """String representation of the CorefMention object: Mention<m.entity.eid: m.head>."""
         return f"Mention<{self._entity._eid}: {self._head}>"
 
+    def remove(self):
+        for word in self._words:
+            word._mentions.remove(self)
+        self._entity._mentions.remove(self)
+
 
 @functools.total_ordering
 class CorefMentionSubspan(object):
