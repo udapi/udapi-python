@@ -71,6 +71,20 @@ else:
 logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s',
                     level=level)
 
+# Global flag to track if an unhandled exception occurred
+_unhandled_exception_occurred = False
+
+def _custom_excepthook(exc_type, exc_value, traceback):
+    global _unhandled_exception_occurred
+    _unhandled_exception_occurred = True
+
+    # Call the default excepthook to allow normal error reporting
+    sys.__excepthook__(exc_type, exc_value, traceback)
+
+# Override the default excepthook
+sys.excepthook = _custom_excepthook
+
+
 # Process and provide the scenario.
 if __name__ == "__main__":
 
@@ -86,7 +100,13 @@ if __name__ == "__main__":
     # Udapi documents have a many cyclic references, so running GC is quite slow.
     if not args.gc:
         gc.disable()
-        atexit.register(os._exit, 0)
+        # When an exception/error has happened, udapy should exit with a non-zero exit code,
+        # so that users can use `udapy ... || echo "Error detected"` (or Makefile reports errors).
+        # However, we cannot use `atexit.register(lambda: os._exit(1 if sys.exc_info()[0] else 0))`
+        # because the Python has already exited the exception-handling block
+        # (the exception/error has been already reported and sys.exc_info()[0] is None).
+        # We thus keep record whether _unhandled_exception_occurred.
+        atexit.register(lambda: os._exit(1 if _unhandled_exception_occurred else 0))
         atexit.register(sys.stderr.flush)
     if args.save:
         args.scenario = args.scenario + ['write.Conllu']
