@@ -121,6 +121,7 @@ class BaseReader(Block):
             if filehandle is None:
                 self.finished = True
                 return True
+        logging.info(f"Reading {self.files.filename}")
 
         while True:
             try:
@@ -209,6 +210,7 @@ class BaseReader(Block):
                 if filehandle is None:
                     self.finished = True
                     return
+                logging.info(f"Reading {self.files.filename}")
 
             trees_loaded = 0
             while True:
@@ -216,6 +218,7 @@ class BaseReader(Block):
                 if root is None:
                     if (trees_loaded == 0 or self.merge) and self.files.has_next_file():
                         filehandle = self.next_filehandle()
+                        logging.info(f"Reading {self.files.filename}")
                         continue
                     self.finished = not self.files.has_next_file()
                     break
