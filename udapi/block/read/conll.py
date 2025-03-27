@@ -91,7 +91,8 @@ class Conll(udapi.block.read.conllu.Conllu):
                     else:
                         raise exception
             elif attribute_name == 'ord':
-                setattr(node, 'ord', int(value))
+                if int(value) != node._ord:
+                    raise ValueError(f"Node {node} ord mismatch: {value}, but expecting {node._ord} at:\n{line}")
             elif attribute_name == 'deps':
                 setattr(node, 'raw_deps', value)
             elif attribute_name != '_' and value != '_':
