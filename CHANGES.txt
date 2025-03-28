@@ -2,6 +2,11 @@ Udapi Change Log
 ----------------
 See https://github.com/udapi/udapi-python/commits/master for details.
 
+0.4.0 2024-03-28
+ - support for CorefUD 1.3
+ - edits by Dan Zeman in block.ud.*
+ - requires Python 3.9+ (difficult to test older versions in Circle-CI)
+
 0.3.0 2022-04-06
  - support for CorefUD 1.0 (new CoNLL-U format for coreference annotation)
  - edits by Dan Zeman in block.ud.*
