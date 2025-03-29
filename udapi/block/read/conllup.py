@@ -20,7 +20,7 @@ NORMAL_ATTRS = 'form lemma upos xpos feats deprel misc'.split()
 class Conllup(udapi.block.read.conll.Conll):
     """A reader of the CoNLL-UPlus files."""
 
-    def __init__(self, attributes='autodetect', **kwargs):
+    def __init__(self, attributes='autodetect', save_global_columns=False, **kwargs):
         """Create the Conllup reader object.
 
         Args:
@@ -28,8 +28,13 @@ class Conllup(udapi.block.read.conll.Conll):
             (can be used if the global.columns header is missing or needs to be overriden).
             Default='autodetect' which means the column names will be loaded from the global.columns header.
             For ignoring a column, use "_" as its name.
+        save_global_columns: keep the "global.columns" header in root.comments. Default=False.
+            Note that when saving the output to CoNLL-U, the comment is not needed
+            and it may be even misleading. It could be helpful only once write.Conllup is implemented
+            (with the possibility to use the same columns as in the input file).
         """
         super().__init__(**kwargs)
+        self.save_global_columns = save_global_columns
         if attributes == 'autodetect':
             self.node_attributes = None
         else:
@@ -42,7 +47,8 @@ class Conllup(udapi.block.read.conll.Conll):
                 return super().parse_comment_line(line, root)
             global_columns = global_columns_match.group(1)
             self.node_attributes = [COLUMN_MAP.get(v, v.lower()) for v in global_columns.split(" ")]
-            root.comment += line + '\n'
+            if self.save_global_columns:
+                root.comment += line[1:] + '\n'
             return
         return super().parse_comment_line(line, root)
 
