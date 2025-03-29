@@ -136,8 +136,7 @@ class Conll(udapi.block.read.conllu.Conllu):
             if node is parent:
                 if self.fix_cycles:
                     logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", node)
-                    node._parent = root
-                    root._children.append(node)
+                    parent = root
                 else:
                     raise ValueError(f"Detected a cycle: {node} attached to itself")
             elif node._children:
