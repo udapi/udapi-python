@@ -14,6 +14,7 @@ class FixEdeprels(Block):
         'aby':     [],
         'ač':      [],
         'ačkoli':  [], # 'ačkoliv' se převede na 'ačkoli' dole
+        'ačkoliv': [], # ... ale možná ne když je doprovázeno předložkou
         'ať':      [],
         'byť':     [],
         'i_když':  [],
