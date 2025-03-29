@@ -328,6 +328,7 @@ class FixEdeprels(Block):
                 edep['deprel'] = re.sub(r'^advcl:v$', r'obl:v:loc', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:v_duchu?(?::gen)?$', r'obl:v_duchu:gen', edep['deprel'])
                 edep['deprel'] = re.sub(r'^nmod:když.*$', r'nmod', edep['deprel']) # nadějí když ne na zbohatnutí, tak alespoň na dobrou obživu ###!!! perhaps "když" or "když ne" should be analyzed as "cc" here!
+                edep['deprel'] = re.sub(r'^obl:ačkoli.*$', r'obl', edep['deprel']) # nadějí když ne na zbohatnutí, tak alespoň na dobrou obživu ###!!! perhaps "když" or "když ne" should be analyzed as "cc" here!
                 # Removing 'až' must be done early. The remainder may be 'počátek'
                 # and we will want to convert it to 'počátkem:gen'.
                 edep['deprel'] = re.sub(r'^(nmod|obl(?::arg)?):až_(.+):(gen|dat|acc|loc|ins)', r'\1:\2:\3', edep['deprel'])
