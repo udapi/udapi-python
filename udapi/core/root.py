@@ -144,7 +144,7 @@ class Root(Node):
             The default (None) is to delete them (and all their descendants).
             `warn` means to issue a warning.
         """
-        if children is not None and self.children:
+        if children is not None and self._children:
             logging.warning('%s is being removed by remove(children=%s), '
                             ' but it has (unexpected) children', self, children)
         self.bundle.trees = [root for root in self.bundle.trees if root != self]
@@ -278,10 +278,10 @@ class Root(Node):
             node.ord = new_ord
             node._root = self
             if not whole_tree:
-                for child in [n for n in node.children if n not in nodes]:
+                for child in [n for n in node._children if n not in nodes]:
                     child._parent = old_root
-                    old_root._children = sorted(old_root.children + [child])
-                node._children = [n for n in node.children if n in nodes]
+                    old_root._children = sorted(old_root._children + [child])
+                node._children = [n for n in node._children if n in nodes]
             if node.parent == old_root or (not whole_tree and node.parent not in nodes):
                 node.parent._children = [n for n in node.parent._children if n != node]
                 node._parent = self

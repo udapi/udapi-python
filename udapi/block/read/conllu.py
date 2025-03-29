@@ -201,7 +201,7 @@ class Conllu(BaseReader):
                     root._children.append(node)
                 else:
                     raise ValueError(f"Detected a cycle: {node} attached to itself")
-            elif node.children:
+            elif node._children:
                 climbing = parent._parent
                 while climbing:
                     if climbing is node:

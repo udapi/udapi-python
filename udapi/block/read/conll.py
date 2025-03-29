@@ -79,22 +79,24 @@ class Conll(udapi.block.read.conllu.Conllu):
         # but it allows for arbitrary columns
         node = root.create_child()
         for (n_attribute, attribute_name) in enumerate(self.node_attributes):
+            value = fields[n_attribute]
             if attribute_name == 'head':
                 try:
-                    parents.append(int(fields[n_attribute]))
+                    parents.append(int(value))
                 except ValueError as exception:
-                    if not self.strict and fields[n_attribute] == '_':
+                    if not self.strict and value == '_':
                         if self.empty_parent == 'warn':
                             logging.warning("Empty parent/head index in '%s'", line)
                         parents.append(0)
                     else:
                         raise exception
             elif attribute_name == 'ord':
-                setattr(node, 'ord', int(fields[n_attribute]))
+                if int(value) != node._ord:
+                    raise ValueError(f"Node {node} ord mismatch: {value}, but expecting {node._ord} at:\n{line}")
             elif attribute_name == 'deps':
-                setattr(node, 'raw_deps', fields[n_attribute])
-            elif attribute_name != '_' and fields[n_attribute] != '_':
-                setattr(node, attribute_name, fields[n_attribute])
+                setattr(node, 'raw_deps', value)
+            elif attribute_name != '_' and value != '_':
+                setattr(node, attribute_name, value)
 
         nodes.append(node)
 
@@ -138,7 +140,7 @@ class Conll(udapi.block.read.conllu.Conllu):
                     root._children.append(node)
                 else:
                     raise ValueError(f"Detected a cycle: {node} attached to itself")
-            elif node.children:
+            elif node._children:
                 climbing = parent._parent
                 while climbing:
                     if climbing is node:
