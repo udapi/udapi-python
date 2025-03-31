@@ -1,9 +1,8 @@
-""""Conllup is a reader block for the CoNLL-UPlus format.
+"""Conllup is a reader block for the CoNLL-UPlus format.
 
 Columns which don't have standardize attributes in Udapi/CoNLL-U
 are stored in MISC (as key=value pairs).
 """
-import json
 import logging
 import re
 
