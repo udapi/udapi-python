@@ -2,6 +2,9 @@
 
 Columns which don't have standardize attributes in Udapi/CoNLL-U
 are stored in MISC (as key=value pairs).
+
+This code has been only tested on Hungarian KorKor files for CorefUD so far.
+However, in the end, it is not used there (xtsv files are used instead conllup).
 """
 import logging
 import re
