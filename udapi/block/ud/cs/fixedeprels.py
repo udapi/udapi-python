@@ -172,6 +172,7 @@ class FixEdeprels(Block):
         's_přihlédnutí_k':  's_přihlédnutím_k:dat',
         's_přihlédnutí_na': 's_přihlédnutím_na:acc',
         's_výjimka':        's_výjimkou:gen',
+        's_výjimka_že':     's_výjimkou_že',
         's_vyloučení':      's_vyloučením:gen',
         's_zřetel_k':       'se_zřetelem_k:dat',
         's_zřetel_na':      'se_zřetelem_na:acc',
