@@ -33,7 +33,7 @@ class BaseReader(Block):
         self.max_docs = max_docs
         self._docs_loaded = 0
         # `global.Entity` is a header stored in a comment before the first tree of each document in a given CoNLL-U file.
-        # In Udapi, it is stored in `document.meta['global.Entity']`, but for technical reasons, we need to temporarily store it in here, the reader.
+        # In Udapi, it is stored in `document.meta['global.Entity']`, but for technical reasons, we need to temporarily store it here, in the reader.
         # The reason is that `read.Conllu` uses a fast loading interface with `read_trees()`,
         # which reads all the trees in a file at once, but it does not have access to the document instance,
         # it just returns a sequence of trees (which may be split into multiple documents if `bundles_per_doc` is set).
