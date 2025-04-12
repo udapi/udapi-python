@@ -100,13 +100,13 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'main':   0,
                     'shape': 'subtree',
                 }
-            if subtokens[1] == 'ť':
+            if subtokens[1] in ['ť', 'tě', 'ti']:
                 if token_from_subtokens != node.form:
                     logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
                     return None
                 node.misc['AddMwt'] = ''
                 return {
-                    'form':   node.form.lower()[:-1] + ' ť',
+                    'form':   node.form.lower()[:-1] + ' ' + subtokens[1],
                     'lemma':  '* ť',
                     'upos':   '* PART',
                     'xpos':   '* TT-------------',
