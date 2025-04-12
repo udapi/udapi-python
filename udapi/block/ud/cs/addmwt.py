@@ -106,7 +106,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     return None
                 node.misc['AddMwt'] = ''
                 return {
-                    'form':   node.form.lower()[:-1] + ' ' + subtokens[1],
+                    'form':   subtokens[0] + ' ' + subtokens[1],
                     'lemma':  '* ť',
                     'upos':   '* PART',
                     'xpos':   '* TT-------------',
