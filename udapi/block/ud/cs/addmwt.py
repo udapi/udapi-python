@@ -18,6 +18,9 @@ MWTS = {
     'kdybychme': {'form': 'když bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'abyste': {'form': 'aby byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
     'kdybyste': {'form': 'když byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    # Old Czech 'abyšta' == dual number; 2nd or 3rd person, the one example in data so far is 3rd.
+    'abyšta': {'form': 'aby byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
+    'kdybyšta': {'form': 'když byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
 }
 for v in MWTS.values():
     v['upos'] = 'SCONJ AUX'
