@@ -35,3 +35,11 @@ class MsfCreateAbstract(Block):
                             subject.feats[f] = node.misc[msf]
                             subject.misc[msf] = node.misc[msf]
                     subject.misc['MSFFunc'] = 'No'
+            # Regardless of whether it had a subject or not, the agreement features
+            # should be removed from the verb.
+            ###!!! We also may want to check if the pre-existing subject has all the features.
+            node.misc['MSFNumber'] = ''
+            node.misc['MSFPerson'] = ''
+            node.misc['MSFGender'] = ''
+            node.misc['MSFAnimacy'] = ''
+            node.misc['MSFPolite'] = ''
