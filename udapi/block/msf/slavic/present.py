@@ -4,9 +4,9 @@ This block detects present tense forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.mwe.msfphrase
+import udapi.block.msf.msfphrase
 
-class Present(udapi.block.mwe.msfphrase.MsfPhrase):
+class Present(udapi.block.msf.msfphrase.MsfPhrase):
 		
 	def process_node(self,node):
 		# the condition VerbForm == 'Fin' ensures that there are no transgressives between the found verbs

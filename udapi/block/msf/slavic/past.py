@@ -4,9 +4,9 @@ This block detects past tense forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.mwe.msfphrase
+import udapi.block.msf.msfphrase
 
-class Past(udapi.block.mwe.msfphrase.MsfPhrase):
+class Past(udapi.block.msf.msfphrase.MsfPhrase):
 
 	def get_person_for_langs_with_simple_past(self, node, person):
 		"""

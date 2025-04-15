@@ -4,9 +4,9 @@ This block detects infinitive verb forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.mwe.msfphrase
+import udapi.block.msf.msfphrase
 
-class Infinitive(udapi.block.mwe.msfphrase.MsfPhrase):
+class Infinitive(udapi.block.msf.msfphrase.MsfPhrase):
 		
 	def process_node(self,node):
 		if node.feats['VerbForm'] == 'Inf' and node.upos == 'VERB':
