@@ -2,26 +2,9 @@
 
 # Conditional mood of Slavic languages
 
-from udapi.core.block import Block
-import importlib
-import sys
+from udapi.block.mwe.MsfPhrase import MsfPhrase
 
-class Slavic_cond(Block):
-	def __init__(self, writer_prefix='',**kwargs):
-		super().__init__(**kwargs)
-		if writer_prefix != '':
-			writer_module = ".".join([writer_prefix,'writer'])
-		else:
-			writer_module = 'writer'
-		try:
-			module = importlib.import_module(writer_module)
-		except ModuleNotFoundError as e:
-			print(e, file=sys.stderr)
-			print("Try to set writer_prefix parameter.", file=sys.stderr)
-			exit(1)
-
-		self.wr = module.Writer()
-
+class conditional(MsfPhrase):
 	
 	def process_node(self, node):
 		if node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Fin':
@@ -48,8 +31,7 @@ class Slavic_cond(Block):
 				if auxVerb.feats['Person'] != '':
 					person=auxVerb.feats['Person']
 				
-					
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					person=person,
 					number=node.feats['Number'],
 					mood='Cnd',
@@ -63,7 +45,6 @@ class Slavic_cond(Block):
 					animacy=node.feats['Animacy']
 				)
 				return
-		
 					
 		cop = [x for x in node.children if x.udeprel == 'cop' and (x.feats['VerbForm'] == 'Part' or x.feats['VerbForm'] == 'Fin')]
 		aux_cnd = [x for x in node.children if x.feats['Mood'] == 'Cnd' or x.deprel=='aux:pass']
@@ -77,7 +58,7 @@ class Slavic_cond(Block):
 			copVerb = cop[0]
 			phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in cop] + [x.ord for x in neg] + [x.ord for x in prep] + [x.ord for x in refl]
 			phrase_ords.sort()
-			self.wr.write_node_info(node,
+			self.write_node_info(node,
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
 					mood='Cnd',
