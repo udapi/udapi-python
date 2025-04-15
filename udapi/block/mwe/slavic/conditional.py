@@ -2,9 +2,9 @@
 
 # Conditional mood of Slavic languages
 
-from udapi.block.mwe.MsfPhrase import MsfPhrase
+import udapi.block.mwe.msfphrase
 
-class conditional(MsfPhrase):
+class conditional(udapi.block.mwe.msfphrase.MsfPhrase):
 	
 	def process_node(self, node):
 		if node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Fin':
