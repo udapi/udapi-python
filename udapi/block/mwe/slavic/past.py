@@ -1,26 +1,12 @@
-#!/usr/bin/env python3
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block detects past tense forms in Slavic languages and saves their
+features as Phrase* attributes in MISC of their head word.
+"""
 
-# Past tense of Slavic languages
+import udapi.block.mwe.msfphrase
 
-from udapi.core.block import Block
-import importlib
-import sys
-
-class Slavic_past(Block):
-	def __init__(self, writer_prefix='',**kwargs):
-		super().__init__(**kwargs)
-		if writer_prefix != '':
-			writer_module = ".".join([writer_prefix,'writer'])
-		else:
-			writer_module = 'writer'
-		try:
-			module = importlib.import_module(writer_module)
-		except ModuleNotFoundError as e:
-			print(e, file=sys.stderr)
-			print("Try to set writer_prefix parameter.", file=sys.stderr)
-			exit(1)
-
-		self.wr = module.Writer()
+class Past(udapi.block.mwe.msfphrase.MsfPhrase):
 
 	def get_person_for_langs_with_simple_past(self, node, person):
 		"""
@@ -48,7 +34,7 @@ class Slavic_past(Block):
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 			phrase_ords.sort()
 
-			self.wr.write_node_info(node,
+			self.write_node_info(node,
 						tense=node.feats['Tense'],
 						person=node.feats['Person'],
 						number=node.feats['Number'],
@@ -56,8 +42,8 @@ class Slavic_past(Block):
 						voice='Pass',
 						aspect=node.feats['Aspect'],
 						form=node.feats['VerbForm'],
-						polarity=self.wr.get_polarity(node,neg),
-						reflex=self.wr.get_is_reflex(node,refl),
+						polarity=self.get_polarity(node,neg),
+						reflex=self.get_is_reflex(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
 						animacy=node.feats['Animacy']
@@ -92,16 +78,16 @@ class Slavic_past(Block):
 				if node.feats['Tense'] == 'Pqp':
 					tense = 'Pqp'
 
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 						tense=tense,
 						person=person,
 						number=node.feats['Number'],
 						mood='Ind',
-						voice=self.wr.get_voice(node,refl),
+						voice=self.get_voice(node,refl),
 						aspect=node.feats['Aspect'],
 						form='Fin',
-						polarity=self.wr.get_polarity(node,neg),
-						reflex=self.wr.get_is_reflex(node,refl),
+						polarity=self.get_polarity(node,neg),
+						reflex=self.get_is_reflex(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
 						animacy=node.feats['Animacy']
@@ -123,16 +109,16 @@ class Slavic_past(Block):
 				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 				phrase_ords.sort()
 
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					tense=node.feats['Tense'],
 					person=node.feats['Person'],
 					number=node.feats['Number'],
 					mood='Ind',
-					voice=self.wr.get_voice(node,refl),
+					voice=self.get_voice(node,refl),
 					aspect=node.feats['Aspect'],
 					form=node.feats['VerbForm'],
-					polarity=self.wr.get_polarity(node,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(node,neg),
+					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy']
@@ -156,7 +142,7 @@ class Slavic_past(Block):
 						person = aux_pres_tense[0].feats['Person']
 					person = self.get_person_for_langs_with_simple_past(node, person)
 
-					self.wr.write_node_info(node,
+					self.write_node_info(node,
 						tense=aux_past_tense[0].feats['Tense'],
 						person=person,
 						number=aux_past_tense[0].feats['Number'],
@@ -164,7 +150,7 @@ class Slavic_past(Block):
 						voice='Pass',
 						form='Fin',
 						aspect=node.feats['Aspect'],
-						polarity=self.wr.get_polarity(aux_past_tense[0],neg),
+						polarity=self.get_polarity(aux_past_tense[0],neg),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
 						animacy=node.feats['Animacy']
@@ -189,16 +175,16 @@ class Slavic_past(Block):
 				if cop[0].feats['VerbForm'] == 'Fin':
 					person = ''
 				
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					aspect=cop[0].feats['Aspect'],
 					tense=cop[0].feats['Tense'],
 					person=person,
 					number=cop[0].feats['Number'],
 					mood='Ind',
-					voice=self.wr.get_voice(cop[0], refl),
+					voice=self.get_voice(cop[0], refl),
 					form='Fin',
-					reflex=self.wr.get_is_reflex(node,refl),
-					polarity=self.wr.get_polarity(cop[0],neg),
+					reflex=self.get_is_reflex(node,refl),
+					polarity=self.get_polarity(cop[0],neg),
 					ords=phrase_ords,
 					gender=cop[0].feats['Gender'],
 					animacy=cop[0].feats['Animacy']

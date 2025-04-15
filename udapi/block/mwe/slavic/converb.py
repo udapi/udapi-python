@@ -1,26 +1,12 @@
-#!/usr/bin/env python3
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block detects converb (transgressive) forms in Slavic languages and saves their
+features as Phrase* attributes in MISC of their head word.
+"""
 
-# Transgressives of Slavic languages
+import udapi.block.mwe.msfphrase
 
-from udapi.core.block import Block
-import importlib
-import sys
-
-class Slavic_transgressive(Block):
-	def __init__(self, writer_prefix='',**kwargs):
-		super().__init__(**kwargs)
-		if writer_prefix != '':
-			writer_module = ".".join([writer_prefix,'writer'])
-		else:
-			writer_module = 'writer'
-		try:
-			module = importlib.import_module(writer_module)
-		except ModuleNotFoundError as e:
-			print(e, file=sys.stderr)
-			print("Try to set writer_prefix parameter.", file=sys.stderr)
-			exit(1)
-
-		self.wr = module.Writer()
+class Converb(udapi.block.mwe.msfphrase.MsfPhrase):
 	
 	def process_node(self, node):
 		# condition node.upos == 'VERB' to prevent copulas from entering this branch
@@ -31,18 +17,18 @@ class Slavic_transgressive(Block):
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 			phrase_ords.sort()
 			
-			self.wr.write_node_info(node,
+			self.write_node_info(node,
 				person=node.feats['Person'],
 				number=node.feats['Number'],
 				form='Conv',
 				tense=node.feats['Tense'],
 				aspect=node.feats['Aspect'],
-				polarity=self.wr.get_polarity(node,neg),
-				reflex=self.wr.get_is_reflex(node,refl),
+				polarity=self.get_polarity(node,neg),
+				reflex=self.get_is_reflex(node,refl),
 				ords=phrase_ords,
 				gender=node.feats['Gender'],
 				animacy=node.feats['Animacy'],
-				voice=self.wr.get_voice(node, refl)
+				voice=self.get_voice(node, refl)
 				)
 
 		# passive voice
@@ -55,13 +41,13 @@ class Slavic_transgressive(Block):
 				phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in neg]
 				phrase_ords.sort()
 			
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					person=auxVerb.feats['Person'],
 					number=auxVerb.feats['Number'],
 					form='Conv',
 					tense=auxVerb.feats['Tense'],
 					aspect=node.feats['Aspect'],
-					polarity=self.wr.get_polarity(auxVerb,neg),
+					polarity=self.get_polarity(auxVerb,neg),
 					ords=phrase_ords,
 					gender=auxVerb.feats['Gender'],
 					animacy=auxVerb.feats['Animacy'],
@@ -82,15 +68,15 @@ class Slavic_transgressive(Block):
 				phrase_ords.sort()
 
 				
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
 					tense=copVerb.feats['Tense'],
 					gender=copVerb.feats['Gender'],
 					animacy=copVerb.feats['Animacy'],
 					form='Conv',
-					polarity=self.wr.get_polarity(node,neg),
+					polarity=self.get_polarity(node,neg),
 					ords=phrase_ords,
-					voice=self.wr.get_voice(copVerb, refl)
+					voice=self.get_voice(copVerb, refl)
 					)
 

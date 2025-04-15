@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
-
-# Conditional mood of Slavic languages
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block detects conditional verb forms in Slavic languages and saves their
+features as Phrase* attributes in MISC of their head word.
+"""
 
 import udapi.block.mwe.msfphrase
 

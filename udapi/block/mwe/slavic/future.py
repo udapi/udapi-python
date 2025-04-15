@@ -1,26 +1,12 @@
-#!/usr/bin/env python3
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block detects future tense forms in Slavic languages and saves their
+features as Phrase* attributes in MISC of their head word.
+"""
 
-# Future tense of Slavic languages
+import udapi.block.mwe.msfphrase
 
-from udapi.core.block import Block
-import importlib
-import sys
-
-class Slavic_future(Block):
-	def __init__(self, writer_prefix='',**kwargs):
-		super().__init__(**kwargs)
-		if writer_prefix != '':
-			writer_module = ".".join([writer_prefix,'writer'])
-		else:
-			writer_module = 'writer'
-		try:
-			module = importlib.import_module(writer_module)
-		except ModuleNotFoundError as e:
-			print(e, file=sys.stderr)
-			print("Try to set writer_prefix parameter.", file=sys.stderr)
-			exit(1)
-
-		self.wr = module.Writer()
+class Future(udapi.block.mwe.msfphrase.MsfPhrase):
 	
 	def process_node(self, node):
 		# future tense for Serbian and Croatian
@@ -39,7 +25,7 @@ class Slavic_future(Block):
 			#if voice == '':
 			#	voice = 'Act'
 			if len(cop) == 0:
-				self.wr.write_node_info(node, 
+				self.write_node_info(node, 
 					tense='Fut',
 					person=aux[0].feats['Person'],
 					number=aux[0].feats['Number'],
@@ -47,8 +33,8 @@ class Slavic_future(Block):
 					voice=voice,
 					aspect=node.feats['Aspect'], # srbstina ani chorvatstina vidy nema
 					form='Fin',
-					polarity=self.wr.get_polarity(node,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(node,neg),
+					reflex=self.get_is_reflex(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
 					ords=phrase_ords
@@ -58,7 +44,7 @@ class Slavic_future(Block):
 				phrase_ords += [x.ord for x in prep]
 				phrase_ords.sort()
 
-				self.wr.write_node_info(node, 
+				self.write_node_info(node, 
 					tense='Fut',
 					person=aux[0].feats['Person'],
 					number=aux[0].feats['Number'],
@@ -66,8 +52,8 @@ class Slavic_future(Block):
 					voice=voice,
 					aspect=node.feats['Aspect'], 
 					form='Fin',
-					polarity=self.wr.get_polarity(node,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(node,neg),
+					reflex=self.get_is_reflex(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
 					ords=phrase_ords
@@ -85,7 +71,7 @@ class Slavic_future(Block):
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg] + [x.ord for x in aux]
 			phrase_ords.sort()
 			
-			self.wr.write_node_info(node, 
+			self.write_node_info(node, 
 				tense='Fut',
 				person=node.feats['Person'],
 				number=node.feats['Number'],
@@ -93,8 +79,8 @@ class Slavic_future(Block):
 				voice=node.feats['Voice'],
 				aspect=node.feats['Aspect'],
 				form='Fin',
-				polarity=self.wr.get_polarity(node,neg),
-				reflex=self.wr.get_is_reflex(node,refl),
+				polarity=self.get_polarity(node,neg),
+				reflex=self.get_is_reflex(node,refl),
 				ords=phrase_ords
 				)
 			return
@@ -110,16 +96,16 @@ class Slavic_future(Block):
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 			phrase_ords.sort()
 			
-			self.wr.write_node_info(node, 
+			self.write_node_info(node, 
 				tense='Fut',
 				person=node.feats['Person'],
 				number=node.feats['Number'],
 				mood='Ind',
-				voice=self.wr.get_voice(node,refl),
+				voice=self.get_voice(node,refl),
 				form='Fin',
 				aspect='Perf',
-				polarity=self.wr.get_polarity(node,neg),
-				reflex=self.wr.get_is_reflex(node,refl),
+				polarity=self.get_polarity(node,neg),
+				reflex=self.get_is_reflex(node,refl),
 				ords=phrase_ords
 				)
 			return"""
@@ -138,16 +124,16 @@ class Slavic_future(Block):
 				auxVerb = aux[0]
 				phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in refl] + [x.ord for x in neg]
 				phrase_ords.sort()
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					tense='Fut',
 					person=auxVerb.feats['Person'],
 					number=auxVerb.feats['Number'],
 					mood='Ind',
-					voice=self.wr.get_voice(node,refl),
+					voice=self.get_voice(node,refl),
 					aspect=node.feats['Aspect'],
 					form='Fin',
-					polarity=self.wr.get_polarity(auxVerb,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(auxVerb,neg),
+					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy']
@@ -162,16 +148,16 @@ class Slavic_future(Block):
 				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 				phrase_ords.sort()
 				
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					tense='Fut',
 					person=node.feats['Person'],
 					number=node.feats['Number'],
 					mood='Ind',
-					voice=self.wr.get_voice(node,refl), # passivum se muze objevit (napr. pojede se), ale jmenny rod neni vyjadren
+					voice=self.get_voice(node,refl), # passivum se muze objevit (napr. pojede se), ale jmenny rod neni vyjadren
 					aspect=node.feats['Aspect'],
 					form='Fin',
-					polarity=self.wr.get_polarity(node,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(node,neg),
+					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords
 					)
 				return
@@ -188,14 +174,14 @@ class Slavic_future(Block):
 			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in aux] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
 			phrase_ords.sort()
 				
-			self.wr.write_node_info(node,
+			self.write_node_info(node,
 					tense='Fut',
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
 					mood='Ind',
 					form='Fin',
-					voice=self.wr.get_voice(copVerb, refl),
-					polarity=self.wr.get_polarity(copVerb,neg),
+					voice=self.get_voice(copVerb, refl),
+					polarity=self.get_polarity(copVerb,neg),
 					ords=phrase_ords
 				)
 

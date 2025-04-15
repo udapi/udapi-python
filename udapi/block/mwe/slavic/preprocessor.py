@@ -1,4 +1,9 @@
-#!/usr/bin/env python3
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block serves as a preprocessor for Slavic languages before the other blocks
+are applied to detect periphrastic verb forms. It improves harmonization of
+annotations across the treebanks by addressing some known divergences.
+"""
 
 from udapi.core.block import Block
 

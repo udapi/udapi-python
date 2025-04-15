@@ -1,26 +1,12 @@
-#!/usr/bin/env python3
+"""
+Morphosyntactic features (UniDive, Lenka Krippnerová):
+This block detects present tense forms in Slavic languages and saves their
+features as Phrase* attributes in MISC of their head word.
+"""
 
-# Present tense of Slavic languages
+import udapi.block.mwe.msfphrase
 
-from udapi.core.block import Block
-import importlib
-import sys
-
-class Slavic_pres(Block):
-	def __init__(self, writer_prefix='',**kwargs):
-		super().__init__(**kwargs)
-		if writer_prefix != '':
-			writer_module = ".".join([writer_prefix,'writer'])
-		else:
-			writer_module = 'writer'
-		try:
-			module = importlib.import_module(writer_module)
-		except ModuleNotFoundError as e:
-			print(e, file=sys.stderr)
-			print("Try to set writer_prefix parameter.", file=sys.stderr)
-			exit(1)
-
-		self.wr = module.Writer()
+class Present(udapi.block.mwe.msfphrase.MsfPhrase):
 		
 	def process_node(self,node):
 		# the condition VerbForm == 'Fin' ensures that there are no transgressives between the found verbs
@@ -34,16 +20,16 @@ class Slavic_pres(Block):
 				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
 				phrase_ords.sort()
 				
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					tense='Pres',
 					person=node.feats['Person'],
 					number=node.feats['Number'],
 					mood='Ind',
 					aspect=node.feats['Aspect'],
-					voice=self.wr.get_voice(node,refl),
+					voice=self.get_voice(node,refl),
 					form='Fin',
-					polarity=self.wr.get_polarity(node,neg),
-					reflex=self.wr.get_is_reflex(node,refl),
+					polarity=self.get_polarity(node,neg),
+					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords
 					)
 				return
@@ -61,7 +47,7 @@ class Slavic_pres(Block):
 			if len(aux) > 0 and len(aux_forb) == 0:
 				auxVerb = aux[0]
 
-				self.wr.write_node_info(node,
+				self.write_node_info(node,
 					tense='Pres',
 					person=auxVerb.feats['Person'],
 					number=auxVerb.feats['Number'],
@@ -69,7 +55,7 @@ class Slavic_pres(Block):
 					aspect=node.feats['Aspect'],
 					form='Fin',
 					voice='Pass',
-					polarity=self.wr.get_polarity(auxVerb,neg),
+					polarity=self.get_polarity(auxVerb,neg),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy']
@@ -89,16 +75,15 @@ class Slavic_pres(Block):
 			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in aux] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
 			phrase_ords.sort()
 				
-			self.wr.write_node_info(node,
+			self.write_node_info(node,
 					tense='Pres',
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
 					aspect=node.feats['Aspect'],
 					mood='Ind',
 					form='Fin',
-					voice=self.wr.get_voice(copVerb, refl),
-					reflex=self.wr.get_is_reflex(node, refl),
-					polarity=self.wr.get_polarity(copVerb,neg),
+					voice=self.get_voice(copVerb, refl),
+					reflex=self.get_is_reflex(node, refl),
+					polarity=self.get_polarity(copVerb,neg),
 					ords=phrase_ords
 				)
-
