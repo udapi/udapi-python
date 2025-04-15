@@ -4,7 +4,7 @@
 
 import udapi.block.mwe.msfphrase
 
-class conditional(udapi.block.mwe.msfphrase.MsfPhrase):
+class Conditional(udapi.block.mwe.msfphrase.MsfPhrase):
 	
 	def process_node(self, node):
 		if node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Fin':
