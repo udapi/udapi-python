@@ -4,7 +4,7 @@ Case in Number Phrases like 'pět mužů' (five men) in Czech.
 """
 from udapi.core.block import Block
 
-class MsfNumPhrase(Block):
+class NumPhrase(Block):
 
 
     def process_node(self, node):

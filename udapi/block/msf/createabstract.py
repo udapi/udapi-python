@@ -7,7 +7,7 @@ subject node, create an abstract node and copy the features there).
 from udapi.core.block import Block
 import re
 
-class MsfCreateAbstract(Block):
+class CreateAbstract(Block):
 
     def process_node(self, node):
         """

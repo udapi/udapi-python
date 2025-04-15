@@ -4,7 +4,7 @@ Cleanup. Removes MSF* features from MISC for function nodes (MSFFunc=Yes).
 """
 from udapi.core.block import Block
 
-class MsfRemoveFunc(Block):
+class RemoveFunc(Block):
 
 
     def process_node(self, node):

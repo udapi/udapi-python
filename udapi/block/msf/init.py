@@ -5,7 +5,7 @@ Initialization. Copies features from FEATS as MSF* attributes to MISC.
 from udapi.core.block import Block
 import re
 
-class MsfInit(Block):
+class Init(Block):
 
 
     def process_node(self, node):

@@ -5,7 +5,7 @@ Derive a MS Case feature from morphological case and adposition.
 from udapi.core.block import Block
 import logging
 
-class MsfCase(Block):
+class Case(Block):
 
     adposmap = {
         'v+Loc':          'Ine',
