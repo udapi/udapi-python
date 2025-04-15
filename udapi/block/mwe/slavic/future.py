@@ -26,7 +26,7 @@ class Slavic_future(Block):
 		# future tense for Serbian and Croatian
 		aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres' and (x.lemma == 'hteti' or x.lemma == 'htjeti')]
 		if node.upos != 'AUX' and len(aux) != 0:
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			aux_other = [x for x in node.children if x.udeprel == 'aux'] # adding aux for passive voice
 			cop = [x for x in node.children if x.deprel == 'cop']
@@ -80,7 +80,7 @@ class Slavic_future(Block):
 		aux = [x for x in node.children if x.lemma == 'ќе' or x.lemma == 'ще']
 		
 		if node.feats['Tense'] == 'Pres' and len(aux) > 0:
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg] + [x.ord for x in aux]
 			phrase_ords.sort()
@@ -103,7 +103,7 @@ class Slavic_future(Block):
 		# Upper Sorbian forms the future tense in this way, however, the feats[Aspect] are not listed in the data
 		# in some languages ​​(e.g. in Russian) these verbs have the Tense Fut, in others (e.g. in Czech) they have the Tense Pres
 		"""if node.feats['Aspect'] == 'Perf' and (node.feats['Tense'] == 'Pres' or node.feats['Tense'] == 'Fut') and node.feats['VerbForm'] != 'Conv':
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			
@@ -132,7 +132,7 @@ class Slavic_future(Block):
 			
 			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Fut']
 			
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			if len(aux) > 0:
 				auxVerb = aux[0]
@@ -183,7 +183,7 @@ class Slavic_future(Block):
 			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Mood']=='Ind']
 			prep = [x for x in node.children if x.upos == 'ADP']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
 			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in aux] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
 			phrase_ords.sort()
@@ -194,7 +194,7 @@ class Slavic_future(Block):
 					number=copVerb.feats['Number'],
 					mood='Ind',
 					form='Fin',
-					voice=self.wr.get_voice(node, refl),
+					voice=self.wr.get_voice(copVerb, refl),
 					polarity=self.wr.get_polarity(copVerb,neg),
 					ords=phrase_ords
 				)

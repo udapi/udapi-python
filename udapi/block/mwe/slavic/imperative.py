@@ -25,7 +25,7 @@ class Slavic_imperative(Block):
 	def process_node(self, node):
 		# the condition node.upos == 'VERB' ensures that copulas do not enter this branch
 		if node.feats['Mood'] == 'Imp' and node.upos == 'VERB':
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			
 			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
@@ -72,7 +72,7 @@ class Slavic_imperative(Block):
 		if len(cop) > 0:
 			prep = [x for x in node.children if x.upos == 'ADP']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
 			copVerb = cop[0]
 			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
@@ -83,7 +83,7 @@ class Slavic_imperative(Block):
 				number=copVerb.feats['Number'],
 				mood='Imp',
 				form='Fin',
-				voice=self.wr.get_voice(node, refl),
+				voice=self.wr.get_voice(copVerb, refl),
 				reflex=self.wr.get_is_reflex(node, refl),
 				polarity=self.wr.get_polarity(node,neg),
 				ords=phrase_ords

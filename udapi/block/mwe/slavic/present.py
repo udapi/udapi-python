@@ -26,7 +26,7 @@ class Slavic_pres(Block):
 		# the condition VerbForm == 'Fin' ensures that there are no transgressives between the found verbs
 		
 		if node.feats['Tense'] == 'Pres' and node.upos == 'VERB' and node.feats['VerbForm'] == 'Fin': #and node.feats['Aspect']=='Imp':
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			aux_forb = [x for x in node.children if x.upos == 'AUX' and (x.lemma == 'ќе' or x.lemma == 'ще' or x.feats['Mood'] == 'Cnd')] # forbidden auxiliaries for present tense (these auxiliaries are used for the future tense or the conditional mood)
 
@@ -81,7 +81,7 @@ class Slavic_pres(Block):
 		aux_forb = [x for x in node.children if x.upos == 'AUX' and x.feats['Tense'] != 'Pres'] # in Serbian this can be a future tense
 		prep = [x for x in node.children if x.upos == 'ADP']
 		neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-		refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+		refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			
 		if len(cop) > 0 and len(aux_forb) == 0:
 			copVerb = cop[0]
@@ -96,7 +96,7 @@ class Slavic_pres(Block):
 					aspect=node.feats['Aspect'],
 					mood='Ind',
 					form='Fin',
-					voice=self.wr.get_voice(node, refl),
+					voice=self.wr.get_voice(copVerb, refl),
 					reflex=self.wr.get_is_reflex(node, refl),
 					polarity=self.wr.get_polarity(copVerb,neg),
 					ords=phrase_ords

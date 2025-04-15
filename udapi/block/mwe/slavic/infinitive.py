@@ -26,7 +26,7 @@ class Slavic_inf(Block):
 		if node.feats['VerbForm'] == 'Inf' and node.upos == 'VERB':
 			aux = [x for x in node.children if x.udeprel == 'aux']
 			if len(aux) == 0: # the list of auxiliary list must be empty - we don't want to mark infinitives which are part of any other phrase (for example the infinititive is part of the future tense in Czech)
-				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 				neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 				
 				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
@@ -51,7 +51,7 @@ class Slavic_inf(Block):
 			aux_forb = [x for x in node.children if x.udeprel == 'aux' and x.feats['VerbForm'] != 'Inf']
 			if len(aux) > 0 and len(aux_forb) == 0:
 				neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
 				phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in neg] + [x.ord for x in refl]
 				phrase_ords.sort()
@@ -76,15 +76,33 @@ class Slavic_inf(Block):
 		if len(cop) > 0 and len(aux_forb) == 0:
 			prep = [x for x in node.children if x.upos == 'ADP']
 			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
 			phrase_ords.sort()
 			
 			self.wr.write_node_info(node,
-				voice=self.wr.get_voice(node, refl),
+				voice=self.wr.get_voice(cop[0], refl),
 				form='Inf',
 				polarity=self.wr.get_polarity(cop[0],neg),
 				reflex=self.wr.get_is_reflex(node, refl),
 				ords=phrase_ords
 				)
+			
+		# there is a rare verb form called supine in Slovenian, it is used instead of infinitive as the argument of motion verbs
+		if node.feats['VerbForm'] == 'Sup':
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
+			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
+
+			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
+			phrase_ords.sort()
+
+			self.wr.write_node_info(node,
+					aspect=node.feats['Aspect'],
+					voice='Act',
+					form='Sup',
+					polarity=self.wr.get_polarity(node,neg),
+					reflex=self.wr.get_is_reflex(node, refl),
+					ords=phrase_ords
+					)
+
 							
