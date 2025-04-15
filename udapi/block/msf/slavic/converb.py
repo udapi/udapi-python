@@ -4,9 +4,9 @@ This block detects converb (transgressive) forms in Slavic languages and saves t
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.msf.msfphrase
+import udapi.block.msf.phrase
 
-class Converb(udapi.block.msf.msfphrase.MsfPhrase):
+class Converb(udapi.block.msf.phrase.Phrase):
 	
 	def process_node(self, node):
 		# condition node.upos == 'VERB' to prevent copulas from entering this branch

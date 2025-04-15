@@ -8,7 +8,7 @@ Lenka Krippnerová.
 from udapi.core.block import Block
 import logging
 
-class MsfPhrase(Block):
+class Phrase(Block):
 
     def process_node(self, node):
         """

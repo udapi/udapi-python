@@ -4,9 +4,9 @@ This block detects imperative verb forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.msf.msfphrase
+import udapi.block.msf.phrase
 
-class Imperative(udapi.block.msf.msfphrase.MsfPhrase):
+class Imperative(udapi.block.msf.phrase.Phrase):
 	
 	def process_node(self, node):
 		# the condition node.upos == 'VERB' ensures that copulas do not enter this branch

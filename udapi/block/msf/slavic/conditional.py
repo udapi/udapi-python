@@ -4,9 +4,9 @@ This block detects conditional verb forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.msf.msfphrase
+import udapi.block.msf.phrase
 
-class Conditional(udapi.block.msf.msfphrase.MsfPhrase):
+class Conditional(udapi.block.msf.phrase.Phrase):
 	
 	def process_node(self, node):
 		if (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'PartRes') or node.feats['VerbForm'] == 'Fin':

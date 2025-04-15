@@ -4,9 +4,9 @@ This block detects future tense forms in Slavic languages and saves their
 features as Phrase* attributes in MISC of their head word.
 """
 
-import udapi.block.msf.msfphrase
+import udapi.block.msf.phrase
 
-class Future(udapi.block.msf.msfphrase.MsfPhrase):
+class Future(udapi.block.msf.phrase.Phrase):
 	
 	def process_node(self, node):
 		# future tense for Serbian and Croatian
