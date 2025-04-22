@@ -7,7 +7,7 @@ features as Phrase* attributes in MISC of their head word.
 import udapi.block.msf.phrase
 
 class Infinitive(udapi.block.msf.phrase.Phrase):
-		
+
 	def process_node(self,node):
 		if node.feats['VerbForm'] == 'Inf' and node.upos == 'VERB':
 			aux = [x for x in node.children if x.udeprel == 'aux']
@@ -67,6 +67,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 			phrase_ords.sort()
 			
 			self.write_node_info(node,
+				aspect=cop[0].feats['Aspect'],
 				voice=self.get_voice(cop[0], refl),
 				form='Inf',
 				polarity=self.get_polarity(cop[0],neg),
