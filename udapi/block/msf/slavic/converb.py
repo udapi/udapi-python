@@ -7,7 +7,7 @@ features as Phrase* attributes in MISC of their head word.
 import udapi.block.msf.phrase
 
 class Converb(udapi.block.msf.phrase.Phrase):
-	
+
 	def process_node(self, node):
 		# condition node.upos == 'VERB' to prevent copulas from entering this branch
 		if node.feats['VerbForm'] == 'Conv' and node.upos == 'VERB':
@@ -69,6 +69,7 @@ class Converb(udapi.block.msf.phrase.Phrase):
 
 				
 				self.write_node_info(node,
+					aspect=copVerb.feats['Aspect'],
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
 					tense=copVerb.feats['Tense'],
@@ -79,4 +80,3 @@ class Converb(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					voice=self.get_voice(copVerb, refl)
 					)
-
