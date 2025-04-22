@@ -8,16 +8,16 @@ annotations across the treebanks by addressing some known divergences.
 from udapi.core.block import Block
 
 class Preprocessor(Block):
-		
+
 	def process_node(self,node):
 
 		# in Ukrainian the active verb forms are not marked as PhraseVoice=Act
 		if (node.upos == 'VERB' or (node.upos == 'AUX' and node.feats['VerbForm'] == 'Fin')) and node.feats['Voice'] == '':
 			node.feats['Voice'] = 'Act'
 				
-		# in Belarusian, some adjectives formed from verbs are marked as verbs
-		# if the verb has case, then it is an adjective
-		if node.upos == 'VERB' and node.feats['Case'] != '':
+		# in some languages, participles are annotated with UPOS=VERB, while in others they are annotated with UPOS=ADJ
+		# we change the UPOS to ADJ when a participle expresses case
+		if node.upos == 'VERB' and node.feats['VerbForm'] == 'Part' and node.feats['Case'] != '':
 			node.upos = 'ADJ'
 			
 		# in Polish, the conditional mood for auxiliary verbs is marked as deprel == 'aux:cnd' and not as in the last Slavic languages ​​feats['Mood'] == 'Cnd'
@@ -27,6 +27,13 @@ class Preprocessor(Block):
 		# unify polarities - some languages ​​mark only Neg (Russian), some mark both Neg and Pos (Czech)
 		if node.feats['Polarity'] == 'Pos':
 			node.feats['Polarity'] = ''
+
+		# In Ukrainian, there is no explicit annotation of reflexive verbs
+		# We decided to unify the annotation of reflexive verbs with Russian and Belarusian, where reflexive verbs are formed similarly
+		# We add the feature Voice=Mid to reflexive verbs
+		# This feature is added only to Ukrainian data (for example, there are some verbs in Old Church Slavonic that end in 'сь' but are not reflexive)
+		if node.upos == 'VERB' and (node.form.endswith('сь') or node.form.endswith('ся')) and self.lang == 'uk':
+			node.feats['Voice'] = 'Mid'
 		
 		# makedonstina tvori budouci cas pomoci pomocneho slova ќе, u nejz neni nijak vyznaceno, ze se podili na tvorbe budouciho casu
 		# stejne tak bulharstina pomoci pomocneho slova ще
@@ -67,8 +74,3 @@ class Preprocessor(Block):
 
 		# TODO maybe we want to set Tense=Fut for the perfective verbs with Tense=Pres? This could solve the problem with the simplified detection of the future tense in Czech
 		# but there are many verbs with no Aspect value, so the problem is still there 
-
-
-
-		
-				
