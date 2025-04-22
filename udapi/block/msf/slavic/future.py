@@ -175,6 +175,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 			phrase_ords.sort()
 				
 			self.write_node_info(node,
+					aspect=copVerb.feats['Aspect'],
 					tense='Fut',
 					person=copVerb.feats['Person'],
 					number=copVerb.feats['Number'],
