@@ -7,7 +7,7 @@ features as Phrase* attributes in MISC of their head word.
 import udapi.block.msf.phrase
 
 class Imperative(udapi.block.msf.phrase.Phrase):
-	
+
 	def process_node(self, node):
 		# the condition node.upos == 'VERB' ensures that copulas do not enter this branch
 		if node.feats['Mood'] == 'Imp' and node.upos == 'VERB':
@@ -65,6 +65,7 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 			phrase_ords.sort()
 				
 			self.write_node_info(node,
+				aspect=copVerb.feats['Aspect'],
 				person=copVerb.feats['Person'],
 				number=copVerb.feats['Number'],
 				mood='Imp',
@@ -74,4 +75,3 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 				polarity=self.get_polarity(node,neg),
 				ords=phrase_ords
 				)
-
