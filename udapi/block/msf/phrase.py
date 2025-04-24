@@ -59,6 +59,8 @@ class Phrase(Block):
         return 'Neg'
 		
     def get_is_reflex(self,node,refl):
+        if node.feats['Voice'] == 'Mid':
+            return 'Yes'
         if len(refl) == 0:
             return node.feats['Reflex']
         return 'Yes'

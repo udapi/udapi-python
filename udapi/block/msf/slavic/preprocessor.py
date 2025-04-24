@@ -31,8 +31,7 @@ class Preprocessor(Block):
 		# In Ukrainian, there is no explicit annotation of reflexive verbs
 		# We decided to unify the annotation of reflexive verbs with Russian and Belarusian, where reflexive verbs are formed similarly
 		# We add the feature Voice=Mid to reflexive verbs
-		# This feature is added only to Ukrainian data (for example, there are some verbs in Old Church Slavonic that end in 'сь' but are not reflexive)
-		if node.upos == 'VERB' and (node.form.endswith('сь') or node.form.endswith('ся')) and self.lang == 'uk':
+		if node.upos == 'VERB' and (node.lemma.endswith('сь') or node.lemma.endswith('ся')):
 			node.feats['Voice'] = 'Mid'
 		
 		# makedonstina tvori budouci cas pomoci pomocneho slova ќе, u nejz neni nijak vyznaceno, ze se podili na tvorbe budouciho casu
@@ -71,6 +70,10 @@ class Preprocessor(Block):
 		# in Old Church Slavonic, there is feature Mood=Sub, but this is a notation for conditional mood
 		if node.feats['Mood'] == 'Sub':
 			node.feats['Mood'] = 'Cnd'
+
+		# # although infinitives in Old Church Slavonic are annotated with Tense=Pres, they do not convey tense; therefore, we remove this annotation
+		if node.feats['VerbForm'] == 'Inf':
+			node.feats['Tense'] = ''
 
 		# TODO maybe we want to set Tense=Fut for the perfective verbs with Tense=Pres? This could solve the problem with the simplified detection of the future tense in Czech
 		# but there are many verbs with no Aspect value, so the problem is still there 

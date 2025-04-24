@@ -39,7 +39,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 						person=node.feats['Person'],
 						number=node.feats['Number'],
 						mood=node.feats['Mood'],
-						voice='Pass',
+						voice='Act', #In Polish, impersonal statements are annotated with Voice=Act. In Ukrainian, the Voice feature is missing; therefore, we decided to annotate these phrases with PhraseVoice=Act
 						aspect=node.feats['Aspect'],
 						form=node.feats['VerbForm'],
 						polarity=self.get_polarity(node,neg),
