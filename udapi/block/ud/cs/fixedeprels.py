@@ -38,6 +38,7 @@ class FixEdeprels(Block):
     # case. And include all other prepositions that have unambiguous morphological
     # case, even if they are not secondary.
     unambiguous = {
+        'á':                'na:acc', # "á konto té záležitosti", ovšem "á konto" není ani spojeno jako složená předložka (význam = "na konto")
         'abi':              'aby',
         'aby_na':           'na:loc',
         'ačkoliv':          'ačkoli',
@@ -59,6 +60,7 @@ class FixEdeprels(Block):
         'bez_zřetel_k':     'bez_zřetele_k:dat',
         'bez_zřetel_na':    'bez_zřetele_na:acc',
         'blízko':           'blízko:dat',
+        'blízko_k':         'blízko:dat',
         'blíž':             'blízko:dat',
         'cesta':            'cestou:gen',
         'coby':             'coby', # remove morphological case
@@ -86,6 +88,8 @@ class FixEdeprels(Block):
         'jakoby_pod':       'pod:ins',
         'jakožto':          'jako',
         'jelikož_do':       'jelikož',
+        'jenom':            'jen',
+        'jesli':            'jestli',
         'jestli_že':        'jestliže',
         'k':                'k:dat',
         'k_konec':          'ke_konci:gen',
@@ -98,6 +102,7 @@ class FixEdeprels(Block):
         'konec':            'koncem:gen',
         'krom':             'kromě:gen',
         'kromě':            'kromě:gen',
+        'leda_když':        'ledaže',
         'li_jako':          'li',
         'liž':              'li',
         'mezi_uvnitř':      'uvnitř:gen',
@@ -131,6 +136,7 @@ class FixEdeprels(Block):
         'o_jako':           'jako',
         'o_o':              'o:acc',
         'od':               'od:gen',
+        'od_počínaje':      'počínaje:ins', # od brambor počínaje a základní zeleninou konče
         'ohledně':          'ohledně:gen',
         'okolo':            'okolo:gen',
         'oproti':           'oproti:dat',
@@ -162,6 +168,7 @@ class FixEdeprels(Block):
         'před_během':       'během:gen', # před a během utkání
         'před_po':          'po:loc', # před a po vyloučení Schindlera
         'přes':             'přes:acc',
+        'přes_přes':        'přes:acc', # annotation error
         'přestože':         'přestože', # remove morphological case
         'při':              'při:loc',
         'při_pro':          'při:loc',
@@ -183,6 +190,7 @@ class FixEdeprels(Block):
         'směr_k':           'směrem_k:dat',
         'směr_na':          'směrem_na:acc',
         'směr_od':          'směrem_od:gen',
+        'směr_přes':        'směrem_přes:acc',
         'společně_s':       'společně_s:ins',
         'spolu':            'spolu_s:ins',
         'spolu_s':          'spolu_s:ins',
@@ -233,6 +241,7 @@ class FixEdeprels(Block):
         'v_služba':         've_službách:gen',
         'v_směr':           've_směru:gen',
         'v_směr_k':         've_směru_k:dat',
+        'v_směr_na':        've_směru_k:dat', # same meaning as ve_směru_na:acc
         'v_smysl':          've_smyslu:gen',
         'v_součinnost_s':   'v_součinnosti_s:ins',
         'v_souhlas_s':      'v_souhlasu_s:ins',
@@ -319,6 +328,7 @@ class FixEdeprels(Block):
                 # flagged as solved.
                 edep['deprel'] = re.sub(r'^advcl:do(?::gen)?$', r'obl:do:gen', edep['deprel']) # od nevidím do nevidím ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^advcl:pro(?::acc)?$', r'advcl:aby', edep['deprel']) # byl by pro, abychom... ###!!! Opravit i konverzi stromu.
+                edep['deprel'] = re.sub(r'^advcl:s(?::ins)?$', r'advcl', edep['deprel']) ###!!! "seděli jsme tam s Člověče, nezlob se!" Měla by se opravit konverze stromu.
                 edep['deprel'] = re.sub(r'^acl:k(?::dat)?$', r'acl', edep['deprel'])
                 edep['deprel'] = re.sub(r'^advcl:k(?::dat)?$', r'obl:k:dat', edep['deprel']) ###!!! Ale měli bychom opravit i závislost v základním stromu!
                 edep['deprel'] = re.sub(r'^advcl:místo(?::gen)?$', r'obl:místo:gen', edep['deprel']) # 'v poslední době se množí bysem místo bych'
