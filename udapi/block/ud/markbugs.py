@@ -154,7 +154,7 @@ class MarkBugs(Block):
         #       so there should be no false alarms. Some errors are not reported, i.e. the cases
         #       when advmod incorrectly depends on a function word ("right before midnight").
         if parent.udeprel in ('aux', 'cop', 'mark', 'clf', 'case'):
-            if udeprel not in ('conj', 'cc', 'punct', 'fixed', 'goeswith', 'advmod'):
+            if udeprel not in ('conj', 'cc', 'punct', 'fixed', 'goeswith', 'advmod', 'reparandum'):
                 self.log(node, parent.deprel + '-child',
                          'parent.deprel=%s deprel!=conj|cc|punct|fixed|goeswith' % parent.deprel)
 
