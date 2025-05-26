@@ -36,6 +36,8 @@ class FixAdvmodByUpos(Block):
                 node.deprel = 'aux'
             elif node.upos == 'ADP':
                 node.deprel = 'case'
+            elif node.upos == 'ADV':
+                node.deprel = 'advmod'
             elif node.upos == 'CCONJ':
                 node.deprel = 'cc'
         elif node.udeprel in ['aux', 'cop']:
