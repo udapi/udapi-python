@@ -44,6 +44,8 @@ class FixAdvmodByUpos(Block):
         elif node.udeprel == 'case':
             if node.upos == 'DET':
                 node.deprel = 'det'
+            elif node.upos == 'PRON':
+                node.deprel = 'nmod'
         elif node.udeprel == 'mark':
             if node.upos in ['PRON', 'DET']:
                 node.deprel = 'nsubj' # it could be also obj, iobj, obl or nmod; just guessing what might be more probable
