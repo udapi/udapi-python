@@ -126,7 +126,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             # could be masculine or neuter. We pick Gender=Masc and Animacy=Anim
             # by default, unless the original token was annotated as Animacy=Inan
             # or Gender=Neut.
-            m = re.match(r"^(na|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
+            m = re.match(r"^(na|nade|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
             if m:
                 node.misc['AddMwt'] = ''
                 # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'

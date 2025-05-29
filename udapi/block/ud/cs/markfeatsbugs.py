@@ -37,7 +37,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Foreign': ['Yes']
+                    'Foreign': ['Yes'],
+                    'Abbr': ['Yes']
                 })
             elif node.feats['Gender'] == 'Masc':
                 self.check_required_features(node, ['Animacy'])
@@ -46,13 +47,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Foreign': ['Yes']})
+                    'Foreign': ['Yes'],
+                    'Abbr': ['Yes']})
             else:
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'Foreign': ['Yes']})
+                    'Foreign': ['Yes'],
+                    'Abbr': ['Yes']})
         # PROPER NOUNS #########################################################
         elif node.upos == 'PROPN':
             self.check_required_features(node, ['Gender', 'Number', 'Case'])
@@ -64,14 +67,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                     'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
-                    'Foreign': ['Yes']})
+                    'Foreign': ['Yes'],
+                    'Abbr': ['Yes']})
             else:
                 self.check_allowed_features(node, {
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                     'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
-                    'Foreign': ['Yes']})
+                    'Foreign': ['Yes'],
+                    'Abbr': ['Yes']})
         # ADJECTIVES ###########################################################
         elif node.upos == 'ADJ':
             if node.feats['Poss'] == 'Yes': # possessive adjectives

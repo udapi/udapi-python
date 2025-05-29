@@ -51,6 +51,8 @@ class FixAdvmodByUpos(Block):
         elif node.udeprel == 'mark':
             if node.upos in ['PRON', 'DET']:
                 node.deprel = 'nsubj' # it could be also obj, iobj, obl or nmod; just guessing what might be more probable
+            elif node.upos == 'NOUN':
+                node.deprel = 'obl'
             elif node.upos == 'INTJ':
                 node.deprel = 'discourse'
         elif node.udeprel == 'cc':
@@ -71,6 +73,8 @@ class FixAdvmodByUpos(Block):
                 node.deprel = 'aux'
             elif node.upos == 'VERB':
                 node.deprel = 'dep'
+            elif node.upos == 'SCONJ':
+                node.deprel = 'mark'
             elif node.upos == 'X':
                 node.deprel = 'dep'
         elif node.udeprel == 'nummod':
