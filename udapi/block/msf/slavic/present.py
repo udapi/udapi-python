@@ -12,12 +12,17 @@ class Present(udapi.block.msf.phrase.Phrase):
 		# the condition VerbForm == 'Fin' ensures that there are no transgressives between the found verbs
 		# the aspect is not always given in Czech treebanks, so we can't rely on the fact that the imperfect aspect is specified 
 		if node.feats['Tense'] == 'Pres' and node.upos == 'VERB' and node.feats['VerbForm'] == 'Fin': #and node.feats['Aspect']=='Imp': 
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
+			
 			aux_forb = [x for x in node.children if x.upos == 'AUX' and (x.lemma == 'ќе' or x.lemma == 'ще' or x.feats['Mood'] == 'Cnd')] # forbidden auxiliaries for present tense (these auxiliaries are used for the future tense or the conditional mood)
 
-			if len(aux_forb) == 0:
-				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
+			if not aux_forb:
+				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
+
+				phrase_nodes = [node] + refl
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+
+				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
 				
 				self.write_node_info(node,
@@ -28,7 +33,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'],
 					voice=self.get_voice(node,refl),
 					form='Fin',
-					polarity=self.get_polarity(node,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords
 					)
@@ -38,12 +43,15 @@ class Present(udapi.block.msf.phrase.Phrase):
 		if node.upos == 'ADJ' and node.feats['Voice'] == 'Pass':
 			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres' and x.lemma != 'hteti' and x.lemma != 'htjeti']
 			aux_forb = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] != 'Pres'] # we don't want the past passive (e. g. 'byl jsem poučen' in Czech)
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			
-			phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in neg]
-			phrase_ords.sort()
-			
-			if len(aux) > 0 and len(aux_forb) == 0:
+			if aux and not aux_forb:
+				phrase_nodes = [node] + aux
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+
+				phrase_ords = [x.ord for x in phrase_nodes]
+				phrase_ords.sort()
+
 				auxVerb = aux[0]
 
 				self.write_node_info(node,
@@ -54,7 +62,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'],
 					form='Fin',
 					voice='Pass',
-					polarity=self.get_polarity(auxVerb,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy']
@@ -69,8 +77,12 @@ class Present(udapi.block.msf.phrase.Phrase):
 			
 			if not aux_forb and not cop:
 				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-				neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
+
+				phrase_nodes = [node] + refl
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+
+				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
 
 				self.write_node_info(node,
@@ -80,22 +92,26 @@ class Present(udapi.block.msf.phrase.Phrase):
 					form='Part',
 					voice=self.get_voice(node, refl),
 					reflex=self.get_is_reflex(node, refl),
-					polarity=self.get_polarity(node,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords
 				)
 				return
 
 		cop = [x for x in node.children if x.udeprel == 'cop' and x.feats['Tense'] == 'Pres']
-		aux = [x for x in node.children if x.udeprel == "aux" and x.feats['Mood'] == 'Ind' and x.feats['Tense'] == 'Pres']
 		aux_forb = [x for x in node.children if x.upos == 'AUX' and x.feats['Tense'] != 'Pres'] # in Serbian this can be a future tense
-		prep = [x for x in node.children if x.upos == 'ADP']
-		neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-		refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			
-		if len(cop) > 0 and len(aux_forb) == 0:
+					
+		if cop and not aux_forb:
+			aux = [x for x in node.children if x.udeprel == "aux" and x.feats['Mood'] == 'Ind' and x.feats['Tense'] == 'Pres']
+			prep = [x for x in node.children if x.upos == 'ADP']
+			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
+
+			phrase_nodes = [node] + cop + aux + prep + refl
+			neg = self.get_negative_particles(phrase_nodes)
+			phrase_nodes += neg
+
 			copVerb = cop[0]
 				
-			phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in aux] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
+			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
 				
 			self.write_node_info(node,
@@ -107,6 +123,6 @@ class Present(udapi.block.msf.phrase.Phrase):
 					form='Fin',
 					voice=self.get_voice(copVerb, refl),
 					reflex=self.get_is_reflex(node, refl),
-					polarity=self.get_polarity(copVerb,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords
 				)

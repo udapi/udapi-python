@@ -19,12 +19,16 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 			# the conditional mood can be formed using the auxiliary verb or some conjunctions (such as 'aby, kdyby...' in Czech)
 			# so x.udeprel == 'aux' can't be required because it doesn't meet the conjunctions
 			
-			if len(aux_cnd) > 0 and len(cop) == 0:
+			if aux_cnd and not cop:
 				aux = [x for x in node.children if x.udeprel == 'aux' or x.feats['Mood'] == 'Cnd'] # all auxiliary verbs and conjuctions with feats['Mood'] == 'Cnd'
 				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-				neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
+
+				phrase_nodes = [node] + aux + refl
 				
-				phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in refl] + [x.ord for x in neg]
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+
+				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
 			
 				auxVerb = aux_cnd[0]
@@ -41,7 +45,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					form='Fin',
 					aspect=node.feats['Aspect'],
 					reflex=self.get_is_reflex(node,refl),
-					polarity=self.get_polarity(node,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					voice=self.get_voice(node, refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
@@ -53,15 +57,18 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 		cop = [x for x in node.children if x.udeprel == 'cop' and (x.feats['VerbForm'] == 'Part' or x.feats['VerbForm'] == 'Fin')]
 		aux_cnd = [x for x in node.children if x.feats['Mood'] == 'Cnd' or x.deprel=='aux:cnd']
 			
-		if len(cop) > 0 and len(aux_cnd) > 0:
+		if cop and aux_cnd:
 			# there can be a copula with Mood='Cnd' (i. e. in Old East Slavonic), we don't want to count these copula in phrase_ords twice, so there is x.udeprel != 'cop' in aux list
 			aux = [x for x in node.children if (x.udeprel == 'aux' or x.feats['Mood'] == 'Cnd') and x.udeprel != 'cop']
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 			prep = [x for x in node.children if x.upos == 'ADP']
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
+			phrase_nodes = [node] + aux + prep + refl + cop
+			neg = self.get_negative_particles(phrase_nodes)
+			phrase_nodes += neg
+
 			copVerb = cop[0]
-			phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in cop] + [x.ord for x in neg] + [x.ord for x in prep] + [x.ord for x in refl]
+			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
 			self.write_node_info(node,
 					aspect=copVerb.feats['Aspect'],
@@ -70,7 +77,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					mood='Cnd',
 					form='Fin',
 					voice=self.get_voice(copVerb, refl),
-					polarity=self.get_polarity(copVerb,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					reflex=self.get_is_reflex(node, refl),
 					ords=phrase_ords,
 					gender=copVerb.feats['Gender'],

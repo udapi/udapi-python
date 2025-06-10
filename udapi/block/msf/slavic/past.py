@@ -29,9 +29,12 @@ class Past(udapi.block.msf.phrase.Phrase):
 		# in Polish, verbs with Person=0 have also Tense=Past, in Ukrainian the tense is not specified
 		if node.feats['Person'] == '0':
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
+			
+			phrase_nodes = [node] + refl
+			neg = self.get_negative_particles(phrase_nodes)
+			phrase_nodes += neg
 
-			phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
+			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
 
 			self.write_node_info(node,
@@ -42,7 +45,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 						voice='Act', #In Polish, impersonal statements are annotated with Voice=Act. In Ukrainian, the Voice feature is missing; therefore, we decided to annotate these phrases with PhraseVoice=Act
 						aspect=node.feats['Aspect'],
 						form=node.feats['VerbForm'],
-						polarity=self.get_polarity(node,neg),
+						polarity=self.get_polarity(phrase_nodes),
 						reflex=self.get_is_reflex(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
@@ -54,20 +57,23 @@ class Past(udapi.block.msf.phrase.Phrase):
 			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres']
 			aux_pqp = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] in past_tenses]
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
+
+			phrase_nodes = [node] + aux + refl + aux_pqp
+			neg = self.get_negative_particles(phrase_nodes)
+			phrase_nodes += neg
 			
-			phrase_ords = [node.ord] + [x.ord for x in aux] + [x.ord for x in refl] + [x.ord for x in neg] + [x.ord for x in aux_pqp]
+			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
 			
 			aux_cnd = [x for x in node.children if (x.feats['Mood'] == 'Cnd' or x.deprel == 'aux:cnd') and x.udeprel != 'conj'] # we don't want to mark l-participles in the conditional as past tense
-			if len(aux_cnd) == 0:
-				if len(aux) > 0:
+			if not aux_cnd:
+				if aux:
 					person = aux[0].feats['Person']
 
-				elif len(aux) == 0:
+				elif not aux:
 					person = '3'
 
-				if len(aux_pqp) > 0:
+				if aux_pqp:
 					person = aux_pqp[0].feats['Person']
 				
 				# in Slovenian, the participles are not annotated as Tense='Past', the Tense feature is missing here
@@ -86,7 +92,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 						voice=self.get_voice(node,refl),
 						aspect=node.feats['Aspect'],
 						form='Fin',
-						polarity=self.get_polarity(node,neg),
+						polarity=self.get_polarity(phrase_nodes),
 						reflex=self.get_is_reflex(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
@@ -100,13 +106,16 @@ class Past(udapi.block.msf.phrase.Phrase):
 
 			# the past tense is formed only by a content verb, not with an auxiliary
 			aux_forb = [x for x in node.children if x.udeprel == 'aux']
-
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-
-			if not aux_forb:
 			
-				phrase_ords = [node.ord] + [x.ord for x in refl] + [x.ord for x in neg]
+			if not aux_forb:
+
+				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
+
+				phrase_nodes = [node] + refl
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+			
+				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
 
 				self.write_node_info(node,
@@ -117,7 +126,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 					voice=self.get_voice(node,refl),
 					aspect=node.feats['Aspect'],
 					form=node.feats['VerbForm'],
-					polarity=self.get_polarity(node,neg),
+					polarity=self.get_polarity(phrase_nodes),
 					reflex=self.get_is_reflex(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
@@ -127,14 +136,18 @@ class Past(udapi.block.msf.phrase.Phrase):
 				
 			
 		# passive
-		elif node.upos == 'ADJ' and node.feats['Voice'] == 'Pass' and len(cop) == 0:	
+		elif node.upos == 'ADJ' and node.feats['Voice'] == 'Pass' and not cop:	
 			aux_past_tense = [x for x in node.children if x.udeprel == 'aux' and (x.feats['Tense'] in past_tenses)]
 			aux_cnd = [x for x in node.children if x.feats['Mood'] == 'Cnd' or x.deprel == 'aux:cnd'] # we don't want to mark l-participles in the conditional as past tense
-			if len(aux_cnd) == 0:
-				if len(aux_past_tense) > 0:
+			if not aux_cnd:
+				if aux_past_tense:
 					aux_pres_tense = [x for x in  node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres'] # e. g. the auxiliary 'jsem' in the phrase 'byl jsem přinucen'
-					neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
-					phrase_ords = [node.ord] + [x.ord for x in aux_past_tense] + [x.ord for x in aux_pres_tense] + [x.ord for x in neg]
+					
+					phrase_nodes = [node] + aux_past_tense + aux_pres_tense
+					neg = self.get_negative_particles(phrase_nodes)
+					phrase_nodes += neg
+
+					phrase_ords = [x.ord for x in phrase_nodes]
 					phrase_ords.sort()
 					
 					person = '3'
@@ -150,7 +163,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 						voice='Pass',
 						form='Fin',
 						aspect=node.feats['Aspect'],
-						polarity=self.get_polarity(aux_past_tense[0],neg),
+						polarity=self.get_polarity(phrase_nodes),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
 						animacy=node.feats['Animacy']
@@ -158,13 +171,16 @@ class Past(udapi.block.msf.phrase.Phrase):
 				
 		else:
 			aux_cnd = [x for x in node.children if x.feats['Mood'] == 'Cnd' or x.deprel == 'aux:cnd'] # we don't want to mark l-participles in the conditional as past tense
-			if len(cop) > 0 and len(aux_cnd) == 0:
+			if cop and not aux_cnd:
 				aux_past_tense = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres']
 				prep = [x for x in node.children if x.upos == 'ADP']
-				neg = [x for x in node.children if x.feats['Polarity'] == 'Neg' and x.upos == 'PART']
 				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
-				phrase_ords = [node.ord] + [x.ord for x in aux_past_tense] + [x.ord for x in cop] + [x.ord for x in prep] + [x.ord for x in neg] + [x.ord for x in refl]
+				phrase_nodes = [node] + aux_past_tense + cop + prep + refl
+				neg = self.get_negative_particles(phrase_nodes)
+				phrase_nodes += neg
+
+				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
 
 				person = '3'
@@ -184,7 +200,7 @@ class Past(udapi.block.msf.phrase.Phrase):
 					voice=self.get_voice(cop[0], refl),
 					form='Fin',
 					reflex=self.get_is_reflex(node,refl),
-					polarity=self.get_polarity(cop[0],neg),
+					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
 					gender=cop[0].feats['Gender'],
 					animacy=cop[0].feats['Animacy']
