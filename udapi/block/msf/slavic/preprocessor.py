@@ -71,9 +71,13 @@ class Preprocessor(Block):
 		if node.feats['Mood'] == 'Sub':
 			node.feats['Mood'] = 'Cnd'
 
-		# # although infinitives in Old Church Slavonic are annotated with Tense=Pres, they do not convey tense; therefore, we remove this annotation
+		# although infinitives in Old Church Slavonic are annotated with Tense=Pres, they do not convey tense; therefore, we remove this annotation
 		if node.feats['VerbForm'] == 'Inf':
 			node.feats['Tense'] = ''
+
+		# in the russian Syntagrus corpus, the negative particles have no Polarity=Neg feature
+		if node.lemma == 'не' and node.upos == 'PART' and node.udeprel == 'advmod':
+			node.feats['Polarity'] = 'Neg'
 
 		# TODO maybe we want to set Tense=Fut for the perfective verbs with Tense=Pres? This could solve the problem with the simplified detection of the future tense in Czech
 		# but there are many verbs with no Aspect value, so the problem is still there 
