@@ -28,7 +28,8 @@ class Phrase(Block):
 		'polarity': 'PhrasePolarity',
 		'gender':'PhraseGender',
 		'animacy':'PhraseAnimacy',
-		'ords':'Phrase'
+		'ords':'Phrase',
+        'expl':'PhraseExpl',
 		}
     
     # a dictionary where the key is the lemma of a negative particle and the value is a list of the lemmas of their possible children that have a 'fixed' relation
@@ -68,7 +69,8 @@ class Phrase(Block):
 			ords = None,
 			gender = None,
 			animacy = None,
-			aspect = None):
+			aspect = None,
+            expl=None):
         arguments = locals()
         del arguments['self'] # delete self and node from arguments,
         del arguments['node'] # we want only grammatical categories 
