@@ -646,6 +646,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'VerbForm': ['Fin'],
                             'Mood': ['Cnd']
                         })
+                    elif node.form.lower() == 'byšta':
+                        self.check_required_features(node, ['Mood', 'Person', 'Number'])
+                        self.check_allowed_features(node, {
+                            'Aspect': ['Imp'],
+                            'VerbForm': ['Fin'],
+                            'Mood': ['Cnd'],
+                            'Person': ['2', '3'],
+                            'Number': ['Dual']
+                        })
                     else:
                         self.check_required_features(node, ['Mood', 'Person', 'Number'])
                         self.check_allowed_features(node, {
@@ -798,7 +807,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'Degree': ['Pos', 'Cmp', 'Sup'],
                         'Polarity': ['Pos', 'Neg'],
-                        'Emph': ['Yes']
+                        'Emph': ['Yes'],
+                        'Abbr': ['Yes']
                     })
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
