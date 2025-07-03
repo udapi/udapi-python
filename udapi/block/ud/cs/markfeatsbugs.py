@@ -129,7 +129,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 self.check_required_features(node, ['VerbForm', 'Voice'])
                 if node.feats['Voice'] == 'Act': # active participles have tense, passives don't but they have degree
                     if node.feats['Gender'] == 'Masc':
-                        self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Tense', 'Gender', 'Animacy', 'Number', 'Case', 'Polarity'])
+                        # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzující').
+                        self.check_required_features(node, ['VerbForm', 'Voice', 'Tense', 'Gender', 'Animacy', 'Number', 'Case', 'Polarity'])
                         self.check_allowed_features(node, {
                             'VerbForm': ['Part'],
                             'Aspect': ['Imp', 'Perf'],
@@ -144,7 +145,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Emph': ['Yes'],
                             'Foreign': ['Yes']})
                     else:
-                        self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Tense', 'Gender', 'Number', 'Case', 'Polarity'])
+                        # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzující').
+                        self.check_required_features(node, ['VerbForm', 'Voice', 'Tense', 'Gender', 'Number', 'Case', 'Polarity'])
                         self.check_allowed_features(node, {
                             'VerbForm': ['Part'],
                             'Aspect': ['Imp', 'Perf'],
@@ -159,7 +161,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Foreign': ['Yes']})
                 else:
                     if node.feats['Gender'] == 'Masc':
-                        self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Gender', 'Animacy', 'Number', 'Case', 'Polarity', 'Degree'])
+                        # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzovaný').
+                        self.check_required_features(node, ['VerbForm', 'Voice', 'Gender', 'Animacy', 'Number', 'Case', 'Polarity', 'Degree'])
                         self.check_allowed_features(node, {
                             'VerbForm': ['Part'],
                             'Aspect': ['Imp', 'Perf'],
@@ -174,7 +177,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Emph': ['Yes'],
                             'Foreign': ['Yes']})
                     else:
-                        self.check_required_features(node, ['VerbForm', 'Aspect', 'Voice', 'Gender', 'Number', 'Case', 'Polarity', 'Degree'])
+                        # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzovaný').
+                        self.check_required_features(node, ['VerbForm', 'Voice', 'Gender', 'Number', 'Case', 'Polarity', 'Degree'])
                         self.check_allowed_features(node, {
                             'VerbForm': ['Part'],
                             'Aspect': ['Imp', 'Perf'],
