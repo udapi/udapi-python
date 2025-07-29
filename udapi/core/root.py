@@ -314,3 +314,25 @@ class Root(Node):
         for node in self._children:
             node._parent = self
             node._children.clear()
+
+    @property
+    def prev_tree(self):
+        """Return the previous tree (root) in the document (from the same zone)."""
+        doc = self._bundle._document
+        num = self._bundle.number
+        if len(doc.bundles) <= num - 1 or doc.bundles[num - 1] is not self._bundle:
+            num = doc.bundles.index(self._bundle) + 1
+        if num == 1:
+            return None
+        return doc.bundles[num - 2].get_tree(zone=self._zone)
+
+    @property
+    def next_tree(self):
+        """Return the next tree (root) in the document (from the same zone)."""
+        doc = self._bundle._document
+        num = self._bundle.number
+        if len(doc.bundles) <= num - 1 or doc.bundles[num - 1] is not self._bundle:
+            num = doc.bundles.index(self._bundle) + 1
+        if len(doc.bundles) <= num:
+            return None
+        return doc.bundles[num].get_tree(zone=self._zone)
