@@ -2,6 +2,9 @@
 import udapi.block.msf.phrase
 from enum import Enum
 
+AUXES_HAVE = ['ter', 'haber']
+AUXES_BE = ['estar']
+
 class Aspect(str, Enum):
     IMP = 'Imp'
     IMPPROG = 'ImpProg'
@@ -41,7 +44,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 self.process_copulas(node,cop,auxes,refl,expl)
             return
 
-        if node.upos == 'VERB':
+        if node.upos == 'VERB': #TODO maybe add 'or node.feats['VerbForm'] == 'Part'?
             auxes = [x for x in node.children if x.udeprel == 'aux']
             aux_pass = [x for x in node.children if x.deprel == 'aux:pass']
             auxes_without_pass = [x for x in node.children if x.udeprel == 'aux' and x.deprel != 'aux:pass']
@@ -66,29 +69,48 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     phrase_ords = [node.ord] + [r.ord for r in refl]
                     phrase_ords.sort()
 
+                    # Portuguese
                     # presente -> PhraseTense=Pres, PhraseAspect=''
                     # Futuro do presente -> PhraseTense=Fut, PhraseAspect=''
+
+                    # Spanish
+                    # presente -> PhraseTense=Pres, PhraseAspect=''
+                    # futuro simple -> PhraseTense=Fut, PhraseAspect=''
                     aspect = ''
                     tense = node.feats['Tense']
 
                     if node.feats['Mood'] == 'Ind':
-
+                        
+                        # Portuguese
                         # pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
+
+                        # Spanish
+                        # pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
                         if node.feats['Tense'] == 'Imp':
                             tense=Tense.PAST.value
                             aspect=Aspect.IMP.value
 
+                        # Portuguese
                         # pretérito perfeito -> PhraseTense=Past, PhraseAspect=Perf
+
+                        # Spanish
+                        # pretérito perfecto -> PhraseTense=Past, PhraseAspect=Perf
                         if node.feats['Tense'] == 'Past':
                             aspect=Aspect.PERF.value
 
+                        # Portuguese
                         # pretérito mais que perfeito simples -> PhraseTense=Past, PhraseAspect=Pqp
                         if node.feats['Tense'] == 'Pqp':
                             tense=Tense.PAST.value
                             aspect=Aspect.PQP.value
                             
+                    # Portuguese
                     # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
                     # subjunctive futuro -> PhraseTense=Fut, PhraseAspect=''
+
+                    # Spanish
+                    # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
+                    # subjunctive futuro -> PhraseTense=Fut, PhraseAspect='' TODO not annotated in treebanks?
                     if node.feats['Mood'] == 'Sub':
 
                         if node.feats['Tense'] == 'Past':
@@ -99,7 +121,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                             tense=Tense.PAST.value
                             aspect=Aspect.IMP.value
 
+                    # Portuguese
                     # Futuro do pretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
+
+                    # Spanish
+                    # pospretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
                     if node.feats['Mood'] == 'Cnd':
                         aspect=''
                         tense=Tense.PRES.value
@@ -146,7 +172,6 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 else:
                     self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, refl, auxes, node)
 
-
     def process_periphrastic_verb_forms(self, node, auxes, refl, all_auxes, head_node):
         """
         Parameters
@@ -166,19 +191,24 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
         if len(auxes)  == 1:
             # Cnd
-            if ((auxes[0].lemma == 'ter' and node.feats['VerbForm'] == 'Part') or (auxes[0].lemma == 'estar' and node.feats['VerbForm'] == 'Ger')) and auxes[0].feats['Mood'] == 'Cnd':
+            if ((auxes[0].lemma in AUXES_HAVE and node.feats['VerbForm'] == 'Part') or (auxes[0].lemma in AUXES_BE and node.feats['VerbForm'] == 'Ger')) and auxes[0].feats['Mood'] == 'Cnd':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl] + [r.ord for r in refl]
                 phrase_ords.sort()
 
+                # Portuguese
                 # aux estar cond + gerund -> PhraseTense=Pres, PhraseAspect=Prog, PhraseMood=Cnd
                 if auxes[0].lemma == 'estar':
                     tense=Tense.PRES.value
                     aspect=Aspect.PROG.value
 
-                # Futuro do pretérito composto -> PhraseTense=Past, PhraseAspect=Perf, PhraseMood=Cnd
+                # Portuguese
+                # Futuro do pretérito composto -> PhraseTense=Past, PhraseAspect='', PhraseMood=Cnd
+
+                # Spanish
+                # Antepospretérito -> PhraseTense=Past, PhraseAspect='', PhraseMood=Cnd
                 else:
                     tense=Tense.PAST.value
-                    aspect=Aspect.PERF.value
+                    aspect=''
 
                 self.write_node_info(head_node,
                     tense=tense,
@@ -193,26 +223,30 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 return
                 
             # Auxiliary 'estar' followed by a gerund 
-            if auxes[0].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
+            if auxes[0].lemma in AUXES_BE and node.feats['VerbForm'] == 'Ger':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
+                # Portuguese + Spanish
                 # pretérito imperfeito (aux estar) -> PhraseTense=Past, PhraseAspect=ImpProg
                 # subjunctive pretérito imperfeito (aux estar) -> PhraseTense=Past, PhraseAspect=ImpProg, PhraseMood=Sub
                 if auxes[0].feats['Tense'] == 'Imp':
                     tense=Tense.PAST.value
                     aspect=Aspect.IMPPROG.value
 
+                # Portuguese + Spanish
                 # pretérito perfeito (aux estar) -> PhraseTense=Past, PhraseAspect=PerfProg
                 elif auxes[0].feats['Tense'] == 'Past':
                     tense=Tense.PAST.value
                     aspect=Aspect.PERFPROG.value
 
+                # Portuguese + Spanish
                 # conditional (aux estar) -> PhraseTense=Pres, PhraseAspect=Prog, PhraseMood=Cnd
                 elif auxes[0].feats['Mood'] == 'Cnd':
                     tense=Tense.PRES.value
                     aspect=Aspect.PROG.value
 
+                # Portuguese + Spanish
                 # presente (aux estar) -> PhraseTense=Pres, PhraseAspect=Prog
                 # futuro do presente (aux estar) -> PhraseTense=Fut, PhraseAspect=Prog
                 # subjunctive presente (aux estar) -> PhraseTense=Pres, PhraseAspect=Prog, PhraseMood=Sub
@@ -232,22 +266,38 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     expl=expl,
                     ords=phrase_ords)
 
-            # Auxiliary 'ter' followed by a participle
-            if auxes[0].lemma == 'ter' and node.feats['VerbForm'] == 'Part':
+            # Auxiliary 'ter' / 'haber' followed by a participle
+            if auxes[0].lemma in AUXES_HAVE and node.feats['VerbForm'] == 'Part':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
+                # Portuguese
                 # futuro do presente composto (aux ter) -> PhraseTense=Fut, PhraseAspect=Perf
+
+                # Spanish
+                # Futuro compuesto antefuturo -> PhraseTense=Fut, PhraseAspect=Perf
                 aspect=Aspect.PERF.value
                 tense=auxes[0].feats['Tense']
 
+                # Portuguese
                 # pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf
                 # subjonctive pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf, PhraseMood=Sub
-                if auxes[0].feats['Tense'] == 'Pres':
-                    tense=Tense.PASTPRES.value
 
-                # pretérito mais que perfeito composto (aux ter/haver) -> PhraseTense=Past, PhraseAspect=Pqp
+                if auxes[0].feats['Tense'] == 'Pres':
+
+                    # Spanish
+                    # Pretérito perfecto compuesto ante presente -> PhraseTense=Past, PhraseAspect=Perf
+                    if auxes[0].lemma == 'haber' and auxes[0].feats['Mood'] != 'Sub':
+                        tense = Tense.PAST.value
+                    else:
+                        tense=Tense.PASTPRES.value
+
+                # Portuguese
+                # pretérito mais que perfeito composto (aux ter) -> PhraseTense=Past, PhraseAspect=Pqp
                 # subjonctive pretérito mais-que-perfeito composto (aux ter) -> PhraseTense=Past, PhraseAspect=Pqp, PhraseMood=Sub
+
+                # Spanish
+                # pretérito pluscuamperfecto -> PhraseTense=Past, PhraseAspect=Pqp
                 elif auxes[0].feats['Tense'] in ['Imp', 'Past']: # TODO prej neni v Past, jenom Imp
                     tense=Tense.PAST.value
                     aspect=Aspect.PQP.value
@@ -263,6 +313,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     expl=expl,
                     ords=phrase_ords)
                 
+            # Portuguese
+            # pretérito mais que perfeito composto (aux haver) -> PhraseTense=Past, PhraseAspect=Perf
             if auxes[0].lemma == 'haver' and auxes[0].feats['Tense'] == 'Imp' and node.feats['VerbForm'] == 'Part':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
@@ -303,6 +355,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
             
             # auxiliary 'ir' followed by infinitive
+            # TODO solve these verb forms for Spanish (VERB 'ir' + ADP 'a' + infinitive)
             if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Inf':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
@@ -368,7 +421,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     ords=phrase_ords)
                 
         elif len(auxes) == 2:
+            # Portuguese
             # auxiliry 'ir' followed by auxiliary 'estar' in infinitive and a gerund
+
+            # TODO Spanish
+            # VERB 'ir' + ADP 'a' + AUX 'estar'.Inf + gerund
             if auxes[0].lemma == 'ir' and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
@@ -431,8 +488,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 
             
                 
-            # Cnd (only ter), Sub and Past,Pres,Fut tenses: 2 auxes - ter + estar
-            if auxes[0].lemma in ['ter', 'haver'] and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
+            # Cnd (only ter/haber), Sub and Past,Pres,Fut tenses: 2 auxes - ter/haber + estar
+            if auxes[0].lemma in AUXES_HAVE and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
@@ -473,6 +530,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 return
                 
     def process_copulas(self, node, cop, auxes, refl, expl):
+
+        aspect = ''
         
         if not auxes:
             tense = cop[0].feats['Tense']
