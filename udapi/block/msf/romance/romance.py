@@ -2,8 +2,8 @@
 import udapi.block.msf.phrase
 from enum import Enum
 
-AUXES_HAVE = ['ter', 'haber']
-AUXES_BE = ['estar']
+AUXES_HAVE = ['ter', 'haber', 'avere']
+AUXES_BE = ['estar', 'essere']
 
 class Aspect(str, Enum):
     IMP = 'Imp'
@@ -44,7 +44,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 self.process_copulas(node,cop,auxes,refl,expl)
             return
 
-        if node.upos == 'VERB': #TODO maybe add 'or node.feats['VerbForm'] == 'Part'?
+        if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
             auxes = [x for x in node.children if x.udeprel == 'aux']
             aux_pass = [x for x in node.children if x.deprel == 'aux:pass']
             auxes_without_pass = [x for x in node.children if x.udeprel == 'aux' and x.deprel != 'aux:pass']
@@ -76,6 +76,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     # Spanish
                     # presente -> PhraseTense=Pres, PhraseAspect=''
                     # futuro simple -> PhraseTense=Fut, PhraseAspect=''
+
+                    # Italian
+                    # presente -> PhraseTense=Pres, PhraseAspect=''
+                    # futuro semplice -> PhraseTense=Fut, PhraseAspect=''
+
                     aspect = ''
                     tense = node.feats['Tense']
 
@@ -86,6 +91,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                         # Spanish
                         # pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
+
+                        # Italian
+                        # imperfetto -> PhraseTense=Past, PhraseAspect=Imp
                         if node.feats['Tense'] == 'Imp':
                             tense=Tense.PAST.value
                             aspect=Aspect.IMP.value
@@ -95,6 +103,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                         # Spanish
                         # pretérito perfecto -> PhraseTense=Past, PhraseAspect=Perf
+
+                        # Italian
+                        # pass remoto -> PhraseTense=Past, PhraseAspect=Perf
                         if node.feats['Tense'] == 'Past':
                             aspect=Aspect.PERF.value
 
@@ -111,12 +122,22 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     # Spanish
                     # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
                     # subjunctive futuro -> PhraseTense=Fut, PhraseAspect='' TODO not annotated in treebanks?
+
+                    # Italian
+                    # Congiuntivo presente -> PhraseTense=Pres, PhraseAspect=''
                     if node.feats['Mood'] == 'Sub':
 
                         if node.feats['Tense'] == 'Past':
                             aspect=Aspect.IMP.value
 
+                        # Portuguese
                         # subjunctive pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
+
+                        # Spanish
+                        # Pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
+
+                        # Italian
+                        # Congiuntivo imperfetto -> PhraseTense=Past, PhraseAspect=Imp
                         if node.feats['Tense']  == 'Imp':
                             tense=Tense.PAST.value
                             aspect=Aspect.IMP.value
@@ -126,6 +147,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                     # Spanish
                     # pospretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
+
+                    # Italian
+                    # Condizionale presente -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
                     if node.feats['Mood'] == 'Cnd':
                         aspect=''
                         tense=Tense.PRES.value
@@ -206,6 +230,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                 # Spanish
                 # Antepospretérito -> PhraseTense=Past, PhraseAspect='', PhraseMood=Cnd
+
+                # Italian
+                # Condizionale passato -> PhraseTense=Past, PhraseAspect='', PhraseMood=Cnd
                 else:
                     tense=Tense.PAST.value
                     aspect=''
@@ -329,7 +356,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 
                 return
 
-            # Auxiliary 'ter' / 'haber' followed by a participle
+            # Auxiliary 'ter' / 'haber' / 'avere' / 'essere' followed by a participle
             if node.feats['VerbForm'] == 'Part':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
@@ -339,21 +366,26 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                 # Spanish
                 # Futuro compuesto antefuturo -> PhraseTense=Fut, PhraseAspect=Perf
+
+                # Italian
+                # Futuro anteriore -> PhraseTense=Fut, PhraseAspect=Perf
                 aspect=Aspect.PERF.value
                 tense=auxes[0].feats['Tense']
 
-                # Portuguese
-                # pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf
-                # subjonctive pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf, PhraseMood=Sub
+                # Spanish
+                # Pretérito perfecto compuesto ante presente -> PhraseTense=Past, PhraseAspect=Perf
 
+                # Italian
+                # Passato prossimo (aux avere/essere) -> PhraseTense=Past, PhraseAspect=Perf
                 if auxes[0].feats['Tense'] == 'Pres':
 
-                    # Spanish
-                    # Pretérito perfecto compuesto ante presente -> PhraseTense=Past, PhraseAspect=Perf
-                    if auxes[0].lemma == 'haber' and auxes[0].feats['Mood'] != 'Sub':
-                        tense = Tense.PAST.value
+                    # Portuguese
+                    # pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf
+                    # subjonctive pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf, PhraseMood=Sub
+                    if auxes[0].lemma == 'ter' or auxes[0].feats['Mood'] == 'Sub':
+                        tense = Tense.PASTPRES.value
                     else:
-                        tense=Tense.PASTPRES.value
+                        tense=Tense.PAST.value
 
                 # Portuguese
                 # pretérito mais que perfeito composto (aux ter) -> PhraseTense=Past, PhraseAspect=Pqp
@@ -361,6 +393,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                 # Spanish
                 # pretérito pluscuamperfecto -> PhraseTense=Past, PhraseAspect=Pqp
+
+                # Italian
+                # Trapassato prossimo -> PhraseTense=Past, PhraseAspect=Pqp
                 elif auxes[0].feats['Tense'] in ['Imp', 'Past']: # TODO prej neni v Past, jenom Imp
                     tense=Tense.PAST.value
                     aspect=Aspect.PQP.value
