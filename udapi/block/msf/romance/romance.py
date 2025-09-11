@@ -191,7 +191,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
         if len(auxes)  == 1:
             # Cnd
-            if ((auxes[0].lemma in AUXES_HAVE and node.feats['VerbForm'] == 'Part') or (auxes[0].lemma in AUXES_BE and node.feats['VerbForm'] == 'Ger')) and auxes[0].feats['Mood'] == 'Cnd':
+            if auxes[0].feats['Mood'] == 'Cnd' and (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Ger'):
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl] + [r.ord for r in refl]
                 phrase_ords.sort()
 
@@ -221,9 +221,76 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     ords=phrase_ords)
                 return
+            
+            if auxes[0].lemma == 'vir' and auxes[0].feats['Tense'] in ['Pres', 'Imp', 'Past'] and node.feats['VerbForm'] == 'Ger':
+                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
+                phrase_ords.sort()
+
+                # aux Pres (vir) + gerund -> PhraseTense=PastPres, PraseAspect=Prog
+                if auxes[0].feats['Tense'] == 'Pres':
+                    tense=Tense.PASTPRES.value
+
+
+                elif auxes[0].feats['Tense'] in ['Imp', 'Past']: 
+                    tense=Tense.PAST.value
+
+                self.write_node_info(head_node,
+                    tense=tense,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood=auxes[0].feats['Mood'],
+                    form='Fin',
+                    aspect=Aspect.PROG.value,
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    ords=phrase_ords)      
+                return
+            
+            if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Ger':
+                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
+                phrase_ords.sort()
+
+                # aux Pres (ir) + gerund -> PhraseTense=Pres, PhraseAspect=Prog
+                tense = auxes[0].feats['Tense']
+                aspect = Aspect.PROG.value
+
+                # aux Imp (ir) + gerund -> PhraseTense=Past, PhraseAspect=Prog
+                if auxes[0].feats['Tense'] == 'Imp':
+                    tense=Tense.PAST.value
+                    aspect=Aspect.PROG.value
+
+                self.write_node_info(head_node,
+                    tense=tense,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood=auxes[0].feats['Mood'],
+                    aspect=aspect,
+                    form='Fin',
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    ords=phrase_ords)
+                return
+            
+            # Portuguese
+            # pretérito mais que perfeito composto (aux haver) -> PhraseTense=Past, PhraseAspect=Perf
+            if auxes[0].lemma == 'haver' and auxes[0].feats['Tense'] == 'Imp' and node.feats['VerbForm'] == 'Part':
+                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
+                phrase_ords.sort()
+
+                self.write_node_info(head_node,
+                    tense=Tense.PAST.value,
+                    aspect=Aspect.PERF.value,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood=auxes[0].feats['Mood'],
+                    form='Fin',
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    ords=phrase_ords)
+                return
                 
             # Auxiliary 'estar' followed by a gerund 
-            if auxes[0].lemma in AUXES_BE and node.feats['VerbForm'] == 'Ger':
+            if node.feats['VerbForm'] == 'Ger':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
@@ -239,12 +306,6 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 elif auxes[0].feats['Tense'] == 'Past':
                     tense=Tense.PAST.value
                     aspect=Aspect.PERFPROG.value
-
-                # Portuguese + Spanish
-                # conditional (aux estar) -> PhraseTense=Pres, PhraseAspect=Prog, PhraseMood=Cnd
-                elif auxes[0].feats['Mood'] == 'Cnd':
-                    tense=Tense.PRES.value
-                    aspect=Aspect.PROG.value
 
                 # Portuguese + Spanish
                 # presente (aux estar) -> PhraseTense=Pres, PhraseAspect=Prog
@@ -265,9 +326,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     aspect=aspect,
                     expl=expl,
                     ords=phrase_ords)
+                
+                return
 
             # Auxiliary 'ter' / 'haber' followed by a participle
-            if auxes[0].lemma in AUXES_HAVE and node.feats['VerbForm'] == 'Part':
+            if node.feats['VerbForm'] == 'Part':
                 phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
@@ -312,48 +375,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     ords=phrase_ords)
+                return
                 
-            # Portuguese
-            # pretérito mais que perfeito composto (aux haver) -> PhraseTense=Past, PhraseAspect=Perf
-            if auxes[0].lemma == 'haver' and auxes[0].feats['Tense'] == 'Imp' and node.feats['VerbForm'] == 'Part':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                self.write_node_info(head_node,
-                    tense=Tense.PAST.value,
-                    aspect=Aspect.PERF.value,
-                    number=auxes[0].feats['Number'],
-                    person=auxes[0].feats['Person'],
-                    mood=auxes[0].feats['Mood'],
-                    form='Fin',
-                    voice=head_node.feats['Voice'],
-                    expl=expl,
-                    ords=phrase_ords)
-                
-            if auxes[0].lemma == 'vir' and auxes[0].feats['Tense'] in ['Pres', 'Imp', 'Past'] and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                # aux Pres (vir) + gerund -> PhraseTense=PastPres, PraseAspect=Prog
-                if auxes[0].feats['Tense'] == 'Pres':
-                    tense=Tense.PASTPRES.value
-
-
-                elif auxes[0].feats['Tense'] in ['Imp', 'Past']: 
-                    tense=Tense.PAST.value
-
-                self.write_node_info(head_node,
-                    tense=tense,
-                    number=auxes[0].feats['Number'],
-                    person=auxes[0].feats['Person'],
-                    mood=auxes[0].feats['Mood'],
-                    form='Fin',
-                    aspect=Aspect.PROG.value,
-                    voice=head_node.feats['Voice'],
-                    expl=expl,
-                    ords=phrase_ords)
-
-            
             # auxiliary 'ir' followed by infinitive
             # TODO solve these verb forms for Spanish (VERB 'ir' + ADP 'a' + infinitive)
             if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Inf':
@@ -381,9 +404,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 # Futuro perifrástico passado perf -> PhraseTense=PastFut, PhraseAspect=Perf
                 elif auxes[0].feats['Tense'] == 'Past':
                     tense=Tense.PASTFUT.value
-                    aspect=Aspect.PERF.value
-
-                
+                    aspect=Aspect.PERF.value                
 
                 self.write_node_info(head_node,
                     tense=tense,
@@ -396,29 +417,6 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     expl=expl,
                     ords=phrase_ords)
                 
-            if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                # aux Pres (ir) + gerund -> PhraseTense=Pres, PhraseAspect=Prog
-                tense = auxes[0].feats['Tense']
-                aspect = Aspect.PROG.value
-
-                # aux Imp (ir) + gerund -> PhraseTense=Past, PhraseAspect=Prog
-                if auxes[0].feats['Tense'] == 'Imp':
-                    tense=Tense.PAST.value
-                    aspect=Aspect.PROG.value
-
-                self.write_node_info(head_node,
-                    tense=tense,
-                    number=auxes[0].feats['Number'],
-                    person=auxes[0].feats['Person'],
-                    mood=auxes[0].feats['Mood'],
-                    aspect=aspect,
-                    form='Fin',
-                    voice=head_node.feats['Voice'],
-                    expl=expl,
-                    ords=phrase_ords)
                 
         elif len(auxes) == 2:
             # Portuguese
