@@ -91,6 +91,18 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'main':   0,
                     'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
                 }
+            if subtokens[1] == 'jest':
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   subtokens[0] + ' jest',
+                    'lemma':  '* být',
+                    'upos':   '* AUX',
+                    'xpos':   '* VB-S---3P-AAI-2',
+                    'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
+                    'deprel': '* aux',
+                    'main':   0,
+                    'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
+                }
             if subtokens[1] == 'i':
                 node.misc['AddMwt'] = ''
                 return {
