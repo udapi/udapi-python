@@ -1,9 +1,10 @@
-
 import udapi.block.msf.phrase
 from enum import Enum
 
 AUXES_HAVE = ['ter', 'haber', 'avere']
 AUXES_BE = ['estar', 'essere']
+MODALS = ['poder', 'deber', 'querer', 'saber', # Spanish + Portuguese
+          'potere', 'dovere', 'volere', 'sapere'] # Italian
 
 class Aspect(str, Enum):
     IMP = 'Imp'
@@ -28,7 +29,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
         cop = [x for x in node.children if x.udeprel == 'cop']
         
         # only expl or expl:pv, no expl:impers or expl:pass
-        refl = [x for x in node.children if x.lemma == 'se' and x.upos == 'PRON' and x.udeprel == 'expl' and x.udeprel != 'expl:impers' and x.udeprel != 'expl:pass']
+        refl = [x for x in node.children if x.lemma == 'se' and x.upos == 'PRON' and x.udeprel == 'expl' and x.deprel != 'expl:impers' and x.deprel != 'expl:pass']
         
         if refl:
             expl='Pv'
@@ -36,7 +37,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
             expl=None
    
         if cop:
-            auxes = [x for x in node.children if x.udeprel == 'aux']
+            # find auxiliary verbs, modal verbs, and auxiliary verbs related to modal verbs among the children of the content verb and separate them from each other 
+            auxes, modals, modal_auxes = self.find_auxes(node)
+
+            if modals:
+                # we consider modals themselves to be separate verb forms
+                self.process_modal_verbs(modals, modal_auxes)
+
             if auxes:
                 self.process_periphrastic_verb_forms(cop[0], auxes, refl, auxes + cop, node)
             else:
@@ -45,9 +52,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
             return
 
         if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
-            auxes = [x for x in node.children if x.udeprel == 'aux']
-            aux_pass = [x for x in node.children if x.deprel == 'aux:pass']
-            auxes_without_pass = [x for x in node.children if x.udeprel == 'aux' and x.deprel != 'aux:pass']
+
+            # find auxiliary verbs, modal verbs, and auxiliary verbs related to modals among the children of the content verb and separate them from each other 
+            auxes, modals, modal_auxes = self.find_auxes(node)
+            aux_pass = [x for x in auxes if x.deprel == 'aux:pass']
+            auxes_without_pass = [x for x in auxes if x.deprel != 'aux:pass']
 
             # infinitive with a subject is a subjunctive
             subj = [x for x in node.children if x.udeprel == 'subj']
@@ -65,108 +74,15 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     )
                 return
             
+            if modals:
+                # we consider modals themselves to be separate verb forms
+                self.process_modal_verbs(modals, modal_auxes)
+            
             if not auxes:
-                    phrase_ords = [node.ord] + [r.ord for r in refl]
-                    phrase_ords.sort()
+                phrase_ords = [node.ord] + [r.ord for r in refl]
+                phrase_ords.sort()
 
-                    # Portuguese
-                    # presente -> PhraseTense=Pres, PhraseAspect=''
-                    # Futuro do presente -> PhraseTense=Fut, PhraseAspect=''
-
-                    # Spanish
-                    # presente -> PhraseTense=Pres, PhraseAspect=''
-                    # futuro simple -> PhraseTense=Fut, PhraseAspect=''
-
-                    # Italian
-                    # presente -> PhraseTense=Pres, PhraseAspect=''
-                    # futuro semplice -> PhraseTense=Fut, PhraseAspect=''
-
-                    aspect = ''
-                    tense = node.feats['Tense']
-
-                    if node.feats['Mood'] == 'Ind':
-                        
-                        # Portuguese
-                        # pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
-
-                        # Spanish
-                        # pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
-
-                        # Italian
-                        # imperfetto -> PhraseTense=Past, PhraseAspect=Imp
-                        if node.feats['Tense'] == 'Imp':
-                            tense=Tense.PAST.value
-                            aspect=Aspect.IMP.value
-
-                        # Portuguese
-                        # pretérito perfeito -> PhraseTense=Past, PhraseAspect=Perf
-
-                        # Spanish
-                        # pretérito perfecto -> PhraseTense=Past, PhraseAspect=Perf
-
-                        # Italian
-                        # pass remoto -> PhraseTense=Past, PhraseAspect=Perf
-                        if node.feats['Tense'] == 'Past':
-                            aspect=Aspect.PERF.value
-
-                        # Portuguese
-                        # pretérito mais que perfeito simples -> PhraseTense=Past, PhraseAspect=Pqp
-                        if node.feats['Tense'] == 'Pqp':
-                            tense=Tense.PAST.value
-                            aspect=Aspect.PQP.value
-                            
-                    # Portuguese
-                    # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
-                    # subjunctive futuro -> PhraseTense=Fut, PhraseAspect=''
-
-                    # Spanish
-                    # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
-                    # subjunctive futuro -> PhraseTense=Fut, PhraseAspect='' TODO not annotated in treebanks?
-
-                    # Italian
-                    # Congiuntivo presente -> PhraseTense=Pres, PhraseAspect=''
-                    if node.feats['Mood'] == 'Sub':
-
-                        if node.feats['Tense'] == 'Past':
-                            aspect=Aspect.IMP.value
-
-                        # Portuguese
-                        # subjunctive pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
-
-                        # Spanish
-                        # Pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
-
-                        # Italian
-                        # Congiuntivo imperfetto -> PhraseTense=Past, PhraseAspect=Imp
-                        if node.feats['Tense']  == 'Imp':
-                            tense=Tense.PAST.value
-                            aspect=Aspect.IMP.value
-
-                    # Portuguese
-                    # Futuro do pretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
-
-                    # Spanish
-                    # pospretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
-
-                    # Italian
-                    # Condizionale presente -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
-                    if node.feats['Mood'] == 'Cnd':
-                        aspect=''
-                        tense=Tense.PRES.value
-
-                    
-                    self.write_node_info(node,
-                        person=node.feats['Person'],
-                        aspect=aspect,
-                        number=node.feats['Number'],
-                        mood=node.feats['Mood'],
-                        form=node.feats['VerbForm'],
-                        tense=tense,
-                        gender=node.feats['Gender'],
-                        voice=node.feats['Voice'],
-                        expl=expl,
-                        ords=phrase_ords
-                    )
+                self.process_simple_verb_forms(node, expl, phrase_ords, node)
 
 
             else:
@@ -174,38 +90,186 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 if not aux_pass:
                     self.process_periphrastic_verb_forms(node, auxes, refl, auxes, node)
 
-                # head verb has one passive auxiliary and no more other auxiliaries
-                # TODO complete the tenses and aspects for individual verb forms
+                # head verb has only passive auxiliary and no more other auxiliaries
                 elif not auxes_without_pass:
                     phrase_ords = [node.ord] + [x.ord for x in auxes] + [r.ord for r in refl]
                     phrase_ords.sort()
 
-                    self.write_node_info(node,
-                        person=aux_pass[0].feats['Person'],
-                        number=aux_pass[0].feats['Number'],
-                        mood=aux_pass[0].feats['Mood'],
-                        form='Fin',
-                        tense=aux_pass[0].feats['Tense'],
-                        gender=node.feats['Gender'],
-                        voice='Pass',
-                        expl=expl,
-                        ords=phrase_ords
-                    )
+                    # TODO phrase-level features are currently determined based on the first passive auxiliary, but it can happen that there are more than one passive auxiliary
+                    self.process_simple_verb_forms(auxes[0], expl, phrase_ords, node)
 
                 # head verb has passive auxiliary and also other auxiliaries
                 else:
                     self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, refl, auxes, node)
 
+    def find_auxes(self, node):
+        """
+        Find all auxiliaries among node.children and classifies them.
+
+        Parameters:
+            node (udapi.core.node.Node): head word, look for auxiliaries in its children
+
+        Returns:
+            tuple: a classification of auxiliaries consisting of:
+                - auxiliaries directly modifying the node,
+                - modal verbs,
+                - auxiliaries modifying a modal verb.
+        """
+
+        node_auxes = []
+        modals = []
+        modal_auxes = []
+
+        for child in node.children:
+            if child.udeprel == 'aux':
+                if child.lemma in MODALS:
+                    modals.append(child)
+                    modal_auxes = node_auxes # auxiliaries found so far are assumed to modify the modal verb (they come before it)
+                    node_auxes = []
+                else:
+                    node_auxes.append(child)
+
+        return node_auxes, modals, modal_auxes
+    
+    def process_modal_verbs(self, modals, modal_auxes):
+        """
+        Annotates modal verb forms with the Phrase* attributes.
+        The modal verbs are kept as a single verb form, without including the infinitive of the content word.
+
+        Parameters:
+            modals (list): all modal verbs among the children of the head content verb (currently assumes there is only one.)
+            modal_auxes (list): auxiliaries of the modal verb(s)
+        
+        """
+
+        if not modal_auxes:
+            self.process_simple_verb_forms(modals[0], '', [modals[0].ord], modals[0]) 
+
+        else:
+            self.process_periphrastic_verb_forms(modals[0], modal_auxes, [], modal_auxes, modals[0])
+
+
+    def process_simple_verb_forms(self, node, expl, phrase_ords, head_node):
+        """
+        Annotate simple verb forms or passive verb forms that contain only a passive auxiliary.
+
+        Parameters
+            node (udapi.core.node.Node): The relevant node. If there is no passive construction, this is the head verb. If the head verb is passive, this is the passive auxiliary.
+            expl (str): The value of the PhraseExpl attribute.
+            phrase_ords (list[int]): The ord values of all member words of the verb form.
+            head_node (udapi.core.node.Node): The node that should receive the Phrase* attributes, i.e., the head of the phrase.
+        """
+
+        # Portuguese
+        # presente -> PhraseTense=Pres, PhraseAspect=''
+        # Futuro do presente -> PhraseTense=Fut, PhraseAspect=''
+
+        # Spanish
+        # presente -> PhraseTense=Pres, PhraseAspect=''
+        # futuro simple -> PhraseTense=Fut, PhraseAspect=''
+
+        # Italian
+        # presente -> PhraseTense=Pres, PhraseAspect=''
+        # futuro semplice -> PhraseTense=Fut, PhraseAspect=''
+
+        aspect = ''
+        tense = node.feats['Tense']
+
+        if node.feats['Mood'] == 'Ind':
+            
+            # Portuguese
+            # pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
+
+            # Spanish
+            # pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
+
+            # Italian
+            # imperfetto -> PhraseTense=Past, PhraseAspect=Imp
+            if node.feats['Tense'] == 'Imp':
+                tense=Tense.PAST.value
+                aspect=Aspect.IMP.value
+
+            # Portuguese
+            # pretérito perfeito -> PhraseTense=Past, PhraseAspect=Perf
+
+            # Spanish
+            # pretérito perfecto -> PhraseTense=Past, PhraseAspect=Perf
+
+            # Italian
+            # pass remoto -> PhraseTense=Past, PhraseAspect=Perf
+            if node.feats['Tense'] == 'Past':
+                aspect=Aspect.PERF.value
+
+            # Portuguese
+            # pretérito mais que perfeito simples -> PhraseTense=Past, PhraseAspect=Pqp
+            if node.feats['Tense'] == 'Pqp':
+                tense=Tense.PAST.value
+                aspect=Aspect.PQP.value
+                
+        # Portuguese
+        # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
+        # subjunctive futuro -> PhraseTense=Fut, PhraseAspect=''
+
+        # Spanish
+        # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
+        # subjunctive futuro -> PhraseTense=Fut, PhraseAspect='' TODO not annotated in treebanks?
+
+        # Italian
+        # Congiuntivo presente -> PhraseTense=Pres, PhraseAspect=''
+        if node.feats['Mood'] == 'Sub':
+
+            if node.feats['Tense'] == 'Past':
+                aspect=Aspect.IMP.value
+
+            # Portuguese
+            # subjunctive pretérito imperfeito -> PhraseTense=Past, PhraseAspect=Imp
+
+            # Spanish
+            # Pretérito imperfecto -> PhraseTense=Past, PhraseAspect=Imp
+
+            # Italian
+            # Congiuntivo imperfetto -> PhraseTense=Past, PhraseAspect=Imp
+            if node.feats['Tense']  == 'Imp':
+                tense=Tense.PAST.value
+                aspect=Aspect.IMP.value
+
+        # Portuguese
+        # Futuro do pretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
+
+        # Spanish
+        # pospretérito (cnd) -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
+
+        # Italian
+        # Condizionale presente -> PhraseTense=Pres, PhraseAspect='', PhraseMood=Cnd
+        if node.feats['Mood'] == 'Cnd':
+            aspect=''
+            tense=Tense.PRES.value
+
+        
+        self.write_node_info(head_node,
+            person=node.feats['Person'],
+            aspect=aspect,
+            number=node.feats['Number'],
+            mood=node.feats['Mood'],
+            form=node.feats['VerbForm'],
+            tense=tense,
+            gender=head_node.feats['Gender'],
+            voice=head_node.feats['Voice'],
+            expl=expl,
+            ords=phrase_ords
+        )
+
+
     def process_periphrastic_verb_forms(self, node, auxes, refl, all_auxes, head_node):
         """
-        Parameters
-        - node: if there is no passive then the node is the head verb, if the head verb is in the passive, then the node is the passive auxiliary
-        - auxes: list of all auxiliaries except the passive auxes
-        - refl: list of reflexives which should be included into the periphrastic phrase
-        - all_auxes: list of all auxiliaries (passive auxes are included)
-        - head_node: the node which should have the Phrase* attributes, i. e. the head of the phrase
+        Annotate periphrastic verb forms with the Phrase* attributes.
 
-        annotates periphrastic verb forms with the Phrase* attributes
+        Parameters
+            node (udapi.core.node.Node): The relevant node. If there is no passive construction, this is the head verb. If the head verb is passive, this is the passive auxiliary.
+            auxes (list[udapi.core.node.Node]): All auxiliaries except the passive auxiliaries.
+            refl (list[udapi.core.node.Node]): Reflexives that should be included in the periphrastic phrase.
+            all_auxes (list[udapi.core.node.Node]): All auxiliaries, including the passive auxiliaries.
+            head_node (udapi.core.node.Node): The node that should receive the Phrase* attributes, i.e., the head of the phrase.
         """
 
         if refl:
@@ -216,7 +280,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
         if len(auxes)  == 1:
             # Cnd
             if auxes[0].feats['Mood'] == 'Cnd' and (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Ger'):
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl] + [r.ord for r in refl]
+                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
                 phrase_ords.sort()
 
                 # Portuguese
