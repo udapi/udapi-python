@@ -548,13 +548,27 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumForm': ['Digit', 'Roman']
                 })
             else:
+                if node.feats['NumType'] == 'Sets':
+                    # 'jedny', 'dvoje', 'troje', 'čtvery'
+                    # Number should perhaps be only Plur because the counted noun will be Plur.
+                    # Gender is not annotated in PDT but there are different forms ('jedni' vs. 'jedny',
+                    # and in Old Czech also 'dvoji' vs. 'dvoje'), so we should allow Gender (and Animacy).
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Sets'],
+                        'NumForm': ['Word'],
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
                 # 'jeden' has Gender, Animacy, Number, Case: jeden, jedna, jedno, jednoho, jednomu, jednom, jedním, jedné, jednu, jednou, jedni, jedny, jedněch, jedněm, jedněmi.
                 # 'dva', 'oba' have Gender, Number=Dual(Plur in modern Czech), Case: dva, dvě, dvou, dvěma.
                 # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
                 # 'pět' and more have Number=Plur, Case: pět, pěti.
                 # 'půl' has no Number and Case, although it behaves syntactically similarly to 'pět' (but genitive is still 'půl', not '*půli').
                 # 'sto', 'tisíc', 'milión', 'miliarda' etc. have Gender (+ possibly Animacy) and Number (depending on their form).
-                if node.lemma == 'jeden':
+                elif node.lemma == 'jeden':
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
@@ -594,7 +608,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 elif re.match(r'^(sto|tisíc|.+ili[oó]n|.+iliarda)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Card', 'Sets'],
+                        'NumType': ['Card'],
                         'NumForm': ['Word'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Animacy': ['Anim', 'Inan'],
@@ -610,7 +624,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # On the other hand, we may want to allow Dual for "stě".
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Card', 'Sets'],
+                        'NumType': ['Card'],
                         'NumForm': ['Word'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
