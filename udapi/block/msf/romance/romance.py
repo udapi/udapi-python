@@ -48,7 +48,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 self.process_periphrastic_verb_forms(cop[0], auxes, refl, auxes + cop, node)
             else:
                 # no auxiliaries, only cop
-                self.process_copulas(node,cop,auxes,refl,expl)
+                self.process_copulas(node,cop,refl,expl)
             return
 
         if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
@@ -626,54 +626,29 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 )
                 return
                 
-    def process_copulas(self, node, cop, auxes, refl, expl):
+    def process_copulas(self, node, cop, refl, expl):
+        """
+        Annotate non-verbal predicates with copula using the Phrase* attributes.
 
-        aspect = ''
-        
-        if not auxes:
-            tense = cop[0].feats['Tense']
-            number=cop[0].feats['Number']
-            person=cop[0].feats['Person']
-            mood=cop[0].feats['Mood']
+        This method is specialized for non-periphrastic copulas. 
+        If any auxiliaries are present, process_periphrastic_verb_forms() is called instead.
 
-            if cop[0].feats['Tense'] in ['Pres', 'Fut']:
-                if cop[0].lemma == 'ser':
-                    aspect=Aspect.PERF.value
-                elif cop[0].lemma == 'estar':
-                    aspect=Aspect.IMP.value
-            
-            elif cop[0].feats['Tense'] == 'Imp':
-                tense=Tense.PAST.value
-                aspect=Aspect.IMP.value
-            
-            elif cop[0].feats['Tense'] == 'Past':
-                aspect=Aspect.PERF.value
-            else:
-                # i.e. copulas in infinitive
-                aspect=''
+        Parameters
+            node (udapi.core.node.Node): The non-verbal predicate that should receive the Phrase* attributes, i.e., the head of the phrase.
+            cop (list[udapi.core.node.Node]): The copula nodes.
+            refl (list[udapi.core.node.Node]): Reflexives that should be included in the periphrastic phrase.
+            expl (str): The value of the PhraseExpl attribute.
+        """
 
-        else: 
-            tense = auxes[0].feats['Tense']
-            number=auxes[0].feats['Number']
-            person=auxes[0].feats['Person']
-            mood=auxes[0].feats['Mood']
-            aspect=''
-
-            
-            if auxes[0].lemma == 'estar': 
-                aspect=Aspect.IMPPROG.value
-
-        phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in auxes] + [r.ord for r in refl]
+        phrase_ords = [node.ord] + [x.ord for x in cop] + [r.ord for r in refl]
         phrase_ords.sort()
-      
-        self.write_node_info(node,
-                    tense=tense,
-                    number=number,
-                    person=person,
-                    mood=mood,
-                    form='Fin',
-                    aspect=aspect,
-                    voice=node.feats['Voice'],
-                    expl=expl,
-                    ords=phrase_ords,
-                )
+
+        # classify the morphological features of the copula node and propagate them to the entire phrase (treating the copula as the content verb)
+        self.process_simple_verb_forms(cop[0], expl, phrase_ords, node)
+
+        # adjust PhraseAspect based on the lemma of the copula
+        if cop[0].feats['Tense'] in ['Pres', 'Fut']:
+            if cop[0].lemma == 'ser':
+                node.misc['PhraseAspect'] = Aspect.PERF.value
+            elif cop[0].lemma == 'estar':
+                node.misc['PhraseAspect'] = Aspect.IMP.value
