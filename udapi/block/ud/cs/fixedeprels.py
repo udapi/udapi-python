@@ -44,6 +44,7 @@ class FixEdeprels(Block):
         'ačkoliv':          'ačkoli',
         'ať':               'ať', # remove morphological case
         'ať_forma':         'formou:gen',
+        'ať_jako':          'jako',
         'ať_na':            'na:loc',
         'ať_s':             's:ins',
         'ať_v':             'v:loc',
@@ -65,6 +66,7 @@ class FixEdeprels(Block):
         'blíže':            'blízko:dat',
         'bok_po_bok_s':     'bok_po_boku_s:ins',
         'cesta':            'cestou:gen',
+        'co_jako':          'jako',
         'coby':             'coby', # remove morphological case
         'daleko':           'nedaleko:gen',
         'daleko_od':        'od:gen',
