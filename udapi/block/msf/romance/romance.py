@@ -24,6 +24,14 @@ class Tense(str, Enum):
 
 class Romance(udapi.block.msf.phrase.Phrase):
 
+    def __init__(self, neg=True, **kwargs):
+        """
+        Parameters:
+        neg (bool) - If True, process negation and generate the PhrasePolarity=Neg attribute.
+        """
+        super().__init__(**kwargs)
+        self.neg = neg
+
     def process_node(self, node):
 
         cop = [x for x in node.children if x.udeprel == 'cop']
@@ -38,23 +46,42 @@ class Romance(udapi.block.msf.phrase.Phrase):
    
         if cop:
             # find auxiliary verbs, modal verbs, and auxiliary verbs related to modal verbs among the children of the content verb and separate them from each other 
-            auxes, modals, modal_auxes = self.find_auxes(node)
+            auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
+            adp = [x for x in node.children if x.upos == 'ADP']
 
             if modals:
                 # we consider modals themselves to be separate verb forms
-                self.process_modal_verbs(modals, modal_auxes)
+                self.process_modal_verbs(modals, modal_auxes, modal_neg)
 
             if auxes:
-                self.process_periphrastic_verb_forms(cop[0], auxes, refl, auxes + cop, node)
+                polarity = ''
+                if self.neg is True:
+                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg] 
+                    if neg:
+                        polarity = 'Neg'
+                else:
+                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [a.ord for a in adp] + [r.ord for r in refl]
+                phrase_ords.sort()
+
+                self.process_periphrastic_verb_forms(cop[0], auxes, expl, polarity, phrase_ords, node)
             else:
                 # no auxiliaries, only cop
-                self.process_copulas(node,cop,auxes,refl,expl)
+                polarity = ''
+                if self.neg is True:
+                    phrase_ords = [node.ord] + [c.ord for c in cop] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg]
+                    if neg:
+                        polarity = 'Neg'
+                else:
+                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in adp] + [r.ord for r in refl]
+                phrase_ords.sort()
+
+                self.process_copulas(node, cop, expl, polarity, phrase_ords)
             return
 
         if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
 
             # find auxiliary verbs, modal verbs, and auxiliary verbs related to modals among the children of the content verb and separate them from each other 
-            auxes, modals, modal_auxes = self.find_auxes(node)
+            auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
             aux_pass = [x for x in auxes if x.deprel == 'aux:pass']
             auxes_without_pass = [x for x in auxes if x.deprel != 'aux:pass']
 
@@ -76,35 +103,67 @@ class Romance(udapi.block.msf.phrase.Phrase):
             
             if modals:
                 # we consider modals themselves to be separate verb forms
-                self.process_modal_verbs(modals, modal_auxes)
+                self.process_modal_verbs(modals, modal_auxes, modal_neg)
             
             if not auxes:
-                phrase_ords = [node.ord] + [r.ord for r in refl]
+                polarity = ''
+                if self.neg is True:
+                    phrase_ords = [node.ord] + [r.ord for r in refl] + [n.ord for n in neg]
+                    if neg:
+                        polarity = 'Neg'
+                else:
+                    phrase_ords = [node.ord] + [r.ord for r in refl]
                 phrase_ords.sort()
 
-                self.process_simple_verb_forms(node, expl, phrase_ords, node)
+                self.process_simple_verb_forms(node, expl, polarity, phrase_ords, node)
 
 
             else:
                 # no passive auxiliaries
                 if not aux_pass:
-                    self.process_periphrastic_verb_forms(node, auxes, refl, auxes, node)
+                    polarity = ''
+                    if self.neg is True:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                        if neg:
+                            polarity = 'Neg'
+                    else:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                    phrase_ords.sort()
+
+                    self.process_periphrastic_verb_forms(node, auxes, expl, polarity, phrase_ords, node)
 
                 # head verb has only passive auxiliary and no more other auxiliaries
                 elif not auxes_without_pass:
-                    phrase_ords = [node.ord] + [x.ord for x in auxes] + [r.ord for r in refl]
+                    polarity = ''
+
+                    if self.neg is True:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                        if neg:
+                            polarity = 'Neg'
+                    else:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
                     phrase_ords.sort()
 
                     # TODO phrase-level features are currently determined based on the first passive auxiliary, but it can happen that there are more than one passive auxiliary
-                    self.process_simple_verb_forms(auxes[0], expl, phrase_ords, node)
+                    self.process_simple_verb_forms(auxes[0], expl, polarity, phrase_ords, node)
 
                 # head verb has passive auxiliary and also other auxiliaries
                 else:
-                    self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, refl, auxes, node)
+                    polarity = ''
 
-    def find_auxes(self, node):
+                    if self.neg is True:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                        if neg:
+                            polarity = 'Neg'
+                    else:
+                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                    phrase_ords.sort()
+
+                    self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, expl, polarity, phrase_ords, node)
+
+    def find_auxes_and_neg(self, node):
         """
-        Find all auxiliaries among node.children and classifies them.
+        Find all auxiliaries and negative adverbials among node.children and classifies them.
 
         Parameters:
             node (udapi.core.node.Node): head word, look for auxiliaries in its children
@@ -112,13 +171,17 @@ class Romance(udapi.block.msf.phrase.Phrase):
         Returns:
             tuple: a classification of auxiliaries consisting of:
                 - auxiliaries directly modifying the node,
+                - negative adverbs modifying the node,
                 - modal verbs,
-                - auxiliaries modifying a modal verb.
+                - auxiliaries modifying a modal verb,
+                - negative adverbs modifying a modal verb.
         """
 
         node_auxes = []
+        node_neg = []
         modals = []
         modal_auxes = []
+        modal_neg = []
 
         for child in node.children:
             if child.udeprel == 'aux':
@@ -126,12 +189,19 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     modals.append(child)
                     modal_auxes = node_auxes # auxiliaries found so far are assumed to modify the modal verb (they come before it)
                     node_auxes = []
+
+                    modal_neg = node_neg
+                    node_neg = []
+
                 else:
                     node_auxes.append(child)
 
-        return node_auxes, modals, modal_auxes
+            elif child.upos == 'ADV' and child.feats['Polarity'] == 'Neg':
+                node_neg.append(child)
+
+        return node_auxes, node_neg, modals, modal_auxes, modal_neg
     
-    def process_modal_verbs(self, modals, modal_auxes):
+    def process_modal_verbs(self, modals, modal_auxes, modal_neg):
         """
         Annotates modal verb forms with the Phrase* attributes.
         The modal verbs are kept as a single verb form, without including the infinitive of the content word.
@@ -139,23 +209,42 @@ class Romance(udapi.block.msf.phrase.Phrase):
         Parameters:
             modals (list): all modal verbs among the children of the head content verb (currently assumes there is only one.)
             modal_auxes (list): auxiliaries of the modal verb(s)
+            modal_neg (list): negative adverbs of the modal verb(s)
         
         """
-
         if not modal_auxes:
-            self.process_simple_verb_forms(modals[0], '', [modals[0].ord], modals[0]) 
+            polarity = ''
+            if self.neg is True:
+                phrase_ords = [modals[0].ord] + [n.ord for n in modal_neg]
+                phrase_ords.sort()
+
+                if modal_neg:
+                    polarity='Neg'
+            else:
+                phrase_ords = [modals[0].ord]
+            self.process_simple_verb_forms(modals[0], '', polarity, phrase_ords, modals[0]) 
 
         else:
-            self.process_periphrastic_verb_forms(modals[0], modal_auxes, [], modal_auxes, modals[0])
+            polarity = ''
+            if self.neg is True:
+                phrase_ords = [modals[0].ord] + [a.ord for a in modal_auxes] + [n.ord for n in modal_neg]
+                if modal_neg:
+                    polarity='Neg'
+            else:
+                phrase_ords = [modals[0].ord] + [a.ord for a in modal_auxes]
+            phrase_ords.sort()
+
+            self.process_periphrastic_verb_forms(modals[0], modal_auxes, '', polarity, phrase_ords, modals[0])
 
 
-    def process_simple_verb_forms(self, node, expl, phrase_ords, head_node):
+    def process_simple_verb_forms(self, node, expl, polarity, phrase_ords, head_node):
         """
         Annotate simple verb forms or passive verb forms that contain only a passive auxiliary.
 
         Parameters
             node (udapi.core.node.Node): The relevant node. If there is no passive construction, this is the head verb. If the head verb is passive, this is the passive auxiliary.
             expl (str): The value of the PhraseExpl attribute.
+            polarity (str): The value of the PhrasePolarity attribute.
             phrase_ords (list[int]): The ord values of all member words of the verb form.
             head_node (udapi.core.node.Node): The node that should receive the Phrase* attributes, i.e., the head of the phrase.
         """
@@ -256,32 +345,27 @@ class Romance(udapi.block.msf.phrase.Phrase):
             gender=head_node.feats['Gender'],
             voice=head_node.feats['Voice'],
             expl=expl,
+            polarity=polarity,
             ords=phrase_ords
         )
 
 
-    def process_periphrastic_verb_forms(self, node, auxes, refl, all_auxes, head_node):
+    def process_periphrastic_verb_forms(self, node, auxes, expl, polarity, phrase_ords, head_node):
         """
         Annotate periphrastic verb forms with the Phrase* attributes.
 
         Parameters
             node (udapi.core.node.Node): The relevant node. If there is no passive construction, this is the head verb. If the head verb is passive, this is the passive auxiliary.
             auxes (list[udapi.core.node.Node]): All auxiliaries except the passive auxiliaries.
-            refl (list[udapi.core.node.Node]): Reflexives that should be included in the periphrastic phrase.
-            all_auxes (list[udapi.core.node.Node]): All auxiliaries, including the passive auxiliaries.
+            expl (str): The value of the PhraseExpl attribute.
+            polarity (str): The value of the PhrasePolarity attribute.
+            phrase_ords (list[int]): The ord values of all member words in the verb form.
             head_node (udapi.core.node.Node): The node that should receive the Phrase* attributes, i.e., the head of the phrase.
         """
-
-        if refl:
-            expl='Pv'
-        else:
-            expl=None
 
         if len(auxes)  == 1:
             # Cnd
             if auxes[0].feats['Mood'] == 'Cnd' and (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Ger'):
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # Portuguese
                 # aux estar cond + gerund -> PhraseTense=Pres, PhraseAspect=Prog, PhraseMood=Cnd
@@ -309,13 +393,12 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     mood='Cnd',
                     form='Fin',
                     expl=expl,
+                    polarity=polarity,
                     voice=head_node.feats['Voice'],
                     ords=phrase_ords)
                 return
             
             if auxes[0].lemma == 'vir' and auxes[0].feats['Tense'] in ['Pres', 'Imp', 'Past'] and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # aux Pres (vir) + gerund -> PhraseTense=PastPres, PraseAspect=Prog
                 if auxes[0].feats['Tense'] == 'Pres':
@@ -334,12 +417,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     aspect=Aspect.PROG.value,
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)      
                 return
             
             if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # aux Pres (ir) + gerund -> PhraseTense=Pres, PhraseAspect=Prog
                 tense = auxes[0].feats['Tense']
@@ -359,14 +441,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     form='Fin',
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
                 return
             
             # Portuguese
             # pretérito mais que perfeito composto (aux haver) -> PhraseTense=Past, PhraseAspect=Perf
             if auxes[0].lemma == 'haver' and auxes[0].feats['Tense'] == 'Imp' and node.feats['VerbForm'] == 'Part':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 self.write_node_info(head_node,
                     tense=Tense.PAST.value,
@@ -377,13 +458,12 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     form='Fin',
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
                 return
                 
             # Auxiliary 'estar' followed by a gerund 
             if node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # Portuguese + Spanish
                 # pretérito imperfeito (aux estar) -> PhraseTense=Past, PhraseAspect=ImpProg
@@ -416,14 +496,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     aspect=aspect,
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
                 
                 return
 
             # Auxiliary 'ter' / 'haber' / 'avere' / 'essere' followed by a participle
             if node.feats['VerbForm'] == 'Part':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # Portuguese
                 # futuro do presente composto (aux ter) -> PhraseTense=Fut, PhraseAspect=Perf
@@ -473,14 +552,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     form='Fin',
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
                 return
                 
             # auxiliary 'ir' followed by infinitive
             # TODO solve these verb forms for Spanish (VERB 'ir' + ADP 'a' + infinitive)
             if auxes[0].lemma == 'ir' and node.feats['VerbForm'] == 'Inf':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 tense=node.feats['Tense']
                 aspect=''
@@ -514,6 +592,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     form='Fin',
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
                 
                 
@@ -524,8 +603,6 @@ class Romance(udapi.block.msf.phrase.Phrase):
             # TODO Spanish
             # VERB 'ir' + ADP 'a' + AUX 'estar'.Inf + gerund
             if auxes[0].lemma == 'ir' and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # Futuro perifrástico -> PhraseTense=Fut, PhraseAspect=Prog
                 if auxes[0].feats['Tense'] == 'Pres':
@@ -555,12 +632,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     aspect=aspect,
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)
 
             # auxiliriy 'ir' in present or future tense followed by auxiliary 'ter' in infinitive and a participle
             if auxes[0].lemma == 'ir' and (auxes[0].feats['Tense'] in ['Pres', 'Fut']) and auxes[1].lemma == 'ter' and node.feats['VerbForm'] == 'Part':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 # Futuro perifrástico -> PhraseTense=FutFut, PhraseAspect=Perf
                 if auxes[0].feats['Tense'] == 'Fut':
@@ -581,14 +657,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     form='Fin',
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords)    
                 
             
                 
             # Cnd (only ter/haber), Sub and Past,Pres,Fut tenses: 2 auxes - ter/haber + estar
             if auxes[0].lemma in AUXES_HAVE and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
-                phrase_ords = [head_node.ord] + [x.ord for x in all_auxes] + [r.ord for r in refl]
-                phrase_ords.sort()
 
                 tense = auxes[0].feats['Tense']
                 aspect = Aspect.PERFPROG.value
@@ -622,58 +697,32 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     aspect=aspect,
                     voice=head_node.feats['Voice'],
                     expl=expl,
+                    polarity=polarity,
                     ords=phrase_ords,
                 )
                 return
                 
-    def process_copulas(self, node, cop, auxes, refl, expl):
+    def process_copulas(self, node, cop, expl, polarity, phrase_ords):
+        """
+        Annotate non-verbal predicates with copula using the Phrase* attributes.
 
-        aspect = ''
-        
-        if not auxes:
-            tense = cop[0].feats['Tense']
-            number=cop[0].feats['Number']
-            person=cop[0].feats['Person']
-            mood=cop[0].feats['Mood']
+        This method is specialized for non-periphrastic copulas. 
+        If any auxiliaries are present, process_periphrastic_verb_forms() is called instead.
 
-            if cop[0].feats['Tense'] in ['Pres', 'Fut']:
-                if cop[0].lemma == 'ser':
-                    aspect=Aspect.PERF.value
-                elif cop[0].lemma == 'estar':
-                    aspect=Aspect.IMP.value
-            
-            elif cop[0].feats['Tense'] == 'Imp':
-                tense=Tense.PAST.value
-                aspect=Aspect.IMP.value
-            
-            elif cop[0].feats['Tense'] == 'Past':
-                aspect=Aspect.PERF.value
-            else:
-                # i.e. copulas in infinitive
-                aspect=''
+        Parameters
+            node (udapi.core.node.Node): The non-verbal predicate that should receive the Phrase* attributes, i.e., the head of the phrase.
+            cop (list[udapi.core.node.Node]): The copula nodes.
+            expl (str): The value of the PhraseExpl attribute.
+            polarity (str): The value of the PhrasePolarity attribute.
+            phrase_ords (list[int]): The ord values of all member words in the verb form.
+        """
 
-        else: 
-            tense = auxes[0].feats['Tense']
-            number=auxes[0].feats['Number']
-            person=auxes[0].feats['Person']
-            mood=auxes[0].feats['Mood']
-            aspect=''
+        # classify the morphological features of the copula node and propagate them to the entire phrase (treating the copula as the content verb)
+        self.process_simple_verb_forms(cop[0], expl, polarity, phrase_ords, node)
 
-            
-            if auxes[0].lemma == 'estar': 
-                aspect=Aspect.IMPPROG.value
-
-        phrase_ords = [node.ord] + [x.ord for x in cop] + [x.ord for x in auxes] + [r.ord for r in refl]
-        phrase_ords.sort()
-      
-        self.write_node_info(node,
-                    tense=tense,
-                    number=number,
-                    person=person,
-                    mood=mood,
-                    form='Fin',
-                    aspect=aspect,
-                    voice=node.feats['Voice'],
-                    expl=expl,
-                    ords=phrase_ords,
-                )
+        # adjust PhraseAspect based on the lemma of the copula
+        if cop[0].feats['Tense'] in ['Pres', 'Fut']:
+            if cop[0].lemma == 'ser':
+                node.misc['PhraseAspect'] = Aspect.PERF.value
+            elif cop[0].lemma == 'estar':
+                node.misc['PhraseAspect'] = Aspect.IMP.value
