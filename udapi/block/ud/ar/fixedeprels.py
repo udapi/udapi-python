@@ -365,14 +365,20 @@ class FixEdeprels(Block):
         'فِي_حَقّ':            'فِي:gen',
         'فِي_حُكم':           'فِي:gen',
         'فِي_حَوَالَى':         'فِي:gen', # fi hawala = in around X
-        'فِي_حِين':           'فِي_حِينِ', # fī ḥīni = while
-        'فِي_حِينَ':           'فِي_حِينِ', # fī ḥīni = while
-        'فِي_حِين_أَنَّ':        'فِي_حِينِ',
+        'فِي_حِين':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِينَ':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِين_أَنَّ':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِينَ_أَنَّ_هُوَ':
+                    'فِي_حِينِ', # fī ḥīni = while
         'فِي_خَارِجَ':          'خَارِجَ:gen', # ḫāriǧa = outside
         'فِي_خِتَام':          'فِي_خِتَامِ:gen', # fī ḫitāmi = in conclusion
         'فِي_خِتَامِ':          'فِي_خِتَامِ:gen', # fī ḫitāmi = in conclusion
         'فِي_خِلَالَ':           'فِي:gen',
-        'فِي_دَاخِل':          'دَاخِل:gen',
+        'فِي_دَاخِل':
+                      'دَاخِلَ:gen',
         'فِي_دَاخِلَ':          'فِي:gen',
         'فِي_سَبِيل':          'فِي_سَبِيلِ:gen', # fī sabīli = in order to
         'فِي_سِيَاق':          'فِي:gen',
@@ -601,8 +607,11 @@ class FixEdeprels(Block):
         """
         for node in tree.descendants_and_empty:
             for edep in node.deps:
-                if edep['deprel'] == 'advcl:pred:إِذَن':
+                if edep['deprel'] == 'advcl:pred:إِذَن' or edep['deprel'] == 'advcl:pred:كدا' or edep['deprel'] == 'advcl:pred:لكن':
                     edep['deprel'] = 'advcl:pred'
+                    continue
+                if edep['deprel'] == 'nmod:بِأَسْرِ:gen':
+                    edep['deprel'] = 'nmod'
                     continue
                 m = re.fullmatch(r'(obl(?::arg)?|nmod|advcl(?::pred)?|acl(?::relcl)?):(.+)', edep['deprel'])
                 if m:
