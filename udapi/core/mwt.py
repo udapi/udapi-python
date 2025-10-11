@@ -1,18 +1,37 @@
 """MWT class represents a multi-word token."""
 from udapi.core.dualdict import DualDict
-
+from udapi.core.feats import Feats
 
 class MWT(object):
     """Class for representing multi-word tokens in UD trees."""
-    __slots__ = ['words', 'form', '_misc', 'root']
+    __slots__ = ['words', 'form', '_feats', '_misc', 'root']
 
-    def __init__(self, words=None, form=None, misc=None, root=None):
+    def __init__(self, words=None, form=None, feats=None, misc=None, root=None):
         self.words = words if words is not None else []
         self.form = form
+        self._feats = Feats(feats) if feats and feats != '_' else None
         self._misc = DualDict(misc) if misc and misc != '_' else None
         self.root = root
         for word in self.words:
             word._mwt = self  # pylint: disable=W0212
+
+    @property
+    def feats(self):
+        """Property `feats` in MWT should be used only for `Typo=Yes`.
+
+        See https://universaldependencies.org/changes.html#typos-in-multiword-tokens
+        However, Udapi does not enforce this restriction and mwt.feats works exactly the same as node.feats.
+        """
+        if self._feats is None:
+            self._feats = Feats()
+        return self._feats
+
+    @feats.setter
+    def feats(self, value):
+        if self._feats is None:
+            self._feats = Feats(value)
+        else:
+            self._feats.set_mapping(value)
 
     @property
     def misc(self):

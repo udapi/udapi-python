@@ -117,7 +117,9 @@ class Conllu(BaseWriter):
             if mwt and node._ord > last_mwt_id:
                 print('\t'.join((mwt.ord_range,
                                  '_' if mwt.form is None else mwt.form,
-                                 '_\t_\t_\t_\t_\t_\t_',
+                                 '_\t_\t_',
+                                 '_' if mwt._feats is None else str(mwt.feats),
+                                 '_\t_\t_',
                                  '_' if mwt._misc is None else str(mwt.misc))))
                 last_mwt_id = mwt.words[-1]._ord
 

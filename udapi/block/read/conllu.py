@@ -223,6 +223,6 @@ class Conllu(BaseReader):
                 logging.warning(f"Wrong MWT range in\n{fields[0]}\n\n{lines}")
                 raise
             words = nodes[int(range_start):int(range_end) + 1]
-            root.create_multiword_token(words, form=fields[1], misc=fields[-1])
+            root.create_multiword_token(words, form=fields[1], feats=fields[5], misc=fields[9])
 
         return root
