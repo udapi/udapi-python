@@ -1,6 +1,5 @@
 """Block to fix case-enhanced dependency relations in Slovak."""
 from udapi.core.block import Block
-import logging
 import re
 
 class FixEdeprels(Block):
@@ -14,9 +13,11 @@ class FixEdeprels(Block):
         'a_hoci':          'hoci',
         'ako':             'ako', # remove morphological case
         'ako_na':          'ako',
+        'ako_z':           'ako',
         'akoby_z':         'z:gen',
         'akže':            'ak',
         'ani_keby':        'keby',
+        'ani_keď':         'keď',
         'až_keď':          'keď',
         'do':              'do:gen',
         'k':               'k:dat',
