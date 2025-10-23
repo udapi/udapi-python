@@ -24,6 +24,36 @@ class FixEdeprels(Block):
         'فَ':   []
     }
 
+    # Reduction and normalization of prepositions and conjunctions, including
+    # the derived and compound ones. The Latin transliterations are not really
+    # needed in the process. We include them here as documentation, but also
+    # to help the poor editor with rendering the lines. Ideally, each line
+    # should have left-to-right text at both the beginning and end.
+    substitution = [
+        {'target': ('min:gen', 'مِن:gen'),
+         'sources':
+             [('ibtida min', 'اِبتِدَاء_مِن')]
+        },
+        {'target': ('ʾiṯra:gen', 'إِثرَ:gen'), # ʾiṯra = right after
+         'sources':
+             [('ʾiṯra', 'إِثرَ')]
+        },
+        {'target': ('ʾaṯnāʾa:gen', 'أَثنَاءَ:gen'), # ʾaṯnāʾa = during
+         'sources':
+             [('ʾaṯnāʾa', 'أَثنَاءَ')]
+        },
+        {'target': ('ʾiḏ', 'إِذ'), # ʾiḏ = because
+         'sources':
+             [('ʾiḏ', 'إِذ'),
+              ('ʾiḏ ʾanna', 'إِذ_أَنَّ')]
+        },
+        {'target': ('ʾiḏā', 'إِذَا'), # ʾiḏā = if
+         'sources':
+             [('ʾiḏā', 'إِذَا'),
+              ('ʾiḏā', 'إِذًا')]
+        },
+    ]
+
     # Secondary prepositions sometimes have the lemma of the original part of
     # speech. We want the grammaticalized form instead. List even those that
     # will have the same lexical form, as we also want to check the morphological
@@ -481,6 +511,7 @@ class FixEdeprels(Block):
         'ما_دَام':           'مِمَّا',
         'مادامت':           'مِمَّا',
         'مَالَم':             'مَالَم', # mālam = unless
+        'مَا_إِذَا':          'إِذَا',
         'مِثلَ':              'مِثلَ', # remove morphological case; miṯla = like
         'مِثلَمَا':            'مِثلَ', # miṯla = like
         'مَعَ':               'مَعَ:gen', # maʿa = with
