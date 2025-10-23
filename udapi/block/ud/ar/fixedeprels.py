@@ -218,6 +218,7 @@ class FixEdeprels(Block):
         'حَوَالَى_مِن':         'مِن:gen', # hawala min = from around X
         'حَولَ':              'حَولَ:gen', # ḥawla = about
         'حولما_إِذَا':        'إِذَا',
+        'حَولَ_مَا_إِذَا':        'إِذَا',
         'حِيَالَ':             'حِيَالَ:gen', # ḥiyāla = concerning
         'حَيثُ':              'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
         'حِينَمَا':            'فِي_حِينِ', # during
