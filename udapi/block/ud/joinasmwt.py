@@ -34,8 +34,8 @@ class JoinAsMwt(Block):
 
     def create_mwt(self, mwt_nodes):
         mwt_form = ''.join([n.form for n in mwt_nodes])
-        mwt = node.root.create_multiword_token(mwt_nodes, mwt_form)
-        if node.misc['SpaceAfter'] == 'No':
+        mwt = mwt_nodes[0].root.create_multiword_token(words=mwt_nodes, form=mwt_form)
+        if mwt_nodes[0].node.misc['SpaceAfter'] == 'No':
             mwt.misc['SpaceAfter'] = 'No'
         for mwt_node in mwt_nodes:
             del mwt_node.misc['SpaceAfter']
