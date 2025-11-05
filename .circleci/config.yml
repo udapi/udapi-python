@@ -59,4 +59,4 @@ workflows:
       - build-and-test:
           matrix:
             parameters:
-              python-version: ["3.9", "3.13"]
+              python-version: ["3.9", "3.11", "3.13"]
