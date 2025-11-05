@@ -2,6 +2,9 @@ Udapi Change Log
 ----------------
 See https://github.com/udapi/udapi-python/commits/master for details.
 
+0.5.1 2025-11-05
+ - make udapy compatible with Python 3.13
+
 0.5.0 2025-10-18
  - added mwt.feats
  - added root.prev_tree and root.next_tree
