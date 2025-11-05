@@ -55,6 +55,18 @@ for prep in 'na o za'.split():
         'shape': 'subtree',
     }
 
+# Old Czech 'toliť' (special case with 3 subtokens; general -ť will be solved dynamically below).
+MWTS['toliť'] = {
+    'form':   'to li ť',
+    'lemma':  'ten li ť',
+    'upos':   'DET SCONJ PART',
+    'xpos':   '* J,------------- TT-------------',
+    'feats':  '* _ _',
+    'deprel': '* mark discourse',
+    'main':   0,
+    'shape':  'siblings'
+}
+
 
 
 class AddMwt(udapi.block.ud.addmwt.AddMwt):

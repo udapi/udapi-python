@@ -66,7 +66,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat', 'Com', 'Pro', 'Oth'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
             else:
@@ -74,7 +74,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat', 'Com', 'Pro', 'Oth'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
         # ADJECTIVES ###########################################################
@@ -385,7 +385,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
             # Relative possessive determiners 'jehož' and 'jejichž' behave similarly
             # to the personal possessive determiners but they do not have Person.
-            elif re.match(r'^(jeho|jejich|j[ií]ch)ž(e|to)?$', node.form.lower()):
+            # Normally determiners do not change j->n after prepositions but we
+            # have an example in Old Czech (štěpové zlatí, na nichžto větviech...)
+            elif re.match(r'^(jeho|jejich|[jn][ií]ch)ž(e|to)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Rel'],
@@ -549,13 +551,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
             else:
                 if node.feats['NumType'] == 'Sets':
-                    # 'jedny', 'dvoje', 'troje', 'čtvery'
+                    # 'jedny', 'dvoje', 'oboje', 'troje', 'čtvery'
                     # Number should perhaps be only Plur because the counted noun will be Plur.
                     # Gender is not annotated in PDT but there are different forms ('jedni' vs. 'jedny',
                     # and in Old Czech also 'dvoji' vs. 'dvoje'), so we should allow Gender (and Animacy).
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Sets'],
+                        'PronType': ['Tot'], # for 'oboje'
                         'NumForm': ['Word'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Animacy': ['Anim', 'Inan'],
