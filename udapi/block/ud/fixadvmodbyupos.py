@@ -44,7 +44,9 @@ class FixAdvmodByUpos(Block):
             if node.upos != 'AUX':
                 node.deprel = 'dep'
         elif node.udeprel == 'case':
-            if node.upos == 'DET':
+            if node.upos == 'ADJ':
+                node.deprel = 'amod'
+            elif node.upos == 'DET':
                 node.deprel = 'det'
             elif node.upos == 'PRON':
                 node.deprel = 'nmod'
@@ -64,6 +66,8 @@ class FixAdvmodByUpos(Block):
                 node.deprel = 'det'
             elif node.upos == 'INTJ':
                 node.deprel = 'discourse'
+            elif node.upos == 'NOUN':
+                node.deprel = 'dep'
         elif node.udeprel == 'det':
             if node.upos == 'NOUN':
                 node.deprel = 'nmod'

@@ -17,7 +17,9 @@ MWTS = {
     'abychme': {'form': 'aby bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'kdybychme': {'form': 'když bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'abyste': {'form': 'aby byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'abyšte': {'form': 'aby byšte', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
     'kdybyste': {'form': 'když byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'kdybyšte': {'form': 'když byšte', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
     # Old Czech 'abyšta' == dual number; 2nd or 3rd person, the one example in data so far is 3rd.
     'abyšta': {'form': 'aby byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
     'kdybyšta': {'form': 'když byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
@@ -150,7 +152,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             # could be masculine or neuter. We pick Gender=Masc and Animacy=Anim
             # by default, unless the original token was annotated as Animacy=Inan
             # or Gender=Neut.
-            m = re.match(r"^(na|nade|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
+            m = re.match(r"^(na|nade|o|po|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
             if m:
                 node.misc['AddMwt'] = ''
                 # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'
