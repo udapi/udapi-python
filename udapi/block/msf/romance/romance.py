@@ -13,6 +13,7 @@ class Aspect(str, Enum):
     PERFPROG = 'PerfProg'
     PROG = 'Prog'
     PQP = 'Pqp'
+    PQPPROG = 'PqpProg'
 
 class Tense(str, Enum):
     FUT = 'Fut'
@@ -444,23 +445,6 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     polarity=polarity,
                     ords=phrase_ords)
                 return
-            
-            # Portuguese
-            # pretérito mais que perfeito composto (aux haver) -> PhraseTense=Past, PhraseAspect=Perf
-            if auxes[0].lemma == 'haver' and auxes[0].feats['Tense'] == 'Imp' and node.feats['VerbForm'] == 'Part':
-
-                self.write_node_info(head_node,
-                    tense=Tense.PAST.value,
-                    aspect=Aspect.PERF.value,
-                    number=auxes[0].feats['Number'],
-                    person=auxes[0].feats['Person'],
-                    mood=auxes[0].feats['Mood'],
-                    form='Fin',
-                    voice=head_node.feats['Voice'],
-                    expl=expl,
-                    polarity=polarity,
-                    ords=phrase_ords)
-                return
                 
             # Auxiliary 'estar' followed by a gerund 
             if node.feats['VerbForm'] == 'Ger':
@@ -531,7 +515,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                         tense=Tense.PAST.value
 
                 # Portuguese
-                # pretérito mais que perfeito composto (aux ter) -> PhraseTense=Past, PhraseAspect=Pqp
+                # pretérito mais que perfeito composto (aux ter/haver) -> PhraseTense=Past, PhraseAspect=Pqp
                 # subjonctive pretérito mais-que-perfeito composto (aux ter) -> PhraseTense=Past, PhraseAspect=Pqp, PhraseMood=Sub
 
                 # Spanish
@@ -682,7 +666,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 # subjonctive Pretérito mais que perfeito composto -> PhraseTense=Past, PhraseAspect=ImpProg, PhraseMood=Sub
                 elif auxes[0].feats['Tense'] in ['Imp', 'Past']:
                     tense=Tense.PAST.value
-                    aspect=Aspect.IMPPROG.value
+                    aspect=Aspect.PQPPROG.value
 
                 # Futuro do presente composto -> PhraseTense=Fut, PhraseAspect=PerfProg
                 elif auxes[0].feats['Tense'] == 'Fut' and auxes[0].lemma == 'ter':
