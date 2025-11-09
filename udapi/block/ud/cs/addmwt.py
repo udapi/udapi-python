@@ -58,6 +58,18 @@ for prep in 'na o za'.split():
         'main': 1,
         'shape': 'subtree',
     }
+# In 19th century texts (Hičkok etalon), one instance of 'seč' was also split (and annotated as ADP + accusative!)
+# We must do it separately, as the preposition is vocalized.
+MWTS['seč'] = {
+    'form': 'se' + ' co',
+    'lemma': 's' + ' co',
+    'upos': 'ADP PRON',
+    'xpos': 'RV--4---------- PQ--4----------',
+    'feats': 'AdpType=Voc|Case=Acc Animacy=Inan|Case=Acc|PronType=Int,Rel',
+    'deprel': 'case *',
+    'main': 1,
+    'shape': 'subtree',
+}
 
 # Old Czech 'toliť' (special case with 3 subtokens; general -ť will be solved dynamically below).
 MWTS['toliť'] = {
