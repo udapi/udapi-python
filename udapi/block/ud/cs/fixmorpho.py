@@ -6,7 +6,7 @@ of words (e.g. whether or not nouns should have the Polarity feature). It was
 created as part of the Hičkok project (while importing nineteenth-century Czech
 data) but it should be applicable on any other Czech treebank.
 """
-import udapi.block.ud.fixmorpho
+import udapi.block
 import re
 
 class FixMorpho(udapi.block):
