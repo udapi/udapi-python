@@ -370,7 +370,7 @@ class FixMorpho(Block):
             # meaning future. However, a few imperfective verbs have a separate
             # future form (distinct from present form), which gets Tense=Fut
             # despite inflecting similarly to present forms.
-            if node.feats['Mood'] == 'Ind' and node.feats['Tense'] == 'Pres' and node.feats['Aspect'] != 'Perf' and re.match(r'((bud|půjd|pojed|polez|pones)(u|eš|e|eme?|ete|ou)|polet(ím|íš|í|íme|íte))', node.form.lower()):
+            if node.feats['Mood'] == 'Ind' and node.feats['Tense'] == 'Pres' and node.feats['Aspect'] != 'Perf' and re.match(r'(ne)?((bud|půjd|pojed|polez|pones)(u|eš|e|eme?|ete|ou)|polet(ím|íš|í|íme|íte))', node.form.lower()):
                 node.feats['Tense'] = 'Fut'
             # Passive participles (including the short forms) should be ADJ, not VERB.
             # But they keep the verbal features of VerbForm, Voice, Aspect.
@@ -397,7 +397,7 @@ class FixMorpho(Block):
         #----------------------------------------------------------------------
         # Words that indicate the speaker's attitude are tagged ADV in UD,
         # although the Czech tagsets often treat them as particles.
-        if node.upos == 'PART' and re.fullmatch(r'(asi?|dokonce|jistě|hlavně|hned|možná|opravdu|skoro|skutečně|snad|třeba|určitě|vlastně|vůbec|zajisté|zase|zrovna|zřejmě|zvláště)', node.lemma):
+        if node.upos == 'PART' and re.fullmatch(r'(asi?|až|bezpochyby|bohdá|co|dokonce|jen|jistě|již|hlavně|hned|jednoduše|leda|možná|naopak|nejen|nejspíše?|opravdu|ovšem|patrně|právě|prej|prý|přece|především|rozhodně|skoro|skutečně|snad|spíše?|teda|tedy|třeba|určitě|věru|vlastně|vůbec|zajisté|zase|zrovna|zřejmě|zvlášť|zvláště)', node.lemma):
             node.upos = 'ADV'
             node.feats['Degree'] = 'Pos'
             node.feats['Polarity'] = 'Pos'
