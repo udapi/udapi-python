@@ -162,6 +162,10 @@ class FixMorpho(Block):
                 node.lemma = 'jenžto'
                 node.upos = 'PRON'
                 node.feats['PrepCase'] = 'Npr'
+            # Relative pronoun "an" is PRON (not DET).
+            elif node.lemma == 'an':
+                node.upos = 'PRON'
+                node.feats['PronType'] = 'Rel'
             # Pronoun "kdo" is PRON (not DET).
             elif node.lemma == 'kdo':
                 node.lemma = 'kdo'
@@ -397,10 +401,11 @@ class FixMorpho(Block):
         #----------------------------------------------------------------------
         # Words that indicate the speaker's attitude are tagged ADV in UD,
         # although the Czech tagsets often treat them as particles.
-        if node.upos == 'PART' and re.fullmatch(r'(asi?|až|bezpochyby|bohdá|co|dokonce|jen|jistě|již|hlavně|hned|jednoduše|leda|možná|naopak|nejen|nejspíše?|opravdu|ovšem|patrně|právě|prej|prý|přece|především|rozhodně|skoro|skutečně|snad|spíše?|teda|tedy|třeba|určitě|věru|vlastně|vůbec|zajisté|zase|zrovna|zřejmě|zvlášť|zvláště)', node.lemma):
+        if node.upos == 'PART' and re.fullmatch(r'(ani|asi?|až|bezpochyby|bohdá|co|dokonce|jen|jistě|již|hlavně|hned|jednoduše|leda|možná|naopak|nejen|nejspíše?|opravdu|ovšem|patrně|právě|prej|prý|přece|především|rozhodně|skoro|skutečně|snad|spíše?|teda|tedy|třeba|určitě|věru|vlastně|vůbec|zajisté|zase|zrovna|zřejmě|zvlášť|zvláště)', node.lemma):
             node.upos = 'ADV'
             node.feats['Degree'] = 'Pos'
             node.feats['Polarity'] = 'Pos'
+            node.misc['CzechParticle'] = 'Yes'
         # Adverb "brzo" should be lemmatized as "brzy".
         if node.upos == 'ADV' and node.form.lower() == 'brzo':
             node.lemma = 'brzy'
@@ -423,6 +428,13 @@ class FixMorpho(Block):
         if node.upos == 'ADP' and node.form.lower() == 'u':
             node.lemma = 'u'
             node.feats['AdpType'] = 'Prep'
+        #----------------------------------------------------------------------
+        # CONJUNCTION
+        #----------------------------------------------------------------------
+        # As a conjunction (and not particle/adverb), "ani" is coordinating and
+        # not subordinating.
+        if node.upos == 'SCONJ' and node.lemma == 'ani':
+            node.upos = 'CCONJ'
         #----------------------------------------------------------------------
         # PARTICLES THAT SHOULD BE ADVERBS
         #----------------------------------------------------------------------
