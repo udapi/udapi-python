@@ -320,7 +320,7 @@ class FixMorpho(Block):
                 node.feats['PronType'] = 'Ind'
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
-            elif re.fullmatch(r'(nijak|nikam|nikde|nikdy|nikudy)', node.lemma):
+            elif re.fullmatch(r'(nic|nijak|nikam|nikde|nikdy|nikudy)', node.lemma):
                 node.feats['PronType'] = 'Neg'
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
