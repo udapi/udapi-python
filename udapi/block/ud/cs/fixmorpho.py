@@ -30,7 +30,7 @@ class FixMorpho(Block):
         # them as proper nouns. We must be careful and not add too many to this
         # rule, as many of them could be used as surnames and then they should
         # be PROPN.
-        if node.upos == 'PROPN' and re.fullmatch(r'(bůh|duch|hospodin|město|milost|pán|panna)', node.lemma.lower()):
+        if node.upos == 'PROPN' and re.fullmatch(r'(bůh|duch|hospodin|město|milost|pan|pán|panna|stvořitel|trojice)', node.lemma.lower()):
             node.lemma = node.lemma.lower()
             node.upos = 'NOUN'
         # Lemmatization.
@@ -124,7 +124,7 @@ class FixMorpho(Block):
                 node.feats['Number[psor]'] = 'Sing'
                 if not re.search(r'(Masc|Neut)', node.feats['Gender[psor]']):
                     node.feats['Gender[psor]'] = 'Masc,Neut'
-            elif node.form.lower() == 'její':
+            elif re.fullmatch(r'(její|jejího|jejímu|jejím|jejích|jejími|jejíma)', node.form.lower()):
                 node.lemma = 'jeho'
                 node.feats['Person'] = '3'
                 node.feats['Number[psor]'] = 'Sing'
@@ -142,6 +142,14 @@ class FixMorpho(Block):
                 node.lemma = 'jehož'
                 node.feats['PronType'] = 'Rel'
                 node.feats['Number[psor]'] = 'Plur'
+            elif re.fullmatch(r'jichžto|jejichžto', node.form.lower()):
+                node.lemma = 'jehožto'
+                node.feats['PronType'] = 'Rel'
+                node.feats['Number[psor]'] = 'Plur'
+        elif node.lemma == 'čí':
+            node.feats['Poss'] = 'Yes'
+            if node.feats['PronType'] == '':
+                node.feats['PronType'] = 'Int,Rel'
         # Reflexive possessive pronoun should not forget the Reflex=Yes feature.
         if node.upos == 'DET' and node.lemma == 'svůj':
             node.feats['Reflex'] = 'Yes'
@@ -150,7 +158,7 @@ class FixMorpho(Block):
         if node.upos in ['PRON', 'DET']:
             # Relative pronoun "jenž" should be PRON, not DET
             # (it inflects for Gender but it can never be used as congruent attribute).
-            if node.lemma == 'jenž':
+            if re.fullmatch(r'(jenž|jenžto)', node.lemma):
                 node.upos = 'PRON'
                 if node.form.lower().startswith('j'):
                     node.feats['PrepCase'] = 'Npr'
@@ -158,7 +166,7 @@ class FixMorpho(Block):
                     node.feats['PrepCase'] = 'Pre'
             # Relative pronoun "ješto" should be PRON, not DET (if it is not SCONJ, but that was excluded by a condition above)
             # (it inflects for Gender but it can never be used as congruent attribute).
-            elif node.form.lower() == 'ješto':
+            elif node.form.lower() in ['ješto', 'ježto']:
                 node.lemma = 'jenžto'
                 node.upos = 'PRON'
                 node.feats['PrepCase'] = 'Npr'
@@ -172,6 +180,17 @@ class FixMorpho(Block):
                 node.upos = 'PRON'
                 if node.feats['PronType'] == '':
                     node.feats['PronType'] = 'Int,Rel'
+                # Unlike "co", we annotate "kdo" as Animacy=Anim|Gender=Masc.
+                # However, we do not annotate Number ("kdo" can be the subject of a plural verb).
+                node.feats['Gender'] = 'Masc'
+                node.feats['Animacy'] = 'Anim'
+                node.feats['Number'] = ''
+            # Pronoun "kdož" is PRON (not DET).
+            elif node.lemma == 'kdož':
+                node.lemma = 'kdož'
+                node.upos = 'PRON'
+                if node.feats['PronType'] == '':
+                    node.feats['PronType'] = 'Rel'
                 # Unlike "co", we annotate "kdo" as Animacy=Anim|Gender=Masc.
                 # However, we do not annotate Number ("kdo" can be the subject of a plural verb).
                 node.feats['Gender'] = 'Masc'
@@ -208,8 +227,7 @@ class FixMorpho(Block):
                 node.feats['Animacy'] = ''
                 node.feats['Number'] = ''
             # Pronoun "což" is PRON (not DET).
-            elif node.lemma == 'což':
-                node.lemma = 'což'
+            elif node.lemma in ['což', 'cože']:
                 node.upos = 'PRON'
                 if node.feats['PronType'] == '':
                     node.feats['PronType'] = 'Rel'
@@ -219,7 +237,7 @@ class FixMorpho(Block):
                 node.feats['Animacy'] = ''
                 node.feats['Number'] = ''
             # Pronoun "něco" is PRON (not DET).
-            elif re.fullmatch(r'(cosi|něco)', node.lemma):
+            elif re.fullmatch(r'(cokoli|cosi|něco)', node.lemma):
                 node.upos = 'PRON'
                 node.feats['PronType'] = 'Ind'
                 # We do not annotate Gender and Number, although it could be argued
@@ -253,6 +271,10 @@ class FixMorpho(Block):
             elif node.lemma == 'všechen':
                 node.upos = 'DET'
                 node.feats['PronType'] = 'Tot'
+            elif re.fullmatch(r'(všecek|všecka|všecku|všecko|všickni)', node.form.lower()):
+                node.lemma = 'všechen'
+                node.upos = 'DET'
+                node.feats['PronType'] = 'Tot'
             # Pronoun "sám" is lemmatized to the long form, it is DET and PronType=Emp.
             elif node.lemma in ['sám', 'samý']:
                 node.lemma = 'samý'
@@ -275,7 +297,8 @@ class FixMorpho(Block):
                 node.feats['PronType'] = 'Ind'
                 node.feats['NumForm'] = ''
                 node.feats['Polarity'] = '' ###!!! so we are losing the distinction mnoho/nemnoho?
-            elif re.fullmatch(r'(tolik)', node.lemma):
+            elif re.fullmatch(r'(toliko?)', node.lemma):
+                node.lemma = 'tolik'
                 node.upos = 'DET'
                 node.feats['PronType'] = 'Dem'
                 node.feats['NumForm'] = ''
@@ -303,7 +326,7 @@ class FixMorpho(Block):
         # Pronominal adverbs have PronType but most of them do not have Degree
         # and Polarity.
         if node.upos == 'ADV':
-            if re.fullmatch(r'(dosud|nyní|proto|sem|tady|tak|takto|tam|teď|tehdy|tenkrát|tu|zde)', node.lemma):
+            if re.fullmatch(r'(dosud|dotud|nyní|odsud|odtud|proto|sem|tady|tak|takož|takto|tam|tamto|teď|tehdy|tenkrát|tu|tudy|zde)', node.lemma):
                 node.feats['PronType'] = 'Dem'
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
@@ -316,7 +339,7 @@ class FixMorpho(Block):
                 node.feats['PronType'] = 'Rel'
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
-            elif re.fullmatch(r'(jaksi|kamsi|kdesi|kdysi|kudysi|nějak|někam|někde|někdy|někudy)', node.lemma):
+            elif re.fullmatch(r'(jakkoli|jaksi|kamkoli|kamsi|kdekoli|kdesi|kdykoli|kdysi|kudykoli|kudysi|nějak|někam|někde|někdy|někudy)', node.lemma):
                 node.feats['PronType'] = 'Ind'
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
@@ -325,7 +348,7 @@ class FixMorpho(Block):
                 node.feats['Degree'] = ''
                 node.feats['Polarity'] = ''
             # Total pronominals can be negated ("nevždy"). Then they get Degree, too.
-            elif re.fullmatch(r'(všude|všudy|ve?ždy|ve?ždycky)', node.lemma):
+            elif re.fullmatch(r'(odevšad|všude|všudy|ve?ždy|ve?ždycky)', node.lemma):
                 node.feats['PronType'] = 'Tot'
                 node.feats['Degree'] = 'Pos'
                 node.feats['Polarity'] = 'Pos'
@@ -337,7 +360,7 @@ class FixMorpho(Block):
         # where it no longer acts as a copula. Czech tagsets typically do not
         # distinguish AUX from VERB, which means that converted data may have to
         # be fixed.
-        if node.upos == 'VERB' and node.lemma == 'být':
+        if node.upos == 'VERB' and node.lemma in ['být', 'bývat', 'bývávat']:
             node.upos = 'AUX'
         if node.upos in ['ADV', 'VERB'] and re.fullmatch(r'(ne)?lze', node.form.lower()):
             node.upos = 'ADV'
@@ -429,15 +452,20 @@ class FixMorpho(Block):
             node.lemma = 'u'
             node.feats['AdpType'] = 'Prep'
         #----------------------------------------------------------------------
-        # CONJUNCTION
+        # CONJUNCTIONS
         #----------------------------------------------------------------------
         # As a conjunction (and not particle/adverb), "ani" is coordinating and
         # not subordinating.
         if node.upos == 'SCONJ' and node.lemma == 'ani':
             node.upos = 'CCONJ'
+        if node.upos == 'CCONJ' and node.lemma == 'nebť':
+            node.lemma = 'neboť'
         #----------------------------------------------------------------------
-        # PARTICLES THAT SHOULD BE ADVERBS
+        # PARTICLES (other than those already grabbed above)
         #----------------------------------------------------------------------
         # "jako" should be SCONJ but 19th century data have it as PART.
-        if node.upos == 'PART' and node.lemma == 'jako':
-            node.upos = 'SCONJ'
+        if node.upos == 'PART':
+            if node.lemma == 'jako':
+                node.upos = 'SCONJ'
+            elif node.lemma == 'ti':
+                node.lemma = 'ť'
