@@ -7,6 +7,7 @@ MODALS = ['poder', 'deber', 'querer', 'saber', # Spanish + Portuguese
           'potere', 'dovere', 'volere', 'sapere'] # Italian
 
 class Aspect(str, Enum):
+    ANT = 'Ant'
     IMP = 'Imp'
     IMPPROG = 'ImpProg'
     PERF = 'Perf'
@@ -523,9 +524,21 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                 # Italian
                 # Trapassato prossimo -> PhraseTense=Past, PhraseAspect=Pqp
-                elif auxes[0].feats['Tense'] in ['Imp', 'Past']: # TODO prej neni v Past, jenom Imp
+                elif auxes[0].feats['Tense'] == 'Imp':
                     tense=Tense.PAST.value
                     aspect=Aspect.PQP.value
+
+                # Spanish
+                # pretérito anterior ante pretérito -> PhraseTense=Past, PhraseAspect=Ant
+
+                # Italian
+                # trapassato remoto -> PhraseTense=Past, PhraseAspect=Ant
+                
+                # French
+                # passé antérieur -> PhraseTense=Past, PhraseAspect=Ant
+                elif auxes[0].feats['Tense'] == 'Past':
+                    tense=Tense.PAST.value
+                    aspect = Aspect.ANT.value
 
                 self.write_node_info(head_node,
                     tense=tense,
