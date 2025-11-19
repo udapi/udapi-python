@@ -39,7 +39,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
         cop = [x for x in node.children if x.udeprel == 'cop']
         
         # only expl or expl:pv, no expl:impers or expl:pass
-        refl = [x for x in node.children if x.lemma == 'se' and x.upos == 'PRON' and x.udeprel == 'expl' and x.deprel != 'expl:impers' and x.deprel != 'expl:pass']
+        refl = [x for x in node.children if (x.lemma == 'se' or x.lemma == 'soi') and x.upos == 'PRON' and x.udeprel == 'expl' and x.deprel != 'expl:impers' and x.deprel != 'expl:pass']
         
         if refl:
             expl='Pv'
@@ -265,6 +265,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
         aspect = ''
         tense = node.feats['Tense']
+        form = node.feats['VerbForm']
 
         if node.feats['Mood'] == 'Ind':
             
@@ -336,13 +337,19 @@ class Romance(udapi.block.msf.phrase.Phrase):
             aspect=''
             tense=Tense.PRES.value
 
+        adp_en = [x for x in head_node.children if x.upos == 'ADP' and x.lemma == 'en' and x.udeprel == 'mark']
+        if node.feats['VerbForm'] == 'Part' and adp_en:
+            phrase_ords.append(adp_en[0].ord)
+            phrase_ords.sort()
+            form = 'Ger'
+
         
         self.write_node_info(head_node,
             person=node.feats['Person'],
             aspect=aspect,
             number=node.feats['Number'],
             mood=node.feats['Mood'],
-            form=node.feats['VerbForm'],
+            form=form,
             tense=tense,
             gender=head_node.feats['Gender'],
             voice=head_node.feats['Voice'],
@@ -499,13 +506,23 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 # Futuro anteriore -> PhraseTense=Fut, PhraseAspect=Perf
                 aspect=Aspect.PERF.value
                 tense=auxes[0].feats['Tense']
+                form='Fin'
+
+                adp_en = [x for x in node.children if x.lemma == 'en' and x.upos == 'ADP' and x.udeprel == 'mark']
+                if auxes[0].feats['VerbForm'] == 'Part' and adp_en:
+                    tense=Tense.PAST.value
+                    aspect=''
+                    phrase_ords.append(adp_en[0].ord)
+                    phrase_ords.sort()
+                    form='Ger'
+
 
                 # Spanish
                 # Pretérito perfecto compuesto ante presente -> PhraseTense=Past, PhraseAspect=Perf
 
                 # Italian
                 # Passato prossimo (aux avere/essere) -> PhraseTense=Past, PhraseAspect=Perf
-                if auxes[0].feats['Tense'] == 'Pres':
+                elif auxes[0].feats['Tense'] == 'Pres':
 
                     # Portuguese
                     # pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf
@@ -533,7 +550,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
                 # Italian
                 # trapassato remoto -> PhraseTense=Past, PhraseAspect=Ant
-                
+
                 # French
                 # passé antérieur -> PhraseTense=Past, PhraseAspect=Ant
                 elif auxes[0].feats['Tense'] == 'Past':
@@ -546,7 +563,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     person=auxes[0].feats['Person'],
                     mood=auxes[0].feats['Mood'],
                     aspect=aspect,
-                    form='Fin',
+                    form=form,
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
