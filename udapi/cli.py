@@ -58,35 +58,34 @@ argparser.add_argument(
 argparser.add_argument(
     'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
 
-args = argparser.parse_args()
-
-# Set the level of logs according to parameters.
-if args.verbose:
-    level = logging.DEBUG
-elif args.quiet:
-    level = logging.CRITICAL
-else:
-    level = logging.INFO
-
-logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s',
-                    level=level)
-
-# Global flag to track if an unhandled exception occurred
-_unhandled_exception_occurred = False
-
-def _custom_excepthook(exc_type, exc_value, traceback):
-    global _unhandled_exception_occurred
-    _unhandled_exception_occurred = True
-
-    # Call the default excepthook to allow normal error reporting
-    sys.__excepthook__(exc_type, exc_value, traceback)
-
-# Override the default excepthook
-sys.excepthook = _custom_excepthook
-
 
 # Process and provide the scenario.
-if __name__ == "__main__":
+def main(argv=None):
+    args = argparser.parse_args(argv)
+
+    # Set the level of logs according to parameters.
+    if args.verbose:
+        level = logging.DEBUG
+    elif args.quiet:
+        level = logging.CRITICAL
+    else:
+        level = logging.INFO
+
+    logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s',
+                        level=level)
+
+    # Global flag to track if an unhandled exception occurred
+    _unhandled_exception_occurred = False
+
+    def _custom_excepthook(exc_type, exc_value, traceback):
+        global _unhandled_exception_occurred
+        _unhandled_exception_occurred = True
+
+        # Call the default excepthook to allow normal error reporting
+        sys.__excepthook__(exc_type, exc_value, traceback)
+
+    # Override the default excepthook
+    sys.excepthook = _custom_excepthook
 
     # Disabling garbage collections makes the whole processing much faster.
     # Similarly, we can save several seconds by partially disabling the at-exit Python cleanup
@@ -134,3 +133,8 @@ if __name__ == "__main__":
         runner.execute()
     except BrokenPipeError:
         pass
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
