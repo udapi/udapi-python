@@ -23,7 +23,7 @@ COLOR_OF = {
 
 
 class TextModeTrees(BaseWriter):
-    """An ASCII pretty printer of dependency trees.
+    r"""An ASCII pretty printer of dependency trees.
 
     .. code-block:: bash
 
@@ -110,7 +110,7 @@ class TextModeTrees(BaseWriter):
          │   ╰─┶   boxer NOUN  acl:relcl
          ╰─╼       .     PUNCT punct
 
-    Some non-projective trees cannot be printed witout crossing edges.
+    Some non-projective trees cannot be printed without crossing edges.
     TextModeTrees uses a special "bridge" symbol ─╪─ to mark this::
 
       ─┮
@@ -123,17 +123,17 @@ class TextModeTrees(BaseWriter):
     (not file or pipe), each node attribute is printed in different color.
     If a given node's MISC contains any of `ToDo`, `Bug` or `Mark` attributes
     (or any other specified in the parameter `mark`), the node will be highlighted
-    (by reveresing the background and foreground colors).
+    (by reversing the background and foreground colors).
 
     This block's method `process_tree` can be called on any node (not only root),
     which is useful for printing subtrees using ``node.draw()``,
     which is internally implemented using this block.
 
     For use in LaTeX, you can insert the output of this block (without colors)
-    into \begin{verbatim}...\end{verbatim}, but you need to compile with pdflatex (xelatex not supported)
-    and you must add the following code into the preambule::
+    into ``\begin{verbatim}...\end{verbatim}``, but you need to compile with pdflatex (xelatex not supported)
+    and you must add the following code into the preamble::
 
-      \\usepackage{pmboxdraw}
+      \usepackage{pmboxdraw}
       \DeclareUnicodeCharacter{256D}{\textSFi}  %╭
       \DeclareUnicodeCharacter{2570}{\textSFii} %╰
 
@@ -149,36 +149,38 @@ class TextModeTrees(BaseWriter):
         """Create new TextModeTrees block object.
 
         Args:
-        print_sent_id: Print ID of the tree (its root, aka "sent_id") above each tree?
-        print_sentence: Print plain-text detokenized sentence on a line above each tree?
-        add_empty_line: Print an empty line after each tree?
-        indent: Number of characters to indent node depth in the tree for better readability.
-        minimize_cross: Minimize crossings of edges in non-projective trees?
-                        Trees without crossings are subjectively more readable, but usually
-                        in practice also "deeper", that is with higher maximal line length.
-        color: Print the node attribute with ANSI terminal colors?
-               Default = 'auto' which means that color output only if the output filehandle
-               is interactive (console). Each attribute is assigned a color (the mapping is
-               tested on black background terminals and can be changed only in source code).
-               If you plan to pipe the output (e.g. to "less -R") and you want the colors,
-               you need to set explicitly color=1, see the example in Synopsis.
-        attributes: A comma-separated list of node attributes which should be printed. Possible
-                    values are ord, form, lemma, upos, xpos, feats, deprel, deps, misc.
-        print_undef_as: What should be printed instead of undefined attribute values (if any)?
-        print_doc_meta: Print `document.meta` metadata before each document?
-        print_comments: Print comments (other than sent_id and text)?
-        print_empty: Print empty nodes?
-        mark: a regex. If `re.search(mark + '=', str(node.misc))` the node is highlighted.
-            If `print_comments and re.search(r'^ %s = ' % mark, root.comment, re.M)`
-            the comment is highlighted.
-            Empty string means no highlighting. Default = 'ToDo|ToDoOrigText|Bug|Mark'.
-        marked_only: print only trees containing one or more marked nodes/comments. Default=False.
-        hints: use thick-marked segments (┡ and ┢) to distinguish whether a given node precedes
-            or follows its parent. Default=True. If False, plain ├ is used in both cases.
-        layout: 'classic' (default) shows word attributes immediately next to each node,
-            'compact' never print edges after (right to) words even in non-projectivities,
-            'align-words' as 'compact' but all first attributes (forms by default) are aligned,
-            'align' as 'align-words' but all attributes are aligned in columns.
+            print_sent_id: Print ID of the tree (its root, aka "sent_id") above each tree?
+            print_text: Print plain-text detokenized sentence on a line above each tree?
+            add_empty_line: Print an empty line after each tree?
+            indent: Number of characters to indent node depth in the tree for better readability.
+            minimize_cross: Minimize crossings of edges in non-projective trees?
+                Trees without crossings are subjectively more readable, but usually
+                in practice also "deeper", that is with higher maximal line length.
+            color: Print the node attribute with ANSI terminal colors?
+                Default = 'auto' which means that color output only if the output filehandle
+                is interactive (console). Each attribute is assigned a color (the mapping is
+                tested on black background terminals and can be changed only in source code).
+                If you plan to pipe the output (e.g. to "less -R") and you want the colors,
+                you need to set explicitly color=1, see the example in Synopsis.
+            attributes: A comma-separated list of node attributes which should be printed. Possible
+                values are ``ord``, ``form``, ``lemma``, ``upos``, ``xpos``, ``feats``, ``deprel``, ``deps``, ``misc``.
+            print_undef_as: What should be printed instead of undefined attribute values (if any)?
+            print_doc_meta: Print ``document.meta`` metadata before each document?
+            print_comments: Print comments (other than ``sent_id`` and ``text``)?
+            print_empty: Print empty nodes?
+            mark: A regex pattern. If ``re.search(mark + '=', str(node.misc))`` matches, the node is highlighted.
+                If ``print_comments`` and ``re.search(r'^ %s = ' % mark, root.comment, re.M)`` matches,
+                the comment is highlighted. Empty string means no highlighting.
+                Default = ``'(ToDo|ToDoOrigText|Bug|Mark)'``.
+            marked_only: Print only trees containing one or more marked nodes/comments. Default ``False``.
+            hints: Use thick-marked segments (┡ and ┢) to distinguish whether a given node precedes
+                or follows its parent. Default ``True``. If ``False``, plain ├ is used in both cases.
+            layout: Tree layout style:
+
+                - ``'classic'`` (default): shows word attributes immediately next to each node
+                - ``'compact'``: never print edges after (right to) words even in non-projectivities
+                - ``'align-words'``: like ``'compact'`` but all first attributes (forms by default) are aligned
+                - ``'align'``: like ``'align-words'`` but all attributes are aligned in columns
         """
         super().__init__(**kwargs)
         self.print_sent_id = print_sent_id
