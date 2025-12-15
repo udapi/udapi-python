@@ -8,13 +8,12 @@ version = "0.5.2"
 description = "Python framework for processing Universal Dependencies data"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {file = "LICENSE"}
+license = "GPL-3.0-or-later"
 authors = [
     {name = "Martin Popel", email = "popel@ufal.mff.cuni.cz"}
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -27,6 +26,7 @@ Homepage = "https://github.com/udapi/udapi-python"
 
 [project.optional-dependencies]
 test = ["pytest"]
+udpipe = ["ufal.udpipe"]
 
 [project.scripts]
 udapy = "udapi.cli:main"
