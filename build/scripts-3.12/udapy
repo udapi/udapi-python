@@ -1,0 +1,136 @@
+#!python
+import os
+import gc
+import sys
+import atexit
+import logging
+import argparse
+
+from udapi.core.run import Run
+
+# Parse command line arguments.
+argparser = argparse.ArgumentParser(
+    formatter_class=argparse.RawTextHelpFormatter,
+    usage="udapy [optional_arguments] scenario",
+    epilog="See http://udapi.github.io",
+    description="udapy - Python interface to Udapi - API for Universal Dependencies\n\n"
+                "Examples of usage:\n"
+                "  udapy -s read.Sentences udpipe.En < in.txt > out.conllu\n"
+                "  udapy -T < sample.conllu | less -R\n"
+                "  udapy -HAM ud.MarkBugs < sample.conllu > bugs.html\n")
+argparser.add_argument(
+    "-q", "--quiet", action="store_true",
+    help="Warning, info and debug messages are suppressed. Only fatal errors are reported.")
+argparser.add_argument(
+    "-v", "--verbose", action="store_true",
+    help="Warning, info and debug messages are printed to the STDERR.")
+argparser.add_argument(
+    "-s", "--save", action="store_true",
+    help="Add write.Conllu to the end of the scenario")
+argparser.add_argument(
+    "-T", "--save_text_mode_trees", action="store_true",
+    help="Add write.TextModeTrees color=1 to the end of the scenario")
+argparser.add_argument(
+    "-H", "--save_html", action="store_true",
+    help="Add write.TextModeTreesHtml color=1 to the end of the scenario")
+argparser.add_argument(
+    "-A", "--save_all_attributes", action="store_true",
+    help="Add attributes=form,lemma,upos,xpos,feats,deprel,misc (to be used after -T and -H)")
+argparser.add_argument(
+    "-C", "--save_comments", action="store_true",
+    help="Add print_comments=1 (to be used after -T and -H)")
+argparser.add_argument(
+    "-M", "--marked_only", action="store_true",
+    help="Add marked_only=1 to the end of the scenario (to be used after -T and -H)")
+argparser.add_argument(
+    "-N", "--no_color", action="store_true",
+    help="Add color=0 to the end of the scenario, this overrides color=1 of -T and -H")
+argparser.add_argument(
+    "-X", "--extra", action="append",
+    help="Add a specified parameter (or a block name) to the end of the scenario\n"
+         "For example 'udapy -TNX attributes=form,misc -X layout=align < my.conllu'")
+argparser.add_argument(
+    "--gc", action="store_true",
+    help="By default, udapy disables Python garbage collection and at-exit cleanup\n"
+         "to speed up everything (especially reading CoNLL-U files). In edge cases,\n"
+         "when processing many files and running out of memory, you can disable this\n"
+         "optimization (i.e. enable garbage collection) with 'udapy --gc'.")
+argparser.add_argument(
+    'scenario', nargs=argparse.REMAINDER, help="A sequence of blocks and their parameters.")
+
+args = argparser.parse_args()
+
+# Set the level of logs according to parameters.
+if args.verbose:
+    level = logging.DEBUG
+elif args.quiet:
+    level = logging.CRITICAL
+else:
+    level = logging.INFO
+
+logging.basicConfig(format='%(asctime)-15s [%(levelname)7s] %(funcName)s - %(message)s',
+                    level=level)
+
+# Global flag to track if an unhandled exception occurred
+_unhandled_exception_occurred = False
+
+def _custom_excepthook(exc_type, exc_value, traceback):
+    global _unhandled_exception_occurred
+    _unhandled_exception_occurred = True
+
+    # Call the default excepthook to allow normal error reporting
+    sys.__excepthook__(exc_type, exc_value, traceback)
+
+# Override the default excepthook
+sys.excepthook = _custom_excepthook
+
+
+# Process and provide the scenario.
+if __name__ == "__main__":
+
+    # Disabling garbage collections makes the whole processing much faster.
+    # Similarly, we can save several seconds by partially disabling the at-exit Python cleanup
+    # (atexit hooks are called in reversed order of their registration,
+    # so flushing stdio buffers etc. will be still done before the os._exit(0) call).
+    # See https://instagram-engineering.com/dismissing-python-garbage-collection-at-instagram-4dca40b29172
+    # Is it safe to disable GC?
+    # OS will free the memory allocated by this process after it ends anyway.
+    # The udapy wrapper is aimed for one-time tasks, not a long-running server,
+    # so in a typical case a document is loaded and almost no memory is freed before the end.
+    # Udapi documents have a many cyclic references, so running GC is quite slow.
+    if not args.gc:
+        gc.disable()
+        # When an exception/error has happened, udapy should exit with a non-zero exit code,
+        # so that users can use `udapy ... || echo "Error detected"` (or Makefile reports errors).
+        # However, we cannot use `atexit.register(lambda: os._exit(1 if sys.exc_info()[0] else 0))`
+        # because the Python has already exited the exception-handling block
+        # (the exception/error has been already reported and sys.exc_info()[0] is None).
+        # We thus keep record whether _unhandled_exception_occurred.
+        atexit.register(lambda: os._exit(1 if _unhandled_exception_occurred else 0))
+        atexit.register(sys.stderr.flush)
+    if args.save:
+        args.scenario = args.scenario + ['write.Conllu']
+    if args.save_text_mode_trees:
+        args.scenario = args.scenario + ['write.TextModeTrees', 'color=1']
+    if args.save_html:
+        args.scenario = args.scenario + ['write.TextModeTreesHtml', 'color=1']
+    if args.save_all_attributes:
+        args.scenario = args.scenario + ['attributes=form,lemma,upos,xpos,feats,deprel,misc']
+    if args.save_comments:
+        args.scenario = args.scenario + ['print_comments=1']
+    if args.marked_only:
+        args.scenario = args.scenario + ['marked_only=1']
+    if args.no_color:
+        args.scenario = args.scenario + ['color=0']
+    if args.extra:
+        args.scenario += args.extra
+
+    runner = Run(args)
+    # udapy is often piped to head etc., e.g.
+    # `seq 1000 | udapy -s read.Sentences | head`
+    # Let's prevent Python from reporting (with distracting stacktrace)
+    # "BrokenPipeError: [Errno 32] Broken pipe"
+    try:
+        runner.execute()
+    except BrokenPipeError:
+        pass

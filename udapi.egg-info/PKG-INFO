@@ -1,0 +1,56 @@
+Metadata-Version: 2.4
+Name: udapi
+Version: 0.5.1
+Summary: Python framework for processing Universal Dependencies data
+Home-page: https://github.com/udapi/udapi-python
+Author: Martin Popel
+Author-email: popel@ufal.mff.cuni.cz
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: colorama
+Requires-Dist: termcolor
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Dynamic: license-file
+
+# udapi-python
+Python framework for processing Universal Dependencies data
+
+[![Build Status](https://circleci.com/gh/udapi/udapi-python.svg?style=shield)](https://circleci.com/gh/udapi/udapi-python)
+[![Website](https://img.shields.io/website-up-down-green-red/http/udapi.github.io.svg)](http://udapi.github.io)
+[![Documentation Status](https://readthedocs.org/projects/udapi/badge/)](http://udapi.readthedocs.io)
+
+## Requirements
+- You need Python 3.6 or higher.
+- If the [ufal.udpipe](https://pypi.python.org/pypi/ufal.udpipe/) parser is needed,
+  make sure you have a C++11 compiler (e.g. [g++ 4.7 or newer](.travis.yml#L9))
+  and install UDPipe with `pip3 install --user --upgrade ufal.udpipe`.
+
+## Install Udapi for developers
+Let's clone the git repo to `~/udapi-python/`, install dependencies
+and setup `$PATH` and `$PYTHONPATH` accordingly.
+```bash
+cd
+git clone https://github.com/udapi/udapi-python.git
+pip3 install --user -r udapi-python/requirements.txt
+echo '## Use Udapi from ~/udapi-python/ ##'                >> ~/.bashrc
+echo 'export PATH="$HOME/udapi-python/bin:$PATH"'          >> ~/.bashrc
+echo 'export PYTHONPATH="$HOME/udapi-python/:$PYTHONPATH"' >> ~/.bashrc
+source ~/.bashrc # or open new bash
+```
+
+## Install Udapi for users
+This is similar to the above, but installs Udapi from PyPI to the standard (user) Python paths.
+```
+pip3 install --user --upgrade udapi
+```
+Try `udapy -h` to check it is installed correctly.
+If it fails, make sure your `PATH` includes the directory where `pip3` installed the `udapy` script.
+Usually, this results in
+```bash
+export PATH="$HOME/.local/bin/:$PATH"
+```

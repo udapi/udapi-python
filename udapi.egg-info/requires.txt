@@ -1,0 +1,5 @@
+colorama
+termcolor
+
+[test]
+pytest
