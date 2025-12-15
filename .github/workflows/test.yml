@@ -47,4 +47,4 @@ jobs:
       
       - name: External tests
         run: |
-          cd udapi/core/tests && ./external_tests.sh
+          cd udapi/core/tests && bash external_tests.sh
