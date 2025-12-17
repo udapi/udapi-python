@@ -253,7 +253,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
             return
 
         xcomps = [x for x in node.children if x.udeprel == 'xcomp']
-        if node.lemma in ['ir', 'aller'] and node.upos == 'VERB' and xcomps:
+        if node.lemma in ['ir', 'aller', 'estar'] and node.upos == 'VERB' and xcomps:
             node.misc['PhraseAux'] = 'Yes'
 
             voice = node.feats['Voice']
@@ -261,7 +261,26 @@ class Romance(udapi.block.msf.phrase.Phrase):
             aux_pass = [x for x in auxes if x.deprel == 'aux:pass']
             auxes_without_pass = [x for x in auxes if x.deprel != 'aux:pass']
 
-            if node.feats['Tense'] == 'Pres':
+            # European Portuguese: estar + a + Inf
+            if node.lemma == 'estar':
+
+                if node.feats['Tense'] == 'Pres':
+                    tense = 'Pres'
+                    aspect = 'Prog'
+
+                elif node.feats['Tense'] == 'Imp':
+                    tense = 'Past'
+                    aspect = 'ImpProg'
+
+                elif node.feats['Tense'] == 'Past':
+                    tense = 'Past'
+                    aspect = 'PerfProg'
+
+                elif node.feats['Tense'] == 'Fut':
+                    tense = 'Fut'
+                    aspect = 'Prog'
+
+            elif node.feats['Tense'] == 'Pres':
                 tense = 'Fut'
                 
             elif node.feats['Tense'] == 'Imp':
@@ -275,13 +294,14 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 tense = 'PastFut'
                 aspect = 'Perf'
 
+
             if auxes_without_pass:
                 if auxes[0].lemma == 'estar':
                     aspect += 'Prog'
                 if auxes[0].lemma == 'haber':
                     aspect += 'Perf'
 
-            adp_a = [x for x in xcomps[0].children if x.lemma == 'a' and x.upos == 'ADP' and x.udeprel == 'mark']
+            adp_a = [x for x in xcomps[0].children if x.lemma == 'a' and x.udeprel == 'mark']
             cop = [x for x in xcomps[0].children if x.udeprel == 'cop']
             phrase_ords = [node.ord, xcomps[0].ord] + [x.ord for x in auxes] + [x.ord for x in cop]
             if adp_a:
