@@ -265,34 +265,34 @@ class Romance(udapi.block.msf.phrase.Phrase):
             if node.lemma == 'estar':
 
                 if node.feats['Tense'] == 'Pres':
-                    tense = 'Pres'
-                    aspect = 'Prog'
+                    tense=Tense.PRES.value
+                    aspect =Aspect.PROG.value
 
                 elif node.feats['Tense'] == 'Imp':
-                    tense = 'Past'
-                    aspect = 'ImpProg'
+                    tense=Tense.PAST.value
+                    aspect=Aspect.IMPPROG.value
 
                 elif node.feats['Tense'] == 'Past':
-                    tense = 'Past'
-                    aspect = 'PerfProg'
+                    tense=Tense.PAST.value
+                    aspect=Aspect.PERFPROG.value
 
                 elif node.feats['Tense'] == 'Fut':
-                    tense = 'Fut'
-                    aspect = 'Prog'
+                    tense=Tense.FUT.value
+                    aspect=Aspect.PROG.value
 
             elif node.feats['Tense'] == 'Pres':
-                tense = 'Fut'
+                tense=Tense.FUT.value
                 
             elif node.feats['Tense'] == 'Imp':
-                tense = 'PastFut'
-                aspect = 'Imp'
+                tense=Tense.PASTFUT.value
+                aspect=Aspect.IMP.value
 
             elif node.feats['Tense'] == 'Fut':
-                tense = 'FutFut'
+                tense=Tense.FUTFUT.value
             
             elif node.feats['Tense'] == 'Past':
-                tense = 'PastFut'
-                aspect = 'Perf'
+                tense=Tense.PASTFUT.value
+                aspect=Aspect.PERF.value
 
 
             if auxes_without_pass:
@@ -378,15 +378,30 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
             # Italian
             # pass remoto -> PhraseTense=Past, PhraseAspect=Perf
-            if node.feats['Tense'] == 'Past':
+            elif node.feats['Tense'] == 'Past':
                 aspect=Aspect.PERF.value
 
             # Portuguese
             # pretérito mais que perfeito simples -> PhraseTense=Past, PhraseAspect=Pqp
-            if node.feats['Tense'] == 'Pqp':
+            elif node.feats['Tense'] == 'Pqp':
                 tense=Tense.PAST.value
                 aspect=Aspect.PQP.value
-                
+
+            else:
+                # viitorul popular/colocvial (intentional future) -> PhraseTense=Fut, PhraseAspect=''
+                o = [x for x in node.children if x.lemma == 'o' and x.upos == 'PART']
+                sa = [x for x in node.children if x.lemma == 'să' and x.upos == 'PART']
+
+
+                if o and sa:
+                    tense = Tense.FUT.value
+                    phrase_ords.append(o[0].ord)
+                    phrase_ords.append(sa[0].ord)
+
+                    phrase_ords.sort()
+
+                    
+                       
         # Portuguese
         # subjunctive presente -> PhraseTense=Pres, PhraseAspect=''
         # subjunctive futuro -> PhraseTense=Fut, PhraseAspect=''
@@ -464,7 +479,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
         if head_node.misc['Phrase'] != '':
             return
         
-        if len(auxes)  == 1:
+        if len(auxes) == 1:
             # Cnd
             if auxes[0].feats['Mood'] == 'Cnd' and (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'Ger'):
 
@@ -599,6 +614,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 aspect=Aspect.PERF.value
                 tense=auxes[0].feats['Tense']
                 form='Fin'
+                mood=auxes[0].feats['Mood']
 
                 adp_en = [x for x in node.children if x.lemma == 'en' and x.upos == 'ADP' and x.udeprel == 'mark']
                 if auxes[0].feats['VerbForm'] == 'Part' and adp_en:
@@ -608,6 +624,13 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     phrase_ords.sort()
                     form='Ger'
 
+
+                # Romanian
+                # Perfect compus -> PhraseTense=Past, PhraseAspect=Perf
+                elif auxes[0].lemma == 'avea':
+                    tense = Tense.PAST.value
+                    aspect = Aspect.PERF.value
+                    form = 'Fin'
 
                 # Spanish
                 # Pretérito perfecto compuesto ante presente -> PhraseTense=Past, PhraseAspect=Perf
@@ -619,8 +642,12 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     # Portuguese
                     # pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf
                     # subjonctive pretérito perfeito composto (aux ter) -> PhraseTense=PastPres, PhraseAspect=Perf, PhraseMood=Sub
-                    if auxes[0].lemma == 'ter' or auxes[0].feats['Mood'] == 'Sub':
+                    if auxes[0].lemma in ['ter', 'fi'] or auxes[0].feats['Mood'] == 'Sub':
                         tense = Tense.PASTPRES.value
+
+                        # subjonctive mood not annotated in Romanian data
+                        if auxes[0].lemma == 'fi':
+                            mood='Sub'
                     else:
                         tense=Tense.PAST.value
 
@@ -653,7 +680,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     tense=tense,
                     number=auxes[0].feats['Number'],
                     person=auxes[0].feats['Person'],
-                    mood=auxes[0].feats['Mood'],
+                    mood=mood,
                     aspect=aspect,
                     form=form,
                     voice=head_node.feats['Voice'],
@@ -662,9 +689,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     ords=phrase_ords)
                 return
                 
-            # auxiliary 'ir' followed by infinitive
-            # TODO solve these verb forms for Spanish (VERB 'ir' + ADP 'a' + infinitive)
-            if auxes[0].lemma in ['ir'] and node.feats['VerbForm'] == 'Inf':
+            # auxiliary 'ir' or 'vrea' followed by infinitive
+            if auxes[0].lemma in ['ir', 'vrea'] and node.feats['VerbForm'] == 'Inf':
 
                 tense=node.feats['Tense']
                 aspect=''
@@ -687,7 +713,12 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 # Futuro perifrástico passado perf -> PhraseTense=PastFut, PhraseAspect=Perf
                 elif auxes[0].feats['Tense'] == 'Past':
                     tense=Tense.PASTFUT.value
-                    aspect=Aspect.PERF.value           
+                    aspect=Aspect.PERF.value
+
+                # Viitorul standard/literar/simplu -> PhraseTense=Fut, PhraseAspect=''
+                if auxes[0].lemma == 'vrea':
+                    tense = Tense.FUT.value
+                    aspect = ''      
 
                 self.write_node_info(head_node,
                     tense=tense,
@@ -701,13 +732,90 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     polarity=polarity,
                     ords=phrase_ords)
                 
+                return
+            
+            # condițional-optativ prezent -> PhraseTense=Pres, PhraseAspect=''
+            if auxes[0].lemma == 'avea' and node.feats['VerbForm'] == 'Inf':
+                tense=Tense.PRES.value
+                aspect=''
+                self.write_node_info(head_node,
+                    tense=tense,
+                    aspect=aspect,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood='Cnd',
+                    form='Fin',
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    polarity=polarity,
+                    ords=phrase_ords)
+                
+                return
+            
+            # viitor popular/colloquial (obligative future) -> PhraseTense=Fut, PhraseAspect=''
+            # viitor popular (potential future - contracted form) -> PhraseTense=Fut, PhraseAspect=''
+            if node.feats['VerbForm'] == 'Fin':
+                sa = [x for x in node.children if x.lemma == 'să' and x.upos == 'PART']
+
+                if sa:
+                    phrase_ords.append(sa[0].ord)
+                    phrase_ords.sort()
+
+                tense=Tense.FUT.value
+                aspect=''
+
+                self.write_node_info(head_node,
+                    tense=tense,
+                    aspect=aspect,
+                    number=head_node.feats['Number'],
+                    person=head_node.feats['Person'],
+                    mood=head_node.feats['Mood'],
+                    form='Fin',
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    polarity=polarity,
+                    ords=phrase_ords)
+                
+                return       
                 
         elif len(auxes) == 2:
+            # Romanian
+            # viitor anterior -> PhraseTense=Fut, PhraseAsoect=Perf
+            if auxes[0].lemma == 'vrea' and auxes[1].lemma == 'fi' and node.feats['VerbForm'] == 'Part':
+
+                self.write_node_info(head_node,
+                    tense=Tense.PAST.value,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood=auxes[0].feats['Mood'],
+                    form='Fin',
+                    aspect=Aspect.PERF.value,
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    polarity=polarity,
+                    ords=phrase_ords)
+                
+                return
+                
+            # condițional-optativ perfect -> PhraseTense=Past    
+            if auxes[0].lemma == 'avea' and auxes[1].lemma == 'fi' and node.feats['VerbForm'] == 'Part':
+
+                self.write_node_info(head_node,
+                    tense=Tense.PAST.value,
+                    number=auxes[0].feats['Number'],
+                    person=auxes[0].feats['Person'],
+                    mood='Cnd',
+                    form='Fin',
+                    aspect='',
+                    voice=head_node.feats['Voice'],
+                    expl=expl,
+                    polarity=polarity,
+                    ords=phrase_ords)
+                
+                return
+
             # Portuguese
             # auxiliry 'ir' followed by auxiliary 'estar' in infinitive and a gerund
-
-            # TODO Spanish
-            # VERB 'ir' + ADP 'a' + AUX 'estar'.Inf + gerund
             if auxes[0].lemma == 'ir' and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
 
                 # Futuro perifrástico -> PhraseTense=Fut, PhraseAspect=Prog
@@ -765,9 +873,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     expl=expl,
                     polarity=polarity,
                     ords=phrase_ords)    
-                
-            
-                
+                        
             # Cnd (only ter/haber), Sub and Past,Pres,Fut tenses: 2 auxes - ter/haber + estar
             if auxes[0].lemma in AUXES_HAVE and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
 
