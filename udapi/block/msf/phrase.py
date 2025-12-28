@@ -17,19 +17,20 @@ class Phrase(Block):
         logging.fatal('process_node() not implemented.')
 
     dictionary = {
-		'person': 'PhrasePerson',
-		'number': 'PhraseNumber',
-		'mood': 'PhraseMood',
-		'tense': 'PhraseTense',
-		'voice': 'PhraseVoice',
-		'aspect':'PhraseAspect',
-		'form': 'PhraseForm',
-		'reflex': 'PhraseReflex',
-		'polarity': 'PhrasePolarity',
-		'gender':'PhraseGender',
-		'animacy':'PhraseAnimacy',
-		'ords':'Phrase',
-        'expl':'PhraseExpl',
+		'person': 'PeriPerson',
+		'number': 'PeriNumber',
+		'mood': 'PeriMood',
+		'tense': 'PeriTense',
+		'voice': 'PeriVoice',
+		'aspect':'PeriAspect',
+		'form': 'PeriForm',
+		'reflex': 'PeriReflex',
+		'polarity': 'PeriPolarity',
+		'gender':'PeriGender',
+		'animacy':'PeriAnimacy',
+		'ords':'Peri',
+        'expl':'PeriExpl',
+        'periphrasis':'Periphrasis',
 		}
     
     # a dictionary where the key is the lemma of a negative particle and the value is a list of the lemmas of their possible children that have a 'fixed' relation
@@ -70,7 +71,8 @@ class Phrase(Block):
 			gender = None,
 			animacy = None,
 			aspect = None,
-            expl=None):
+            expl=None,
+            periphrasis=None):
         arguments = locals()
         del arguments['self'] # delete self and node from arguments,
         del arguments['node'] # we want only grammatical categories 
@@ -136,4 +138,12 @@ class Phrase(Block):
         if self.is_expl_pass(refl):
             return 'Pass'
         return voice
+    
+    def get_periphrasis_bool(self,node):
+        auxes = [x for x in node.children if x.udeprel == 'aux']
+
+        if auxes:
+            return 'Yes'
+        else:
+            return 'No'
 

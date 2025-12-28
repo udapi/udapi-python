@@ -36,7 +36,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
     def process_node(self, node):
 
-        if node.misc['Phrase'] != '':
+        if node.misc['Peri'] != '':
             return
 
         cop = [x for x in node.children if x.udeprel == 'cop']
@@ -102,6 +102,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                         gender=node.feats['Gender'],
                         voice=node.feats['Voice'],
                         expl=expl,
+                        periphrasis=self.get_periphrasis_bool(node),
                         ords=[node.ord]
                     )
                 return
@@ -120,7 +121,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     phrase_ords = [node.ord] + [r.ord for r in refl]
                 phrase_ords.sort()
 
-                self.process_phrases_with_ir_aller(node, expl, polarity, phrase_ords, node)
+                self.process_phrases_with_ir_aller_estar(node, expl, polarity, phrase_ords, node)
                 self.process_simple_verb_forms(node, expl, polarity, phrase_ords, node)
 
 
@@ -151,7 +152,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     phrase_ords.sort()
 
                     # TODO phrase-level features are currently determined based on the first passive auxiliary, but it can happen that there are more than one passive auxiliary
-                    self.process_phrases_with_ir_aller(auxes[0], expl, polarity, phrase_ords, node)
+                    self.process_phrases_with_ir_aller_estar(auxes[0], expl, polarity, phrase_ords, node)
                     self.process_simple_verb_forms(auxes[0], expl, polarity, phrase_ords, node)
 
                 # head verb has passive auxiliary and also other auxiliaries
@@ -229,7 +230,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     polarity='Neg'
             else:
                 phrase_ords = [modals[0].ord]
-            self.process_phrases_with_ir_aller(modals[0], '', polarity, phrase_ords, modals[0])
+            self.process_phrases_with_ir_aller_estar(modals[0], '', polarity, phrase_ords, modals[0])
             self.process_simple_verb_forms(modals[0], '', polarity, phrase_ords, modals[0]) 
 
         else:
@@ -244,17 +245,17 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
             self.process_periphrastic_verb_forms(modals[0], modal_auxes, '', polarity, phrase_ords, modals[0])
 
-    def process_phrases_with_ir_aller(self, node, expl, polarity, phrase_ords, head_node):
+    def process_phrases_with_ir_aller_estar(self, node, expl, polarity, phrase_ords, head_node):
         aspect = ''
         tense = node.feats['Tense']
 
         # phrase already annotated
-        if head_node.misc['Phrase'] != '':
+        if head_node.misc['Peri'] != '':
             return
 
         xcomps = [x for x in node.children if x.udeprel == 'xcomp']
-        if node.lemma in ['ir', 'aller', 'estar'] and node.upos == 'VERB' and xcomps:
-            node.misc['PhraseAux'] = 'Yes'
+        if node.lemma in ['ir', 'aller', 'estar', 'ter'] and node.upos == 'VERB' and xcomps:
+            node.misc['PeriAux'] = 'Yes'
 
             voice = node.feats['Voice']
             auxes = [x for x in xcomps[0].children if x.udeprel == 'aux']
@@ -280,6 +281,11 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     tense=Tense.FUT.value
                     aspect=Aspect.PROG.value
 
+            elif node.lemma == 'ter' and len(xcomps) > 1:
+                tense=Tense.PAST.value
+                aspect=Aspect.PROG.value
+                xcomps[0].misc['PeriAux'] = 'Yes'
+
             elif node.feats['Tense'] == 'Pres':
                 tense=Tense.FUT.value
                 
@@ -301,18 +307,20 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 if auxes[0].lemma == 'haber':
                     aspect += 'Perf'
 
-            adp_a = [x for x in xcomps[0].children if x.lemma == 'a' and x.udeprel == 'mark']
+            
+
+            adp_a = [x for x in xcomps[-1].children if x.lemma == 'a' and x.udeprel == 'mark']
             cop = [x for x in xcomps[0].children if x.udeprel == 'cop']
-            phrase_ords = [node.ord, xcomps[0].ord] + [x.ord for x in auxes] + [x.ord for x in cop]
+            phrase_ords = [node.ord] + [x.ord for x in xcomps] + [x.ord for x in auxes] + [x.ord for x in cop]
             if adp_a:
-                phrase_ords.append(adp_a[0].ord)
+                phrase_ords += [x.ord for x in adp_a]
 
             if aux_pass:
                 voice='Pass'
 
             phrase_ords.sort()
 
-            self.write_node_info(xcomps[0],
+            self.write_node_info(xcomps[-1],
                                  tense = tense,
                                  number = node.feats['Number'],
                                  person = node.feats['Person'],
@@ -322,6 +330,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                                  voice=voice,
                                  expl = expl,
                                  polarity = polarity,
+                                 periphrasis='Yes',
                                  ords=phrase_ords)
             return
 
@@ -337,7 +346,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
             head_node (udapi.core.node.Node): The node that should receive the Phrase* attributes, i.e., the head of the phrase.
         """
 
-        if node.misc['PhraseAux'] != '':
+        if node.misc['PeriAux'] != '':
             return
 
         # Portuguese
@@ -459,6 +468,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
             voice=head_node.feats['Voice'],
             expl=expl,
             polarity=polarity,
+            periphrasis=self.get_periphrasis_bool(head_node),
             ords=phrase_ords
         )
 
@@ -476,7 +486,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
         """
 
         # phrase already annotated
-        if head_node.misc['Phrase'] != '':
+        if head_node.misc['Peri'] != '':
             return
         
         if len(auxes) == 1:
@@ -511,6 +521,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     expl=expl,
                     polarity=polarity,
                     voice=head_node.feats['Voice'],
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 return
             
@@ -534,6 +545,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)      
                 return
             
@@ -558,6 +570,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 return
                 
@@ -596,6 +609,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     aspect=aspect,
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return
@@ -686,6 +700,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 return
                 
@@ -730,6 +745,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return
@@ -748,6 +764,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return
@@ -774,6 +791,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return       
@@ -793,6 +811,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return
@@ -810,6 +829,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
                 
                 return
@@ -847,6 +867,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)
 
             # auxiliriy 'ir' in present or future tense followed by auxiliary 'ter' in infinitive and a participle
@@ -872,6 +893,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords)    
                         
             # Cnd (only ter/haber), Sub and Past,Pres,Fut tenses: 2 auxes - ter/haber + estar
@@ -910,6 +932,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                     voice=head_node.feats['Voice'],
                     expl=expl,
                     polarity=polarity,
+                    periphrasis='Yes',
                     ords=phrase_ords,
                 )
                 return
@@ -930,12 +953,12 @@ class Romance(udapi.block.msf.phrase.Phrase):
         """
 
         # classify the morphological features of the copula node and propagate them to the entire phrase (treating the copula as the content verb)
-        self.process_phrases_with_ir_aller(cop[0], expl, polarity, phrase_ords, node)
+        self.process_phrases_with_ir_aller_estar(cop[0], expl, polarity, phrase_ords, node)
         self.process_simple_verb_forms(cop[0], expl, polarity, phrase_ords, node)
 
         # adjust PhraseAspect based on the lemma of the copula
         if cop[0].feats['Tense'] in ['Pres', 'Fut']:
             if cop[0].lemma == 'ser':
-                node.misc['PhraseAspect'] = Aspect.PERF.value
+                node.misc['PeriAspect'] = Aspect.PERF.value
             elif cop[0].lemma == 'estar':
-                node.misc['PhraseAspect'] = Aspect.IMP.value
+                node.misc['PeriAspect'] = Aspect.IMP.value
