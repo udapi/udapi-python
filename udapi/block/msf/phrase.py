@@ -127,6 +127,15 @@ class Phrase(Block):
         if len(refl) == 0:
             return node.feats['Reflex']
         return 'Yes'
+    
+    def get_expl_type(self,node, refl):
+        if node.feats['Voice'] == 'Mid':
+            return 'Pv'
+        if not refl:
+            return ''
+        if refl[0].deprel == 'expl':
+            return 'Pv'
+        return refl[0].deprel.split(':')[1].capitalize()
 
     def is_expl_pass(self,refl):
         if len(refl) == 0:
