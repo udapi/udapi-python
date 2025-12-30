@@ -27,7 +27,7 @@ class Converb(udapi.block.msf.phrase.Phrase):
 				tense=node.feats['Tense'],
 				aspect=node.feats['Aspect'],
 				polarity=self.get_polarity(phrase_nodes),
-				reflex=self.get_is_reflex(node,refl),
+				expl=self.get_expl_type(node,refl),
 				ords=phrase_ords,
 				gender=node.feats['Gender'],
 				animacy=node.feats['Animacy'],

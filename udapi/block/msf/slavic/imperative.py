@@ -28,7 +28,7 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 				form='Fin',
 				voice='Act',
 				polarity=self.get_polarity(phrase_nodes),
-				reflex=self.get_is_reflex(node,refl),
+				expl=self.get_expl_type(node,refl),
 				ords=phrase_ords
 				)
 			return
@@ -80,7 +80,7 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 				mood='Imp',
 				form='Fin',
 				voice=self.get_voice(copVerb, refl),
-				reflex=self.get_is_reflex(node, refl),
+				expl=self.get_expl_type(node, refl),
 				polarity=self.get_polarity(phrase_nodes),
 				ords=phrase_ords
 				)

@@ -44,7 +44,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					mood='Cnd',
 					form='Fin',
 					aspect=node.feats['Aspect'],
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					polarity=self.get_polarity(phrase_nodes),
 					voice=self.get_voice(node, refl),
 					ords=phrase_ords,
@@ -78,7 +78,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					form='Fin',
 					voice=self.get_voice(copVerb, refl),
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node, refl),
+					expl=self.get_expl_type(node, refl),
 					ords=phrase_ords,
 					gender=copVerb.feats['Gender'],
 					animacy=copVerb.feats['Animacy']

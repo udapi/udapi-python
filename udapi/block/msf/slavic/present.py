@@ -11,7 +11,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 	def process_node(self,node):
 		# the condition VerbForm == 'Fin' ensures that there are no transgressives between the found verbs
 		# the aspect is not always given in Czech treebanks, so we can't rely on the fact that the imperfect aspect is specified 
-		if node.feats['Tense'] == 'Pres' and node.upos == 'VERB' and node.feats['VerbForm'] == 'Fin': #and node.feats['Aspect']=='Imp': 
+		if node.feats['Tense'] == 'Pres' and node.upos == 'VERB' and node.feats['VerbForm'] == 'Fin' and node.feats['Aspect'] !='Perf': 
 			
 			aux_forb = [x for x in node.children if x.upos == 'AUX' and (x.lemma == 'ќе' or x.lemma == 'ще' or x.feats['Mood'] == 'Cnd')] # forbidden auxiliaries for present tense (these auxiliaries are used for the future tense or the conditional mood)
 
@@ -34,7 +34,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 					voice=self.get_voice(node,refl),
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords
 					)
 				return
@@ -91,7 +91,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 					number=node.feats['Number'],
 					form='Part',
 					voice=self.get_voice(node, refl),
-					reflex=self.get_is_reflex(node, refl),
+					expl=self.get_expl_type(node, refl),
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords
 				)
@@ -122,7 +122,7 @@ class Present(udapi.block.msf.phrase.Phrase):
 					mood='Ind',
 					form='Fin',
 					voice=self.get_voice(copVerb, refl),
-					reflex=self.get_is_reflex(node, refl),
+					expl=self.get_expl_type(node, refl),
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords
 				)

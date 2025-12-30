@@ -27,7 +27,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					voice=self.get_voice(node,refl),
 					form='Inf',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords
 				)
 				return
@@ -50,7 +50,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					voice='Pass',
 					form='Inf',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node, refl),
+					expl=self.get_expl_type(node, refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
@@ -78,7 +78,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 				voice=self.get_voice(cop[0], refl),
 				form='Inf',
 				polarity=self.get_polarity(phrase_nodes),
-				reflex=self.get_is_reflex(node, refl),
+				expl=self.get_expl_type(node, refl),
 				ords=phrase_ords
 				)
 			
@@ -98,6 +98,6 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					voice='Act',
 					form='Sup',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node, refl),
+					expl=self.get_expl_type(node, refl),
 					ords=phrase_ords
 					)

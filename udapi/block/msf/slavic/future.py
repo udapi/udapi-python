@@ -34,7 +34,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'], # srbstina ani chorvatstina vidy nema
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
 					ords=phrase_ords
@@ -54,7 +54,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'], 
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
 					ords=phrase_ords
@@ -85,7 +85,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 				aspect=node.feats['Aspect'],
 				form='Fin',
 				polarity=self.get_polarity(phrase_nodes),
-				reflex=self.get_is_reflex(node,refl),
+				expl=self.get_expl_type(node,refl),
 				ords=phrase_ords
 				)
 			return
@@ -93,7 +93,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 		# future tense of perfect verbs
 		# Upper Sorbian forms the future tense in this way, however, the feats[Aspect] are not listed in the data
 		# in some languages ​​(e.g. in Russian) these verbs have the Tense Fut, in others (e.g. in Czech) they have the Tense Pres
-		"""if node.feats['Aspect'] == 'Perf' and (node.feats['Tense'] == 'Pres' or node.feats['Tense'] == 'Fut') and node.feats['VerbForm'] != 'Conv':
+		if node.feats['Aspect'] == 'Perf' and (node.feats['Tense'] == 'Pres' or node.feats['Tense'] == 'Fut') and node.feats['VerbForm'] != 'Conv':
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 			
 			phrase_nodes = [node] + refl
@@ -112,10 +112,10 @@ class Future(udapi.block.msf.phrase.Phrase):
 				form='Fin',
 				aspect='Perf',
 				polarity=self.get_polarity(phrase_nodes),
-				reflex=self.get_is_reflex(node,refl),
+				expl=self.get_expl_type(node,refl),
 				ords=phrase_ords
 				)
-			return"""
+			return
 
 		
 		# future tense of imperfect verbs and passive voice
@@ -145,7 +145,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'],
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy']
@@ -166,7 +166,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'],
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords
 					)
 				return
