@@ -54,8 +54,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 						)
 
 		# compound past tense
-		if (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'PartRes') and node.upos == 'VERB' and node.feats['Voice'] != 'Pass':
-			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres']
+		if (node.feats['VerbForm'] in ['Part', 'PartRes', 'Fin']) and node.upos == 'VERB' and node.feats['Voice'] != 'Pass':
+			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] in ['Pres', '']]
 			aux_pqp = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] in past_tenses]
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
