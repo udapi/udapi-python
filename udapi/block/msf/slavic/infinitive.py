@@ -28,6 +28,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					form='Inf',
 					polarity=self.get_polarity(phrase_nodes),
 					expl=self.get_expl_type(node,refl),
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 				)
 				return
@@ -54,7 +55,8 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
-					number=node.feats['Number']
+					number=node.feats['Number'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)
 				return
 					
@@ -79,6 +81,7 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 				form='Inf',
 				polarity=self.get_polarity(phrase_nodes),
 				expl=self.get_expl_type(node, refl),
+				periphrasis=self.get_periphrasis_bool(node),
 				ords=phrase_ords
 				)
 			
@@ -99,5 +102,6 @@ class Infinitive(udapi.block.msf.phrase.Phrase):
 					form='Sup',
 					polarity=self.get_polarity(phrase_nodes),
 					expl=self.get_expl_type(node, refl),
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 					)

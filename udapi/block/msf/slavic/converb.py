@@ -31,7 +31,8 @@ class Converb(udapi.block.msf.phrase.Phrase):
 				ords=phrase_ords,
 				gender=node.feats['Gender'],
 				animacy=node.feats['Animacy'],
-				voice=self.get_voice(node, refl)
+				voice=self.get_voice(node, refl),
+				periphrasis=self.get_periphrasis_bool(node)
 				)
 
 		# passive voice
@@ -57,7 +58,8 @@ class Converb(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=auxVerb.feats['Gender'],
 					animacy=auxVerb.feats['Animacy'],
-					voice='Pass'
+					voice='Pass',
+					periphrasis=self.get_periphrasis_bool(node)
 				)
 
 		# copulas
@@ -87,5 +89,6 @@ class Converb(udapi.block.msf.phrase.Phrase):
 					form='Conv',
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
-					voice=self.get_voice(copVerb, refl)
+					voice=self.get_voice(copVerb, refl),
+					periphrasis=self.get_periphrasis_bool(node)
 					)

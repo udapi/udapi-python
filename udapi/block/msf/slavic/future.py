@@ -37,6 +37,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					expl=self.get_expl_type(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 					)
 			else:
@@ -57,6 +58,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					expl=self.get_expl_type(node,refl),
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 					)
 				
@@ -86,6 +88,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 				form='Fin',
 				polarity=self.get_polarity(phrase_nodes),
 				expl=self.get_expl_type(node,refl),
+				periphrasis=self.get_periphrasis_bool(node),
 				ords=phrase_ords
 				)
 			return
@@ -113,6 +116,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 				aspect='Perf',
 				polarity=self.get_polarity(phrase_nodes),
 				expl=self.get_expl_type(node,refl),
+				periphrasis=self.get_periphrasis_bool(node),
 				ords=phrase_ords
 				)
 			return
@@ -148,7 +152,8 @@ class Future(udapi.block.msf.phrase.Phrase):
 					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
-					animacy=node.feats['Animacy']
+					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)
 				return
 
@@ -167,6 +172,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					form='Fin',
 					polarity=self.get_polarity(phrase_nodes),
 					expl=self.get_expl_type(node,refl),
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 					)
 				return
@@ -195,6 +201,7 @@ class Future(udapi.block.msf.phrase.Phrase):
 					form='Fin',
 					voice=self.get_voice(copVerb, refl),
 					polarity=self.get_polarity(phrase_nodes),
+					periphrasis=self.get_periphrasis_bool(node),
 					ords=phrase_ords
 				)
 

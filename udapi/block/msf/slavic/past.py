@@ -49,7 +49,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 						expl=self.get_expl_type(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 
 		# compound past tense
@@ -96,7 +97,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 						expl=self.get_expl_type(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 				
 
@@ -130,7 +132,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
-					animacy=node.feats['Animacy']
+					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)
 			
 				
@@ -166,7 +169,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 						polarity=self.get_polarity(phrase_nodes),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 				
 		else:
@@ -203,5 +207,6 @@ class Past(udapi.block.msf.phrase.Phrase):
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
 					gender=cop[0].feats['Gender'],
-					animacy=cop[0].feats['Animacy']
+					animacy=cop[0].feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)

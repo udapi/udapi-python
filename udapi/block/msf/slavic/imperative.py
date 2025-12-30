@@ -29,6 +29,7 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 				voice='Act',
 				polarity=self.get_polarity(phrase_nodes),
 				expl=self.get_expl_type(node,refl),
+				periphrasis=self.get_periphrasis_bool(node),
 				ords=phrase_ords
 				)
 			return
@@ -54,7 +55,8 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
-					animacy=node.feats['Animacy']
+					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)
 				return
 
@@ -82,5 +84,6 @@ class Imperative(udapi.block.msf.phrase.Phrase):
 				voice=self.get_voice(copVerb, refl),
 				expl=self.get_expl_type(node, refl),
 				polarity=self.get_polarity(phrase_nodes),
+				periphrasis=self.get_periphrasis_bool(node),
 				ords=phrase_ords
 				)
