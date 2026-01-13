@@ -18,7 +18,7 @@ RE_BEGIN = re.compile(r'^#begin document ([^ ]+)')
 class Conll2012(udapi.block.read.conllu.Conllu):
     """A reader of the Conll2012 files."""
 
-    def __init__(self, attributes='docname,_,ord,form,_,_,_,_,_,_,_,_,coref', **kwargs):
+    def __init__(self, attributes='docname,_,ord,form,_,_,_,_,_,_,_,_,coref', emptyval='_', **kwargs):
         """Create the Conll2012 reader object.
 
         Args:
@@ -29,10 +29,15 @@ class Conll2012(udapi.block.read.conllu.Conllu):
             word-order number/index (usualy called ID).
             For Corref-PT-SemEval, use attributes='ord,form,_,_,_,_,coref'.
             For Summ-it++v2, use attributes='ord,form,_,_,_,_,_,_,coref'.
+            For FantasyCoref, use attributes='docname,_,ord,form,_,_,_,_,_,_,_,coref'.
+        emptyval: a symbol that represents an empty value, especially in the coref column
+            (default='_' suitable for LitBank, Corref-PT-SemEval, and Summ-it++v2)
+            For FantasyCoref, use emptyval='-'.
         """
         super().__init__(**kwargs)
         self.node_attributes = attributes.split(',')
         self._docname = 'd'
+        self.emptyval = emptyval
 
     def parse_comment_line(self, line, root):
         if line.startswith("#end document"):
@@ -83,7 +88,7 @@ class Conll2012(udapi.block.read.conllu.Conllu):
                     logging.warning(f"Mismatch: expected {node.ord=}, but found {int(value) + 1} {line=}")
 
             elif attribute_name == 'coref':
-                if value and value != '_':
+                if value and value != self.emptyval:
                     # LitBank always separates chunks by a vertical bar, e.g. (13)|10)
                     # Summ-it++v2 does not, e.g. (13)10)
                     if '|' in value:
