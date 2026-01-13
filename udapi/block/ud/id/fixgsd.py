@@ -242,7 +242,7 @@ class FixGSD(Block):
                     hyph.remove()
                     node.remove()
                     first.misc['SpaceAfter'] = ''
-                    mwt = root.create_multiword_token([first, second], first.form + second.form, mwtmisc)
+                    mwt = root.create_multiword_token([first, second], form=first.form + second.form, misc=mwtmisc)
                 else:
                     first.form = first.form + '-' + node.form
                     if node.no_space_after:
@@ -288,7 +288,7 @@ class FixGSD(Block):
                     prefix.remove()
                     hyph.remove()
                     stem.misc['SpaceAfter'] = ''
-                    mwt = root.create_multiword_token([stem, second], stem.form + second.form, mwtmisc)
+                    mwt = root.create_multiword_token([stem, second], form=stem.form + second.form, misc=mwtmisc)
                 else:
                     stem.form = prefix.form + '-' + stem.form
                     prefix.remove()
@@ -345,7 +345,7 @@ class FixGSD(Block):
                         if mwt:
                             mwtmisc = mwt.misc.copy()
                             mwt.remove()
-                            mwt = root.create_multiword_token([satu0, nya], satu0.form + nya.form, mwtmisc)
+                            mwt = root.create_multiword_token([satu0, nya], form=satu0.form + nya.form, misc=mwtmisc)
                             satu0.misc['SpaceAfter'] = ''
                         root.text = root.compute_text()
         if node.multiword_token and node.no_space_after:

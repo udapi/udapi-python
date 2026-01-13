@@ -8,7 +8,9 @@ MWTS = {
     'abych': {'form': 'aby bych', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
     'kdybych': {'form': 'když bych', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=1|VerbForm=Fin'},
     'abys': {'form': 'aby bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
+    'abysi': {'form': 'aby bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
     'kdybys': {'form': 'když bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
+    'kdybysi': {'form': 'když bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
     'aby': {'form': 'aby by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
     'kdyby': {'form': 'když by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
     'abychom': {'form': 'aby bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
@@ -17,7 +19,9 @@ MWTS = {
     'abychme': {'form': 'aby bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'kdybychme': {'form': 'když bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'abyste': {'form': 'aby byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'abyšte': {'form': 'aby byšte', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
     'kdybyste': {'form': 'když byste', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
+    'kdybyšte': {'form': 'když byšte', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=2|VerbForm=Fin'},
     # Old Czech 'abyšta' == dual number; 2nd or 3rd person, the one example in data so far is 3rd.
     'abyšta': {'form': 'aby byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
     'kdybyšta': {'form': 'když byšta', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Dual|Person=3|VerbForm=Fin'},
@@ -54,6 +58,30 @@ for prep in 'na o za'.split():
         'main': 1,
         'shape': 'subtree',
     }
+# In 19th century texts (Hičkok etalon), one instance of 'seč' was also split (and annotated as ADP + accusative!)
+# We must do it separately, as the preposition is vocalized.
+MWTS['seč'] = {
+    'form': 'se' + ' co',
+    'lemma': 's' + ' co',
+    'upos': 'ADP PRON',
+    'xpos': 'RV--4---------- PQ--4----------',
+    'feats': 'AdpType=Voc|Case=Acc Animacy=Inan|Case=Acc|PronType=Int,Rel',
+    'deprel': 'case *',
+    'main': 1,
+    'shape': 'subtree',
+}
+
+# Old Czech 'toliť' (special case with 3 subtokens; general -ť will be solved dynamically below).
+MWTS['toliť'] = {
+    'form':   'to li ť',
+    'lemma':  'ten li ť',
+    'upos':   'DET SCONJ PART',
+    'xpos':   '* J,------------- TT-------------',
+    'feats':  '* _ _',
+    'deprel': '* mark discourse',
+    'main':   0,
+    'shape':  'siblings'
+}
 
 
 
@@ -87,6 +115,18 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'upos':   '* AUX',
                     'xpos':   '* VB-S---2P-AAI--',
                     'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=2|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
+                    'deprel': '* aux',
+                    'main':   0,
+                    'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
+                }
+            if subtokens[1] == 'jest':
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   subtokens[0] + ' jest',
+                    'lemma':  '* být',
+                    'upos':   '* AUX',
+                    'xpos':   '* VB-S---3P-AAI-2',
+                    'feats':  '* Aspect=Imp|Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
                     'deprel': '* aux',
                     'main':   0,
                     'shape':  'subtree' if node.upos in ['VERB'] else 'siblings',
@@ -126,7 +166,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             # could be masculine or neuter. We pick Gender=Masc and Animacy=Anim
             # by default, unless the original token was annotated as Animacy=Inan
             # or Gender=Neut.
-            m = re.match(r"^(na|nade|o|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
+            m = re.match(r"^(na|nade|o|po|pro|přěde|ski?rz[eě]|za)[nň](ž?)$", node.form.lower())
             if m:
                 node.misc['AddMwt'] = ''
                 # Remove vocalization from 'přěde' (přěd něj) but keep it in 'skrze'

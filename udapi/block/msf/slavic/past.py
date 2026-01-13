@@ -46,15 +46,16 @@ class Past(udapi.block.msf.phrase.Phrase):
 						aspect=node.feats['Aspect'],
 						form=node.feats['VerbForm'],
 						polarity=self.get_polarity(phrase_nodes),
-						reflex=self.get_is_reflex(node,refl),
+						expl=self.get_expl_type(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 
 		# compound past tense
-		if (node.feats['VerbForm'] == 'Part' or node.feats['VerbForm'] == 'PartRes') and node.upos == 'VERB' and node.feats['Voice'] != 'Pass':
-			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] == 'Pres']
+		if (node.feats['VerbForm'] in ['Part', 'PartRes', 'Fin']) and node.upos == 'VERB' and node.feats['Voice'] != 'Pass':
+			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] in ['Pres', '']]
 			aux_pqp = [x for x in node.children if x.udeprel == 'aux' and x.feats['Tense'] in past_tenses]
 			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
 
@@ -93,10 +94,11 @@ class Past(udapi.block.msf.phrase.Phrase):
 						aspect=node.feats['Aspect'],
 						form='Fin',
 						polarity=self.get_polarity(phrase_nodes),
-						reflex=self.get_is_reflex(node,refl),
+						expl=self.get_expl_type(node,refl),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 				
 
@@ -127,10 +129,11 @@ class Past(udapi.block.msf.phrase.Phrase):
 					aspect=node.feats['Aspect'],
 					form=node.feats['VerbForm'],
 					polarity=self.get_polarity(phrase_nodes),
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
-					animacy=node.feats['Animacy']
+					animacy=node.feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)
 			
 				
@@ -166,7 +169,8 @@ class Past(udapi.block.msf.phrase.Phrase):
 						polarity=self.get_polarity(phrase_nodes),
 						ords=phrase_ords,
 						gender=node.feats['Gender'],
-						animacy=node.feats['Animacy']
+						animacy=node.feats['Animacy'],
+						periphrasis=self.get_periphrasis_bool(node)
 						)
 				
 		else:
@@ -199,9 +203,10 @@ class Past(udapi.block.msf.phrase.Phrase):
 					mood='Ind',
 					voice=self.get_voice(cop[0], refl),
 					form='Fin',
-					reflex=self.get_is_reflex(node,refl),
+					expl=self.get_expl_type(node,refl),
 					polarity=self.get_polarity(phrase_nodes),
 					ords=phrase_ords,
 					gender=cop[0].feats['Gender'],
-					animacy=cop[0].feats['Animacy']
+					animacy=cop[0].feats['Animacy'],
+					periphrasis=self.get_periphrasis_bool(node)
 					)

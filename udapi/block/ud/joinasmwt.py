@@ -22,19 +22,30 @@ class JoinAsMwt(Block):
         if node.multiword_token:
             return
         mwt_nodes = [node]
-        while (node.no_space_after and node.next_node and not node.next_node.multiword_token
-               and node.form[-1].isalpha() and node.next_node.form[0].isalpha()):
+        while (node.next_node and not node.next_node.multiword_token
+               and self.should_join(node, node.next_node)):
             node = node.next_node
             mwt_nodes.append(node)
         if len(mwt_nodes) > 1:
-            mwt_form = ''.join([n.form for n in mwt_nodes])
-            mwt = node.root.create_multiword_token(mwt_nodes, mwt_form)
-            if node.misc['SpaceAfter'] == 'No':
-                mwt.misc['SpaceAfter'] = 'No'
+            self.create_mwt(mwt_nodes)
+
+    def should_join(self, node, next_node):
+        return node.no_space_after and node.form[-1].isalpha() and next_node.form[0].isalpha()
+
+    def create_mwt(self, mwt_nodes):
+        mwt_form = ''.join([n.form for n in mwt_nodes])
+        mwt = mwt_nodes[0].root.create_multiword_token(words=mwt_nodes, form=mwt_form)
+        if mwt_nodes[0].node.misc['SpaceAfter'] == 'No':
+            mwt.misc['SpaceAfter'] = 'No'
+        for mwt_node in mwt_nodes:
+            del mwt_node.misc['SpaceAfter']
+        if self.revert_orig_form:
             for mwt_node in mwt_nodes:
-                del mwt_node.misc['SpaceAfter']
-            if self.revert_orig_form:
-                for mwt_node in mwt_nodes:
-                    if mwt_node.misc['OrigForm']:
-                        mwt_node.form = mwt_node.misc['OrigForm']
-                        del mwt_node.misc['OrigForm']
+                if mwt_node.misc['OrigForm']:
+                    mwt_node.form = mwt_node.misc['OrigForm']
+                    del mwt_node.misc['OrigForm']
+        self.postprocess_mwt()
+
+    # a helper method to be overriden
+    def postprocess_mwt(self, mwt):
+        pass

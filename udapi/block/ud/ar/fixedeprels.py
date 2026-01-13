@@ -24,6 +24,36 @@ class FixEdeprels(Block):
         'فَ':   []
     }
 
+    # Reduction and normalization of prepositions and conjunctions, including
+    # the derived and compound ones. The Latin transliterations are not really
+    # needed in the process. We include them here as documentation, but also
+    # to help the poor editor with rendering the lines. Ideally, each line
+    # should have left-to-right text at both the beginning and end.
+    substitution = [
+        {'target': ('min:gen', 'مِن:gen'),
+         'sources':
+             [('ibtida min', 'اِبتِدَاء_مِن')]
+        },
+        {'target': ('ʾiṯra:gen', 'إِثرَ:gen'), # ʾiṯra = right after
+         'sources':
+             [('ʾiṯra', 'إِثرَ')]
+        },
+        {'target': ('ʾaṯnāʾa:gen', 'أَثنَاءَ:gen'), # ʾaṯnāʾa = during
+         'sources':
+             [('ʾaṯnāʾa', 'أَثنَاءَ')]
+        },
+        {'target': ('ʾiḏ', 'إِذ'), # ʾiḏ = because
+         'sources':
+             [('ʾiḏ', 'إِذ'),
+              ('ʾiḏ ʾanna', 'إِذ_أَنَّ')]
+        },
+        {'target': ('ʾiḏā', 'إِذَا'), # ʾiḏā = if
+         'sources':
+             [('ʾiḏā', 'إِذَا'),
+              ('ʾiḏā', 'إِذًا')]
+        },
+    ]
+
     # Secondary prepositions sometimes have the lemma of the original part of
     # speech. We want the grammaticalized form instead. List even those that
     # will have the same lexical form, as we also want to check the morphological
@@ -136,6 +166,7 @@ class FixEdeprels(Block):
         'بِ_صَدَد':            'بِصَدَدِ:gen', # biṣadadi = with respect to
         'بِ_صَرف_نَظَر_عَن':     'بِصَرفِ_اَلنَّظَرِ_عَن:gen', # biṣarfi an-naẓari ʿan = regardless of
         'بِ_صِفَة':            'بِصِفَةِ:gen', # biṣifati = as
+        'بِ_صُورَة':            'بِ:gen',
         'بِ_عَكس':            'بِ:gen',
         'بِ_عَلَى':            'بِ:gen',
         'بِ_عَن':             'بِ:gen',
@@ -196,6 +227,7 @@ class FixEdeprels(Block):
         'بَينَ':              'بَينَ:gen', # bayna = between
         'بَينَ_حَوَالَى':        'بَينَ:gen', # bayna hawala
         'بينا':             'بَينَ:gen', # bayna = between
+        'بَينَ_وَ_وَ_وَ':             'بَينَ:gen', # bayna = between
         'بَينَمَا':            'بَينَ:gen',
         'بَينَمَا_لَم':         'بَينَ:gen',
         'تُجَاهَ':             'تُجَاهَ:gen', # tuǧāha = towards, facing
@@ -216,14 +248,17 @@ class FixEdeprels(Block):
         'حَوَالَى_مِن':         'مِن:gen', # hawala min = from around X
         'حَولَ':              'حَولَ:gen', # ḥawla = about
         'حولما_إِذَا':        'إِذَا',
+        'حَولَ_مَا_إِذَا':        'إِذَا',
         'حِيَالَ':             'حِيَالَ:gen', # ḥiyāla = concerning
         'حَيثُ':              'حَيثُ', # remove morphological case; ḥayṯu = where (SCONJ, not ADV)
         'حِينَمَا':            'فِي_حِينِ', # during
         'خَارِجَ':             'خَارِجَ:gen', # ḫāriǧa = outside
         'خِلَالَ':              'خِلَالَ:gen', # ḫilāla = during
         'خَلفَ':              'خَلفَ:gen', # ḫalfa = behind
-        'دَاخِل':             'دَاخِلَ:gen', # dāḫila = inside of
-        'دَاخِلَ':             'دَاخِلَ:gen', # dāḫila = inside of
+        'دَاخِل':
+                    'دَاخِلَ:gen', # dāḫila = inside of
+        'دَاخِلَ':
+                    'دَاخِلَ:gen', # dāḫila = inside of
         'دُونَ':              'دُونَ:gen', # dūna = without
         'دُونَ_أَن':           'دُونَ:gen', # dūna ʾan = without
         'دُونَ_سِوَى':          'دُونَ:gen', # dūna siwā = without
@@ -245,9 +280,12 @@ class FixEdeprels(Block):
         'سِوَى_لِ':            'سِوَى:gen', # siwā = except for
         'ضِدَّ':               'ضِدَّ:gen', # ḍidda = against
         'ضِمنَ':              'ضِمنَ:gen', # ḍimna = within, inside, among
-        'طَالَمَا':            'طَالَمَا', # ṭālamā = as long as
-        'طالَما':            'طَالَمَا:gen',
-        'طَالَمَا_أَنَّ':         'طَالَمَا', # ṭālamā = as long as
+        'طَالَمَا':
+                    'طَالَمَا', # ṭālamā = as long as
+        'طالَما':
+                    'طَالَمَا', # ṭālamā = as long as
+        'طَالَمَا_أَنَّ':
+                    'طَالَمَا', # ṭālamā = as long as
         'طِوَالَ':             'طِوَالَ:gen', # ṭiwāla = throughout
         'طِيلَةَ':             'طِيلَةَ:gen', # ṭīlata = during
         'عبر':              'عَبرَ:gen',
@@ -265,18 +303,32 @@ class FixEdeprels(Block):
         'عَلَى_أَسَاس_أَنَّ':      'عَلَى_أَسَاسٍ:gen', # ʿalā ʾasāsin = based on
         'عَلَى_اِعتِبَار_أَنَّ':    'عَلَى_اِعتِبَارِ_أَنَّ', # ʿalā iʿtibāri ʾanna = considering that
         'عَلَى_إِلَّا':           'إِلَّا', # ʾillā = except, unless
-        'عَلَى_الفور':        'عَلَى:gen',
-        'عَلَى_إِلَى':          'عَلَى:gen',
-        'عَلَى_أَن':           'عَلَى:gen', # ʿalā = on
-        'عَلَى_أَنَّ':           'عَلَى:gen', # ʿalā = on
-        'عَلَى_أَن_بِ':         'عَلَى:gen', # ʿalā = on
-        'عَلَى_أَنَّ_مِن_شَأن':    'عَلَى:gen', # ʿalā = on
-        'عَلَى_أَنَّ_هُوَ':        'عَلَى:gen', # ʿalā = on
-        'عَلَى_أَنَّ_هُوَ_لَدَى':    'عَلَى:gen', # ʿalā = on
-        'عَلَى_بِ':            'عَلَى:gen',
-        'عَلَى_بِ_فِي':         'عَلَى:gen',
-        'عَلَى_بَينَ':          'عَلَى:gen',
-        'عَلَى_حَدّ':           'عَلَى:gen',
+        'عَلَى_الفور':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_إِلَى':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَن':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَن_بِ':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_عَلَى':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_مِن_شَأن':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_هُوَ':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_أَنَّ_هُوَ_لَدَى':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_بِ':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_بِ_فِي':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_بَينَ':
+                       'عَلَى:gen', # ʿalā = on
+        'عَلَى_حَدّ':
+                       'عَلَى:gen', # ʿalā = on
         'عَلَى_حِسَاب':         'عَلَى_حِسَابِ:gen', # ʿalā ḥisābi = at the expense of
         'عَلَى_حَسَبَ':          'حَسَبَ:gen', # ḥasaba = according to, depending on
         'عَلَى_حَولَ':          'عَلَى:gen',
@@ -344,14 +396,20 @@ class FixEdeprels(Block):
         'فِي_حَقّ':            'فِي:gen',
         'فِي_حُكم':           'فِي:gen',
         'فِي_حَوَالَى':         'فِي:gen', # fi hawala = in around X
-        'فِي_حِين':           'فِي_حِينِ', # fī ḥīni = while
-        'فِي_حِينَ':           'فِي_حِينِ', # fī ḥīni = while
-        'فِي_حِين_أَنَّ':        'فِي_حِينِ',
+        'فِي_حِين':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِينَ':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِين_أَنَّ':
+                    'فِي_حِينِ', # fī ḥīni = while
+        'فِي_حِينَ_أَنَّ_هُوَ':
+                    'فِي_حِينِ', # fī ḥīni = while
         'فِي_خَارِجَ':          'خَارِجَ:gen', # ḫāriǧa = outside
         'فِي_خِتَام':          'فِي_خِتَامِ:gen', # fī ḫitāmi = in conclusion
         'فِي_خِتَامِ':          'فِي_خِتَامِ:gen', # fī ḫitāmi = in conclusion
         'فِي_خِلَالَ':           'فِي:gen',
-        'فِي_دَاخِل':          'دَاخِل:gen',
+        'فِي_دَاخِل':
+                      'دَاخِلَ:gen',
         'فِي_دَاخِلَ':          'فِي:gen',
         'فِي_سَبِيل':          'فِي_سَبِيلِ:gen', # fī sabīli = in order to
         'فِي_سِيَاق':          'فِي:gen',
@@ -453,6 +511,7 @@ class FixEdeprels(Block):
         'ما_دَام':           'مِمَّا',
         'مادامت':           'مِمَّا',
         'مَالَم':             'مَالَم', # mālam = unless
+        'مَا_إِذَا':          'إِذَا',
         'مِثلَ':              'مِثلَ', # remove morphological case; miṯla = like
         'مِثلَمَا':            'مِثلَ', # miṯla = like
         'مَعَ':               'مَعَ:gen', # maʿa = with
@@ -526,6 +585,7 @@ class FixEdeprels(Block):
         'وَرَاءَ':             'وَرَاءَ:gen', # warāʾa = behind, past, beyond
         'وَسطَ':              'وَسطَ:gen', # wasṭa = in the middle
         'وِفقَ':              'وِفقَ:gen', # wifqa = according to
+        'وِفق_لِ':            'وِفقَ:gen', # wifqa = according to
         'ولو':              'إِذَا', # walaw = even if
         'ولو_أَنَّ':           'إِذَا' # walaw = even if
     }
@@ -543,47 +603,82 @@ class FixEdeprels(Block):
         else:
             return None
 
-    def process_node(self, node):
+    @staticmethod
+    def compose_edeprel(bdeprel, cdeprel):
+        """
+        Composes enhanced deprel from the basic part and optional case
+        enhancement.
+
+        Parameters
+        ----------
+        bdeprel : str
+            Basic deprel (can include subtype, e.g., 'acl:relcl').
+        cdeprel : TYPE
+            Case enhancement (can be composed of adposition and morphological
+            case, e.g., 'k:dat'). It is optional and it can be None or empty
+            string if there is no case enhancement.
+
+        Returns
+        -------
+        Full enhanced deprel (str).
+        """
+        assert(bdeprel[-1] != ':')
+        edeprel = bdeprel
+        if cdeprel:
+            assert(cdeprel[0] != ':')
+            edeprel += ':'+cdeprel
+        return edeprel
+
+    def process_tree(self, tree):
         """
         Occasionally the edeprels automatically derived from the Czech basic
         trees do not match the whitelist. For example, the noun is an
         abbreviation and its morphological case is unknown.
+
+        We cannot use the process_node() method because it ignores empty nodes.
         """
-        for edep in node.deps:
-            m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):', edep['deprel'])
-            if m:
-                solved = False
-                # Arabic clauses often start with وَ wa "and", which does not add
-                # much to the meaning but sometimes gets included in the enhanced
-                # case label. Remove it if there are more informative subsequent
-                # morphs.
-                edep['deprel'] = re.sub(r':وَ_', r':', edep['deprel'])
-                edep['deprel'] = re.sub(r':وَ:', r':', edep['deprel'])
-                edep['deprel'] = re.sub(r':وَ$', r'', edep['deprel'])
-                # If one of the following expressions occurs followed by another preposition
-                # or by morphological case, remove the additional case marking. For example,
-                # 'jako_v' becomes just 'jako'.
-                re_prefix = r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'
-                re_suffix = r'([_:].+)?$'
-                for x in self.outermost:
-                    exceptions = self.outermost[x]
-                    m = re.match(re_prefix + x + re_suffix, edep['deprel'])
-                    if m and (not m.group(2) or not (x + m.group(2)) in exceptions):
-                        edep['deprel'] = m.group(1)+':'+x
-                        solved = True
-                        break
-                if solved:
+        for node in tree.descendants_and_empty:
+            for edep in node.deps:
+                if edep['deprel'] == 'advcl:pred:إِذَن' or edep['deprel'] == 'advcl:pred:كدا' or edep['deprel'] == 'advcl:pred:لكن':
+                    edep['deprel'] = 'advcl:pred'
                     continue
-                for x in self.unambiguous:
-                    # All secondary prepositions have only one fixed morphological case
-                    # they appear with, so we can replace whatever case we encounter with the correct one.
-                    m = re.match(r'^(obl(?::arg)?|nmod|advcl|acl(?::relcl)?):'+x+r'(?::(?:nom|gen|dat|acc|voc|loc|ins))?$', edep['deprel'])
-                    if m:
-                        edep['deprel'] = m.group(1)+':'+self.unambiguous[x]
-                        solved = True
-                        break
-                if solved:
+                if edep['deprel'] == 'nmod:بِأَسْرِ:gen':
+                    edep['deprel'] = 'nmod'
                     continue
+                m = re.fullmatch(r'(obl(?::arg)?|nmod|advcl(?::pred)?|acl(?::relcl)?):(.+)', edep['deprel'])
+                if m:
+                    bdeprel = m.group(1)
+                    cdeprel = m.group(2)
+                    solved = False
+                    # Arabic clauses often start with وَ wa "and", which does not add
+                    # much to the meaning but sometimes gets included in the enhanced
+                    # case label. Remove it if there are more informative subsequent
+                    # morphs.
+                    cdeprel = re.sub(r'^وَ_', r'', cdeprel)
+                    cdeprel = re.sub(r'^وَ:', r'', cdeprel)
+                    cdeprel = re.sub(r'^وَ$', r'', cdeprel)
+                    edep['deprel'] = self.compose_edeprel(bdeprel, cdeprel)
+                    # If one of the following expressions occurs followed by another preposition
+                    # or by morphological case, remove the additional case marking.
+                    for x in self.outermost:
+                        exceptions = self.outermost[x]
+                        m = re.fullmatch(x+r'([_:].+)?', cdeprel)
+                        if m and m.group(1) and not x+m.group(1) in exceptions:
+                            cdeprel = x
+                            edep['deprel'] = self.compose_edeprel(bdeprel, cdeprel)
+                            solved = True
+                            break
+                    if solved:
+                        continue
+                    # Split preposition from morphological case (if any), normalize
+                    # the preposition and add the fixed morphological case where
+                    # applicable.
+                    m = re.fullmatch(r'([^:]+):(nom|gen|acc)', cdeprel)
+                    adposition = m.group(1) if m else cdeprel
+                    if adposition in self.unambiguous:
+                        cdeprel = self.unambiguous[adposition]
+                        edep['deprel'] = self.compose_edeprel(bdeprel, cdeprel)
+                        continue
 
     def set_basic_and_enhanced(self, node, parent, deprel, edeprel):
         '''

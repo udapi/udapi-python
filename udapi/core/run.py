@@ -99,9 +99,9 @@ def _import_blocks(block_names, block_args):
     :param block_args: A list of block arguments to be passed to block constructor.
     :return: A list of initialized objects.
     :rtype: list
-
     """
     blocks = []
+    namespace = {}  # Create a namespace dictionary to store imported classes
 
     for (block_id, block_name) in enumerate(block_names):
         # Importing module dynamically.
@@ -115,7 +115,7 @@ def _import_blocks(block_names, block_args):
         try:
             command = "from " + module + " import " + class_name + " as b" + str(block_id)
             logging.debug("Trying to run command: %s", command)
-            exec(command)  # pylint: disable=exec-used
+            exec(command, namespace)  # Pass namespace as globals
         except ModuleNotFoundError as err:
             package_name = ".".join(module.split(".")[:-1])
             package_blocks = _blocks_in_a_package(package_name)
@@ -130,10 +130,11 @@ def _import_blocks(block_names, block_args):
             raise
 
         # Run the imported module.
-        kwargs = block_args[block_id]  # pylint: disable=unused-variable
+        kwargs = block_args[block_id]
+        namespace['kwargs'] = kwargs  # Add kwargs to the namespace
         command = "b%s(**kwargs)" % block_id
         logging.debug("Trying to evaluate this: %s", command)
-        new_block_instance = eval(command)  # pylint: disable=eval-used
+        new_block_instance = eval(command, namespace)  # Pass namespace as globals
         args = ' '.join(f"{k}={v}" for k,v in kwargs.items())
         blocks.append((block_name, new_block_instance, args))
 

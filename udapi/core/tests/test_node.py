@@ -245,5 +245,25 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(root.descendants_and_empty, [e1, e2, e3, e4, e6, e7])
         self.assertEqual([n.ord for n in root.descendants_and_empty], [0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
 
+    def test_enh_deps_and_reordering(self):
+        """Test reordering of node ord in enhanced deps when reorderin/removing nodes."""
+        root = Root()
+        for i in range(3):
+            root.create_child(form=f'node{i+1}')
+
+        n1, n2, n3 = root.descendants()
+        n1.raw_deps = '2:nsubj|3:obj'
+        self.assertEqual(n1.raw_deps, '2:nsubj|3:obj')
+        self.assertEqual(n1.deps, [{'parent': n2, 'deprel': 'nsubj'}, {'parent': n3, 'deprel': 'obj'}])
+        n2.shift_after_node(n3)
+        self.assertEqual(n1.raw_deps, '2:obj|3:nsubj')
+        # TODO only node.raw_deps are currently guaranteed to return the deps sorted, not node.deps
+        #self.assertEqual(n1.deps, [{'parent': n3, 'deprel': 'obj'}, {'parent': n2, 'deprel': 'nsubj'}])
+        # TODO: after removing a node, all deps should be updated
+        #n2.remove()
+        #self.assertEqual(n1.raw_deps, '2:nsubj')
+        #self.assertEqual(n1.deps, [{'parent': n3, 'deprel': 'obj'}])
+
+
 if __name__ == "__main__":
     unittest.main()

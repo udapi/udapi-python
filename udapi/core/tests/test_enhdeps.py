@@ -57,7 +57,7 @@ class TestEnhDeps(unittest.TestCase):
         e.deps.append({'parent': h, 'deprel':'dep:e2h'})
         d.deps.append({'parent': e, 'deprel': 'dep:d2e'})
         self.assertEqual("2:dep:e2h", e.raw_deps, )
-        self.assertEqual("5:conj|3.1:dep:d2e", d.raw_deps)
+        self.assertEqual("3.1:dep:d2e|5:conj", d.raw_deps)
         self.assertEqual(self.tree.descendants_and_empty, self.nodes[:3] + [e] + self.nodes[3:])
 
 

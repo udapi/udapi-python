@@ -66,7 +66,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat', 'Com', 'Pro', 'Oth'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
             else:
@@ -74,7 +74,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
-                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat'],
+                    'NameType': ['Giv', 'Sur', 'Geo', 'Nat', 'Com', 'Pro', 'Oth'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
         # ADJECTIVES ###########################################################
@@ -91,7 +91,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'NameType': ['Giv', 'Sur', 'Nat'], # for possessive adjectives derived from personal names
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
                 else:
                     self.check_required_features(node, ['Poss', 'Gender[psor]', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
@@ -102,7 +103,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'NameType': ['Giv', 'Sur', 'Nat'], # for possessive adjectives derived from personal names
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
             elif node.feats['NumType'] == 'Ord' or node.feats['NumType'] == 'Mult': # ordinal numerals are a subtype of adjectives; same for some multiplicative numerals (dvojí, trojí)
                 if node.feats['Gender'] == 'Masc':
                     self.check_required_features(node, ['NumType', 'Gender', 'Animacy', 'Number', 'Case'])
@@ -114,7 +116,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'Variant': ['Short'], # sedmer (Mult Short) duch tvój; pól čtverta (Ord Short) komára
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
                 else:
                     self.check_required_features(node, ['NumType', 'Gender', 'Number', 'Case'])
                     self.check_allowed_features(node, {
@@ -124,7 +127,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
                         'Variant': ['Short'],
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
             elif node.feats['VerbForm'] == 'Part': # participles (except l-participles) are a subtype of adjectives
                 self.check_required_features(node, ['VerbForm', 'Voice'])
                 if node.feats['Voice'] == 'Act': # active participles have tense, passives don't but they have degree
@@ -143,7 +147,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Polarity': ['Pos', 'Neg'],
                             'Variant': ['Short'],
                             'Emph': ['Yes'],
-                            'Foreign': ['Yes']})
+                            'Foreign': ['Yes'],
+                            'Abbr': ['Yes']})
                     else:
                         # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzující').
                         self.check_required_features(node, ['VerbForm', 'Voice', 'Tense', 'Gender', 'Number', 'Case', 'Polarity'])
@@ -158,7 +163,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Polarity': ['Pos', 'Neg'],
                             'Variant': ['Short'],
                             'Emph': ['Yes'],
-                            'Foreign': ['Yes']})
+                            'Foreign': ['Yes'],
+                            'Abbr': ['Yes']})
                 else:
                     if node.feats['Gender'] == 'Masc':
                         # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzovaný').
@@ -175,7 +181,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Degree': ['Pos', 'Cmp', 'Sup'],
                             'Variant': ['Short'],
                             'Emph': ['Yes'],
-                            'Foreign': ['Yes']})
+                            'Foreign': ['Yes'],
+                            'Abbr': ['Yes']})
                     else:
                         # Aspect is not required in general because it is omitted for participles of biaspectual verbs (e.g. 'analyzovaný').
                         self.check_required_features(node, ['VerbForm', 'Voice', 'Gender', 'Number', 'Case', 'Polarity', 'Degree'])
@@ -190,7 +197,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Degree': ['Pos', 'Cmp', 'Sup'],
                             'Variant': ['Short'],
                             'Emph': ['Yes'],
-                            'Foreign': ['Yes']})
+                            'Foreign': ['Yes'],
+                            'Abbr': ['Yes']})
             else: # regular adjectives, including short forms
                 if node.feats['Gender'] == 'Masc':
                     self.check_required_features(node, ['Gender', 'Animacy', 'Number', 'Case', 'Degree', 'Polarity'])
@@ -203,7 +211,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Polarity': ['Pos', 'Neg'],
                         'Variant': ['Short'],
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
                 else:
                     self.check_required_features(node, ['Gender', 'Number', 'Case', 'Degree', 'Polarity'])
                     self.check_allowed_features(node, {
@@ -214,7 +223,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Polarity': ['Pos', 'Neg'],
                         'Variant': ['Short'],
                         'Emph': ['Yes'],
-                        'Foreign': ['Yes']})
+                        'Foreign': ['Yes'],
+                        'Abbr': ['Yes']})
         # PRONOUNS #############################################################
         elif node.upos == 'PRON':
             self.check_required_features(node, ['PronType'])
@@ -281,7 +291,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
-            elif re.match(r'^(co|což|což?koliv?|něco|lečco|lecco|nic|nicož)$', node.lemma):
+            elif re.match(r'^(co(si?)?|což|což?koliv?|něco|lečco|lecco|nic|nicož)$', node.lemma):
                 # Although these pronouns behave by default as neuter singular,
                 # no Gender and Number is annotated. However, quite unusually,
                 # there is Animacy=Inan without Gender.
@@ -385,7 +395,9 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 })
             # Relative possessive determiners 'jehož' and 'jejichž' behave similarly
             # to the personal possessive determiners but they do not have Person.
-            elif re.match(r'^(jeho|jejich|j[ií]ch)ž(e|to)?$', node.form.lower()):
+            # Normally determiners do not change j->n after prepositions but we
+            # have an example in Old Czech (štěpové zlatí, na nichžto větviech...)
+            elif re.match(r'^(jeho|jejich|[jn][ií]ch)ž(e|to)?$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Rel'],
@@ -548,13 +560,28 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'NumForm': ['Digit', 'Roman']
                 })
             else:
+                if node.feats['NumType'] == 'Sets':
+                    # 'jedny', 'dvoje', 'oboje', 'troje', 'čtvery'
+                    # Number should perhaps be only Plur because the counted noun will be Plur.
+                    # Gender is not annotated in PDT but there are different forms ('jedni' vs. 'jedny',
+                    # and in Old Czech also 'dvoji' vs. 'dvoje'), so we should allow Gender (and Animacy).
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Sets'],
+                        'PronType': ['Tot'], # for 'oboje'
+                        'NumForm': ['Word'],
+                        'Gender': ['Masc', 'Fem', 'Neut'],
+                        'Animacy': ['Anim', 'Inan'],
+                        'Number': ['Sing', 'Dual', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
                 # 'jeden' has Gender, Animacy, Number, Case: jeden, jedna, jedno, jednoho, jednomu, jednom, jedním, jedné, jednu, jednou, jedni, jedny, jedněch, jedněm, jedněmi.
                 # 'dva', 'oba' have Gender, Number=Dual(Plur in modern Czech), Case: dva, dvě, dvou, dvěma.
                 # 'tři', 'čtyři' have Number=Plur, Case: tři, třech, třem, třemi.
                 # 'pět' and more have Number=Plur, Case: pět, pěti.
                 # 'půl' has no Number and Case, although it behaves syntactically similarly to 'pět' (but genitive is still 'půl', not '*půli').
                 # 'sto', 'tisíc', 'milión', 'miliarda' etc. have Gender (+ possibly Animacy) and Number (depending on their form).
-                if node.lemma == 'jeden':
+                elif node.lemma == 'jeden':
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
@@ -594,7 +621,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 elif re.match(r'^(sto|tisíc|.+ili[oó]n|.+iliarda)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Card', 'Sets'],
+                        'NumType': ['Card'],
                         'NumForm': ['Word'],
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Animacy': ['Anim', 'Inan'],
@@ -610,7 +637,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # On the other hand, we may want to allow Dual for "stě".
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
-                        'NumType': ['Card', 'Sets'],
+                        'NumType': ['Card'],
                         'NumForm': ['Word'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
@@ -828,12 +855,14 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         # SUBORDINATING CONJUNCTIONS ###########################################
         elif node.upos == 'SCONJ':
             self.check_allowed_features(node, {
-                'Emph': ['Yes']
+                'Emph': ['Yes'],
+                'Abbr': ['Yes']
             })
         # COORDINATING CONJUNCTIONS ############################################
         elif node.upos == 'CCONJ':
             self.check_allowed_features(node, {
-                'Emph': ['Yes']
+                'Emph': ['Yes'],
+                'Abbr': ['Yes']
             })
         # PARTICLES ############################################################
         elif node.upos == 'PART':

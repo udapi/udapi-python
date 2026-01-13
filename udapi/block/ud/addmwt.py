@@ -86,7 +86,7 @@ class AddMwt(Block):
             mwt_words[mwt_words.index(node):mwt_words.index(node)+1] = nodes
             nodes = mwt_words
 
-        mwt = node.root.create_multiword_token(nodes, mwt_form, mwt_misc)
+        mwt = node.root.create_multiword_token(words=nodes, form=mwt_form, misc=mwt_misc)
         self.postprocess_mwt(mwt)
 
     def multiword_analysis(self, node):

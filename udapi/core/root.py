@@ -167,14 +167,15 @@ class Root(Node):
         return new_node
 
     # TODO document whether misc is a string or dict or it can be both
-    def create_multiword_token(self, words=None, form=None, misc=None):
+    def create_multiword_token(self, words=None, form=None, feats=None, misc=None):
         """Create and return a new multi-word token (MWT) in this tree.
 
         The new MWT can be optionally initialized using the following args.
         Args:
         words: a list of nodes which are part of the new MWT
         form: string representing the surface form of the new MWT
-        misc: misc attribute of the new MWT
+        misc: FEATS attribute of the new MWT (only `Typo=Yes` allowed there in UD guidelines)
+        misc: MISC attribute of the new MWT
         """
         # Nested or overlapping MWTs are not allowed in CoNLL-U,
         # so first remove all previous MWTs containing any of words.
@@ -182,7 +183,7 @@ class Root(Node):
             if w.multiword_token:
                 w.multiword_token.remove()
         # Now, create the new MWT.
-        mwt = MWT(words, form, misc, root=self)
+        mwt = MWT(words, form, feats, misc, root=self)
         self._mwts.append(mwt)
         if words[-1].misc["SpaceAfter"] == "No":
             mwt.misc["SpaceAfter"] = "No"

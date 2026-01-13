@@ -118,7 +118,7 @@ class MarkBugs(Block):
             if upos == i_upos and not feats[i_feat]:
                 # Some languages do not distinguish finite and non-finite forms of verbs.
                 # The VerbForm feature is not obligatory in those languages.
-                if i_feat != 'VerbForm' or not node.root.zone.split('_')[0] in {'id', 'jv', 'tl', 'hil', 'ifb'}:
+                if i_feat != 'VerbForm' or not node.root.zone.split('_')[0] in {'id', 'jv', 'tl', 'hil', 'ifb', 'naq'}:
                     self.log(node, 'no-' + i_feat, 'upos=%s but %s feature is missing' % (upos, i_feat))
 
         if feats['VerbForm'] == 'Fin':
