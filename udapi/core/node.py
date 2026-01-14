@@ -1151,6 +1151,7 @@ class ListOfNodes(list):
     nodes = node.children
     nodes = node.children()
     nodes = node.children(add_self=True, following_only=True)
+    nodes = node.descendants(add_self=True, add_mwt=True)
     """
     __slots__ = ('origin',)
 
@@ -1164,16 +1165,28 @@ class ListOfNodes(list):
         super().__init__(iterable)
         self.origin = origin
 
-    def __call__(self, add_self=False, following_only=False, preceding_only=False):
+    def __call__(self, add_self=False, following_only=False, preceding_only=False, add_mwt=False):
         """Returns a subset of nodes contained in this list as specified by the args."""
         if add_self:
             self.append(self.origin)
             self.sort()
+        result = self
         if preceding_only:
-            return [x for x in self if x._ord <= self.origin._ord]
+            result = [x for x in result if x._ord <= self.origin._ord]
         if following_only:
-            return [x for x in self if x._ord >= self.origin._ord]
-        return self
+            result = [x for x in result if x._ord >= self.origin._ord]
+        if add_mwt:
+            new = []
+            last_mwt_id = -1
+            for node in result:
+                mwt = node.multiword_token
+                if mwt:
+                    if node.ord > last_mwt_id:
+                        last_mwt_id = mwt.words[-1].ord
+                        new.append(mwt)
+                new.append(node)
+            result = new
+        return result
 
 
 def find_minimal_common_treelet(*args):
