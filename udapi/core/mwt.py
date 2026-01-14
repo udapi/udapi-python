@@ -77,8 +77,78 @@ class MWT(object):
 
     @property
     def no_space_after(self):
-        """Boolean property as a shortcut for `node.misc["SpaceAfter"] == "No"`."""
+        """Boolean property as a shortcut for `mwt.misc["SpaceAfter"] == "No"`."""
         return self.misc["SpaceAfter"] == "No"
+
+    @staticmethod
+    def is_empty():
+        """Is this an Empty node?
+
+        Returns always False because multi-word tokens cannot be empty nodes.
+        """
+        return False
+
+    @staticmethod
+    def is_leaf():
+        """Is this a node/mwt without any children?
+
+        Returns always True because multi-word tokens cannot have children.
+        """
+        return True
+
+    def _get_attr(self, name):  # pylint: disable=too-many-return-statements
+        if name == 'form':
+            return self.form
+        if name == 'ord':
+            return self.ord_range
+        if name in ('edge', 'children', 'siblings', 'depth'):
+            return 0
+        if name == 'feats_split':
+            return str(self.feats).split('|')
+        if name == 'misc_split':
+            return str(self.misc).split('|')
+        if name.startswith('feats['):
+            return self.feats[name[6:-1]]
+        if name.startswith('misc['):
+            return self.misc[name[5:-1]]
+        return '<mwt>'
+
+    def get_attrs(self, attrs, undefs=None, stringify=True):
+        """Return multiple attributes or pseudo-attributes, possibly substituting empty ones.
+
+        MWTs do not have children nor parents nor prev/next nodes,
+        so the pseudo-attributes: p_xy, c_xy, l_xy and r_xy are irrelevant (and return nothing).
+        Other pseudo-attributes (e.g. dir) return always the string "<mwt>".
+        The only relevant pseudo-attributes are
+        feats_split and misc_split: a list of name=value formatted strings.
+        The `ord` attribute returns actually `mwt.ord_range`.
+
+        Args:
+        attrs: A list of attribute names, e.g. ``['form', 'ord', 'feats_split']``.
+        undefs: A value to be used instead of None for empty (undefined) values.
+        stringify: Apply `str()` on each value (except for None)
+        """
+        values = []
+        for name in attrs:
+            nodes = [self]
+            if name[1] == '_':
+                nodes, name = [], name[2:]
+            for node in (n for n in nodes if n is not None):
+                if name in {'feats_split', 'misc_split'}:
+                    values.extend(node._get_attr(name))
+                else:
+                    values.append(node._get_attr(name))
+
+        if undefs is not None:
+            values = [x if x is not None else undefs for x in values]
+        if stringify:
+            values = [str(x) if x is not None else None for x in values]
+        return values
+
+    @property
+    def _ord(self):
+        self.words.sort()
+        return self.words[0]._ord
 
 # TODO: node.remove() should check if the node is not part of any MWT
 # TODO: Document that editing words by mwt.words.append(node), del or remove(node) is not supported
