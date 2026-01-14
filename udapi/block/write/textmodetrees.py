@@ -144,7 +144,7 @@ class TextModeTrees(BaseWriter):
     def __init__(self, print_sent_id=True, print_text=True, add_empty_line=True, indent=1,
                  minimize_cross=True, color='auto', attributes='form,upos,deprel',
                  print_undef_as='_', print_doc_meta=True, print_comments=False, print_empty=True,
-                 mark='(ToDo|ToDoOrigText|Bug|Mark)', marked_only=False, hints=True,
+                 print_mwt=False, mark='(ToDo|ToDoOrigText|Bug|Mark)', marked_only=False, hints=True,
                  layout='classic', **kwargs):
         """Create new TextModeTrees block object.
 
@@ -167,7 +167,8 @@ class TextModeTrees(BaseWriter):
             print_undef_as: What should be printed instead of undefined attribute values (if any)?
             print_doc_meta: Print ``document.meta`` metadata before each document?
             print_comments: Print comments (other than ``sent_id`` and ``text``)?
-            print_empty: Print empty nodes?
+            print_empty: Print empty nodes? Default=True
+            print_mwt: Print multi-word tokens? Default=False
             mark: A regex pattern. If ``re.search(mark + '=', str(node.misc))`` matches, the node is highlighted.
                 If ``print_comments`` and ``re.search(r'^ %s = ' % mark, root.comment, re.M)`` matches,
                 the comment is highlighted. Empty string means no highlighting.
@@ -193,6 +194,7 @@ class TextModeTrees(BaseWriter):
         self.print_doc_meta = print_doc_meta
         self.print_comments = print_comments
         self.print_empty = print_empty
+        self.print_mwt = print_mwt
         self.mark = mark
         self.marked_only = marked_only
         self.layout = layout
@@ -250,18 +252,18 @@ class TextModeTrees(BaseWriter):
     def process_tree(self, root, force_print=False):
         """Print the tree to (possibly redirected) sys.stdout."""
         if self.print_empty:
-            if root.is_root():
+            if root.is_root() and not self.print_mwt:
                 allnodes = [root] + root.descendants_and_empty
             else:
-                allnodes = root.descendants(add_self=1)
+                allnodes = root.descendants(add_self=1, add_mwt=self.print_mwt)
                 empty = [e for e in root._root.empty_nodes if e > allnodes[0] and e < allnodes[-1]]
                 allnodes.extend(empty)
                 allnodes.sort()
         else:
-            allnodes = root.descendants(add_self=1)
+            allnodes = root.descendants(add_self=1, add_mwt=self.print_mwt)
         if not force_print and not self.should_print_tree(root, allnodes):
             return
-        self._index_of = {allnodes[i].ord: i for i in range(len(allnodes))}
+        self._index_of = {allnodes[i].ord_range if allnodes[i].is_mwt() else allnodes[i].ord: i for i in range(len(allnodes))}
         self.lines = [''] * len(allnodes)
         self.lengths = [0] * len(allnodes)
 
@@ -288,7 +290,7 @@ class TextModeTrees(BaseWriter):
                     if self.layout == 'classic':
                         self.add_node(idx, node)
                 else:
-                    if idx_node.parent is not node:
+                    if idx_node.is_mwt() or idx_node.parent is not node:
                         self._add(idx, self._vert[self._ends(idx, '─╭╰╪┡┢')])
                     else:
                         precedes_parent = idx < self._index_of[node.ord]
@@ -306,7 +308,7 @@ class TextModeTrees(BaseWriter):
 
         if self.layout == 'classic':
             for idx, node in enumerate(allnodes):
-                if node.is_empty():
+                if node.is_empty() or node.is_mwt():
                     self.add_node(idx, node)
         else:
             columns_attrs = [[a] for a in self.attrs] if self.layout == 'align' else [self.attrs]
@@ -365,7 +367,7 @@ class TextModeTrees(BaseWriter):
 
     def add_node(self, idx, node):
         """Render a node with its attributes."""
-        if not node.is_root():
+        if node.is_mwt() or not node.is_root():
             values = node.get_attrs(self.attrs, undefs=self.print_undef_as)
             self.lengths[idx] += 1 + len(' '.join(values))
             marked = self.is_marked(node)
