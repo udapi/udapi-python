@@ -45,7 +45,7 @@ class Conll2012(udapi.block.read.conllu.Conllu):
         match = RE_BEGIN.match(line)
         if match:
             docname = match.group(1)
-            # LitBank uses e.g.
+            # LitBank and FantasyCoref use e.g.
             # #begin document (1023_bleak_house_brat); part 0
             if docname.startswith('(') and docname.endswith(');'):
                 docname = docname[1:-2]
@@ -56,6 +56,9 @@ class Conll2012(udapi.block.read.conllu.Conllu):
             # Corref-PT-SemEval uses e.g.
             # #begin document D1_C30_Folha_07-08-2007_09h19.txt.xml
             docname = docname.replace('.txt', '').replace('.xml', '')
+            # FantasyCoref may use parentheses within the document ID e.g.
+            # #begin document (051_Fundevogel_(Bird-foundling)); part 000
+            docname = docname.replace('(', '').replace(')', '')
 
             root.newdoc = docname
             self._global_entity = 'eid-etype-head-other'
@@ -77,6 +80,8 @@ class Conll2012(udapi.block.read.conllu.Conllu):
         for (n_attribute, attribute_name) in enumerate(self.node_attributes):
             value = fields[n_attribute]
             if attribute_name == 'docname':
+                # FantasyCoref may use parentheses within the document ID
+                value = value.replace('(', '').replace(')', '')
                 if value != self._docname:
                     logging.warning(f"Document name mismatch {value} != {self._docname}")
 
