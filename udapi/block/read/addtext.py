@@ -32,7 +32,7 @@ class AddText(BaseReader):
             self.finished = True
             return
         text = ''.join(self.filehandle.readlines())
-        i, end, was_newpar = 0, len(text), True
+        i, end, was_newpar = 0, len(text)-1, True
         while i <= end and text[i].isspace():
             i += 1
 
