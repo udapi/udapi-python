@@ -16,9 +16,17 @@ class Text(BaseReader):
         so that `udpipe.Base` keeps these characters in `SpacesAfter`.
         As most blocks do not expect whitespace other than a space to appear
         in the processed text, using this feature is at your own risk.
+    empty_line: how empty lines are handled. Default 'new_sentence' preserves
+        the current behaviour (empty lines mark sentence boundaries). Use
+        'keep' to read the entire file content into a single sentence (tree), including
+        empty lines. Use 'newpar' to behave like 'new_sentence' but also set
+        `root.newpar = True` on each sentence.
     """
-    def __init__(self, rstrip='\r\n ', **kwargs):
+    def __init__(self, rstrip='\r\n ', empty_line='new_sentence', **kwargs):
+        if empty_line not in {'new_sentence', 'keep', 'newpar'}:
+            raise ValueError("empty_line must be 'new_sentence', 'keep' or 'newpar'")
         self.rstrip = rstrip
+        self.empty_line = empty_line
         super().__init__(**kwargs)
 
     @staticmethod
@@ -32,6 +40,13 @@ class Text(BaseReader):
     def read_tree(self, document=None):
         if self.filehandle is None:
             return None
+        if self.empty_line == 'keep':
+            content = self.filehandle.read()
+            if content == '':
+                return None
+            root = Root()
+            root.text = content
+            return root
         lines = []
         line = None
         while True:
@@ -54,4 +69,6 @@ class Text(BaseReader):
 
         root = Root()
         root.text = " ".join(lines)
+        if self.empty_line == 'newpar':
+            root.newpar = True
         return root
