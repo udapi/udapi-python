@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from udapi.block.read.conllu import Conllu as ConlluReader
@@ -62,6 +63,35 @@ class UDPipeOnline:
 
         return response["result"]
 
+    def perform_request_urlencoded(self, params, method="process"):
+        """Perform a request using application/x-www-form-urlencoded to preserve LF newlines.
+
+        This avoids CRLF normalization done by the email MIME serializer, ensuring that
+        the content of the 'data' field retains Unix LF ("\n") exactly as provided.
+        """
+        request_data = urllib.parse.urlencode(params).encode("utf-8")
+        request_headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
+
+        try:
+            with urllib.request.urlopen(urllib.request.Request(
+                url=f"{self.server}/{method}", headers=request_headers, data=request_data
+            )) as request:
+                response = json.loads(request.read())
+        except urllib.error.HTTPError as e:
+            print("An exception was raised during UDPipe '{}' REST request.\n"
+                  "The service returned the following error:\n"
+                  "  {}".format(method, e.fp.read().decode("utf-8")), file=sys.stderr)
+            raise
+        except json.JSONDecodeError as e:
+            print("Cannot parse the JSON response of UDPipe '{}' REST request.\n"
+                  "  {}".format(method, e.msg), file=sys.stderr)
+            raise
+
+        if "model" not in response or "result" not in response:
+            raise ValueError("Cannot parse the UDPipe '{}' REST request response.".format(method))
+
+        return response["result"]
+
     def tag_parse_tree(self, root, tag=True, parse=True):
         """Tag (+lemmatize, fill FEATS) and parse a tree (already tokenized)."""
         if not tag and not parse:
@@ -76,7 +106,7 @@ class UDPipeOnline:
             params["parser"] = ""
             attrs.append('deprel')
 
-        out_data = self.perform_request(params=params)
+        out_data = self.perform_request_urlencoded(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)
         parsed_root = conllu_reader.read_tree()
@@ -108,7 +138,7 @@ class UDPipeOnline:
             params["parser"] = ""
         if ranges:
             params["tokenizer"] = "presegmented;ranges" if resegment else "ranges"
-        out_data = self.perform_request(params=params)
+        out_data = self.perform_request_urlencoded(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)
         trees = conllu_reader.read_trees()
@@ -126,7 +156,7 @@ class UDPipeOnline:
     def segment_text(self, text):
         """Segment the provided text into sentences returned as a Python list."""
         params = {"model": self.model, "data": text, "tokenizer":"", "output": "plaintext=normalized_spaces"}
-        return self.perform_request(params=params).rstrip().split("\n")
+        return self.perform_request_urlencoded(params=params).rstrip().split("\n")
 
     def process_document(self, doc, tokenize=True, tag=True, parse=True, resegment=False, ranges=False):
         """Delete all existing bundles and substitute them with those parsed by UDPipe."""
@@ -152,7 +182,7 @@ class UDPipeOnline:
             params["input"] = "horizontal"
             params["data"] = "\n".join(" ".join([n.form for n in root.descendants]) for root in doc.trees) + "\n"
 
-        out_data = self.perform_request(params=params)
+        out_data = self.perform_request_urlencoded(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
         conllu_reader.files.filehandle = io.StringIO(out_data)
         trees = conllu_reader.read_trees()
