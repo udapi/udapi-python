@@ -77,9 +77,12 @@ class AddBratAnn(Block):
                 except Exception as e:
                     logging.warning(f"Unexpected mention line: {line}\n{e}")
             elif line.startswith(self.coref_attr):
-                cor_attr, mention_ids = line.split("\t")
-                parts = mention_ids.split()
-                assert(parts[0] == "Coreference")
+                try:
+                    cor_attr, mention_ids = line.rstrip().split("\t")
+                    parts = mention_ids.split()
+                    assert(parts[0] == "Coreference")
+                except Exception as e:
+                    logging.warning(f"Unexpected coref line: '{line}'\n{e}")
                 clusters.append([p.split(":")[1] for p in parts[1:]])
             elif line.startswith("#"):
                 pass # Let's ignore annotators' comments
