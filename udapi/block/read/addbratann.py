@@ -13,6 +13,8 @@ from udapi.core.files import Files
 import logging
 from bisect import bisect_left
 
+def _m(range_s, range_e, offset):
+    return f"{range_s}-{offset}:{range_e}-{offset}" if offset else f"{range_s}:{range_e}"
 
 class AddBratAnn(Block):
 
@@ -47,7 +49,7 @@ class AddBratAnn(Block):
                     offset += 1
 
         for line in ann_filehandle:
-            line = line.rstrip()
+            line = line.rstrip('\n')
             if not "\t" in line:
                 logging.warning(f"Unexpected line without tabs: {line}")
             elif line.startswith("T"):
@@ -57,16 +59,18 @@ class AddBratAnn(Block):
                     # Usually range are two numbers, but can be more, e.g. type_and_range="Abstract  605 653;654 703"
                     # Let's take the first and last number only.´
                     parts = type_and_range.split()
-                    ne_type, range_s, range_e = parts[0], parts[1], parts[-1]
+                    ne_type, range_s, range_e = parts[0], int(parts[1]), int(parts[-1])
 
                     # If form ends with spaces, remove them and adjust range_e
                     stripped_form = form.rstrip(" ")
                     if form != stripped_form:
                         num_spaces = len(form) - len(stripped_form)
+                        logging.debug(f"Stripping {num_spaces} space{'s' if num_spaces>1 else ''} from {mention_id} '{form}' ({_m(range_s,range_e,offset)}->{range_e-num_spaces})")
                         form = stripped_form
-                        range_e = int(range_e) - num_spaces
+                        range_e = range_e - num_spaces
 
-                    mentions[mention_id] = [ne_type, int(range_s), int(range_e), form]
+
+                    mentions[mention_id] = [ne_type, range_s, range_e, form]
                     if self.keep_mention_id:
                         attrs.append(["mention_id", mention_id, mention_id])
                 except Exception as e:
@@ -155,7 +159,7 @@ class AddBratAnn(Block):
                             break
 
             if not ok_s or not ok_e:
-                logging.warning(f"Mention {mention_id} range {range_s}-{offset}:{range_e}-{offset} ({form})"
+                logging.warning(f"Mention {mention_id} range {_m(range_s, range_e, offset)} ({form})"
                                 f" crosses token boundaries: {token_s.misc} ({token_s.form}) "
                                 f".. {token_e.misc} ({token_e.form})")
 
