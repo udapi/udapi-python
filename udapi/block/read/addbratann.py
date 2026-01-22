@@ -13,26 +13,12 @@ from udapi.core.files import Files
 import logging
 from bisect import bisect_left
 
-# cd fr-litbank/brat/coref
-# cat *.ann | grep '^T' | cut -f2 | cut -f1 -d " " | Sort
-#   33085 PER
-#    2518 FAC
-#    1886 TIME
-#    1046 LOC
-#    1046 GPE
-#     559 NO_PER
-#     508 VEH
-#     229 ORG
-#     115 METALEPSE
-#      85 HIST
-#      12 X
-#      12 TO_DISCUSS
-#       1 OTHER
-#       1 None
 
 class AddBratAnn(Block):
 
-    def __init__(self, files, offset=0, detect_bom=True, keep_mention_id=True, coref_attr="R", zone='', **kwargs):
+    def __init__(self, files,  zone='', offset=0, detect_bom=True, keep_mention_id=True,
+                 coref_attr="R", no_type_value='_Unsorted_',
+                 **kwargs):
         """Args:
         files: file names with the coreference annotations (*.ann)
         offset: what number to substract from the chatacter indices in the ann files
@@ -45,6 +31,7 @@ class AddBratAnn(Block):
         self.detect_bom = detect_bom
         self.keep_mention_id = keep_mention_id
         self.coref_attr = coref_attr
+        self.no_type_value = no_type_value
 
     def process_document(self, document):
 
@@ -71,14 +58,14 @@ class AddBratAnn(Block):
                     # Let's take the first and last number only.´
                     parts = type_and_range.split()
                     ne_type, range_s, range_e = parts[0], parts[1], parts[-1]
-                    
+
                     # If form ends with spaces, remove them and adjust range_e
                     stripped_form = form.rstrip(" ")
                     if form != stripped_form:
                         num_spaces = len(form) - len(stripped_form)
                         form = stripped_form
                         range_e = int(range_e) - num_spaces
-                    
+
                     mentions[mention_id] = [ne_type, int(range_s), int(range_e), form]
                     if self.keep_mention_id:
                         attrs.append(["mention_id", mention_id, mention_id])
@@ -97,11 +84,9 @@ class AddBratAnn(Block):
         # Create entity objects for non-singletons.
         entity_map = {}
         for mention_ids in clusters:
-            #etype = mentions[mention_ids[0]][0]
             etype, etype_index = None, 0
-            #for m_id in mention_ids[1:]:
             for index, m_id in enumerate(mention_ids):
-                if mentions[m_id][0] == '_Unsorted_':
+                if mentions[m_id][0] == self.no_type_value:
                     pass
                 elif etype is None:
                     etype, etype_index = mentions[m_id][0], index
@@ -109,7 +94,7 @@ class AddBratAnn(Block):
                     logging.warning(f"Mention type mismatch {mention_ids[etype_index]}:{etype} != {m_id}:{mentions[m_id][0]}. Using the former.")
             if etype is None:
                 etype = "other"
-            entity = document.create_coref_entity(etype=etype.lower())
+            entity = document.create_coref_entity(etype=etype)
             for m_id in mention_ids:
                 if m_id in entity_map:
                     logging.warning(f"Mention {m_id} already in Entity {entity_map[m_id].eid}, not adding to {entity.eid}")
@@ -196,8 +181,7 @@ class AddBratAnn(Block):
 
             # Create entities for singletons
             if mention_id not in entity_map:
-                etype = 'other' if ne_type == "_Unsorted_" else ne_type.lower()
-                entity_map[mention_id] = document.create_coref_entity(etype=etype)
+                entity_map[mention_id] = document.create_coref_entity(etype=ne_type)
 
             # Create the Udapi mention object
             mention = entity_map[mention_id].create_mention(words=mwords)
