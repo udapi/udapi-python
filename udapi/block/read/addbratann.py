@@ -12,6 +12,7 @@ from udapi.core.block import Block
 from udapi.core.files import Files
 import logging
 from bisect import bisect_left
+import networkx as nx
 
 def _m(range_s, range_e, offset):
     return f"{range_s}-{offset}:{range_e}-{offset}" if offset else f"{range_s}:{range_e}"
@@ -84,6 +85,25 @@ class AddBratAnn(Block):
                 pass # Let's ignore annotators' comments
             else:
                 logging.warning(f"Unexpected line in {self.files.filename}:\n{line}")
+
+        # Some Brat ann files use link-based representation, e.g.
+        # R123	Coreference Arg1:T11 Arg2:T13
+        # R124	Coreference Arg1:T12 Arg2:T14
+        # R125	Coreference Arg1:T13 Arg2:T14
+        # This actually means that all four mentions T11, T12, T13 and T14 are in the same cluster (entity).
+        # However, clusters = [["T11", "T13"], ["T12", "T14"], ["T13", "T14"]]
+        # and we need to convert it to clusters = [["T11", "T12", "T13", "T14"]]
+        # Note that if creating entities for link, in their original order,
+        # R123 and R125 would result in creating two entities and when hitting R125
+        # we would need to merge them, i.e. delete one of them and move their mentions to the other.
+        # This is the solution of corefud.Link2Cluster, but here it seems easier to find connected components.
+        coref_graph = nx.Graph()
+        for mention_ids in clusters:
+            coref_graph.add_node(mention_ids[0])
+            for mention_id in mention_ids[1:]:
+                coref_graph.add_node(mention_id)
+                coref_graph.add_edge(mention_id, mention_ids[0])
+        clusters = [list(component) for component in nx.connected_components(coref_graph)]
 
         # Create entity objects for non-singletons.
         entity_map = {}
