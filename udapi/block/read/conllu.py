@@ -27,7 +27,7 @@ class Conllu(BaseReader):
         strict: raise an exception if errors found (default=False, i.e. a robust mode)
         empty_parent: What to do if HEAD is _? Default=warn: issue a warning and attach to the root
             or if strict=1 issue an exception. With `empty_parent=ignore` no warning is issued.
-        fix_cycles: fix cycles by attaching a node in the cycle to the root
+        fix_cycles: fix cycles by attaching a node in the cycle to the root; fix also HEAD index out of range
         """
         super().__init__(**kwargs)
         self.strict = strict
@@ -193,12 +193,15 @@ class Conllu(BaseReader):
             try:
                 parent = nodes[parents[node_ord]]
             except IndexError:
-                raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
+                if self.fix_cycles:
+                    logging.warning(f"Ignoring out-of-range HEAD (attaching to the root instead): {node} HEAD={parents[node_ord]}")
+                    parent = root
+                else:
+                    raise ValueError("Node %s HEAD is out of range (%d)" % (node, parents[node_ord]))
             if node is parent:
                 if self.fix_cycles:
-                    logging.warning("Ignoring a cycle (attaching to the root instead):\n%s", node)
-                    node._parent = root
-                    root._children.append(node)
+                    logging.warning("Ignoring a self-cycle (attaching to the root instead):\n%s", node)
+                    parent = root
                 else:
                     raise ValueError(f"Detected a cycle: {node} attached to itself")
             elif node._children:
