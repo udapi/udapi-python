@@ -50,7 +50,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
-					periphrasis=self.get_periphrasis_bool(node)
+					analytic=self.get_analytic_bool(node)
 				)
 				return
 		
@@ -83,5 +83,5 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=copVerb.feats['Gender'],
 					animacy=copVerb.feats['Animacy'],
-					periphrasis=self.get_periphrasis_bool(node)
+					analytic=self.get_analytic_bool(node)
 			)
