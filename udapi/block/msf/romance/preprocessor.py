@@ -1,7 +1,6 @@
-from phrase import Phrase
-from enum import Enum
+from udapi.core.block import Block
 
-class Preprocessor(Phrase):
+class Preprocessor(Block):
 
 
     def process_node(self, node):
