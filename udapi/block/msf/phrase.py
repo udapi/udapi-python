@@ -10,10 +10,10 @@ import logging
 
 class Phrase(Block):
 
-    def __init__(self, feature_prefix='CG', **kwargs):
+    def __init__(self, feature_prefix='CW', **kwargs):
         """
         Parameters:
-        feature_prefix (string) - The prefix of phrase features (e. g. 'CG', 'Phrase'), default is 'CG'
+        feature_prefix (string) - The prefix of phrase features (e. g. 'CW', 'Phrase'), default is 'CG'
         """
         super().__init__(**kwargs)
         self.feature_prefix = feature_prefix
