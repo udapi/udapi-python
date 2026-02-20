@@ -1,8 +1,14 @@
 """Block udpipe.Base for tagging and parsing using UDPipe."""
 from udapi.core.block import Block
-from udapi.tool.udpipe import UDPipe
 from udapi.tool.udpipeonline import UDPipeOnline
 from udapi.core.bundle import Bundle
+
+# Import UDPipe only if available (requires ufal.udpipe)
+try:
+    from udapi.tool.udpipe import UDPipe
+    UDPIPE_AVAILABLE = True
+except ImportError:
+    UDPIPE_AVAILABLE = False
 
 KNOWN_MODELS = {
     'af': 'models/udpipe/2.4/afrikaans-afribooms-ud-2.4-190531.udpipe',
@@ -143,6 +149,8 @@ class Base(Block):
         if self.online:
             self._tool = UDPipeOnline(model=self.model)
         else:
+            if not UDPIPE_AVAILABLE:
+                raise ImportError("UDPipe is not available. Install ufal.udpipe or use online=1")
             self._tool = UDPipe(model=self.model)
         return self._tool
 
