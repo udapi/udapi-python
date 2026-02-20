@@ -10,53 +10,63 @@ import logging
 
 class Phrase(Block):
 
+    def __init__(self, feature_prefix='CW', **kwargs):
+        """
+        Parameters:
+        feature_prefix (string) - The prefix of phrase features (e. g. 'CW', 'Phrase'), default is 'CG'
+        """
+        super().__init__(**kwargs)
+        self.feature_prefix = feature_prefix
+
+        self.dictionary = {
+            'person': f'{feature_prefix}Person',
+            'number': f'{feature_prefix}Number',
+            'mood': f'{feature_prefix}Mood',
+            'tense': f'{feature_prefix}Tense',
+            'voice': f'{feature_prefix}Voice',
+            'aspect':f'{feature_prefix}Aspect',
+            'form': f'{feature_prefix}Form',
+            'reflex': f'{feature_prefix}Reflex',
+            'polarity': f'{feature_prefix}Polarity',
+            'gender': f'{feature_prefix}Gender',
+            'animacy': f'{feature_prefix}Animacy',
+            'ords': feature_prefix,
+            'expl': f'{feature_prefix}Expl',
+            'analytic': 'Analytic',
+            }
+        
+        # a dictionary where the key is the lemma of a negative particle and the value is a list of the lemmas of their possible children that have a 'fixed' relation
+        # we do not want to include these negative particles in the phrase; these are expressions like "never", etc.
+        self.negation_fixed = {
+            # Belarusian
+            'ні' : ['раз'],
+            'ня' : ['толькі'],
+
+            # Upper Sorbian
+            'nic' : ['naposledku'],
+
+            # Polish
+            'nie' : ['mało'],
+
+            # Pomak
+            'néma' : ['kak'],
+
+            # Slovenian
+            'ne' : ['le'],
+
+            # Russian and Old East Slavic
+            'не' : ['то', 'токмо'],
+            'ни' : ['в', 'раз', 'шатко'],
+            'нет' : ['нет']
+        }
+
     def process_node(self, node):
         """
         Override this in a derived class!
         """
         logging.fatal('process_node() not implemented.')
 
-    dictionary = {
-		'person': 'PeriPerson',
-		'number': 'PeriNumber',
-		'mood': 'PeriMood',
-		'tense': 'PeriTense',
-		'voice': 'PeriVoice',
-		'aspect':'PeriAspect',
-		'form': 'PeriForm',
-		'reflex': 'PeriReflex',
-		'polarity': 'PeriPolarity',
-		'gender':'PeriGender',
-		'animacy':'PeriAnimacy',
-		'ords':'Peri',
-        'expl':'PeriExpl',
-        'periphrasis':'Periphrasis',
-		}
     
-    # a dictionary where the key is the lemma of a negative particle and the value is a list of the lemmas of their possible children that have a 'fixed' relation
-    # we do not want to include these negative particles in the phrase; these are expressions like "never", etc.
-    negation_fixed = {
-        # Belarusian
-        'ні' : ['раз'],
-        'ня' : ['толькі'],
-
-        # Upper Sorbian
-        'nic' : ['naposledku'],
-
-        # Polish
-        'nie' : ['mało'],
-
-        # Pomak
-        'néma' : ['kak'],
-
-        # Slovenian
-        'ne' : ['le'],
-
-        # Russian and Old East Slavic
-        'не' : ['то', 'токмо'],
-        'ни' : ['в', 'раз', 'шатко'],
-        'нет' : ['нет']
-    }
 
     def write_node_info(self, node,
 			tense = None,
@@ -72,7 +82,7 @@ class Phrase(Block):
 			animacy = None,
 			aspect = None,
             expl=None,
-            periphrasis=None):
+            analytic=None):
         arguments = locals()
         del arguments['self'] # delete self and node from arguments,
         del arguments['node'] # we want only grammatical categories 
@@ -148,7 +158,7 @@ class Phrase(Block):
             return 'Pass'
         return voice
     
-    def get_periphrasis_bool(self,node):
+    def get_analytic_bool(self,node):
         auxes = [x for x in node.children if x.udeprel == 'aux']
 
         if auxes:

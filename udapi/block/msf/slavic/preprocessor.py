@@ -17,8 +17,8 @@ class Preprocessor(Block):
 				
 		# in some languages, participles are annotated with UPOS=VERB, while in others they are annotated with UPOS=ADJ
 		# we change the UPOS to ADJ when a participle expresses case
-		if node.upos == 'VERB' and node.feats['VerbForm'] == 'Part' and node.feats['Case'] != '':
-			node.upos = 'ADJ'
+		#if node.upos == 'VERB' and node.feats['VerbForm'] == 'Part' and node.feats['Case'] != '':
+		#	node.upos = 'ADJ'
 			
 		# in Polish, the conditional mood for auxiliary verbs is marked as deprel == 'aux:cnd' and not as in the last Slavic languages ​​feats['Mood'] == 'Cnd'
 		if node.deprel == 'aux:cnd':
@@ -54,8 +54,8 @@ class Preprocessor(Block):
 					node.feats['Number'] = subj[0].feats['Number']
 
 		# participles in passive are sometimes annotated as VERB, sometimes as ADJ
-		if node.upos == 'VERB' and node.feats['Voice'] == 'Pass':
-			node.upos = 'ADJ'
+		#if node.upos == 'VERB' and node.feats['Voice'] == 'Pass':
+		#	node.upos = 'ADJ'
 
 		# there are cases where the node has deprel=='expl:pv' or 'expl:pass' or 'expl:impers' and Reflex is not Yes (i.e. Macedonian treebank)
 		# we add the Reflex=Yes feature

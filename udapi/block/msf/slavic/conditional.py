@@ -30,12 +30,12 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 
 				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
-			
-				auxVerb = aux_cnd[0]
 
 				person='3' # TODO there is a problem in russian etc. (same as in past tense)
-				if auxVerb.feats['Person'] != '':
-					person=auxVerb.feats['Person']
+
+				for aux_verb in aux:
+					if aux_verb.feats['Person'] != '':
+						person=aux_verb.feats['Person']
 				
 					
 				self.write_node_info(node,
@@ -50,7 +50,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=node.feats['Gender'],
 					animacy=node.feats['Animacy'],
-					periphrasis=self.get_periphrasis_bool(node)
+					analytic=self.get_analytic_bool(node)
 				)
 				return
 		
@@ -69,11 +69,21 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 			phrase_nodes += neg
 
 			copVerb = cop[0]
+
+			person = '3'
+
+			for aux_verb in aux:
+					if aux_verb.feats['Person'] != '':
+						person=aux_verb.feats['Person']
+			for cop_verb in cop:
+				if cop_verb.feats['Person'] != '':
+						person=aux_verb.feats['Person']
+
 			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
 			self.write_node_info(node,
 					aspect=copVerb.feats['Aspect'],
-					person=copVerb.feats['Person'],
+					person=person,
 					number=copVerb.feats['Number'],
 					mood='Cnd',
 					form='Fin',
@@ -83,5 +93,5 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 					ords=phrase_ords,
 					gender=copVerb.feats['Gender'],
 					animacy=copVerb.feats['Animacy'],
-					periphrasis=self.get_periphrasis_bool(node)
+					analytic=self.get_analytic_bool(node)
 			)
