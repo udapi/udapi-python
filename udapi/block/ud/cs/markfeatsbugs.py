@@ -37,6 +37,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                    'Emph': ['Yes'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']
                 })
@@ -47,6 +48,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim', 'Inan'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                    'Emph': ['Yes'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
             else:
@@ -54,6 +56,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Gender': ['Masc', 'Fem', 'Neut'],
                     'Number': ['Sing', 'Dual', 'Plur'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                    'Emph': ['Yes'],
                     'Foreign': ['Yes'],
                     'Abbr': ['Yes']})
         # PROPER NOUNS #########################################################
@@ -531,6 +534,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
             elif node.lemma == 'žádný':
                 # In Old Czech, this determiner also allows Variant=Short: žáden, žádna, žádnu, žádno, žádni, žádny.
                 self.check_adjective_like(node, ['PronType'], {'PronType': ['Neg'], 'Variant': ['Short']})
+            elif node.feats['NumType'] in ['Ord', 'Mult']: # pronominal numerals 'několikátý', 'několikerý', 'několiký' etc.
+                self.check_adjective_like(node, ['PronType', 'NumType'], {
+                    'PronType': ['Ind', 'Int', 'Rel', 'Dem'],
+                    'NumType': ['Ord', 'Mult']
+                })
             elif node.feats['NumType'] == 'Card': # pronominal quantifiers 'mnoho', 'málo', 'několik' etc.
                 if node.lemma == 'nejeden':
                     self.check_adjective_like(node, ['PronType', 'NumType'], {'PronType': ['Ind'], 'NumType': ['Card']})
