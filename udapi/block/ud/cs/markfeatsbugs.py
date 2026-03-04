@@ -504,7 +504,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
-            elif re.match(r'^(můj|tvůj|svůj)(ž(e|to)?)$', node.lemma):
+            elif re.match(r'^(můj|tvůj|svůj)(ž(e|to)?)?$', node.lemma):
                 if node.feats['Reflex'] == 'Yes':
                     self.check_adjective_like(node, ['PronType', 'Poss', 'Reflex'], {
                         'PronType': ['Prs'],
