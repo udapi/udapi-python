@@ -158,6 +158,22 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'main':   0,
                     'shape':  'subtree',
                 }
+            # dajžto = dajž + to
+            if subtokens[1] == 'to':
+                if token_from_subtokens != node.form:
+                    logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
+                    return None
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   subtokens[0] + ' ' + subtokens[1],
+                    'lemma':  '* ten',
+                    'upos':   '* DET',
+                    'xpos':   '* PDNS4----------',
+                    'feats':  '* Case=Acc|Gender=Neut|Number=Sing|PronType=Dem',
+                    'deprel': '* obj',
+                    'main':   0,
+                    'shape':  'subtree',
+                }
             # Contractions of prepositions and pronouns almost could be processed
             # regardless of AddMwt instructions by the annotator, but we still
             # require it to be on the safe side. For example, both 'přědeň' and
