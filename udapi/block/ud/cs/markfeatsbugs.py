@@ -599,7 +599,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
-                elif re.match(r'^(dva|oba)$', node.lemma):
+                elif re.match(r'^(dva|oba|dvé|obé)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm', 'Gender', 'Number', 'Case'])
                     if self.pdt20:
                         self.check_allowed_features(node, {
