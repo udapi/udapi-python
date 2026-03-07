@@ -599,7 +599,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
-                elif re.match(r'^(dva|oba|dvé|obé)$', node.lemma):
+                elif re.match(r'^(dva|oba)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm', 'Gender', 'Number', 'Case'])
                     if self.pdt20:
                         self.check_allowed_features(node, {
@@ -620,6 +620,16 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Number': ['Dual', 'Plur'],
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                         })
+                elif re.match(r'^(dvé|obé)$', node.lemma):
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Gender', 'Number', 'Case'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'PronType': ['Tot'], # for 'obé'
+                        'NumForm': ['Word'],
+                        'Gender': ['Neut'],
+                        'Number': ['Sing'], # when 'dvé' is subject, the verb is neuter singular
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
                 elif node.lemma == 'půl':
                     self.check_required_features(node, ['NumType', 'NumForm'])
                     self.check_allowed_features(node, {
