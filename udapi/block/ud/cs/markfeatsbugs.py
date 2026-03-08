@@ -113,6 +113,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_required_features(node, ['NumType', 'Gender', 'Animacy', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Ord', 'Mult'],
+                        'NumForm': ['Roman'], # NumForm is normally not used with ordinals except when a Roman numeral is clearly ordinal even without context ('XXXIIho')
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
