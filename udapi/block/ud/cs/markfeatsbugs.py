@@ -296,7 +296,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Animacy': ['Anim'],
                     'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Loc', 'Ins']
                 })
-            elif re.match(r'^(co(si?)?|což|což?koliv?|něco|lečco|lecco|nic|nicož)$', node.lemma):
+            elif re.match(r'^(co(si?)?|což|což?koliv?|něco|lečco|lecco|ledacos?|nic|nicož)$', node.lemma):
                 # Although these pronouns behave by default as neuter singular,
                 # no Gender and Number is annotated. However, quite unusually,
                 # there is Animacy=Inan without Gender.
