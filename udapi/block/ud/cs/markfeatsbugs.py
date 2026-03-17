@@ -741,7 +741,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Person': ['1', '2', '3'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Polarity': ['Pos', 'Neg'],
-                        'Variant': ['Short', 'Long'] # distinguishes sigmatic (Long) and asigmatic (Short) aorist
+                        'Variant': ['Short', 'Long'], # distinguishes sigmatic (Long) and asigmatic (Short) aorist
+                        'Emph': ['Yes']
                     })
             elif node.feats['VerbForm'] == 'Part': # only l-participle; the others are ADJ, not VERB
                 if node.feats['Gender'] == 'Masc':
