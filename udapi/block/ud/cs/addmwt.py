@@ -59,6 +59,7 @@ for prep in 'na o za'.split():
         'shape': 'subtree',
     }
 # In 19th century texts (Hičkok etalon), one instance of 'seč' was also split (and annotated as ADP + accusative!)
+# A few additional instances were found in older texts, too (e.g. 16th century).
 # We must do it separately, as the preposition is vocalized.
 MWTS['seč'] = {
     'form': 'se' + ' co',
