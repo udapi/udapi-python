@@ -156,7 +156,7 @@ class Stats(Block):
                 columns.append((f"c_len_{i}{'' if i < self.e_len_max else '+'}", f"{percent:5.1f}"))
             if self.report_entity_range:
                 self.entity_ranges.sort()
-                percentile = self.entity_ranges[int(0.95 * (len(self.entity_ranges) - 1))]
+                percentile = self.entity_ranges[int(0.95 * (len(self.entity_ranges) - 1))] if self.entity_ranges else 0
                 columns += [('entity_range_95percentile', f"{percentile:6,}"),]
         if self.report_mentions:
             columns += [('mentions', f"{self.mentions:7,}"),
