@@ -6,7 +6,8 @@ class Stats(Block):
 
     def __init__(self, m_len_max=5, e_len_max=5,
                  report_basics=False, report_mentions=True, report_entities=True,
-                 report_details=True, selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM _',
+                 report_details=True, report_words_per_doc=False, report_entity_range=True,
+                 selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM _',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human',
                  per_doc=False, max_rows_per_page=50, docname='newdoc', docname_len=15,
                  **kwargs):
@@ -17,6 +18,8 @@ class Stats(Block):
         self.report_mentions = report_mentions
         self.report_entities = report_entities
         self.report_details = report_details
+        self.report_words_per_doc = report_words_per_doc
+        self.report_entity_range = report_entity_range
         self.exclude_singletons = exclude_singletons
         self.exclude_nonsingletons = exclude_nonsingletons
         self.style = style
@@ -40,10 +43,17 @@ class Stats(Block):
         self.longest_entity = 0
         self.m_words = 0
         self.selected_upos = None if selected_upos == 'all' else selected_upos.split()
+        self.entity_ranges = []
 
     def process_document(self, doc):
         self.total_nodes += len(list(doc.nodes))
         self.counter['documents'] += 1
+        node2docord, current_docord = {}, 0
+        if self.report_entity_range:
+            for node in doc.nodes_and_empty:
+                node2docord[node] = current_docord
+                current_docord += 1
+
         for entity in doc.coref_entities:
             len_mentions = len(entity.mentions)
             if len_mentions == 1:
@@ -52,6 +62,7 @@ class Stats(Block):
                 continue
             elif len_mentions > 1 and self.exclude_nonsingletons:
                 continue
+            self.entity_ranges.append(node2docord[entity.mentions[-1].head] - node2docord[entity.mentions[0].head])
             self.longest_entity = max(len_mentions, self.longest_entity)
             self.counter['c_total_len'] += len_mentions
             self.counter[f"c_len_{min(len_mentions, self.e_len_max)}"] += 1
@@ -83,11 +94,17 @@ class Stats(Block):
                     self.counter['m_nontreelet'] += 1 if heads > 1 else 0
 
         if self.report_basics:
+            doc_words = 0
             for tree in doc.trees:
-                self.counter['newdocs'] += 1 if tree.newdoc else 0
                 self.counter['sents'] += 1
                 self.counter['words'] += len(tree.descendants)
                 self.counter['empty'] += len(tree.empty_nodes)
+                if tree.newdoc:
+                    self.counter['newdocs'] += 1
+                    if doc_words > self.counter['max_words_per_doc']:
+                        self.counter['max_words_per_doc'] = doc_words
+                    doc_words = 0
+                doc_words += len(tree.descendants)
 
     def after_process_document(self, doc):
         if self.per_doc:
@@ -122,10 +139,13 @@ class Stats(Block):
 
         columns =[ ]
         if self.report_basics:
-            columns += [('docs', f"{self.counter['newdocs']:7,}"),
+            columns += [('docs', f"{self.counter['newdocs']:6,}"),
                         ('sents', f"{self.counter['sents']:7,}"),
-                        ('words', f"{self.counter['words']:7,}"),
+                        ('words', f"{self.counter['words']:9,}"),
                         ('empty', f"{self.counter['empty']:7,}"),]
+            if self.report_words_per_doc:
+                columns += [('max_words/doc', f"{self.counter['max_words_per_doc']:7,}"),
+                            ('words/doc', f"{self.counter['words']/self.counter['newdocs']:7,.0f}"),]
         if self.report_entities:
             columns += [('entities', f"{self.entities:7,}"),
                         ('entities_per1k', f"{1000 * self.entities / total_nodes_nonzero:6.0f}"),
@@ -134,6 +154,10 @@ class Stats(Block):
             for i in range(1, self.e_len_max + 1):
                 percent = 100 * self.counter[f"c_len_{i}"] / entities_nonzero
                 columns.append((f"c_len_{i}{'' if i < self.e_len_max else '+'}", f"{percent:5.1f}"))
+            if self.report_entity_range:
+                self.entity_ranges.sort()
+                percentile = self.entity_ranges[int(0.95 * (len(self.entity_ranges) - 1))]
+                columns += [('entity_range_95percentile', f"{percentile:6,}"),]
         if self.report_mentions:
             columns += [('mentions', f"{self.mentions:7,}"),
                         ('mentions_per1k', f"{1000 * self.mentions / total_nodes_nonzero:6.0f}"),
@@ -155,7 +179,7 @@ class Stats(Block):
                 columns.append(('head_upos=' + upos, f"{100 * self.counter['m_head_upos_' + upos] / mentions_nonzero:5.1f}"))
 
         if self.style.startswith('tex'):
-            print(" & ".join(c[1] for c in columns), end=" \\\\\n")
+            print(" &".join(c[1] for c in columns), end=" \\\\\n")
         elif self.style == 'human':
             for c in columns:
                 print(f"{c[0]:>15} = {c[1].strip():>10}")
@@ -175,20 +199,39 @@ class Stats(Block):
                 print(r'\title{Udapi coreference statistics}')
                 print(r'\begin{document}')
         print(r'\def\MC#1#2{\multicolumn{#1}{c}{#2}}')
-        lines = [r'\begin{mypage}\begin{tabular}{@{}l ',
+        lines = [r'\begin{mypage}'+"\n"+r'\begin{tabular}{@{}l ',
                  " " * self.docname_len,
                  ("document" if self.per_doc else "dataset ") + " " * (self.docname_len-8),
                  " " * self.docname_len]
         if self.report_basics:
+            #lines[0] += "rrrr "
+            #lines[1] += r'& \MC{4}{total number of}              '
+            #lines[2] += r'&        &         &         &         '
+            #lines[3] += r'&   docs &   sents &   words & empty n.'
+
+            #lines[0] += "rrrrr "
+            #lines[1] += r'& \MC{5}{number of}                             '
+            #lines[2] += r'& \MC{4}{total}                       & per doc '
+            #lines[3] += r'&  docs &  sents &    words & empty n.& words   '
             lines[0] += "rrrr "
-            lines[1] += r'& \MC{4}{total number of}              '
-            lines[2] += r'&        &         &         &         '
-            lines[3] += r'&   docs &   sents &   words & empty n.'
+            lines[1] += r'& \MC{4}{text size}                  '
+            lines[2] += r'& \MC{4}{total number of}            '
+            lines[3] += r'&  docs &  sents &    words &empty n.'
+            if self.report_words_per_doc:
+                lines[0] += "rr "
+                lines[1] += r'&        &        '
+                lines[2] += r'&\MC{2}{words/doc}'
+                lines[3] += r'&    max &    avg '
         if self.report_entities:
             lines[0] += "rrrr "
-            lines[1] += r'& \MC{4}{entities}                 '
-            lines[2] += r'&  total & per 1k & \MC{2}{length} '
-            lines[3] += r'&  count &  words &    max &  avg. '
+            lines[1] += r'& \MC{4}{entities}              '
+            lines[2] += r'&  total &per 1k &\MC{2}{length}'
+            lines[3] += r'&  count & words &   max &  avg '
+            if self.report_entity_range:
+                lines[0] += "r "
+                lines[1] += r'&       '
+                lines[2] += r'& range '
+                lines[3] += r'& p95   '
             if self.e_len_max:
                 for i in range(1, self.e_len_max + 1):
                     lines[0] += "r"
@@ -198,9 +241,9 @@ class Stats(Block):
                 lines[1] += r'& \MC{' + str(self.e_len_max) + r'}{distribution of entity lengths}'
         if self.report_mentions:
             lines[0] += "rrrr "
-            lines[1] += r'& \MC{4}{mentions}                  '
-            lines[2] += r'&   total & per 1k & \MC{2}{length} '
-            lines[3] += r'&   count &  words &    max &  avg. '
+            lines[1] += r'& \MC{4}{mentions}              '
+            lines[2] += r'&  total &per 1k &\MC{2}{length}'
+            lines[3] += r'&  count & words &   max &  avg '
             if self.m_len_max:
                 for i in range(0, self.m_len_max + 1):
                     lines[0] += "r"
@@ -227,12 +270,17 @@ class Stats(Block):
         lines[2] += r'\\'
         lines[3] += r'\\\midrule'
         if self.report_basics:
+            lines[1] += r'\cmidrule(lr){2-7}' if self.report_words_per_doc else r'\cmidrule(lr){2-5}'
+            lines[2] += r'\cmidrule(lr){2-5}'
             last_col += 4
-            lines[1] += r'\cmidrule(lr){2-5}'
+            if self.report_words_per_doc:
+                lines[2] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+2}" + '}'
+                last_col += 2
         if self.report_entities:
-            lines[1] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+4}" + '}'
+            _cols = 5 if self.report_entity_range else 5
+            lines[1] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+_cols}" + '}'
             lines[2] += r'\cmidrule(lr){' + f"{last_col+3}-{last_col+4}" + '}'
-            last_col += 4
+            last_col += _cols
             if self.e_len_max:
                 last_col += self.e_len_max
                 lines[1] += r'\cmidrule(lr){6-' + str(last_col) + '}'
@@ -251,6 +299,6 @@ class Stats(Block):
     def print_footer(self, end_doc=True):
         if not self.style.startswith('tex-'):
             return
-        print(r'\bottomrule\end{tabular}\end{mypage}')
+        print(r'\bottomrule\end{tabular}'+"\n"+r'\end{mypage}')
         if self.style == 'tex-doc' and end_doc:
             print(r'\end{document}')
