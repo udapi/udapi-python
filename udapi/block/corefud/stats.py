@@ -1,15 +1,17 @@
 from udapi.core.block import Block
 from collections import Counter
+import re
 
 class Stats(Block):
     """Block corefud.Stats prints various coreference-related statistics."""
 
     def __init__(self, m_len_max=5, e_len_max=5,
                  report_basics=False, report_mentions=True, report_entities=True,
-                 report_details=True, report_words_per_doc=False, report_entity_range=True,
+                 report_details=True, report_words_per_doc=False, report_entity_range=False,
                  selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM _',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human',
                  per_doc=False, max_rows_per_page=50, docname='newdoc', docname_len=15,
+                 highlight_docnames=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.m_len_max = m_len_max
@@ -31,6 +33,7 @@ class Stats(Block):
             raise ValueError(f'Unknown style {style}')
         self.docname = docname
         self.docname_len = docname_len
+        self.highlight_docnames = highlight_docnames
         self._header_printed = False
         self._lines_printed = None
 
@@ -62,7 +65,8 @@ class Stats(Block):
                 continue
             elif len_mentions > 1 and self.exclude_nonsingletons:
                 continue
-            self.entity_ranges.append(node2docord[entity.mentions[-1].head] - node2docord[entity.mentions[0].head])
+            if self.report_entity_range:
+                self.entity_ranges.append(node2docord[entity.mentions[-1].head] - node2docord[entity.mentions[0].head])
             self.longest_entity = max(len_mentions, self.longest_entity)
             self.counter['c_total_len'] += len_mentions
             self.counter[f"c_len_{min(len_mentions, self.e_len_max)}"] += 1
@@ -117,6 +121,7 @@ class Stats(Block):
             self.longest_mention = 0
             self.longest_entity = 0
             self.m_words = 0
+            self.entity_ranges = []
 
     def process_end(self, skip=True, doc=None):
         if not self._lines_printed:
@@ -128,6 +133,10 @@ class Stats(Block):
                 return
             else:
                 docname = doc.meta['loaded_from'] if self.docname == 'filename' else doc[0].trees[0].newdoc
+                if self.style.startswith('tex'):
+                    if self.highlight_docnames and re.search(self.highlight_docnames, docname):
+                        docname = r"\NEW " + docname
+                    docname = docname.replace('_', r'\_')
                 print(f"{docname:{self.docname_len}}", end='&' if self.style.startswith('tex') else '\n')
         elif self.style.startswith('tex-'):
             print(f"{self.counter['documents']:4} documents &")
@@ -151,13 +160,13 @@ class Stats(Block):
                         ('entities_per1k', f"{1000 * self.entities / total_nodes_nonzero:6.0f}"),
                         ('longest_entity', f"{self.longest_entity:6}"),
                         ('avg_entity', f"{self.counter['c_total_len'] / entities_nonzero:5.1f}")]
-            for i in range(1, self.e_len_max + 1):
-                percent = 100 * self.counter[f"c_len_{i}"] / entities_nonzero
-                columns.append((f"c_len_{i}{'' if i < self.e_len_max else '+'}", f"{percent:5.1f}"))
             if self.report_entity_range:
                 self.entity_ranges.sort()
                 percentile = self.entity_ranges[int(0.95 * (len(self.entity_ranges) - 1))] if self.entity_ranges else 0
                 columns += [('entity_range_95percentile', f"{percentile:6,}"),]
+            for i in range(1, self.e_len_max + 1):
+                percent = 100 * self.counter[f"c_len_{i}"] / entities_nonzero
+                columns.append((f"c_len_{i}{'' if i < self.e_len_max else '+'}", f"{percent:5.1f}"))
         if self.report_mentions:
             columns += [('mentions', f"{self.mentions:7,}"),
                         ('mentions_per1k', f"{1000 * self.mentions / total_nodes_nonzero:6.0f}"),
@@ -196,6 +205,7 @@ class Stats(Block):
             if self._lines_printed is None:
                 print(r'\documentclass[multi=mypage]{standalone}')
                 print(r'\usepackage[utf8]{inputenc}\usepackage{booktabs}\usepackage{underscore}')
+                print(r'\usepackage[table]{xcolor}\newcommand{\NEW}{\rowcolor{gray!50}}')
                 print(r'\title{Udapi coreference statistics}')
                 print(r'\begin{document}')
         print(r'\def\MC#1#2{\multicolumn{#1}{c}{#2}}')
@@ -204,15 +214,6 @@ class Stats(Block):
                  ("document" if self.per_doc else "dataset ") + " " * (self.docname_len-8),
                  " " * self.docname_len]
         if self.report_basics:
-            #lines[0] += "rrrr "
-            #lines[1] += r'& \MC{4}{total number of}              '
-            #lines[2] += r'&        &         &         &         '
-            #lines[3] += r'&   docs &   sents &   words & empty n.'
-
-            #lines[0] += "rrrrr "
-            #lines[1] += r'& \MC{5}{number of}                             '
-            #lines[2] += r'& \MC{4}{total}                       & per doc '
-            #lines[3] += r'&  docs &  sents &    words & empty n.& words   '
             lines[0] += "rrrr "
             lines[1] += r'& \MC{4}{text size}                  '
             lines[2] += r'& \MC{4}{total number of}            '
