@@ -3,8 +3,6 @@ Block ud.FixLeaf checks that function word dependents are leaves.
 Certain known exceptions are observed (e.g., fixed expressions).
 """
 from udapi.core.block import Block
-import logging
-import re
 
 class FixLeaf(Block):
     """

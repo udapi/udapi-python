@@ -11,7 +11,6 @@ udapy ud.PrintFixed known_expressions=fixed_expressions.txt < in.conllu | sort |
 Author: Dan Zeman
 """
 from udapi.core.block import Block
-import re
 import logging
 
 class PrintFixed(Block):
