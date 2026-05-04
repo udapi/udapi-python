@@ -6,7 +6,7 @@ Author: Dan Zeman
 """
 from udapi.core.block import Block
 
-class DeQue(Block):
+class Coord(Block):
     """Block for fixing coordination in UD_Galician-CTG."""
 
     def process_node(self, node):
