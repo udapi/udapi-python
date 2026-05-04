@@ -15,7 +15,10 @@ class DeQue(Block):
         # Is the current node "que" and is it preceded by a preposition?
         if not node.prev_node:
             return
-        if node.lemma == 'que' and node.prev_node.upos == 'ADP':
+        # Originally I thought we would catch any "que" even if currently tagged 'SCONJ' (it could be annotation error).
+        # However, it turns out some of them may be correct, e.g., compound marker "salvo que" ("salvo" is 'ADP').
+        # So I am now requiring that "que" is already pronoun.
+        if node.lemma == 'que' and node.upos == 'PRON' and node.prev_node.upos == 'ADP':
             que = node
             preposition = node.prev_node
             # I have not seen it but que could be attached as a descendant of the preposition.
