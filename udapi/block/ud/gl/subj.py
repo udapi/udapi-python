@@ -12,6 +12,14 @@ class Subj(Block):
 
     def process_node(self, node):
         subjects = [x for x in node.children if x.udeprel in ['nsubj', 'csubj'] and not re.search(r':outer$', x.deprel)]
+        # Certain lemmas are unlikely to be subjects ("onde"), others could be
+        # subjects in theory but were seen in the treebank only in clearly non
+        # subject positions (while mistakenly tagged "nsubj").
+        if len(subjects) > 1:
+            for x in subjects:
+                if re.fullmatch(r'(canto|como|dous|em|lle|miúdo|obstante|obter|onde|pena|principio|respecto|seis|tarde|través|tres)', x.lemma):
+                    x.deprel = 'obl' if node.upos in ['VERB', 'ADJ', 'ADV'] else 'nmod'
+            subjects = [x for x in node.children if x.udeprel in ['nsubj', 'csubj'] and not re.search(r':outer$', x.deprel)]
         if len(subjects) > 1:
             ques = [x for x in node.children if x.ord > subjects[0].ord and x.ord < node.ord and x.lemma in ['que', 'qual']]
             cops = [x for x in node.children if x.ord > subjects[0].ord and x.ord < node.ord and x.udeprel == 'cop']
@@ -33,3 +41,7 @@ class Subj(Block):
                 subjects[0].xpos = 'CS'
                 subjects[0].feats['PronType'] = ''
                 subjects[0].deprel = 'mark'
+            # Some verbs resemble pseudo-copulas and their second "subject"
+            # could be a secondary predicate.
+            elif len(subjects) == 2 and re.fullmatch(r'(aparecer|considerar|definir|empregar|estar|interpretar|parecer|referir|ser|servir|significar|valorar)', node.lemma):
+                subjects[1].deprel = 'xcomp'
