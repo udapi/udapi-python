@@ -19,6 +19,13 @@ class Subj(Block):
             for x in subjects:
                 if re.fullmatch(r'(canto|como|dous|em|lle|miúdo|obstante|obter|onde|pena|principio|respecto|seis|tarde|través|tres)', x.lemma):
                     x.deprel = 'obl' if node.upos in ['VERB', 'ADJ', 'ADV'] else 'nmod'
+                elif x.lemma == 'que' and x.prev_node and re.fullmatch(r'(dado|xa)', x.prev_node.form.lower()):
+                    x.upos = 'SCONJ'
+                    x.xpos = 'CS'
+                    x.feats['PronType'] = ''
+                    x.deprel = 'mark'
+                    if not x.prev_node.is_descendant_of(x) and not x.is_descendant_of(x.prev_node):
+                        x.prev_node.parent = node
             subjects = [x for x in node.children if x.udeprel in ['nsubj', 'csubj'] and not re.search(r':outer$', x.deprel)]
         if len(subjects) > 1:
             ques = [x for x in node.children if x.ord > subjects[0].ord and x.ord < node.ord and x.lemma in ['que', 'qual']]
@@ -45,3 +52,8 @@ class Subj(Block):
             # could be a secondary predicate.
             elif len(subjects) == 2 and re.fullmatch(r'(aparecer|considerar|definir|empregar|estar|interpretar|parecer|referir|ser|servir|significar|valorar)', node.lemma):
                 subjects[1].deprel = 'xcomp'
+            # With a copula, we may be actually observing the outer subject.
+            # Note that we defined the cops list as copulas between the first subject and the current node (verb).
+            # This will work for the example I observed (outer subject, copula, inner subject, verb) but it may miss other examples.
+            elif len(subjects) == 2 and len(cops) > 0:
+                subjects[0].deprel = 'csubj:outer' if subjects[0].upos == 'VERB' else 'nsubj:outer'
