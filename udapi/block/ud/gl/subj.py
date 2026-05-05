@@ -12,12 +12,13 @@ class Subj(Block):
 
     def process_node(self, node):
         subjects = [x for x in node.children if x.udeprel in ['nsubj', 'csubj'] and not re.search(r':outer$', x.deprel)]
+        objects = [x for x in node.children if x.udeprel == 'obj']
         # Certain lemmas are unlikely to be subjects ("onde"), others could be
         # subjects in theory but were seen in the treebank only in clearly non
         # subject positions (while mistakenly tagged "nsubj").
         if len(subjects) > 1:
             for x in subjects:
-                if re.fullmatch(r'(canto|como|dous|em|lle|miúdo|obstante|obter|onde|pena|principio|respecto|seis|tarde|través|tres)', x.lemma):
+                if re.fullmatch(r'(canto|como|consigo|dous|em|lle|miúdo|obstante|obter|onde|pena|principio|respecto|seis|tarde|través|tres)', x.lemma):
                     x.deprel = 'obl' if node.upos in ['VERB', 'ADJ', 'ADV'] else 'nmod'
                 elif x.lemma == 'que' and x.prev_node and re.fullmatch(r'(dado|xa)', x.prev_node.form.lower()):
                     x.upos = 'SCONJ'
@@ -57,3 +58,6 @@ class Subj(Block):
             # This will work for the example I observed (outer subject, copula, inner subject, verb) but it may miss other examples.
             elif len(subjects) == 2 and len(cops) > 0:
                 subjects[0].deprel = 'csubj:outer' if subjects[0].upos == 'VERB' else 'nsubj:outer'
+            # There is no guarantee that this is correct but there are too many to disambiguate them manually, and we have to do something.
+            elif len(subjects) == 2 and subjects[0].lemma == 'que':
+                subjects[0].deprel = 'obj' if len(objects) == 0 else 'obl'
