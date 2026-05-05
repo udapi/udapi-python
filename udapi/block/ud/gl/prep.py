@@ -10,7 +10,7 @@ class Prep(Block):
     """Block for fixing prepositions in UD_Galician-CTG."""
 
     def process_node(self, node):
-        if node.upos == 'ADP' and node.parent.ord < node.ord:
+        if node.upos == 'ADP' and node.parent.ord < node.ord and node.udeprel != 'conj':
             rightsiblings = node.siblings(following_only=True)
             if len(rightsiblings) > 0 and rightsiblings[0].upos in ['NOUN', 'PROPN', 'PRON']:
                 noun = rightsiblings[0]
