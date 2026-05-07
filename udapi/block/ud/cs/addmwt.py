@@ -14,7 +14,9 @@ MWTS = {
     'aby': {'form': 'aby by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
     'kdyby': {'form': 'když by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
     'abychom': {'form': 'aby bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    'abysme': {'form': 'aby bysme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'kdybychom': {'form': 'když bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
+    'kdybysme': {'form': 'když bysme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     # Old Czech 'abychme' == Modern Czech 'abychom'
     'abychme': {'form': 'aby bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'kdybychme': {'form': 'když bychme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
