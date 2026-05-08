@@ -384,7 +384,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
         elif node.upos == 'DET':
             # Possessive determiners 'jeho' and 'jejich' (formerly 'jich') do not inflect, i.e., no Gender, Number, Case.
             # Note that the possessive determiner 'její' (formerly 'jejie') does inflect, although it also has the lemma 'jeho'.
-            if re.match(r'^(je?ho|jejich|j[ií]ch)$', node.form.lower()):
+            # Note that long 'jejích' refers to singular feminine possessor in Modern Czech, but in Middle Czech it can be plural.
+            if re.match(r'^(je?ho|jej[ií]ch|j[ií]ch)$', node.form.lower()):
                 self.check_required_features(node, ['PronType', 'Poss', 'Person', 'Number[psor]'])
                 self.check_allowed_features(node, {
                     'PronType': ['Prs'],
@@ -780,7 +781,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         self.check_allowed_features(node, {
                             'Aspect': ['Imp', 'Perf'],
                             'VerbForm': ['Conv'],
-                            'Tense': ['Past', 'Pres'],
+                            'Tense': ['Past', 'Pres', 'Fut'], # future tense distinguishes "budouce" from "jsouce"
                             'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
                             'Number': ['Sing'],
                             'Gender': ['Masc'],
@@ -792,7 +793,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         self.check_allowed_features(node, {
                             'Aspect': ['Imp', 'Perf'],
                             'VerbForm': ['Conv'],
-                            'Tense': ['Past', 'Pres'],
+                            'Tense': ['Past', 'Pres', 'Fut'], # future tense distinguishes "budouce" from "jsouce"
                             'Voice': ['Act'], # passive participle is ADJ, so we will not encounter it under VERB
                             'Number': ['Sing'],
                             'Gender': ['Fem', 'Neut'],
@@ -803,7 +804,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'Aspect': ['Imp', 'Perf'],
                         'VerbForm': ['Conv'],
-                        'Tense': ['Past', 'Pres'],
+                        'Tense': ['Past', 'Pres', 'Fut'], # future tense distinguishes "budouce" from "jsouce"
                         'Voice': ['Act'],
                         'Number': ['Dual', 'Plur'],
                         'Polarity': ['Pos', 'Neg']
