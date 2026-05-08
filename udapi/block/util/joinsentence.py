@@ -55,6 +55,11 @@ class JoinSentence(Block):
                 if join_commands:
                     if not previous_tree:
                         logging.fatal('Cannot join the first sentence as there is no previous sentence')
+                    # We must take care of moving multiword tokens before we steal nodes.
+                    for mwt in root.multiword_tokens:
+                        previous_tree.multiword_tokens.append(mwt)
+                        mwt.root = previous_tree
+                    root.multiword_tokens = []
                     previous_tree.steal_nodes(root.descendants)
                     previous_tree.text = previous_tree.compute_text()
                     # Remove from the node the MISC attribute that triggered the sentence split.
@@ -69,9 +74,16 @@ class JoinSentence(Block):
                 if not previous_tree:
                     logging.fatal('Cannot join the first sentence as there is no previous sentence')
                 root = bundle.get_tree()
+                # We must take care of moving multiword tokens before we steal nodes.
+                for mwt in root.multiword_tokens:
+                    previous_tree.multiword_tokens.append(mwt)
+                    mwt.root = previous_tree
+                root.multiword_tokens = []
                 previous_tree.steal_nodes(root.descendants)
                 previous_tree.text = previous_tree.compute_text()
                 # Remove the current bundle. It will also update the numbers of the remaining bundles.
                 bundle.remove()
                 # We have found our sentence. No need to process the rest of the document.
                 break
+            else:
+                previous_tree = bundle.get_tree()
