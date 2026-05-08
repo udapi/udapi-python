@@ -12,11 +12,13 @@ class JoinToken(Block):
     annotator or by a previous block that tests the specific conditions under
     which joining is desired.) Joining cannot be done across sentence
     boundaries; if necessary, apply util.JoinSentence first. Multiword tokens
-    are currently not supported: None of the nodes to be merged can belong to
-    a MWT. (The block ud.JoinAsMwt may be of some help, but it works differently.)
+    are currently supported only partially: If the token consists of the
+    current and the previous node only, they will be replaced by a node
+    representing the surface token. Any other situation involving a MWT will
+    be rejected. (The block ud.JoinAsMwt may be of some help, but it works differently.)
     Merging is simple if there is no space between the tokens (see SpaceAfter=No
     at the first token). If there is a space, there are three options in theory:
-        
+
         1. Keep the tokens as two nodes but apply the UD goeswith relation
            (see https://universaldependencies.org/u/overview/typos.html) and
            the related annotation rules.
@@ -26,7 +28,7 @@ class JoinToken(Block):
         3. Remove the space without any trace. Not recommended in UD unless the
            underlying text was created directly for UD and can be thus considered
            part of the annotation.
-    
+
     At present, this block does not support merging with spaces at all, but
     in the future one or more of the options may be added.
     """
@@ -63,7 +65,18 @@ class JoinToken(Block):
             logging.warning("MISC %s cannot be used at the first token of a sentence." % self.misc_name)
             node.misc['Bug'] = 'JoiningTokenNotSupportedHere'
             return
-        if node.multiword_token or prevnode.multiword_token:
+        ###!!! Only limited support for MWT: If there are two words and this is the second one, the MWT will become single word-token again.
+        ###!!! Other configurations with MWT will not be processed and a warning will be issued.
+        if node.multiword_token and prevnode.multiword_token and node.multiword_token == prevnode.multiword_token and len(node.multiword_token.words) == 2:
+            mwt = node.multiword_token
+            # Adjust the attributes of the nodes so that the code below
+            # that joins two standard nodes will do what is needed.
+            prevnode.form = mwt.form
+            prevnode.misc['SpaceAfter'] = 'No'
+            node.form = ''
+            node.misc['SpaceAfter'] = mwt.misc['SpaceAfter']
+            mwt.remove()
+        elif node.multiword_token or prevnode.multiword_token:
             logging.warning("MISC %s cannot be used if one of the nodes belongs to a multiword token." % self.misc_name)
             node.misc['Bug'] = 'JoiningTokenNotSupportedHere'
             return
