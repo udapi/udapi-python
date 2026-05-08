@@ -634,7 +634,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Number': ['Sing'], # when 'dvé' is subject, the verb is neuter singular
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
-                elif node.lemma == 'půl':
+                elif re.match(r'^(půl|půldruhého|půltřetího)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
