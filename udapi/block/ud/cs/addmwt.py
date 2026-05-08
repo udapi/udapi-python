@@ -13,6 +13,7 @@ MWTS = {
     'kdybysi': {'form': 'když bys', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Sing|Person=2|VerbForm=Fin'},
     'aby': {'form': 'aby by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
     'kdyby': {'form': 'když by', 'feats': '_ Aspect=Imp|Mood=Cnd|VerbForm=Fin'},
+    # Note: Occasionally we also need to split 'jakoby' but we must not do it whenever we see the string, it must be specifically ordered in the given position!
     'abychom': {'form': 'aby bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'abysme': {'form': 'aby bysme', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
     'kdybychom': {'form': 'když bychom', 'feats': '_ Aspect=Imp|Mood=Cnd|Number=Plur|Person=1|VerbForm=Fin'},
@@ -74,6 +75,18 @@ MWTS['seč'] = {
     'shape': 'subtree',
 }
 
+# Old Czech 'takliž'.
+MWTS['takliž'] = {
+    'form':   'tak liž',
+    'lemma':  'tak li',
+    'upos':   'ADV SCONJ',
+    'xpos':   'Db------------- J,-------------',
+    'feats':  'PronType=Dem Emph=Yes',
+    'deprel': 'advmod mark',
+    'main':   0,
+    'shape':  'siblings'
+}
+
 # Old Czech 'toliť' (special case with 3 subtokens; general -ť will be solved dynamically below).
 MWTS['toliť'] = {
     'form':   'to li ť',
@@ -98,6 +111,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
             return None
         analysis = MWTS.get(node.form.lower(), None)
         if analysis is not None:
+            node.misc['AddMwt'] = ''
             return analysis
         # If the node did not match any of the static rules defined in MWTS,
         # check it against the "dynamic" rules below. The enclitic 'ť' will be
@@ -110,6 +124,21 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                 logging.warning("MISC 'AddMwt=%s' has unexpected number of subtokens." % node.misc['AddMwt'])
                 return None
             token_from_subtokens = ''.join(subtokens)
+            # The patterns with -by, -bych... (aby, kdyby) are mostly solved above,
+            # but the exception is 'jakoby', where we need instruction at specific
+            # position, otherwise we do not split it.
+            if subtokens[1] == 'by':
+                node.misc['AddMwt'] = ''
+                return {
+                    'form':   subtokens[0] + ' by',
+                    'lemma':  '* být',
+                    'upos':   '* AUX',
+                    'xpos':   '* Vc-------------',
+                    'feats':  '* Aspect=Imp|Mood=Cnd|VerbForm=Fin',
+                    'deprel': '* aux',
+                    'main':   0,
+                    'shape':  'siblings',
+                }
             if subtokens[1] == 'jsi':
                 node.misc['AddMwt'] = ''
                 return {
@@ -146,7 +175,7 @@ class AddMwt(udapi.block.ud.addmwt.AddMwt):
                     'main':   0,
                     'shape': 'subtree',
                 }
-            if subtokens[1] in ['ť', 'tě', 'ti']:
+            if subtokens[1] in ['ť', 'tě', 'ti', 't']:
                 if token_from_subtokens != node.form:
                     logging.warning("Concatenation of MISC 'AddMwt=%s' does not yield the FORM '%s'." % (node.misc['AddMwt'], node.form))
                     return None

@@ -118,6 +118,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Animacy': ['Anim', 'Inan'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                        'Degree': ['Pos', 'Cmp', 'Sup'], # allowed because of 'prvnějšího'
                         'Variant': ['Short'], # sedmer (Mult Short) duch tvój; pól čtverta (Ord Short) komára
                         'Emph': ['Yes'],
                         'Foreign': ['Yes'],
@@ -130,6 +131,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Gender': ['Masc', 'Fem', 'Neut'],
                         'Number': ['Sing', 'Dual', 'Plur'],
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins'],
+                        'Degree': ['Pos', 'Cmp', 'Sup'], # allowed because of 'prvnějšího'
                         'Variant': ['Short'],
                         'Emph': ['Yes'],
                         'Foreign': ['Yes'],
@@ -418,7 +420,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # there the form changes after preposition and PrepCase must be annotated (muž, jehož se bojím VS. muž, bez něhož se neobejdeme).
                 })
             # Feminine personal possessive determiner.
-            elif re.match(r'^(její|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
+            elif re.match(r'^(její|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejim|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
                 # Congruent gender:
                 # - in PDT, only in singular; masculine and neuter are merged even in nominative
@@ -464,7 +466,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             # Feminine relative possessive determiner.
-            elif re.match(r'^(její|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)$', node.form.lower()):
+            elif re.match(r'^(její|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejim|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)$', node.form.lower()):
                 # The feminine possessive 'jejíž' slightly inflects, unlike 'jehož' and 'jejichž'.
                 # Congruent gender:
                 # - in PDT, only in singular; masculine and neuter are merged even in nominative
@@ -623,12 +625,11 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                             'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                         })
                 elif re.match(r'^(dvé|obé)$', node.lemma):
-                    self.check_required_features(node, ['NumType', 'NumForm', 'Gender', 'Number', 'Case'])
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
                         'NumType': ['Card'],
                         'PronType': ['Tot'], # for 'obé'
                         'NumForm': ['Word'],
-                        'Gender': ['Neut'],
                         'Number': ['Sing'], # when 'dvé' is subject, the verb is neuter singular
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
