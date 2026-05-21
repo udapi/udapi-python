@@ -959,7 +959,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
         # adjust PhraseAspect based on the lemma of the copula
         if cop[0].feats['Tense'] in ['Pres', 'Fut']:
+            phrase_aspect = self.feature_prefix + 'Aspect'
             if cop[0].lemma == 'ser':
-                node.misc['PeriAspect'] = Aspect.PERF.value
+                node.misc[phrase_aspect] = Aspect.PERF.value
             elif cop[0].lemma == 'estar':
-                node.misc['PeriAspect'] = Aspect.IMP.value
+                node.misc[phrase_aspect] = Aspect.IMP.value
