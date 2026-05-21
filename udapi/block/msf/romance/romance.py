@@ -256,6 +256,9 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
         xcomps = [x for x in node.children if x.udeprel == 'xcomp']
         if node.lemma in ['ir', 'aller', 'estar', 'ter'] and node.upos == 'VERB' and xcomps:
+            tense = node.feats['Tense']
+            aspect = node.feats['Aspect']
+
             node.misc['PeriAux'] = 'Yes'
 
             voice = node.feats['Voice']
@@ -527,7 +530,7 @@ class Romance(udapi.block.msf.phrase.Phrase):
                 return
             
             if auxes[0].lemma == 'vir' and auxes[0].feats['Tense'] in ['Pres', 'Imp', 'Past'] and node.feats['VerbForm'] == 'Ger':
-
+                tense = auxes[0].feats['Tense']
                 # aux Pres (vir) + gerund -> PhraseTense=PastPres, PraseAspect=Prog
                 if auxes[0].feats['Tense'] == 'Pres':
                     tense=Tense.PASTPRES.value
@@ -838,6 +841,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
             # Portuguese
             # auxiliry 'ir' followed by auxiliary 'estar' in infinitive and a gerund
             if auxes[0].lemma == 'ir' and auxes[1].lemma == 'estar' and node.feats['VerbForm'] == 'Ger':
+                tense = auxes[0].feats['Tense']
+                aspect = auxes[0].feats['Aspect']
 
                 # Futuro perifrástico -> PhraseTense=Fut, PhraseAspect=Prog
                 if auxes[0].feats['Tense'] == 'Pres':
@@ -873,6 +878,8 @@ class Romance(udapi.block.msf.phrase.Phrase):
 
             # auxiliriy 'ir' in present or future tense followed by auxiliary 'ter' in infinitive and a participle
             if auxes[0].lemma == 'ir' and (auxes[0].feats['Tense'] in ['Pres', 'Fut']) and auxes[1].lemma == 'ter' and node.feats['VerbForm'] == 'Part':
+                tense = auxes[0].feats['Tense']
+                aspect = auxes[0].feats['Aspect']
 
                 # Futuro perifrástico -> PhraseTense=FutFut, PhraseAspect=Perf
                 if auxes[0].feats['Tense'] == 'Fut':
