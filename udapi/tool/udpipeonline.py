@@ -27,42 +27,6 @@ class UDPipeOnline:
             response = json.loads(request.read())
         return list(response["models"].keys())
 
-    def perform_request(self, params, method="process"):
-        if not params:
-            request_headers, request_data = {}, None
-        else:
-            message = email.mime.multipart.MIMEMultipart("form-data", policy=email.policy.HTTP)
-
-            for name, value in params.items():
-                payload = email.mime.nonmultipart.MIMENonMultipart("text", "plain")
-                payload.add_header("Content-Disposition", "form-data; name=\"{}\"".format(name))
-                payload.add_header("Content-Transfer-Encoding", "8bit")
-                payload.set_payload(value, charset="utf-8")
-                message.attach(payload)
-
-            request_data = message.as_bytes().split(b"\r\n\r\n", maxsplit=1)[1]
-            request_headers = {"Content-Type": message["Content-Type"]}
-
-        try:
-            with urllib.request.urlopen(urllib.request.Request(
-                url=f"{self.server}/{method}", headers=request_headers, data=request_data
-            )) as request:
-                response = json.loads(request.read())
-        except urllib.error.HTTPError as e:
-            print("An exception was raised during UDPipe 'process' REST request.\n"
-                "The service returned the following error:\n"
-                "  {}".format(e.fp.read().decode("utf-8")), file=sys.stderr)
-            raise
-        except json.JSONDecodeError as e:
-            print("Cannot parse the JSON response of UDPipe 'process' REST request.\n"
-                "  {}".format(e.msg), file=sys.stderr)
-            raise
-
-        if "model" not in response or "result" not in response:
-            raise ValueError("Cannot parse the UDPipe 'process' REST request response.")
-
-        return response["result"]
-
     def perform_request_urlencoded(self, params, method="process"):
         """Perform a request using application/x-www-form-urlencoded to preserve LF newlines.
 
@@ -162,25 +126,22 @@ class UDPipeOnline:
         """Delete all existing bundles and substitute them with those parsed by UDPipe."""
         if parse and not tag:
             raise ValueError('Combination parse=True tag=False is not allowed.')
-        params = {"model": self.model, "tokenizer": "presegmented"}
+        params = {"model": self.model}
         if tag:
             params["tagger"] = ""
         if parse:
             params["parser"] = ""
-        if resegment:
-            params["tokenizer"] = ""
-        if ranges:
-            params["tokenizer"] = "ranges" if resegment else "presegmented;ranges"
+        if tokenize:
+            params["tokenizer"] = "" if resegment else "presegmented"
+            if ranges:
+                params["tokenizer"] = "presegmented;ranges" if resegment else "ranges"
+        else:
+            params["input"] = "conllu"
 
-        #in_trees = []
-        #for bundle in doc.bundles:
-        #    assert(len(bundle.trees) == 1)
-        #    in_trees.append(bundle.trees[0])
         if tokenize:
             params["data"] = "\n".join(root.text for root in doc.trees) + "\n"
         else:
-            params["input"] = "horizontal"
-            params["data"] = "\n".join(" ".join([n.form for n in root.descendants]) for root in doc.trees) + "\n"
+            params["data"] = doc.to_conllu_string() + "\n"
 
         out_data = self.perform_request_urlencoded(params=params)
         conllu_reader = ConlluReader(empty_parent="ignore")
