@@ -257,7 +257,7 @@ class UnfixFixed(Block):
 
     def is_adp_noun(self, node, fixed_children):
         """
-        Current node is the verb, its fixed child is the preposition.
+        Current node is the preposition, its fixed child is the noun.
         """
         if len(fixed_children) != 1:
             return False
@@ -266,6 +266,91 @@ class UnfixFixed(Block):
             # be used for one-time cleanup, so I don't care so much.
             (adp, noun) = an.split(' ', maxsplit=2)
             if node.lemma == adp and fixed_children[0].form.lower() == noun:
+                return True
+        return False
+
+    # The following are sometimes tagged ADP NOUN NOUN, sometimes ADP ADJ NOUN.
+    # The latter is correct, although less frequent. In some cases, the ADJ
+    # slot is in fact a DET: todo, toda, cualquier, una; tota, totes, una.
+    adp_adj_noun = [
+        'a buenas horas',
+        'a buen seguro',
+        'a corto plazo',
+        'a largo plazo',
+        'a medio plazo',
+        'a primera vista',
+        'a toda costa',
+        'a toda prisa',
+        'a todo pasto',
+        'con toda normalidad',
+        'de buena voluntad',
+        'de buen grado',
+        'de cualquier forma',
+        'de igual modo',
+        'de mala fe',
+        'de mala manera',
+        'de ninguna manera',
+        'de nuevo cuño',
+        'de otro lado',
+        'de poca monta',
+        'de puta madre',
+        'de segunda mano',
+        'de todas formas',
+        'de todas maneras',
+        'de todos modos',
+        'de una vez',
+        'en gran medida',
+        'en gran parte',
+        'por otra parte',
+        'por otro lado',
+        # Catalan
+        'a grans trets',
+        'amb prou feines',
+        'de tota manera',
+        'de totes maneres',
+        "d' una banda",
+        'en certa manera',
+        'en gran mesura'
+    ]
+
+    def is_adp_adj_noun(self, node, fixed_children):
+        """
+        Current node is the preposition, its fixed children are the adjective
+        and the noun.
+        """
+        if len(fixed_children) != 2:
+            return False
+        for aan in self.adp_adj_noun:
+            # It would be more efficient to precompute this but this block will
+            # be used for one-time cleanup, so I don't care so much.
+            (adp, adj, noun) = aan.split(' ', maxsplit=3)
+            if node.lemma == adp and fixed_children[0].form.lower() == adj and fixed_children[1].form.lower() == noun:
+                return True
+        return False
+
+    # Similar to ADP ADJ NOUN, but here the adjective follows the noun.
+    adp_noun_adj = [
+        'a puerta cerrada',
+        'a tiro limpio',
+        'de capa caída',
+        'en líneas generales',
+        # Catalan
+        'en línia recta',
+        'pel cap baix'
+    ]
+
+    def is_adp_noun_adj(self, node, fixed_children):
+        """
+        Current node is the preposition, its fixed children are the adjective
+        and the noun.
+        """
+        if len(fixed_children) != 2:
+            return False
+        for ana in self.adp_noun_adj:
+            # It would be more efficient to precompute this but this block will
+            # be used for one-time cleanup, so I don't care so much.
+            (adp, noun, adj) = ana.split(' ', maxsplit=3)
+            if node.lemma == adp and fixed_children[0].form.lower() == noun and fixed_children[1].form.lower() == adj:
                 return True
         return False
 
@@ -291,13 +376,38 @@ class UnfixFixed(Block):
                     self.reattach(fixed_children[0], verbs_right[0], 'mark')
                 else:
                     self.reattach(fixed_children[0], node, 'xcomp')
+                node.feats['ExtPos'] = ''
             elif node.lemma == 'a' and node.udeprel == 'obj' and len(fixed_children) == 1:
                 # Occasionally the annotator decided that an animate direct object with "a" must be fixed: "a barberos". That's wrong.
                 self.reattach(fixed_children[0], node.parent, 'obj')
                 self.reattach(node, fixed_children[0], 'case')
+                node.feats['ExtPos'] = ''
             elif self.is_adp_noun(node, fixed_children):
                 deprel = 'obl' if node.udeprel == 'advmod' else node.deprel
                 if deprel == 'obl' and node.parent.upos in ['NOUN', 'PRON', 'PROPN'] and node.parent.udeprel in ['nsubj', 'obj', 'iobj', 'obl', 'vocative', 'dislocated', 'expl', 'nmod']:
                     deprel = 'nmod'
                 self.reattach(fixed_children[0], node.parent, deprel)
                 self.reattach(node, fixed_children[0], 'case')
+                node.feats['ExtPos'] = ''
+            elif self.is_adp_adj_noun(node, fixed_children):
+                deprel = 'obl' if node.udeprel == 'advmod' else node.deprel
+                if deprel == 'obl' and node.parent.upos in ['NOUN', 'PRON', 'PROPN'] and node.parent.udeprel in ['nsubj', 'obj', 'iobj', 'obl', 'vocative', 'dislocated', 'expl', 'nmod']:
+                    deprel = 'nmod'
+                self.reattach(fixed_children[1], node.parent, deprel)
+                self.reattach(node, fixed_children[1], 'case')
+                if fixed_children[0].form.lower() in ['todo', 'todos', 'toda', 'todas', 'ninguna', 'cualquier', 'una', 'tota', 'totes']:
+                    fixed_children[0].upos = 'DET'
+                    self.reattach(fixed_children[0], fixed_children[1], 'det')
+                else:
+                    fixed_children[0].upos = 'ADJ'
+                    self.reattach(fixed_children[0], fixed_children[1], 'amod')
+                node.feats['ExtPos'] = ''
+            elif self.is_adp_noun_adj(node, fixed_children):
+                deprel = 'obl' if node.udeprel == 'advmod' else node.deprel
+                if deprel == 'obl' and node.parent.upos in ['NOUN', 'PRON', 'PROPN'] and node.parent.udeprel in ['nsubj', 'obj', 'iobj', 'obl', 'vocative', 'dislocated', 'expl', 'nmod']:
+                    deprel = 'nmod'
+                self.reattach(fixed_children[0], node.parent, deprel)
+                self.reattach(node, fixed_children[0], 'case')
+                fixed_children[1].upos = 'ADJ'
+                self.reattach(fixed_children[1], fixed_children[0], 'amod')
+                node.feats['ExtPos'] = ''

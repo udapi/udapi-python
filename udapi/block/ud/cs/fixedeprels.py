@@ -119,6 +119,7 @@ class FixEdeprels(Block):
         'na_báze':          'na_bázi:gen',
         'na_čelo':          'na_čele:gen',
         'na_mimo':          'na:loc', # na kurtě i mimo něj
+        'na_na':            'na:acc', # na víc než na 8. místo
         'na_než':           'na:acc', # na víc než čtyři a půl kilometru
         'na_od':            'na_rozdíl_od:gen',
         'na_počátek':       'na_počátku:gen',
