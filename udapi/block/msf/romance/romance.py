@@ -1,5 +1,8 @@
 import udapi.block.msf.phrase
 from enum import Enum
+import logging
+
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 AUXES_HAVE = ['ter', 'haber', 'avere']
 AUXES_BE = ['estar', 'essere']
@@ -36,139 +39,144 @@ class Romance(udapi.block.msf.phrase.Phrase):
         self.neg = neg
 
     def process_node(self, node):
+        try:
 
-        if node.misc[self.feature_prefix] != '':
-            return
-
-        cop = [x for x in node.children if x.udeprel == 'cop']
-        
-        # only expl or expl:pv, no expl:impers or expl:pass
-        refl = [x for x in node.children if (x.lemma == 'se' or x.lemma == 'soi') and x.upos == 'PRON' and x.udeprel == 'expl' and x.deprel != 'expl:impers' and x.deprel != 'expl:pass']
-        
-        if refl:
-            expl='Pv'
-        else:
-            expl=None
-   
-        if cop:
-            # find auxiliary verbs, modal verbs, and auxiliary verbs related to modal verbs among the children of the content verb and separate them from each other 
-            auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
-            adp = [x for x in node.children if x.upos == 'ADP']
-
-            if modals:
-                # we consider modals themselves to be separate verb forms
-                self.process_modal_verbs(modals, modal_auxes, modal_neg)
-
-            if auxes:
-                polarity = ''
-                if self.neg is True:
-                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg] 
-                    if neg:
-                        polarity = 'Neg'
-                else:
-                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [a.ord for a in adp] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                self.process_periphrastic_verb_forms(cop[0], auxes, expl, polarity, phrase_ords, node)
-            else:
-                # no auxiliaries, only cop
-                polarity = ''
-                if self.neg is True:
-                    phrase_ords = [node.ord] + [c.ord for c in cop] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg]
-                    if neg:
-                        polarity = 'Neg'
-                else:
-                    phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in adp] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                self.process_copulas(node, cop, expl, polarity, phrase_ords)
-            return
-
-        if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
-
-            # find auxiliary verbs, modal verbs, and auxiliary verbs related to modals among the children of the content verb and separate them from each other 
-            auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
-            aux_pass = [x for x in auxes if x.deprel == 'aux:pass']
-            auxes_without_pass = [x for x in auxes if x.deprel != 'aux:pass']
-
-            # infinitive with a subject is a subjunctive
-            subj = [x for x in node.children if x.udeprel == 'subj']
-            if node.feats['VerbForm'] == 'Inf' and subj:
-                self.write_node_info(node,
-                        person=node.feats['Person'],
-                        number=node.feats['Number'],
-                        mood='Sub',
-                        form='Fin',
-                        tense=Tense.FUT.value,
-                        gender=node.feats['Gender'],
-                        voice=node.feats['Voice'],
-                        expl=expl,
-                        analytic=self.get_analytic_bool(node),
-                        ords=[node.ord]
-                    )
+            if node.misc[self.feature_prefix] != '':
                 return
+
+            cop = [x for x in node.children if x.udeprel == 'cop']
             
-            if modals:
-                # we consider modals themselves to be separate verb forms
-                self.process_modal_verbs(modals, modal_auxes, modal_neg)
+            # only expl or expl:pv, no expl:impers or expl:pass
+            refl = [x for x in node.children if (x.lemma == 'se' or x.lemma == 'soi') and x.upos == 'PRON' and x.udeprel == 'expl' and x.deprel != 'expl:impers' and x.deprel != 'expl:pass']
             
-            if not auxes:
-                polarity = ''
-                if self.neg is True:
-                    phrase_ords = [node.ord] + [r.ord for r in refl] + [n.ord for n in neg]
-                    if neg:
-                        polarity = 'Neg'
-                else:
-                    phrase_ords = [node.ord] + [r.ord for r in refl]
-                phrase_ords.sort()
-
-                self.process_phrases_with_ir_aller_estar(node, expl, polarity, phrase_ords, node)
-                self.process_simple_verb_forms(node, expl, polarity, phrase_ords, node)
-
-
+            if refl:
+                expl='Pv'
             else:
-                # no passive auxiliaries
-                if not aux_pass:
+                expl=None
+    
+            if cop:
+                # find auxiliary verbs, modal verbs, and auxiliary verbs related to modal verbs among the children of the content verb and separate them from each other 
+                auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
+                adp = [x for x in node.children if x.upos == 'ADP']
+
+                if modals:
+                    # we consider modals themselves to be separate verb forms
+                    self.process_modal_verbs(modals, modal_auxes, modal_neg)
+
+                if auxes:
                     polarity = ''
                     if self.neg is True:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                        phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg] 
                         if neg:
                             polarity = 'Neg'
                     else:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                        phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in auxes] + [a.ord for a in adp] + [r.ord for r in refl]
                     phrase_ords.sort()
 
-                    self.process_periphrastic_verb_forms(node, auxes, expl, polarity, phrase_ords, node)
-
-                # head verb has only passive auxiliary and no more other auxiliaries
-                elif not auxes_without_pass:
-                    polarity = ''
-
-                    if self.neg is True:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
-                        if neg:
-                            polarity = 'Neg'
-                    else:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
-                    phrase_ords.sort()
-
-                    # TODO phrase-level features are currently determined based on the first passive auxiliary, but it can happen that there are more than one passive auxiliary
-                    self.process_phrases_with_ir_aller_estar(auxes[0], expl, polarity, phrase_ords, node)
-                    self.process_simple_verb_forms(auxes[0], expl, polarity, phrase_ords, node)
-
-                # head verb has passive auxiliary and also other auxiliaries
+                    self.process_periphrastic_verb_forms(cop[0], auxes, expl, polarity, phrase_ords, node)
                 else:
+                    # no auxiliaries, only cop
                     polarity = ''
-
                     if self.neg is True:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                        phrase_ords = [node.ord] + [c.ord for c in cop] + [r.ord for r in refl] + [a.ord for a in adp] + [n.ord for n in neg]
                         if neg:
                             polarity = 'Neg'
                     else:
-                        phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                        phrase_ords = [node.ord] + [c.ord for c in cop] + [a.ord for a in adp] + [r.ord for r in refl]
                     phrase_ords.sort()
 
-                    self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, expl, polarity, phrase_ords, node)
+                    self.process_copulas(node, cop, expl, polarity, phrase_ords)
+                return
+
+            if node.upos == 'VERB': #TODO maybe add "or node.feats['VerbForm'] == 'Part'"?
+
+                # find auxiliary verbs, modal verbs, and auxiliary verbs related to modals among the children of the content verb and separate them from each other 
+                auxes, neg, modals, modal_auxes, modal_neg = self.find_auxes_and_neg(node)
+                aux_pass = [x for x in auxes if x.deprel == 'aux:pass']
+                auxes_without_pass = [x for x in auxes if x.deprel != 'aux:pass']
+
+                # infinitive with a subject is a subjunctive
+                subj = [x for x in node.children if x.udeprel == 'subj']
+                if node.feats['VerbForm'] == 'Inf' and subj:
+                    self.write_node_info(node,
+                            person=node.feats['Person'],
+                            number=node.feats['Number'],
+                            mood='Sub',
+                            form='Fin',
+                            tense=Tense.FUT.value,
+                            gender=node.feats['Gender'],
+                            voice=node.feats['Voice'],
+                            expl=expl,
+                            analytic=self.get_analytic_bool(node),
+                            ords=[node.ord]
+                        )
+                    return
+                
+                if modals:
+                    # we consider modals themselves to be separate verb forms
+                    self.process_modal_verbs(modals, modal_auxes, modal_neg)
+                
+                if not auxes:
+                    polarity = ''
+                    if self.neg is True:
+                        phrase_ords = [node.ord] + [r.ord for r in refl] + [n.ord for n in neg]
+                        if neg:
+                            polarity = 'Neg'
+                    else:
+                        phrase_ords = [node.ord] + [r.ord for r in refl]
+                    phrase_ords.sort()
+
+                    self.process_phrases_with_ir_aller_estar(node, expl, polarity, phrase_ords, node)
+                    self.process_simple_verb_forms(node, expl, polarity, phrase_ords, node)
+
+
+                else:
+                    # no passive auxiliaries
+                    if not aux_pass:
+                        polarity = ''
+                        if self.neg is True:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                            if neg:
+                                polarity = 'Neg'
+                        else:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                        phrase_ords.sort()
+
+                        self.process_periphrastic_verb_forms(node, auxes, expl, polarity, phrase_ords, node)
+
+                    # head verb has only passive auxiliary and no more other auxiliaries
+                    elif not auxes_without_pass:
+                        polarity = ''
+
+                        if self.neg is True:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                            if neg:
+                                polarity = 'Neg'
+                        else:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                        phrase_ords.sort()
+
+                        # TODO phrase-level features are currently determined based on the first passive auxiliary, but it can happen that there are more than one passive auxiliary
+                        self.process_phrases_with_ir_aller_estar(auxes[0], expl, polarity, phrase_ords, node)
+                        self.process_simple_verb_forms(auxes[0], expl, polarity, phrase_ords, node)
+
+                    # head verb has passive auxiliary and also other auxiliaries
+                    else:
+                        polarity = ''
+
+                        if self.neg is True:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl] + [n.ord for n in neg]
+                            if neg:
+                                polarity = 'Neg'
+                        else:
+                            phrase_ords = [node.ord] + [a.ord for a in auxes] + [r.ord for r in refl]
+                        phrase_ords.sort()
+
+                        self.process_periphrastic_verb_forms(aux_pass[0], auxes_without_pass, expl, polarity, phrase_ords, node)
+        except Exception as e:
+            node_identifier = node.address() if hasattr(node, 'address') else str(node)
+            logging.error(f"Error processing node [{node_identifier}]: {e}", exc_info=True)
+            return
 
     def find_auxes_and_neg(self, node):
         """
