@@ -69,6 +69,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 			phrase_nodes += neg
 
 			copVerb = cop[0]
+			
 
 			person = '3'
 
@@ -77,7 +78,7 @@ class Conditional(udapi.block.msf.phrase.Phrase):
 						person=aux_verb.feats['Person']
 			for cop_verb in cop:
 				if cop_verb.feats['Person'] != '':
-						person=aux_verb.feats['Person']
+						person=cop_verb.feats['Person']
 
 			phrase_ords = [x.ord for x in phrase_nodes]
 			phrase_ords.sort()
