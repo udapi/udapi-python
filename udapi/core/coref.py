@@ -825,8 +825,9 @@ def store_coref_to_misc(doc):
                 eid = entity.eid
                 if field == 'GRP':
                     eid = re.sub(r'^d\d+\.', '', eid)
+                # Unlike deserialization, the serialization (store_coref_to_misc) does not have the parameter "strict" yet.
                 if any(x in eid for x in CHARS_FORBIDDEN_IN_ID):
-                    _error(f"{eid} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]", strict)
+                    _error(f"{eid} contains forbidden characters [{CHARS_FORBIDDEN_IN_ID}]", strict=False)
                     for c in CHARS_FORBIDDEN_IN_ID:
                         eid = eid.replace(c, '')
                 values.append(eid)

@@ -5,90 +5,99 @@ features as Phrase* attributes in MISC of their head word.
 """
 
 import udapi.block.msf.phrase
+import logging
+
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Converb(udapi.block.msf.phrase.Phrase):
 
 	def process_node(self, node):
-		# condition node.upos == 'VERB' to prevent copulas from entering this branch
-		if node.feats['VerbForm'] == 'Conv' and node.upos == 'VERB':
-			refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-
-			phrase_nodes = [node] + refl
-			neg = self.get_negative_particles(phrase_nodes)
-			phrase_nodes += neg
-
-			phrase_ords = [x.ord for x in phrase_nodes]
-			phrase_ords.sort()
-			
-			self.write_node_info(node,
-				person=node.feats['Person'],
-				number=node.feats['Number'],
-				form='Conv',
-				tense=node.feats['Tense'],
-				aspect=node.feats['Aspect'],
-				polarity=self.get_polarity(phrase_nodes),
-				expl=self.get_expl_type(node,refl),
-				ords=phrase_ords,
-				gender=node.feats['Gender'],
-				animacy=node.feats['Animacy'],
-				voice=self.get_voice(node, refl),
-				analytic=self.get_analytic_bool(node)
-				)
-
-		# passive voice
-		elif node.upos == 'ADJ':
-			aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['VerbForm'] == 'Conv']
-			
-			if aux:
-				auxVerb = aux[0]
-
-				phrase_nodes = [node] + aux
-				neg = self.get_negative_particles(phrase_nodes)
-				phrase_nodes += neg
-				phrase_ords = [x.ord for x in phrase_nodes]
-				phrase_ords.sort()
-			
-				self.write_node_info(node,
-					person=auxVerb.feats['Person'],
-					number=auxVerb.feats['Number'],
-					form='Conv',
-					tense=auxVerb.feats['Tense'],
-					aspect=node.feats['Aspect'],
-					polarity=self.get_polarity(phrase_nodes),
-					ords=phrase_ords,
-					gender=auxVerb.feats['Gender'],
-					animacy=auxVerb.feats['Animacy'],
-					voice='Pass',
-					analytic=self.get_analytic_bool(node)
-				)
-
-		# copulas
-		else:
-			cop = [x for x in node.children if x.udeprel == 'cop' and x.feats['VerbForm'] == 'Conv']
-			
-			if cop:
-				prep = [x for x in node.children if x.upos == 'ADP']
+		try:
+			# condition node.upos == 'VERB' to prevent copulas from entering this branch
+			if node.feats['VerbForm'] == 'Conv' and node.upos == 'VERB':
 				refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
-			
-				copVerb = cop[0]
 
-				phrase_nodes = [node] + cop + prep + refl
+				phrase_nodes = [node] + refl
 				neg = self.get_negative_particles(phrase_nodes)
 				phrase_nodes += neg
+
 				phrase_ords = [x.ord for x in phrase_nodes]
 				phrase_ords.sort()
-
 				
 				self.write_node_info(node,
-					aspect=copVerb.feats['Aspect'],
-					person=copVerb.feats['Person'],
-					number=copVerb.feats['Number'],
-					tense=copVerb.feats['Tense'],
-					gender=copVerb.feats['Gender'],
-					animacy=copVerb.feats['Animacy'],
+					person=node.feats['Person'],
+					number=node.feats['Number'],
 					form='Conv',
+					tense=node.feats['Tense'],
+					aspect=node.feats['Aspect'],
 					polarity=self.get_polarity(phrase_nodes),
+					expl=self.get_expl_type(node,refl),
 					ords=phrase_ords,
-					voice=self.get_voice(copVerb, refl),
+					gender=node.feats['Gender'],
+					animacy=node.feats['Animacy'],
+					voice=self.get_voice(node, refl),
 					analytic=self.get_analytic_bool(node)
 					)
+
+			# passive voice
+			elif node.upos == 'ADJ':
+				aux = [x for x in node.children if x.udeprel == 'aux' and x.feats['VerbForm'] == 'Conv']
+				
+				if aux:
+					auxVerb = aux[0]
+
+					phrase_nodes = [node] + aux
+					neg = self.get_negative_particles(phrase_nodes)
+					phrase_nodes += neg
+					phrase_ords = [x.ord for x in phrase_nodes]
+					phrase_ords.sort()
+				
+					self.write_node_info(node,
+						person=auxVerb.feats['Person'],
+						number=auxVerb.feats['Number'],
+						form='Conv',
+						tense=auxVerb.feats['Tense'],
+						aspect=node.feats['Aspect'],
+						polarity=self.get_polarity(phrase_nodes),
+						ords=phrase_ords,
+						gender=auxVerb.feats['Gender'],
+						animacy=auxVerb.feats['Animacy'],
+						voice='Pass',
+						analytic=self.get_analytic_bool(node)
+					)
+
+			# copulas
+			else:
+				cop = [x for x in node.children if x.udeprel == 'cop' and x.feats['VerbForm'] == 'Conv']
+				
+				if cop:
+					prep = [x for x in node.children if x.upos == 'ADP']
+					refl = [x for x in node.children if x.feats['Reflex'] == 'Yes' and x.udeprel == 'expl']
+				
+					copVerb = cop[0]
+
+					phrase_nodes = [node] + cop + prep + refl
+					neg = self.get_negative_particles(phrase_nodes)
+					phrase_nodes += neg
+					phrase_ords = [x.ord for x in phrase_nodes]
+					phrase_ords.sort()
+
+					
+					self.write_node_info(node,
+						aspect=copVerb.feats['Aspect'],
+						person=copVerb.feats['Person'],
+						number=copVerb.feats['Number'],
+						tense=copVerb.feats['Tense'],
+						gender=copVerb.feats['Gender'],
+						animacy=copVerb.feats['Animacy'],
+						form='Conv',
+						polarity=self.get_polarity(phrase_nodes),
+						ords=phrase_ords,
+						voice=self.get_voice(copVerb, refl),
+						analytic=self.get_analytic_bool(node)
+						)
+					
+		except Exception as e:
+			node_identifier = node.address() if hasattr(node, 'address') else str(node)
+			logging.error(f"Error processing node [{node_identifier}]: {e}", exc_info=True)
+			return
