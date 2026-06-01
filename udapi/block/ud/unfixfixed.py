@@ -276,6 +276,7 @@ class UnfixFixed(Block):
         'a buenas horas',
         'a buen seguro',
         'a corto plazo',
+        'a duras penas',
         'a largo plazo',
         'a medio plazo',
         'a primera vista',
@@ -600,8 +601,7 @@ class UnfixFixed(Block):
 
     def is_adp_noun_adp(self, node, fixed_children):
         """
-        Current node is the preposition, its fixed children are the adjective
-        and the noun.
+        Current node is the preposition, the rest are its fixed children.
         """
         if len(fixed_children) != 2:
             return False
@@ -610,6 +610,83 @@ class UnfixFixed(Block):
             # be used for one-time cleanup, so I don't care so much.
             (adp1, noun, adp2) = ana.split(' ', maxsplit=3)
             if node.lemma == adp1 and fixed_children[0].form.lower() == noun and fixed_children[1].form.lower() == adp2:
+                return True
+        return False
+
+    adp_det_noun_adp = [
+        'a el abrigo de',
+        'a el borde de',
+        'a el cabo de',
+        'a el comienzo de',
+        'a el contrario de',
+        'a el filo de',
+        'a el final de',
+        'a el inicio de',
+        'a el lado de',
+        'a el límite de',
+        'a el margen de',
+        'a el objeto de',
+        'a el parecer de',
+        'a el respecto de',
+        'a el servicio de',
+        'a el término de',
+        'a el tiempo que',
+        'a la espera de',
+        'a la hora de',
+        'a la mitad de',
+        'a la par que',
+        'a la vez que',
+        'a la vista de',
+        'a la vuelta de',
+        'a lo largo de',
+        'con el fin de',
+        'con el objetivo de',
+        'con el objeto de',
+        'con el propósito de',
+        'con la condición de',
+        'en el caso de',
+        'en el puesto de',
+        'en la línea de',
+        'en la medida en',
+        'en la medida que',
+        'en lo concerniente a',
+        # Catalan
+        'a el marge de',
+        'a la vegada que',
+        'a la vora de',
+        "a l' entorn de",
+        "a l' hora d'",
+        "a l' hora de",
+        "a l' ombra d'",
+        "amb el propòsit d'",
+        "amb la col·laboració de",
+        'amb la finalitat de',
+        "amb la intenció d'",
+        'amb la intenció de',
+        "amb l' objecte de",
+        "amb l' objectiu d'",
+        "amb l' objectiu de",
+        'de la mà de',
+        'en el camp de',
+        'en el cas de',
+        'en el cas que',
+        "en el marc d'",
+        'en el marc de',
+        "en l' àmbit de",
+        'en la mesura que'
+    ]
+
+    def is_adp_det_noun_adp(self, node, fixed_children):
+        """
+        Current node is the preposition, the rest are its fixed children.
+        """
+        if len(fixed_children) != 3:
+            return False
+        for adna in self.adp_det_noun_adp:
+            # It would be more efficient to precompute this but this block will
+            # be used for one-time cleanup, so I don't care so much.
+            (adp1, det, noun, adp2) = adna.split(' ', maxsplit=4)
+            if node.lemma == adp1 and fixed_children[0].form.lower() == det and fixed_children[1].form.lower() == noun and fixed_children[2].form.lower() == adp2:
                 return True
         return False
 
@@ -680,6 +757,21 @@ class UnfixFixed(Block):
                     noun2 = node.parent
                     self.reattach(noun1, parent, deprel)
                     self.reattach(adp1, noun1, 'case')
-                    self.reattach(noun2, noun1, 'acl' if adp2.lemma == 'que' else 'nmod')
-                    self.reattach(adp2, noun2, 'mark' if adp2.lemma == 'que' else 'case')
+                    self.reattach(noun2, noun1, 'acl' if adp2.lemma == 'que' or noun2.upos == 'VERB' else 'nmod')
+                    self.reattach(adp2, noun2, 'mark' if adp2.lemma == 'que' or noun2.upos == 'VERB' else 'case')
+                    node.feats['ExtPos'] = ''
+            elif self.is_adp_det_noun_adp(node, fixed_children) and node.parent.ord > node.ord:
+                parent = node.parent.parent
+                if parent:
+                    deprel = node.parent.deprel
+                    adp1 = node
+                    det = fixed_children[0]
+                    noun1 = fixed_children[1]
+                    adp2 = fixed_children[2]
+                    noun2 = node.parent
+                    self.reattach(noun1, parent, deprel)
+                    self.reattach(adp1, noun1, 'case')
+                    self.reattach(det, noun1, 'det')
+                    self.reattach(noun2, noun1, 'acl' if adp2.lemma == 'que' or noun2.upos == 'VERB' else 'nmod')
+                    self.reattach(adp2, noun2, 'mark' if adp2.lemma == 'que' or noun2.upos == 'VERB' else 'case')
                     node.feats['ExtPos'] = ''
