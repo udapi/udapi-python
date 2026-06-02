@@ -8,6 +8,7 @@ class Stats(Block):
     def __init__(self, m_len_max=5, e_len_max=5,
                  report_basics=False, report_mentions=True, report_entities=True,
                  report_details=True, report_words_per_doc=False, report_entity_range=False,
+                 report_docs=True, report_empty_nodes=True,
                  selected_upos='NOUN PRON PROPN DET ADJ VERB ADV NUM _',
                  exclude_singletons=False, exclude_nonsingletons=False, style='human',
                  per_doc=False, max_rows_per_page=50, docname='newdoc', docname_len=15,
@@ -22,6 +23,8 @@ class Stats(Block):
         self.report_details = report_details
         self.report_words_per_doc = report_words_per_doc
         self.report_entity_range = report_entity_range
+        self.report_docs = report_docs
+        self.report_empty_nodes = report_empty_nodes
         self.exclude_singletons = exclude_singletons
         self.exclude_nonsingletons = exclude_nonsingletons
         self.style = style
@@ -148,10 +151,12 @@ class Stats(Block):
 
         columns =[ ]
         if self.report_basics:
-            columns += [('docs', f"{self.counter['newdocs']:6,}"),
-                        ('sents', f"{self.counter['sents']:7,}"),
-                        ('words', f"{self.counter['words']:9,}"),
-                        ('empty', f"{self.counter['empty']:7,}"),]
+            if self.report_docs:
+                columns += [('docs', f"{self.counter['newdocs']:6,}"),]
+            columns += [('sents', f"{self.counter['sents']:7,}"),
+                        ('words', f"{self.counter['words']:9,}"),]
+            if self.report_empty_nodes:
+                columns += [('empty', f"{self.counter['empty']:7,}"),]
             if self.report_words_per_doc:
                 columns += [('max_words/doc', f"{self.counter['max_words_per_doc']:7,}"),
                             ('words/doc', f"{self.counter['words']/self.counter['newdocs']:7,.0f}"),]
@@ -214,10 +219,17 @@ class Stats(Block):
                  ("document" if self.per_doc else "dataset ") + " " * (self.docname_len-8),
                  " " * self.docname_len]
         if self.report_basics:
-            lines[0] += "rrrr "
-            lines[1] += r'& \MC{4}{text size}                  '
-            lines[2] += r'& \MC{4}{total number of}            '
-            lines[3] += r'&  docs &  sents &    words &empty n.'
+            basic_cols = []
+            if self.report_docs:
+                basic_cols.append('docs')
+            basic_cols.extend(['sents', 'words'])
+            if self.report_empty_nodes:
+                basic_cols.append('empty n.')
+
+            lines[0] += "r" * len(basic_cols) + " "
+            lines[1] += r'& \MC{' + str(len(basic_cols)) + r'}{text size}                  '
+            lines[2] += r'& \MC{' + str(len(basic_cols)) + r'}{total number of}            '
+            lines[3] += '&' + '&'.join(f"{label:>7}" for label in basic_cols)
             if self.report_words_per_doc:
                 lines[0] += "rr "
                 lines[1] += r'&        &        '
@@ -271,14 +283,15 @@ class Stats(Block):
         lines[2] += r'\\'
         lines[3] += r'\\\midrule'
         if self.report_basics:
-            lines[1] += r'\cmidrule(lr){2-7}' if self.report_words_per_doc else r'\cmidrule(lr){2-5}'
-            lines[2] += r'\cmidrule(lr){2-5}'
-            last_col += 4
+            basics_count = (1 if self.report_docs else 0) + 2 + (1 if self.report_empty_nodes else 0)
+            lines[1] += r'\cmidrule(lr){2-' + str(1 + basics_count + (2 if self.report_words_per_doc else 0)) + '}'
+            lines[2] += r'\cmidrule(lr){2-' + str(1 + basics_count) + '}'
+            last_col += basics_count
             if self.report_words_per_doc:
                 lines[2] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+2}" + '}'
                 last_col += 2
         if self.report_entities:
-            _cols = 5 if self.report_entity_range else 5
+            _cols = 5 if self.report_entity_range else 4
             lines[1] += r'\cmidrule(lr){' + f"{last_col+1}-{last_col+_cols}" + '}'
             lines[2] += r'\cmidrule(lr){' + f"{last_col+3}-{last_col+4}" + '}'
             last_col += _cols
