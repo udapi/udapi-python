@@ -74,6 +74,18 @@ MWTS['seč'] = {
     'main': 1,
     'shape': 'subtree',
 }
+# In 17th century texts, 'načež' sometimes should be interpreted really as
+# relative pronoun with preposition, not as adverb meaning "thereafter".
+MWTS['načež'] = {
+    'form': 'na' + ' což',
+    'lemma': 'na' + ' co',
+    'upos': 'ADP PRON',
+    'xpos': 'RV--4---------- PE--4----------',
+    'feats': 'AdpType=Prep|Case=Acc Animacy=Inan|Case=Acc|PronType=Rel',
+    'deprel': 'case *',
+    'main': 1,
+    'shape': 'subtree',
+}
 
 # Old Czech 'takliž'.
 MWTS['takliž'] = {

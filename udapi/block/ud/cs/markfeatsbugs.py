@@ -640,6 +640,19 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'NumType': ['Card'],
                         'NumForm': ['Word']
                     })
+                # 'čtvrt' can have plural ('tři čtvrtě') and can inflect for
+                # case ('čtvrti', 'čtvrtí', 'čtvrtím', 'čtvrtích', 'čtvrtěmi')
+                # but it behaves unusually and does not inflect in presence of
+                # quantified noun ('před čtvrt hodinou').
+                elif re.match(r'^(čtvrt)$', node.lemma):
+                    self.check_required_features(node, ['NumType', 'NumForm', 'Gender'])
+                    self.check_allowed_features(node, {
+                        'NumType': ['Card'],
+                        'NumForm': ['Word'],
+                        'Gender': ['Fem'],
+                        'Number': ['Sing', 'Plur'],
+                        'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
+                    })
                 elif re.match(r'^(sto|tisíc|.+ili[oó]n|.+iliarda)$', node.lemma):
                     self.check_required_features(node, ['NumType', 'NumForm', 'Number', 'Case'])
                     self.check_allowed_features(node, {
