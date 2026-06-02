@@ -3,6 +3,7 @@ Block ud.JoinToken will join a given token with the preceding one.
 """
 from udapi.core.block import Block
 import logging
+import re
 
 
 class JoinToken(Block):
@@ -29,8 +30,8 @@ class JoinToken(Block):
            underlying text was created directly for UD and can be thus considered
            part of the annotation.
 
-    At present, this block does not support merging with spaces at all, but
-    in the future one or more of the options may be added.
+    At present, this block does not support merging with spaces except for
+    long numbers, for which it creates words with spaces (option 2).
     """
 
     def __init__(self, misc_name='JoinToken', misc_value=None, **kwargs):
@@ -80,10 +81,18 @@ class JoinToken(Block):
             logging.warning("MISC %s cannot be used if one of the nodes belongs to a multiword token." % self.misc_name)
             node.misc['Bug'] = 'JoiningTokenNotSupportedHere'
             return
+        # In exceptional cases UD allows spaces inside words and then we may
+        # join tokens even if there was space between them. Such exceptions
+        # must be registered for each UD language. We do not access that register
+        # here but we allow a special case which is allowed e.g. in Czech and
+        # French: long numbers (1 000 000).
         if prevnode.misc['SpaceAfter'] != 'No':
-            logging.warning("MISC %s cannot be used if there is space between the tokens." % self.misc_name)
-            node.misc['Bug'] = 'JoiningTokensWithSpaceNotSupported'
-            return
+            if re.fullmatch(r'[0-9,\. ]+', node.form) and re.fullmatch(r'[0-9,\. ]+', prevnode.form):
+                node.form = ' ' + node.form
+            else:
+                logging.warning("MISC %s cannot be used if there is space between the tokens." % self.misc_name)
+                node.misc['Bug'] = 'JoiningTokensWithSpaceNotSupported'
+                return
         ###!!! This block currently must not be applied on data containing
         ###!!! enhanced dependencies. We must first implement adjustments of
         ###!!! the enhanced structure.
