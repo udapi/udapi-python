@@ -11,18 +11,8 @@ class Conllu(BaseWriter):
         self.print_text = print_text
         self.print_empty_trees = print_empty_trees
 
-    def process_tree(self, tree):  # pylint: disable=too-many-branches
-        empty_nodes = tree.empty_nodes
-        if empty_nodes:
-            nodes = sorted(tree._descendants + empty_nodes)
-        else:
-            nodes = tree._descendants
-
-        # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
-        # we need to skip the whole tree (including possible comments).
-        if not nodes and not self.print_empty_trees:
-            return
-
+    def iter_comment_lines(self, tree):
+        """Yield comment lines (without leading #) for the current tree."""
         # If tree.comment contains placeholders $NEWDOC,...$TEXT, replace them with the actual
         # value of the attribute and make note on which line (i_*) they were present.
         comment_lines = tree.comment.splitlines()
@@ -65,51 +55,66 @@ class Conllu(BaseWriter):
         printed_i = -1
         if comment_lines and comment_lines[0].startswith(' global.columns'):
             printed_i += 1
-            print('#' + comment_lines[printed_i])
+            yield comment_lines[printed_i]
         if self.print_sent_id:
             if tree.newdoc:
                 if i_newdoc == -1:
-                    print('# newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else ''))
+                    yield ' newdoc' + (' id = ' + tree.newdoc if tree.newdoc is not True else '')
                 else:
                     while printed_i < i_newdoc:
                         printed_i += 1
                         if comment_lines[printed_i]:
-                            print('#' + comment_lines[printed_i])
+                            yield comment_lines[printed_i]
                 ge = tree.document.meta.get('global.Entity')
                 if ge:
                     if i_global_entity == -1:
-                        print('# global.Entity = ' + ge)
+                        yield ' global.Entity = ' + ge
                     else:
                         while printed_i < i_global_entity:
                             printed_i += 1
                             if comment_lines[printed_i]:
-                                print('#' + comment_lines[printed_i])
+                                yield comment_lines[printed_i]
             if tree.newpar:
                 if i_newpar == -1:
-                    print('# newpar' + (' id = ' + tree.newpar if tree.newpar is not True else ''))
+                    yield ' newpar' + (' id = ' + tree.newpar if tree.newpar is not True else '')
                 else:
                     while printed_i < i_newpar:
                         printed_i += 1
                         if comment_lines[printed_i]:
-                            print('#' + comment_lines[printed_i])
+                            yield comment_lines[printed_i]
             if i_sent_id == -1:
-                print('# sent_id = ' + tree.sent_id)
+                yield ' sent_id = ' + tree.sent_id
             else:
                 while printed_i < i_sent_id:
                     printed_i += 1
                     if comment_lines[printed_i]:
-                        print('#' + comment_lines[printed_i])
+                        yield comment_lines[printed_i]
         if self.print_text and i_text == -1:
-            print('# text = ' + (tree.compute_text() if tree.text is None else tree.text.replace('\n', '').replace('\r', '').rstrip()))
+            yield ' text = ' + (tree.compute_text() if tree.text is None else tree.text.replace('\n', '').replace('\r', '').rstrip())
 
         for c_line in comment_lines[printed_i + 1:]:
             if c_line:
-                print('#' + c_line)
+                yield c_line
 
         # Special-purpose json_* comments should always be at the end of the comment block.
         if tree.json:
             for key, value in sorted(tree.json.items()):
-                print(f"# json_{key} = {json.dumps(value, ensure_ascii=False, sort_keys=True)}")
+                yield f" json_{key} = {json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+
+    def process_tree(self, tree):  # pylint: disable=too-many-branches
+        empty_nodes = tree.empty_nodes
+        if empty_nodes:
+            nodes = sorted(tree._descendants + empty_nodes)
+        else:
+            nodes = tree._descendants
+
+        # Empty sentences are not allowed in CoNLL-U, so with print_empty_trees==0
+        # we need to skip the whole tree (including possible comments).
+        if not nodes and not self.print_empty_trees:
+            return
+
+        for line in self.iter_comment_lines(tree):
+            print('#' + line)
 
         last_mwt_id = 0
         for node in nodes:
