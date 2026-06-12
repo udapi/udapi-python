@@ -34,17 +34,20 @@ argparser.add_argument(
     "-H", "--save_html", action="store_true",
     help="Add write.TextModeTreesHtml color=1 to the end of the scenario")
 argparser.add_argument(
+    "-P", "--save_pretty_conllu", action="store_true",
+    help="Add write.PrettyConllu to the end of the scenario")
+argparser.add_argument(
     "-A", "--save_all_attributes", action="store_true",
-    help="Add attributes=form,lemma,upos,xpos,feats,deprel,misc (to be used after -T and -H)")
+    help="Add attributes=form,lemma,upos,xpos,feats,deprel,misc (to be used after -T, -H and -P)")
 argparser.add_argument(
     "-C", "--save_comments", action="store_true",
-    help="Add print_comments=1 (to be used after -T and -H)")
+    help="Add print_comments=1 (to be used after -T, -H and -P)")
 argparser.add_argument(
     "-M", "--marked_only", action="store_true",
-    help="Add marked_only=1 to the end of the scenario (to be used after -T and -H)")
+    help="Add marked_only=1 to the end of the scenario (to be used after -T, -H and -P)")
 argparser.add_argument(
     "-N", "--no_color", action="store_true",
-    help="Add color=0 to the end of the scenario, this overrides color=1 of -T and -H")
+    help="Add color=0 to the end of the scenario, this overrides color=1 of -T, -H and -P")
 argparser.add_argument(
     "-X", "--extra", action="append",
     help="Add a specified parameter (or a block name) to the end of the scenario\n"
@@ -113,6 +116,8 @@ def main(argv=None):
         args.scenario = args.scenario + ['write.TextModeTrees', 'color=1']
     if args.save_html:
         args.scenario = args.scenario + ['write.TextModeTreesHtml', 'color=1']
+    if args.save_pretty_conllu:
+        args.scenario = args.scenario + ['write.PrettyConllu', 'color=1']
     if args.save_all_attributes:
         args.scenario = args.scenario + ['attributes=form,lemma,upos,xpos,feats,deprel,misc']
     if args.save_comments:
