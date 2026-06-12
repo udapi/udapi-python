@@ -73,18 +73,23 @@ class FixMorpho(Block):
         # In 19th century data, the grammaticalized usages of "se", "si" are
         # tagged as PART (rather than a reflexive PRON, which is the standard).
         # Even if it already was tagged PRON, some features may have to be added.
-        if node.upos in ['PRON', 'PART'] and node.form.lower() in ['se', 'si']:
+        if node.upos in ['PRON', 'PART'] and node.form.lower() in ['se', 'si', 'sebe', 'sobě', 'sebou']:
             node.lemma = 'se'
             node.upos = 'PRON'
             node.feats['PronType'] = 'Prs'
             node.feats['Reflex'] = 'Yes'
-            if node.form.lower() == 'se':
+            if node.form.lower() in ['se', 'sebe']:
                 # Occasionally "se" can be genitive: "z prudkého do se dorážení".
                 if not node.feats['Case'] == 'Gen':
                     node.feats['Case'] = 'Acc'
+            elif node.form.lower() in ['si', 'sobě']:
+                # Long form "sobě" can be both locative and dative.
+                if not node.feats['Case'] == 'Loc':
+                    node.feats['Case'] = 'Dat'
             else:
-                node.feats['Case'] = 'Dat'
-            node.feats['Variant'] = 'Short'
+                node.feats['Case'] = 'Ins'
+            if node.form.lower() in ['se', 'si']:
+                node.feats['Variant'] = 'Short'
         # As the genitive/accusative form of "on", "jeho" should have PrepCase.
         if node.upos == 'PRON' and node.form.lower() == 'jeho':
             node.feats['PrepCase'] = 'Npr'
@@ -362,6 +367,20 @@ class FixMorpho(Block):
         # be fixed.
         if node.upos == 'VERB' and node.lemma in ['být', 'bývat', 'bývávat']:
             node.upos = 'AUX'
+        # In 19th century data, the conditional auxiliaries are tagged as SCONJ.
+        # 'by' = 'J,-S---3------B-'
+        # Fix it.
+        if node.upos in ['SCONJ', 'PART'] and re.fullmatch(r'(by|bych|bys|bychom|byste)', node.form.lower()):
+            node.upos = 'AUX'
+            node.lemma = 'být'
+            node.feats['VerbForm'] = 'Fin'
+            node.feats['Mood'] = 'Cnd'
+            node.feats['Tense'] = ''
+            node.feats['Aspect'] = 'Imp'
+            node.feats['Voice'] = 'Act'
+            if node.form.lower() == 'by':
+                node.feats['Person'] = '' # theoretically sometimes also 2nd, although mostly 3rd
+                node.feats['Number'] = ''
         if node.upos in ['ADV', 'VERB'] and re.fullmatch(r'(ne)?lze', node.form.lower()):
             node.upos = 'ADV'
             node.lemma = 'lze' # not 'nelze'
