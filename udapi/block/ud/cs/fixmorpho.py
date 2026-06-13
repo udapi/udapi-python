@@ -369,15 +369,16 @@ class FixMorpho(Block):
             node.upos = 'AUX'
         # In 19th century data, the conditional auxiliaries are tagged as SCONJ.
         # 'by' = 'J,-S---3------B-'
-        # Fix it.
-        if node.upos in ['SCONJ', 'PART'] and re.fullmatch(r'(by|bych|bys|bychom|byste)', node.form.lower()):
+        # Fix it. And also make sure that the right features are present.
+        if node.upos in ['AUX', 'SCONJ', 'PART'] and re.fullmatch(r'(by|bych|bys|bychom|byste)', node.form.lower()):
             node.upos = 'AUX'
             node.lemma = 'být'
             node.feats['VerbForm'] = 'Fin'
             node.feats['Mood'] = 'Cnd'
             node.feats['Tense'] = ''
             node.feats['Aspect'] = 'Imp'
-            node.feats['Voice'] = 'Act'
+            node.feats['Voice'] = '' ###!!! Maybe we should use Voice=Act with all non-passive verbal forms but we do not do it at present.
+            node.feats['Polarity'] = ''
             if node.form.lower() == 'by':
                 node.feats['Person'] = '' # theoretically sometimes also 2nd, although mostly 3rd
                 node.feats['Number'] = ''
@@ -397,7 +398,7 @@ class FixMorpho(Block):
             # have it, too. Passive infinitives are always periphrastic.
             # (This is not done in the PDT tagset, but we should add it.)
             if node.feats['VerbForm'] == 'Inf':
-                node.feats['Voice'] = 'Act'
+                node.feats['Voice'] = '' ###!!! 'Act' is currently not permitted by ud.cs.MarkFeatsBugs and not used in older data (13th to 18th century)
             # Same for imperatives.
             elif node.feats['Mood'] == 'Imp':
                 node.feats['Voice'] = 'Act'
