@@ -155,6 +155,11 @@ class FixMorpho(Block):
             node.feats['Poss'] = 'Yes'
             if node.feats['PronType'] == '':
                 node.feats['PronType'] = 'Int,Rel'
+        # Some Czech corpora have 'každý' as ADJ.
+        if node.lemma == 'každý':
+            node.upos = 'DET'
+            node.feats['PronType'] = 'Tot'
+            node.feats['Degree'] = ''
         # Reflexive possessive pronoun should not forget the Reflex=Yes feature.
         if node.upos == 'DET' and node.lemma == 'svůj':
             node.feats['Reflex'] = 'Yes'
