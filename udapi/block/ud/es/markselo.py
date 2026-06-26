@@ -7,6 +7,14 @@ from udapi.core.block import Block
 
 class MarkSeLo(Block):
 
+    def __init__(self, print_it=False, **kwargs):
+        """
+        Default: Print the annotation patterns but do not fix anything.
+        fix=1: Do not print the patterns but fix them.
+        """
+        super().__init__(**kwargs)
+        self.print_it = print_it
+
     def process_node(self, node):
         if node.upos == 'VERB':
             se_children = [x for x in node.children if x.form.lower() == 'se']
@@ -23,3 +31,9 @@ class MarkSeLo(Block):
                         for x in lo_children:
                             x.misc['Mark'] = 'lo'
                         node.misc['Mark'] = 'VERB'
+                        # We may either use the marks above with udapy -TAM or -HAM,
+                        # or optionally print the observed examples to STDOUT and
+                        # then aggregate them with | sort | uniq -c | sort -rn.
+                        if self.print_it:
+                            reflex = 'Yes' if se_children[0].feats['Reflex'] == 'Yes' else 'No'
+                            print(f'{node.lemma}\tReflex={reflex}\tse={se_children[0].deprel}\tlo={lo_children[0].deprel}')
