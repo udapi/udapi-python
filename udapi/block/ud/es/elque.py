@@ -4,7 +4,6 @@ It is written for Spanish but a similar block should work for other Romance
 languages.
 """
 from udapi.core.block import Block
-import logging
 import re
 
 class ElQue(Block):
