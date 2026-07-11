@@ -18,13 +18,19 @@ MWTS = {
     'dessa':   {'form': 'de essa', 'lemma': 'de esse'},
     'dessas':  {'form': 'de essas', 'lemma': 'de esse'},
     'desse':   {'form': 'de esse', 'lemma': 'de esse'},
+	'comigo':  {'form': 'com mim', 'lemma': 'com mim',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
+	'conosco':  {'form': 'com nós', 'lemma': 'com nós',
+				 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
     'desses':  {'form': 'de esses', 'lemma': 'de esse'},
     'desta':   {'form': 'de esta', 'lemma': 'de este'},
     'destas':  {'form': 'de estas', 'lemma': 'de este'},
     'deste':   {'form': 'de este', 'lemma': 'de este'},
     'destes':  {'form': 'de estes', 'lemma': 'de este'},
-    'disso':   {'form': 'de isso', 'lemma': 'de este'},
-    'disto':   {'form': 'de isto', 'lemma': 'de este'},
+    'disso':   {'form': 'de isso', 'lemma': 'de isso',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *'},
+    'disto':   {'form': 'de isto', 'lemma': 'de isto',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
     'do':      {'form': 'de o', 'lemma': 'de o'},  # 'upos': 'ADP PRON', 'deprel': 'case *''
     'dos':     {'form': 'de os', 'lemma': 'de o'},
     'dum':     {'form': 'de um', 'lemma': 'de um'},
@@ -36,9 +42,40 @@ MWTS = {
     'nesses':  {'form': 'em esses', 'lemma': 'em esse'},
     'nesta':   {'form': 'em esta', 'lemma': 'em este'},
     'neste':   {'form': 'em este', 'lemma': 'em este'},
+
+	'nele':    {'form': 'em ele', 'lemma': 'em ele',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *'},
+
+	'naquilo': {'form': 'em aquilo', 'lemma': 'em aquilo',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				'feats': '_ Gender=Masc|Number=Sing|PronType=Dem'},
+
+	'àquela': {'form': 'a aquela', 'lemma': 'a aquilo',
+			   'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+			   'feats': '_ Gender=Fem|Number=Sing|PronType=Dem'},
+
+	# aquele can be `det` or `pron`
+	'naquele': {'form': 'em aquele', 'lemma': 'em aquele',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				'feats': '_ Gender=Masc|Number=Sing|PronType=Dem'},
+	'naquela': {'form': 'em aquela', 'lemma': 'em aquele',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				'feats': '_ Gender=Fem|Number=Sing|PronType=Dem'},
+	'naqueles': {'form': 'em aqueles', 'lemma': 'em aquele',
+				 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				 'feats': '_ Gender=Masc|Number=Plur|PronType=Dem'},
+	'naquelas': {'form': 'em aquelas', 'lemma': 'em aquele',
+				 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				 'feats': '_ Gender=Fem|Number=Plur|PronType=Dem'},
+	
+	'daquele': {'form': 'de aquele', 'lemma': 'de aquele',
+				'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree', 'deprel': 'case *',
+				'feats': '_ Gender=Masc|Number=Plur|PronType=Dem'},
+	
     'nisso':   {'form': 'em isso', 'lemma': 'em este'},
     'nisto':   {'form': 'em isto', 'lemma': 'em este',
                 'upos': 'ADP PRON', 'main': 1, 'shape': 'subtree'},
+	
     'no':      {'form': 'em o', 'lemma': 'em o'}, # PRON cases are excluded below
     'nos':     {'form': 'em os', 'lemma': 'em o'}, # PRON cases are excluded below
     'num':     {'form': 'em um', 'lemma': 'em um'},
@@ -66,10 +103,20 @@ for v in MWTS.values():
 for pronoun in 'ela ele eles elas'.split():
     MWTS['d' + pronoun] = {
         'form': 'de ' + pronoun,
-        'lemma': 'de ' + pronoun,
+        'lemma': 'de ele',
         'upos': 'ADP PRON',
         'deprel': 'case *',
         'main': 1,
+        'shape': 'subtree',
+    }
+for pronoun in 'ela ele eles elas'.split():
+    MWTS['n' + pronoun] = {
+        'form': 'em ' + pronoun,
+        'lemma': 'em ele',
+        'upos': 'ADP PRON',
+        'deprel': 'case *',
+        'main': 1,
+		'feats': '_ *',
         'shape': 'subtree',
     }
 
