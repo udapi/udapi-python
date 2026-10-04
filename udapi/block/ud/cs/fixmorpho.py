@@ -49,6 +49,13 @@ class FixMorpho(Block):
             # Case=Nom for consistency.
             if node.feats['Variant'] == 'Short' and node.feats['Case'] == '':
                 node.feats['Case'] = 'Nom'
+            # Possessive adjectives need Gender[psor], which is not encoded in
+            # the Xixstol tagset. We can deduce it from the suffix of the lemma.
+            if node.feats['Poss'] == 'Yes' and node.feats['Gender[psor]'] == '':
+                if re.search(r'ův$', node.lemma.lower()):
+                    node.feats['Gender[psor]'] = 'Masc'
+                elif re.search(r'in$', node.lemma.lower()):
+                    node.feats['Gender[psor]'] = 'Fem'
         #----------------------------------------------------------------------
         # PRONOUNS AND DETERMINERS
         #----------------------------------------------------------------------
