@@ -309,7 +309,7 @@ class FixMorpho(Block):
             node.feats['PronType'] = 'Tot'
         # Pronominal cardinal numerals should be DET, not NUM.
         if node.upos == 'NUM':
-            if re.fullmatch(r'(mnoho|málo|několik)', node.lemma):
+            if re.fullmatch(r'((pře)?mnoho|málo|několik)', node.lemma):
                 node.upos = 'DET'
                 node.feats['PronType'] = 'Ind'
                 node.feats['NumForm'] = ''
@@ -327,7 +327,7 @@ class FixMorpho(Block):
                 node.feats['NumForm'] = ''
                 node.feats['Polarity'] = ''
         if node.upos in ['ADV', 'NUM']:
-            if re.fullmatch(r'(mnoho|málo|několi)krát', node.lemma):
+            if re.fullmatch(r'((pře)?mnoho|málo|několi)krát', node.lemma):
                 node.upos = 'ADV'
                 node.feats['NumType'] = 'Mult'
                 node.feats['PronType'] = 'Ind'
