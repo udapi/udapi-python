@@ -47,6 +47,10 @@ class FixOblToNmod(Block):
             elif upos == 'VERB':
                 return 'advcl'
             else:
-                return re.sub(r'^obl', 'nmod', old_deprel)
+                # Discard certain subtypes while keeping others.
+                ###!!! This should be customizable! discard_subtypes=agent,subj
+                new_deprel = re.sub(r':(agent|arg):', ':', old_deprel)
+                new_deprel = re.sub(r':(agent|arg)$', '', new_deprel)
+                return re.sub(r'^obl', 'nmod', new_deprel)
         else:
             return old_deprel
