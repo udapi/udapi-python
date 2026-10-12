@@ -392,7 +392,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'Poss': ['Yes'],
                     'Person': ['3'],
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
-                    'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut'],
+                    'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
                     'Gender': ['Masc', 'Fem', 'Neut'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Animacy': ['Anim', 'Inan'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
@@ -411,7 +411,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     'PronType': ['Rel'],
                     'Poss': ['Yes'],
                     'Number[psor]': ['Sing', 'Dual', 'Plur'],
-                    'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut'],
+                    'Gender[psor]': ['Masc', 'Neut', 'Masc,Neut', 'Fem'],
                     'Gender': ['Masc', 'Fem', 'Neut'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Animacy': ['Anim', 'Inan'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified gender by context
                     'Number': ['Sing', 'Dual', 'Plur'], # uninflected in modern Czech, but old Czech annotations sometime indicate the modified number by context
@@ -421,6 +421,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     # there the form changes after preposition and PrepCase must be annotated (muž, jehož se bojím VS. muž, bez něhož se neobejdeme).
                 })
             # Feminine personal possessive determiner.
+            # Note that "jejích" has been captured above.
             elif re.match(r'^(jej[íi]|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejim|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)$', node.form.lower()):
                 # The feminine possessive 'její' slightly inflects, unlike 'jeho' and 'jejich'.
                 # Congruent gender:
@@ -467,6 +468,7 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Case': ['Nom', 'Gen', 'Dat', 'Acc', 'Voc', 'Loc', 'Ins']
                     })
             # Feminine relative possessive determiner.
+            # Note that "jejíchž" has been captured above.
             elif re.match(r'^(jej[íi]|jeje|jejie|jejího|jejieho|jejímu|jejiemu|jejím|jejim|jejiem|jejiej|jejíma|jejiema|jejích|jejiech|jejími|jejiemi)(ž(e|to)?)$', node.form.lower()):
                 # The feminine possessive 'jejíž' slightly inflects, unlike 'jehož' and 'jejichž'.
                 # Congruent gender:
