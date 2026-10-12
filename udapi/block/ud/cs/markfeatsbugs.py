@@ -835,26 +835,31 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                 # New Czech data, in particular PDT, use Int,Rel regardless of context.
                 self.check_allowed_features(node, {
                     'NumType': ['Mult', 'Ord'],
-                    'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind']
+                    'PronType': ['Dem', 'Int', 'Rel', 'Int,Rel', 'Ind'],
+                    'Typo': ['Yes']
                 })
             elif self.pdt20:
                 if node.feats['PronType'] != '':
                     # Pronominal adverbs in PDT are neither compared nor negated.
                     # New Czech data, in particular PDT, use Int,Rel regardless of context.
                     self.check_allowed_features(node, {
-                        'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot']
+                        'PronType': ['Dem', 'Int,Rel', 'Ind', 'Neg', 'Tot'],
+                        'Typo': ['Yes']
                     })
                 elif node.feats['Degree'] != '':
                     # Adverbs that are compared can also be negated.
                     self.check_required_features(node, ['Degree', 'Polarity'])
                     self.check_allowed_features(node, {
                         'Degree': ['Pos', 'Cmp', 'Sup'],
-                        'Polarity': ['Pos', 'Neg']
+                        'Polarity': ['Pos', 'Neg'],
+                        'Typo': ['Yes']
                     })
                 else:
                     # The remaining adverbs are neither pronominal, nor compared or
                     # negated.
-                    self.check_allowed_features(node, {})
+                    self.check_allowed_features(node, {
+                        'Typo': ['Yes']
+                    })
             else:
                 if node.feats['PronType'] == 'Tot':
                     # Total adverbs in Old Czech can be negated: vždy, nevždy.
@@ -864,13 +869,15 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                     self.check_allowed_features(node, {
                         'PronType': ['Tot'],
                         'Degree': ['Pos'],
-                        'Polarity': ['Pos', 'Neg']
+                        'Polarity': ['Pos', 'Neg'],
+                        'Typo': ['Yes']
                     })
                 elif node.feats['PronType'] != '':
                     # Other pronominal adverbs are neither compared nor negated.
                     # Old Czech data disambiguate Int from Rel (Int is used only in direct questions with question mark; indirect questions like "Ptal ses, kde to je?" use Rel.)
                     self.check_allowed_features(node, {
-                        'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg']
+                        'PronType': ['Dem', 'Int', 'Rel', 'Ind', 'Neg'],
+                        'Typo': ['Yes']
                     })
                 else:
                     # All other adverbs should have both Degree and Polarity,
@@ -880,7 +887,8 @@ class MarkFeatsBugs(udapi.block.ud.markfeatsbugs.MarkFeatsBugs):
                         'Degree': ['Pos', 'Cmp', 'Sup'],
                         'Polarity': ['Pos', 'Neg'],
                         'Emph': ['Yes'],
-                        'Abbr': ['Yes']
+                        'Abbr': ['Yes'],
+                        'Typo': ['Yes']
                     })
         # ADPOSITIONS ##########################################################
         elif node.upos == 'ADP':
