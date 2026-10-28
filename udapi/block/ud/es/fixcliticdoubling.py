@@ -17,3 +17,5 @@ class FixCliticDoubling(Block):
             a_nominals = [x for x in node.children if x.deprel == 'obl:arg' and len([y for y in x.children if y.form.lower() == 'a' and y.deprel == 'case']) > 0]
             if len(dative_clitics) == 1 and len(a_nominals) == 1:
                 dative_clitics[0].deprel = 'expl'
+                if dative_clitics[0].deps:
+                    dative_clitics[0].deps[0]['deprel'] = 'expl'
